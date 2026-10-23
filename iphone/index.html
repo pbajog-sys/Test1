@@ -1,0 +1,795 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Check-in">
+<meta name="theme-color" content="#f4f6f7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#16191b" media="(prefers-color-scheme: dark)">
+<link rel="apple-touch-icon" href="icon-180.png">
+<link rel="manifest" href="manifest.webmanifest">
+<title>Tages-Check-in</title>
+<style>
+:root {
+  --bg: #f4f6f7; --card: #ffffff; --text: #1b1f22; --muted: #6b7378; --line: #e2e6e8;
+  --accent: #2a7f8f; --accent-text: #ffffff; --chip: #eef1f2;
+  --green: #2e9d4f; --yellow: #d9a300; --red: #d23c3c; --grey: #b8bec2;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #16191b; --card: #212528; --text: #eef1f2; --muted: #9aa3a8; --line: #33393d;
+    --accent: #47a7b8; --accent-text: #0f1a1c; --chip: #2b3034; --grey: #5a6166;
+  }
+}
+* { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html, body { margin: 0; background: var(--bg); color: var(--text); }
+body {
+  font: 17px/1.4 -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+  padding: env(safe-area-inset-top) 0 calc(72px + env(safe-area-inset-bottom));
+  -webkit-text-size-adjust: 100%;
+}
+main { max-width: 560px; margin: 0 auto; padding: 12px 16px 24px; }
+h1 { font-size: 28px; margin: 8px 0 14px; letter-spacing: -0.02em; }
+h2 { font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: .04em;
+     color: var(--muted); margin: 22px 4px 8px; }
+.card { background: var(--card); border-radius: 14px; padding: 14px 16px; }
+.card + .card { margin-top: 10px; }
+.row { display: flex; align-items: center; gap: 10px; }
+.row + .row { margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--line); }
+.row label, .row .lbl { flex: 1; }
+.muted { color: var(--muted); }
+.small { font-size: 14px; }
+input[type=text], input[type=number], input:not([type]) {
+  font: inherit; color: var(--text); background: var(--chip); border: 0; border-radius: 10px;
+  padding: 10px 12px; width: 100%; min-height: 44px; outline-offset: 2px;
+}
+input.num { width: 96px; text-align: right; }
+.unit { color: var(--muted); min-width: 30px; }
+button { font: inherit; border: 0; border-radius: 10px; min-height: 44px; cursor: pointer; color: var(--text); background: var(--chip); padding: 0 14px; }
+button.primary { background: var(--accent); color: var(--accent-text); font-weight: 600; width: 100%; min-height: 52px; margin-top: 18px; font-size: 18px; }
+button.danger { color: var(--red); }
+button.wide { width: 100%; }
+button.wide + button.wide { margin-top: 8px; }
+.seg { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.seg button[aria-pressed=true] { background: var(--accent); color: var(--accent-text); font-weight: 600; }
+.stepper { display: flex; align-items: center; gap: 6px; }
+.stepper button { width: 52px; padding: 0; font-weight: 600; }
+.stepper input { width: 72px; text-align: center; padding: 10px 4px; }
+.datebar { display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; }
+.datebar button { width: 44px; padding: 0; font-size: 22px; background: transparent; }
+.datebar button:disabled { opacity: .25; }
+.datebar .d { font-weight: 600; text-align: center; }
+.badge { display: inline-block; font-size: 13px; background: var(--chip); color: var(--muted); border-radius: 8px; padding: 2px 8px; margin-top: 2px; }
+.dot { width: 14px; height: 14px; border-radius: 50%; flex: none; background: var(--grey); }
+.dot.g { background: var(--green); } .dot.y { background: var(--yellow); } .dot.r { background: var(--red); }
+.bar { height: 6px; border-radius: 3px; background: var(--chip); overflow: hidden; margin-top: 8px; }
+.bar > i { display: block; height: 100%; background: var(--accent); }
+.big { font-size: 26px; font-weight: 700; letter-spacing: -0.01em; }
+.days .row { font-size: 15px; }
+.days .row .lbl { flex: 0 0 74px; }
+.days .row { align-items: flex-start; }
+.days .row .info { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+#runRow { margin-top: 14px; }
+nav.tabs { position: fixed; left: 0; right: 0; bottom: 0; display: flex; background: var(--card);
+  border-top: 1px solid var(--line); padding-bottom: env(safe-area-inset-bottom); z-index: 5; }
+nav.tabs button { flex: 1; background: transparent; border-radius: 0; min-height: 56px; font-size: 13px; color: var(--muted); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; }
+nav.tabs button svg { width: 24px; height: 24px; }
+nav.tabs button[aria-selected=true] { color: var(--accent); font-weight: 600; }
+.hidden { display: none !important; }
+.toast { position: fixed; left: 50%; bottom: calc(84px + env(safe-area-inset-bottom)); transform: translateX(-50%);
+  background: var(--text); color: var(--bg); padding: 10px 18px; border-radius: 20px; font-size: 15px;
+  opacity: 0; transition: opacity .2s; pointer-events: none; z-index: 10; max-width: calc(100% - 32px); text-align: center; }
+.toast.show { opacity: 1; }
+ol.steps { margin: 6px 0 0; padding-left: 20px; } ol.steps li + li { margin-top: 4px; }
+</style>
+</head>
+<body>
+<main>
+
+<!-- ============ Heute ============ -->
+<section id="tab-today">
+  <h1>Check-in</h1>
+  <div class="datebar">
+    <button id="dayPrev" aria-label="Vortag">‹</button>
+    <div class="d"><div id="dayLabel"></div><div id="dayBadge" class="badge hidden">bereits erfasst</div></div>
+    <button id="dayNext" aria-label="Nächster Tag">›</button>
+  </div>
+
+  <div class="card">
+    <div class="row">
+      <label for="weight">Gewicht <span class="muted small">(optional)</span></label>
+      <input id="weight" class="num" inputmode="decimal" autocomplete="off" placeholder="–">
+      <span class="unit">kg</span>
+    </div>
+  </div>
+
+  <h2>Bewegung heute</h2>
+  <div class="card">
+    <div class="seg" id="moveSeg">
+      <button data-m="keine">keine</button>
+      <button data-m="Spaziergang">Spaziergang</button>
+      <button data-m="Lauf">Lauf</button>
+      <button data-m="Krafttraining">Krafttraining</button>
+    </div>
+    <div class="row" id="runRow">
+      <span class="lbl">Laufzeit</span>
+      <div class="stepper" data-for="run"></div>
+    </div>
+  </div>
+
+  <h2>Lernzeit</h2>
+  <div class="card" id="goalCard"></div>
+
+  <h2>Notiz</h2>
+  <div class="card">
+    <input id="note" placeholder="optional" autocomplete="off" enterkeyhint="done">
+  </div>
+
+  <button class="primary" id="saveBtn">Speichern</button>
+</section>
+
+<!-- ============ Woche ============ -->
+<section id="tab-week" class="hidden">
+  <h1>Woche</h1>
+  <div class="datebar">
+    <button id="weekPrev" aria-label="Vorwoche">‹</button>
+    <div class="d"><div id="weekLabel"></div><div id="weekRange" class="muted small"></div></div>
+    <button id="weekNext" aria-label="Nächste Woche">›</button>
+  </div>
+
+  <h2>Gewicht · Mittel Mo–So</h2>
+  <div class="card" id="weightCard"></div>
+
+  <h2>Wochenziele</h2>
+  <div id="goalsWeek"></div>
+  <p class="muted small" id="lightHint" style="margin:8px 4px 0"></p>
+
+  <h2>Tage</h2>
+  <div class="card days" id="daysCard"></div>
+</section>
+
+<!-- ============ Einstellungen ============ -->
+<section id="tab-settings" class="hidden">
+  <h1>Einstellungen</h1>
+
+  <h2>Wochenziele</h2>
+  <div class="card">
+    <div class="row">
+      <span class="lbl">Lauf pro Woche</span>
+      <input id="sRun" class="num" type="number" inputmode="numeric" min="0" step="5"><span class="unit">min</span>
+    </div>
+    <div class="row">
+      <input id="sG1n" placeholder="Fokusziel 1 (leer = aus)" autocomplete="off">
+    </div>
+    <div class="row" style="border-top:0;padding-top:0;margin-top:8px">
+      <span class="lbl muted small">pro Woche</span>
+      <input id="sG1m" class="num" type="number" inputmode="numeric" min="0" step="5"><span class="unit">min</span>
+    </div>
+    <div class="row">
+      <input id="sG2n" placeholder="Fokusziel 2 (leer = aus)" autocomplete="off">
+    </div>
+    <div class="row" style="border-top:0;padding-top:0;margin-top:8px">
+      <span class="lbl muted small">pro Woche</span>
+      <input id="sG2m" class="num" type="number" inputmode="numeric" min="0" step="5"><span class="unit">min</span>
+    </div>
+  </div>
+
+  <h2>Daten</h2>
+  <div class="card">
+    <p class="small muted" style="margin:0 0 12px">
+      Alles bleibt auf diesem iPhone. Exportiere regelmäßig als Excel-Datei –
+      sie hat dasselbe Format wie die PC-App.
+    </p>
+    <button class="wide" id="exportBtn">Als Excel-Datei exportieren</button>
+    <button class="wide" id="importBtn">Excel-Datei importieren …</button>
+    <input type="file" id="importFile" accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="hidden">
+    <p class="small muted" id="dataInfo" style="margin:12px 0 0"></p>
+  </div>
+
+  <h2>Erinnerung am Abend</h2>
+  <div class="card small">
+    Eine Web-App kann sich nicht selbst zu einer Uhrzeit melden. So geht es mit der Erinnerungen-App:
+    <ol class="steps">
+      <li>Erinnerungen öffnen → <b>Neue Erinnerung</b> „Check-in“.</li>
+      <li><b>Datum</b> und <b>Uhrzeit</b> einschalten (z. B. 20:30), <b>Wiederholen: Täglich</b>.</li>
+      <li>Abends auf die Mitteilung tippen, dann das Check-in-Symbol auf dem Home-Bildschirm.</li>
+    </ol>
+  </div>
+
+  <h2>Zurücksetzen</h2>
+  <div class="card">
+    <button class="wide danger" id="wipeBtn">Alle Daten auf diesem iPhone löschen</button>
+  </div>
+  <p class="muted small" style="margin:14px 4px">Keine Cloud, kein Konto, keine Telemetrie.</p>
+</section>
+
+</main>
+
+<nav class="tabs" role="tablist">
+  <button role="tab" data-tab="today" aria-selected="true">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M8 12.5l2.7 2.7L16.5 9"/></svg>Heute</button>
+  <button role="tab" data-tab="week" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="12" width="3.5" height="8" rx="1"/><rect x="10.25" y="7" width="3.5" height="13" rx="1"/><rect x="16.5" y="4" width="3.5" height="16" rx="1"/></svg>Woche</button>
+  <button role="tab" data-tab="settings" aria-selected="false">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>Einstellungen</button>
+</nav>
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+/* ===================================================================
+   Speicher (localStorage, nur auf diesem Gerät)
+   =================================================================== */
+const KEY = "tagescheckin.v1";
+const MOVEMENTS = ["keine", "Spaziergang", "Lauf", "Krafttraining"];
+const DEFAULT_SETTINGS = { runGoal: 90, g1name: "Fokus 1", g1goal: 180, g2name: "", g2goal: 0 };
+
+function loadState() {
+  try {
+    const raw = JSON.parse(localStorage.getItem(KEY) || "{}");
+    return { entries: raw.entries || {}, settings: Object.assign({}, DEFAULT_SETTINGS, raw.settings || {}) };
+  } catch (e) {
+    return { entries: {}, settings: Object.assign({}, DEFAULT_SETTINGS) };
+  }
+}
+let state = loadState();
+function persist() {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(state));
+    return true;
+  } catch (e) {
+    toast("Speichern fehlgeschlagen – Speicher voll oder privat-Modus?");
+    return false;
+  }
+}
+if (navigator.storage && navigator.storage.persist) navigator.storage.persist().catch(() => {});
+
+function activeGoals(s = state.settings) {
+  const g = [];
+  if ((s.g1name || "").trim()) g.push({ slot: 1, name: s.g1name.trim(), target: +s.g1goal || 0 });
+  if ((s.g2name || "").trim()) g.push({ slot: 2, name: s.g2name.trim(), target: +s.g2goal || 0 });
+  return g;
+}
+
+/* ===================================================================
+   Datum-Helfer (immer lokale Kalendertage, Schlüssel "YYYY-MM-DD")
+   =================================================================== */
+const pad = n => String(n).padStart(2, "0");
+const keyOf = d => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+const fromKey = k => { const [y, m, d] = k.split("-").map(Number); return new Date(y, m - 1, d); };
+const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+const today = () => { const n = new Date(); return new Date(n.getFullYear(), n.getMonth(), n.getDate()); };
+const weekStart = d => addDays(d, -((d.getDay() + 6) % 7));
+const WD = ["So", "Mo", "Di", "Mi", "Do", "Fr", "Sa"];
+const WD_LONG = ["Sonntag", "Montag", "Dienstag", "Mittwoch", "Donnerstag", "Freitag", "Samstag"];
+const fmtDM = d => `${pad(d.getDate())}.${pad(d.getMonth() + 1)}.`;
+const fmtDMY = d => `${fmtDM(d)}${d.getFullYear()}`;
+const fmtNum = (x, digits = 1) => x.toFixed(digits).replace(".", ",");
+function isoWeek(d) {
+  const t = new Date(Date.UTC(d.getFullYear(), d.getMonth(), d.getDate()));
+  t.setUTCDate(t.getUTCDate() + 4 - (t.getUTCDay() || 7));
+  const y0 = new Date(Date.UTC(t.getUTCFullYear(), 0, 1));
+  return Math.ceil(((t - y0) / 86400000 + 1) / 7);
+}
+
+/* ===================================================================
+   Auswertung (gleiche Regeln wie die PC-App)
+   =================================================================== */
+const YELLOW_RATIO = 0.7;
+const runMin = e => (e && e.movement === "Lauf" ? (+e.run || 0) : 0);
+
+function daysElapsed(start, now, todayRecorded) {
+  const end = addDays(start, 6);
+  if (now > end) return 7;
+  if (now < start) return 0;
+  return Math.round((now - start) / 86400000) + (todayRecorded ? 1 : 0);
+}
+function light(actual, expected) {
+  if (expected <= 0) return "";
+  if (actual >= expected) return "g";
+  if (actual >= YELLOW_RATIO * expected) return "y";
+  return "r";
+}
+function weightAvg(start) {
+  const w = [];
+  for (let i = 0; i < 7; i++) {
+    const e = state.entries[keyOf(addDays(start, i))];
+    if (e && typeof e.weight === "number") w.push(e.weight);
+  }
+  return w.length ? { avg: w.reduce((a, b) => a + b, 0) / w.length, n: w.length } : { avg: null, n: 0 };
+}
+function summarize(start) {
+  const now = today();
+  const days = [...Array(7)].map((_, i) => state.entries[keyOf(addDays(start, i))] || null);
+  const present = days.filter(Boolean);
+  const elapsed = daysElapsed(start, now, !!state.entries[keyOf(now)]);
+  const mk = (label, actual, target) => {
+    target = Math.max(0, +target || 0);
+    const expected = target * elapsed / 7;
+    return { label, actual, target, expected, light: light(actual, expected) };
+  };
+  const goals = [mk("Lauf", present.reduce((a, e) => a + runMin(e), 0), state.settings.runGoal)];
+  for (const g of activeGoals()) {
+    const f = g.slot === 1 ? "g1" : "g2";
+    goals.push(mk(g.name, present.reduce((a, e) => a + (+e[f] || 0), 0), g.target));
+  }
+  return { start, days, goals, w: weightAvg(start), wPrev: weightAvg(addDays(start, -7)),
+           running: start <= now && now <= addDays(start, 6) };
+}
+
+/* ===================================================================
+   UI: Heute
+   =================================================================== */
+const $ = id => document.getElementById(id);
+let curDay = today();
+let curMove = "keine";
+let viewingToday = true;
+const steppers = {};
+
+function makeStepper(host, step = 5, big = 15) {
+  host.innerHTML = "";
+  const minus = document.createElement("button"); minus.textContent = "−" + big; minus.type = "button";
+  const input = document.createElement("input"); input.type = "number"; input.inputMode = "numeric"; input.min = "0"; input.step = String(step);
+  const plus = document.createElement("button"); plus.textContent = "+" + big; plus.type = "button";
+  const unit = document.createElement("span"); unit.className = "unit"; unit.textContent = "min";
+  const get = () => Math.max(0, Math.round(+input.value || 0));
+  const set = v => { input.value = Math.max(0, Math.min(1440, Math.round(v))); };
+  minus.onclick = () => set(get() - big);
+  plus.onclick = () => set(get() + big);
+  input.addEventListener("focus", () => input.select());
+  host.append(minus, input, plus, unit);
+  return { get, set };
+}
+steppers.run = makeStepper(document.querySelector('[data-for="run"]'));
+
+function buildGoalCard() {
+  const card = $("goalCard");
+  card.innerHTML = "";
+  const goals = activeGoals();
+  if (!goals.length) {
+    card.innerHTML = '<span class="muted small">Keine Fokusziele benannt – siehe Einstellungen.</span>';
+    return;
+  }
+  for (const g of goals) {
+    const row = document.createElement("div"); row.className = "row";
+    const lbl = document.createElement("span"); lbl.className = "lbl"; lbl.textContent = g.name;
+    const st = document.createElement("div"); st.className = "stepper";
+    row.append(lbl, st); card.append(row);
+    steppers["g" + g.slot] = makeStepper(st);
+  }
+}
+
+function setMove(m) {
+  curMove = m;
+  for (const b of $("moveSeg").children) b.setAttribute("aria-pressed", String(b.dataset.m === m));
+  $("runRow").classList.toggle("hidden", m !== "Lauf");
+}
+$("moveSeg").addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  setMove(b.dataset.m);
+});
+
+function loadDay() {
+  const k = keyOf(curDay);
+  const e = state.entries[k];
+  const isToday = k === keyOf(today());
+  viewingToday = isToday;
+  $("dayLabel").textContent = (isToday ? "Heute, " : WD_LONG[curDay.getDay()] + ", ") + fmtDMY(curDay);
+  $("dayBadge").classList.toggle("hidden", !e);
+  $("dayNext").disabled = isToday;
+  $("weight").value = e && typeof e.weight === "number" ? fmtNum(e.weight) : "";
+  setMove(e ? e.movement : "keine");
+  steppers.run.set(e ? +e.run || 0 : 0);
+  if (steppers.g1) steppers.g1.set(e ? +e.g1 || 0 : 0);
+  if (steppers.g2) steppers.g2.set(e ? +e.g2 || 0 : 0);
+  $("note").value = e ? e.note || "" : "";
+}
+$("dayPrev").onclick = () => { curDay = addDays(curDay, -1); loadDay(); };
+$("dayNext").onclick = () => { if (curDay < today()) { curDay = addDays(curDay, 1); loadDay(); } };
+
+$("saveBtn").onclick = () => {
+  const txt = $("weight").value.trim().replace(",", ".");
+  let weight = null;
+  if (txt) {
+    weight = Number(txt);
+    if (!isFinite(weight) || weight < 20 || weight > 400) { toast("Gewicht bitte zwischen 20 und 400 kg."); $("weight").focus(); return; }
+    weight = Math.round(weight * 100) / 100;
+  }
+  const k = keyOf(curDay);
+  const old = state.entries[k] || {};
+  // Nicht angezeigte Fokusziele behalten ihren bisherigen Wert.
+  const e = { weight, movement: curMove, run: curMove === "Lauf" ? steppers.run.get() : 0,
+              g1name: old.g1name || "", g1: +old.g1 || 0, g2name: old.g2name || "", g2: +old.g2 || 0,
+              note: $("note").value.trim(), recorded: new Date().toISOString() };
+  for (const g of activeGoals()) {
+    if (g.slot === 1) { e.g1name = g.name; e.g1 = steppers.g1.get(); }
+    else { e.g2name = g.name; e.g2 = steppers.g2.get(); }
+  }
+  state.entries[k] = e;
+  if (persist()) { toast("Gespeichert ✓"); loadDay(); document.activeElement && document.activeElement.blur(); }
+};
+
+/* ===================================================================
+   UI: Woche
+   =================================================================== */
+let curWeek = weekStart(today());
+const LIGHT_TEXT = { g: "grün", y: "gelb", r: "rot", "": "–" };
+
+function renderWeek() {
+  const s = summarize(curWeek);
+  $("weekLabel").textContent = "KW " + isoWeek(curWeek);
+  $("weekRange").textContent = `${fmtDM(curWeek)} – ${fmtDMY(addDays(curWeek, 6))}`;
+  $("weekNext").disabled = s.running;
+
+  const wc = $("weightCard");
+  if (s.w.avg === null) {
+    wc.innerHTML = '<span class="muted">Keine Gewichtswerte in dieser Woche.</span>';
+  } else {
+    let trend = '<span class="muted small">Vorwoche: keine Werte</span>';
+    if (s.wPrev.avg !== null) {
+      const d = s.w.avg - s.wPrev.avg;
+      const arrow = Math.abs(d) < 0.05 ? "→" : d > 0 ? "↑" : "↓";
+      trend = `<b>${arrow} ${d > 0 ? "+" : ""}${fmtNum(d)} kg</b> <span class="muted small">ggü. Vorwoche (${fmtNum(s.wPrev.avg)} kg)</span>`;
+    }
+    wc.innerHTML = `<div class="big">${fmtNum(s.w.avg)} kg</div>
+      <div class="muted small">aus ${s.w.n} Wert${s.w.n === 1 ? "" : "en"}</div><div style="margin-top:6px">${trend}</div>`;
+  }
+
+  const gw = $("goalsWeek"); gw.innerHTML = "";
+  for (const g of s.goals) {
+    const card = document.createElement("div"); card.className = "card";
+    const pct = g.target > 0 ? Math.round(100 * g.actual / g.target) : 0;
+    let detail = g.target > 0 ? `${g.actual} / ${g.target} min · ${pct} %` : `${g.actual} min · kein Wochenziel`;
+    if (s.running && g.target > 0) detail += `<br><span class="muted small">Soll bis heute: ${Math.round(g.expected)} min</span>`;
+    card.innerHTML = `<div class="row" style="align-items:flex-start">
+        <span class="dot ${g.light}" style="margin-top:5px" aria-hidden="true"></span>
+        <div class="lbl"><b></b><div class="small">${detail}</div></div>
+        <span class="small muted">${LIGHT_TEXT[g.light]}</span></div>
+      ${g.target > 0 ? `<div class="bar"><i style="width:${Math.min(100, pct)}%"></i></div>` : ""}`;
+    card.querySelector("b").textContent = g.label;
+    gw.append(card);
+  }
+  $("lightHint").textContent = s.running
+    ? "Ampel vergleicht mit dem Soll bis heute (heute zählt, sobald erfasst). Grün ≥ Soll, Gelb ≥ 70 %, sonst Rot."
+    : "Grün ≥ Wochenziel, Gelb ≥ 70 %, sonst Rot.";
+
+  const dc = $("daysCard"); dc.innerHTML = "";
+  s.days.forEach((e, i) => {
+    const d = addDays(curWeek, i);
+    const row = document.createElement("div"); row.className = "row";
+    const parts = [];
+    if (e) {
+      if (typeof e.weight === "number") parts.push(fmtNum(e.weight) + " kg");
+      parts.push(e.movement === "Lauf" && e.run ? `Lauf ${e.run} min` : e.movement);
+      const learn = (+e.g1 || 0) + (+e.g2 || 0);
+      if (learn) parts.push(`Lernen ${learn} min`);
+      if (e.note) parts.push(e.note);
+    }
+    row.innerHTML = `<span class="lbl">${WD[d.getDay()]} ${fmtDM(d)}</span><span class="info ${e ? "" : "muted"}"></span>`;
+    row.querySelector(".info").textContent = e ? parts.join(" · ") : "–";
+    row.style.cursor = "pointer";
+    row.onclick = () => { if (d <= today()) { curDay = d; showTab("today"); } };
+    dc.append(row);
+  });
+}
+$("weekPrev").onclick = () => { curWeek = addDays(curWeek, -7); renderWeek(); };
+$("weekNext").onclick = () => { curWeek = addDays(curWeek, 7); renderWeek(); };
+
+/* ===================================================================
+   UI: Einstellungen
+   =================================================================== */
+function loadSettingsForm() {
+  const s = state.settings;
+  $("sRun").value = s.runGoal; $("sG1n").value = s.g1name; $("sG1m").value = s.g1goal;
+  $("sG2n").value = s.g2name; $("sG2m").value = s.g2goal;
+  const n = Object.keys(state.entries).length;
+  $("dataInfo").textContent = n ? `${n} Tag${n === 1 ? "" : "e"} gespeichert.` : "Noch keine Einträge.";
+}
+function saveSettingsForm() {
+  const int = v => Math.max(0, Math.round(+v || 0));
+  state.settings = { runGoal: int($("sRun").value), g1name: $("sG1n").value.trim(), g1goal: int($("sG1m").value),
+                     g2name: $("sG2n").value.trim(), g2goal: int($("sG2m").value) };
+  persist();
+  buildGoalCard();
+}
+for (const id of ["sRun", "sG1n", "sG1m", "sG2n", "sG2m"]) $(id).addEventListener("change", saveSettingsForm);
+
+$("wipeBtn").onclick = () => {
+  if (!confirm("Wirklich alle Einträge und Einstellungen auf diesem iPhone löschen? Vorher exportieren!")) return;
+  state = { entries: {}, settings: Object.assign({}, DEFAULT_SETTINGS) };
+  persist(); buildGoalCard(); loadSettingsForm(); loadDay(); toast("Gelöscht");
+};
+
+/* ===================================================================
+   Tabs
+   =================================================================== */
+function showTab(name) {
+  for (const t of ["today", "week", "settings"]) $("tab-" + t).classList.toggle("hidden", t !== name);
+  for (const b of document.querySelectorAll("nav.tabs button")) b.setAttribute("aria-selected", String(b.dataset.tab === name));
+  if (name === "today") loadDay();
+  if (name === "week") renderWeek();
+  if (name === "settings") loadSettingsForm();
+  window.scrollTo(0, 0);
+}
+document.querySelector("nav.tabs").addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if (b) showTab(b.dataset.tab);
+});
+
+let toastTimer;
+function toast(msg) {
+  const t = $("toast"); t.textContent = msg; t.classList.add("show");
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => t.classList.remove("show"), 2200);
+}
+
+/* ===================================================================
+   XLSX: Export (gleiche Spalten wie die PC-App) und Import
+   =================================================================== */
+const HEADERS = ["Datum", "Gewicht (kg)", "Bewegung", "Lauf (min)", "Fokusziel 1", "Fokus 1 (min)",
+                 "Fokusziel 2", "Fokus 2 (min)", "Lernzeit gesamt (min)", "Notiz", "Erfasst am"];
+const WIDTHS = [12, 13, 14, 11, 18, 13, 18, 13, 20, 40, 17];
+const EXCEL_EPOCH = Date.UTC(1899, 11, 30);
+const serialFromKey = k => { const [y, m, d] = k.split("-").map(Number); return (Date.UTC(y, m - 1, d) - EXCEL_EPOCH) / 86400000; };
+const serialFromDate = dt => (Date.UTC(dt.getFullYear(), dt.getMonth(), dt.getDate(), dt.getHours(), dt.getMinutes(), dt.getSeconds()) - EXCEL_EPOCH) / 86400000;
+const keyFromSerial = s => { const d = new Date(EXCEL_EPOCH + Math.floor(s) * 86400000); return `${d.getUTCFullYear()}-${pad(d.getUTCMonth() + 1)}-${pad(d.getUTCDate())}`; };
+
+const xmlEsc = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]))
+                              .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g, "");
+function colName(i) { let s = ""; i++; while (i) { const m = (i - 1) % 26; s = String.fromCharCode(65 + m) + s; i = Math.floor((i - 1) / 26); } return s; }
+
+function buildSheetXml() {
+  // Stile: 0 Standard, 1 Datum, 2 Zahl 0.0, 3 Datum+Uhrzeit, 4 fett
+  const rows = [];
+  const cell = (r, c, v, style) => {
+    const ref = colName(c) + r, s = style ? ` s="${style}"` : "";
+    if (v === null || v === undefined || v === "") return "";
+    if (typeof v === "number") return `<c r="${ref}"${s}><v>${v}</v></c>`;
+    return `<c r="${ref}"${s} t="inlineStr"><is><t xml:space="preserve">${xmlEsc(v)}</t></is></c>`;
+  };
+  rows.push(`<row r="1">${HEADERS.map((h, c) => cell(1, c, h, 4)).join("")}</row>`);
+  const keys = Object.keys(state.entries).sort();
+  keys.forEach((k, i) => {
+    const e = state.entries[k], r = i + 2;
+    const g1 = e.g1name ? (+e.g1 || 0) : null, g2 = e.g2name ? (+e.g2 || 0) : null;
+    const vals = [
+      [serialFromKey(k), 1], [typeof e.weight === "number" ? e.weight : null, 2], [e.movement, 0],
+      [runMin(e) || null, 0], [e.g1name || null, 0], [g1, 0], [e.g2name || null, 0], [g2, 0],
+      [(g1 || 0) + (g2 || 0), 0], [e.note || null, 0],
+      [e.recorded ? Math.round(serialFromDate(new Date(e.recorded)) * 86400) / 86400 : null, 3],
+    ];
+    rows.push(`<row r="${r}">${vals.map(([v, st], c) => cell(r, c, v, st)).join("")}</row>`);
+  });
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<sheetViews><sheetView workbookViewId="0"><pane ySplit="1" topLeftCell="A2" activePane="bottomLeft" state="frozen"/></sheetView></sheetViews>
+<cols>${WIDTHS.map((w, i) => `<col min="${i + 1}" max="${i + 1}" width="${w}" customWidth="1"/>`).join("")}</cols>
+<sheetData>${rows.join("")}</sheetData></worksheet>`;
+}
+
+function buildXlsx() {
+  const files = {
+    "[Content_Types].xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+<Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+<Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
+</Types>`,
+    "_rels/.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="xl/workbook.xml"/>
+</Relationships>`,
+    "xl/workbook.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+<sheets><sheet name="Daten" sheetId="1" r:id="rId1"/></sheets></workbook>`,
+    "xl/_rels/workbook.xml.rels": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
+<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`,
+    "xl/styles.xml": `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<styleSheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+<numFmts count="3"><numFmt numFmtId="164" formatCode="DD.MM.YYYY"/><numFmt numFmtId="165" formatCode="0.0"/><numFmt numFmtId="166" formatCode="DD.MM.YYYY HH:MM"/></numFmts>
+<fonts count="2"><font><sz val="11"/><name val="Calibri"/></font><font><b/><sz val="11"/><name val="Calibri"/></font></fonts>
+<fills count="2"><fill><patternFill patternType="none"/></fill><fill><patternFill patternType="gray125"/></fill></fills>
+<borders count="1"><border><left/><right/><top/><bottom/><diagonal/></border></borders>
+<cellStyleXfs count="1"><xf numFmtId="0" fontId="0" fillId="0" borderId="0"/></cellStyleXfs>
+<cellXfs count="5">
+<xf numFmtId="0" fontId="0" fillId="0" borderId="0" xfId="0"/>
+<xf numFmtId="164" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+<xf numFmtId="165" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+<xf numFmtId="166" fontId="0" fillId="0" borderId="0" xfId="0" applyNumberFormat="1"/>
+<xf numFmtId="0" fontId="1" fillId="0" borderId="0" xfId="0" applyFont="1"/>
+</cellXfs>
+<cellStyles count="1"><cellStyle name="Normal" xfId="0" builtinId="0"/></cellStyles>
+</styleSheet>`,
+    "xl/worksheets/sheet1.xml": buildSheetXml(),
+  };
+  return zipStore(files);
+}
+
+// --- Minimaler ZIP-Writer (unkomprimiert) ---
+const CRC_TABLE = (() => { const t = new Uint32Array(256); for (let n = 0; n < 256; n++) { let c = n; for (let k = 0; k < 8; k++) c = c & 1 ? 0xEDB88320 ^ (c >>> 1) : c >>> 1; t[n] = c >>> 0; } return t; })();
+function crc32(b) { let c = 0xFFFFFFFF; for (let i = 0; i < b.length; i++) c = CRC_TABLE[(c ^ b[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+function zipStore(files) {
+  const enc = new TextEncoder(), parts = [], central = [];
+  let offset = 0;
+  const now = new Date();
+  const dosTime = (now.getHours() << 11) | (now.getMinutes() << 5) | (now.getSeconds() >> 1);
+  const dosDate = ((now.getFullYear() - 1980) << 9) | ((now.getMonth() + 1) << 5) | now.getDate();
+  for (const [name, text] of Object.entries(files)) {
+    const nameB = enc.encode(name), data = enc.encode(text), crc = crc32(data);
+    const lh = new DataView(new ArrayBuffer(30));
+    lh.setUint32(0, 0x04034b50, true); lh.setUint16(4, 20, true); lh.setUint16(6, 0x0800, true); lh.setUint16(8, 0, true);
+    lh.setUint16(10, dosTime, true); lh.setUint16(12, dosDate, true); lh.setUint32(14, crc, true);
+    lh.setUint32(18, data.length, true); lh.setUint32(22, data.length, true); lh.setUint16(26, nameB.length, true); lh.setUint16(28, 0, true);
+    parts.push(new Uint8Array(lh.buffer), nameB, data);
+    const ch = new DataView(new ArrayBuffer(46));
+    ch.setUint32(0, 0x02014b50, true); ch.setUint16(4, 20, true); ch.setUint16(6, 20, true); ch.setUint16(8, 0x0800, true); ch.setUint16(10, 0, true);
+    ch.setUint16(12, dosTime, true); ch.setUint16(14, dosDate, true); ch.setUint32(16, crc, true);
+    ch.setUint32(20, data.length, true); ch.setUint32(24, data.length, true); ch.setUint16(28, nameB.length, true);
+    ch.setUint32(42, offset, true);
+    central.push(new Uint8Array(ch.buffer), nameB);
+    offset += 30 + nameB.length + data.length;
+  }
+  const cdSize = central.reduce((a, b) => a + b.length, 0);
+  const end = new DataView(new ArrayBuffer(22));
+  const count = Object.keys(files).length;
+  end.setUint32(0, 0x06054b50, true); end.setUint16(8, count, true); end.setUint16(10, count, true);
+  end.setUint32(12, cdSize, true); end.setUint32(16, offset, true);
+  return new Blob([...parts, ...central, new Uint8Array(end.buffer)],
+                  { type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" });
+}
+
+$("exportBtn").onclick = async () => {
+  const n = Object.keys(state.entries).length;
+  if (!n) { toast("Noch keine Einträge zum Exportieren."); return; }
+  const blob = buildXlsx();
+  const name = `checkin-${keyOf(today())}.xlsx`;
+  const file = new File([blob], name, { type: blob.type });
+  try {
+    if (navigator.canShare && navigator.canShare({ files: [file] })) {
+      await navigator.share({ files: [file], title: "Tages-Check-in" });
+      return;
+    }
+  } catch (e) {
+    if (e && e.name === "AbortError") return;
+  }
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = name;
+  document.body.append(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 10000);
+};
+
+// --- Minimaler ZIP-Reader (unkomprimiert oder Deflate) ---
+async function unzip(buf) {
+  const v = new DataView(buf), u8 = new Uint8Array(buf), dec = new TextDecoder();
+  let eocd = -1;
+  for (let i = buf.byteLength - 22; i >= Math.max(0, buf.byteLength - 66000); i--) {
+    if (v.getUint32(i, true) === 0x06054b50) { eocd = i; break; }
+  }
+  if (eocd < 0) throw new Error("Keine gültige .xlsx-Datei.");
+  const count = v.getUint16(eocd + 10, true);
+  let p = v.getUint32(eocd + 16, true);
+  const out = {};
+  for (let n = 0; n < count; n++) {
+    if (v.getUint32(p, true) !== 0x02014b50) throw new Error("Beschädigte Datei.");
+    const method = v.getUint16(p + 10, true), csize = v.getUint32(p + 20, true);
+    const nlen = v.getUint16(p + 28, true), xlen = v.getUint16(p + 30, true), clen = v.getUint16(p + 32, true);
+    const lho = v.getUint32(p + 42, true);
+    const name = dec.decode(u8.subarray(p + 46, p + 46 + nlen));
+    p += 46 + nlen + xlen + clen;
+    if (!/\.(xml|rels)$/.test(name)) continue;
+    const start = lho + 30 + v.getUint16(lho + 26, true) + v.getUint16(lho + 28, true);
+    const raw = u8.subarray(start, start + csize);
+    let data;
+    if (method === 0) data = raw;
+    else if (method === 8) {
+      if (typeof DecompressionStream === "undefined") throw new Error("Import braucht iOS 16.4 oder neuer.");
+      data = new Uint8Array(await new Response(new Blob([raw]).stream().pipeThrough(new DecompressionStream("deflate-raw"))).arrayBuffer());
+    } else continue;
+    out[name] = dec.decode(data);
+  }
+  return out;
+}
+
+const parseXml = s => new DOMParser().parseFromString(s, "application/xml");
+const byTag = (node, tag) => Array.from(node.getElementsByTagNameNS("*", tag));
+
+async function readXlsx(buf) {
+  const f = await unzip(buf);
+  const wb = parseXml(f["xl/workbook.xml"] || "");
+  const sheet = byTag(wb, "sheet").find(s => s.getAttribute("name") === "Daten");
+  if (!sheet) throw new Error('Kein Blatt „Daten“ gefunden.');
+  const rid = sheet.getAttributeNS("http://schemas.openxmlformats.org/officeDocument/2006/relationships", "id") || sheet.getAttribute("r:id");
+  const rels = parseXml(f["xl/_rels/workbook.xml.rels"] || "");
+  const rel = byTag(rels, "Relationship").find(r => r.getAttribute("Id") === rid);
+  let target = rel ? rel.getAttribute("Target") : "worksheets/sheet1.xml";
+  target = target.startsWith("/") ? target.slice(1) : "xl/" + target;
+  const shared = f["xl/sharedStrings.xml"] ? byTag(parseXml(f["xl/sharedStrings.xml"]), "si").map(si => byTag(si, "t").map(t => t.textContent).join("")) : [];
+  const ws = parseXml(f[target] || "");
+  const colIdx = ref => { let n = 0; for (const ch of ref.replace(/\d+/g, "")) n = n * 26 + ch.charCodeAt(0) - 64; return n - 1; };
+  const rows = byTag(ws, "row").map(row => {
+    const cells = [];
+    for (const c of byTag(row, "c")) {
+      const t = c.getAttribute("t"), vEl = byTag(c, "v")[0];
+      let val = null;
+      if (t === "s") val = shared[+(vEl && vEl.textContent)] ?? null;
+      else if (t === "inlineStr") val = byTag(c, "t").map(x => x.textContent).join("");
+      else if (t === "str") val = vEl ? vEl.textContent : null;
+      else if (t === "b") val = vEl ? vEl.textContent === "1" : null;
+      else if (vEl) val = Number(vEl.textContent);
+      cells[colIdx(c.getAttribute("r"))] = val;
+    }
+    return cells;
+  });
+  if (!rows.length) return {};
+  const hdr = {}; rows[0].forEach((h, i) => { if (h != null) hdr[String(h).trim()] = i; });
+  if (!("Datum" in hdr)) throw new Error('Spalte „Datum“ fehlt.');
+  const get = (r, h) => (h in hdr ? r[hdr[h]] : null);
+  const num = x => { if (x == null || x === "" || typeof x === "boolean") return null; const n = typeof x === "number" ? x : Number(String(x).replace(",", ".")); return isFinite(n) ? n : null; };
+  const str = x => (x == null ? "" : String(x).trim());
+  const entries = {};
+  for (const r of rows.slice(1)) {
+    const dv = get(r, "Datum");
+    let k = null;
+    if (typeof dv === "number") k = keyFromSerial(dv);
+    else if (typeof dv === "string") {
+      let m = dv.trim().match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})$/);
+      if (m) k = `${m[3]}-${pad(m[2])}-${pad(m[1])}`;
+      else if ((m = dv.trim().match(/^(\d{4})-(\d{2})-(\d{2})/))) k = `${m[1]}-${m[2]}-${m[3]}`;
+    }
+    if (!k) continue;
+    let mv = str(get(r, "Bewegung")); if (!MOVEMENTS.includes(mv)) mv = "keine";
+    const rec = num(get(r, "Erfasst am"));
+    entries[k] = {
+      weight: num(get(r, "Gewicht (kg)")), movement: mv,
+      run: mv === "Lauf" ? Math.round(num(get(r, "Lauf (min)")) || 0) : 0,
+      g1name: str(get(r, "Fokusziel 1")), g1: Math.round(num(get(r, "Fokus 1 (min)")) || 0),
+      g2name: str(get(r, "Fokusziel 2")), g2: Math.round(num(get(r, "Fokus 2 (min)")) || 0),
+      note: str(get(r, "Notiz")),
+      recorded: rec ? new Date(EXCEL_EPOCH + rec * 86400000 + new Date().getTimezoneOffset() * 60000).toISOString() : null,
+    };
+  }
+  return entries;
+}
+
+$("importBtn").onclick = () => $("importFile").click();
+$("importFile").onchange = async ev => {
+  const file = ev.target.files[0]; ev.target.value = "";
+  if (!file) return;
+  try {
+    const imported = await readXlsx(await file.arrayBuffer());
+    const keys = Object.keys(imported);
+    if (!keys.length) { toast("Keine Einträge in der Datei gefunden."); return; }
+    const clash = keys.filter(k => state.entries[k]).length;
+    const msg = `${keys.length} Tage gefunden` + (clash ? `, davon ${clash} schon vorhanden (werden durch die Datei ersetzt)` : "") + ". Importieren?";
+    if (!confirm(msg)) return;
+    Object.assign(state.entries, imported);
+    if (persist()) { toast(`${keys.length} Tage importiert`); loadSettingsForm(); }
+  } catch (e) {
+    alert("Import fehlgeschlagen: " + (e && e.message ? e.message : e));
+  }
+};
+
+/* ===================================================================
+   Start
+   =================================================================== */
+buildGoalCard();
+showTab("today");
+document.addEventListener("visibilitychange", () => {
+  // Nach Mitternacht oder Rückkehr in die App: "Heute" aktualisieren
+  if (document.visibilityState === "visible" && !$("tab-today").classList.contains("hidden")) {
+    if (viewingToday || curDay > today()) curDay = today();
+    loadDay();
+  }
+});
+if ("serviceWorker" in navigator && location.protocol === "https:") {
+  navigator.serviceWorker.register("sw.js").catch(() => {});
+}
+</script>
+</body>
+</html>
