@@ -1,0 +1,17 @@
+{
+  "name": "Wal-Quiz – Seepferdchen der Walkunde",
+  "short_name": "Wal-Quiz",
+  "description": "Walarten am Foto erkennen: üben und das Seepferdchen der Walkunde machen.",
+  "lang": "de",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#06182c",
+  "theme_color": "#0b2a4a",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png" },
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" }
+  ]
+}

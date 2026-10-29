@@ -1,0 +1,581 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Wal-Quiz</title>
+<meta name="description" content="Lerne die Walarten kennen und mach das Seepferdchen der Walkunde.">
+<meta name="theme-color" content="#0b2a4a">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Wal-Quiz">
+<style>
+  :root {
+    --bg1: #0b2a4a;
+    --bg2: #06182c;
+    --card: rgba(255,255,255,0.08);
+    --card-strong: rgba(255,255,255,0.14);
+    --text: #eaf4ff;
+    --muted: #9fb9d4;
+    --accent: #4fc3f7;
+    --accent-ink: #04223a;
+    --ok: #3ddc97;
+    --bad: #ff6b6b;
+    --gold: #ffd166;
+    --radius: 16px;
+  }
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: linear-gradient(180deg, var(--bg1), var(--bg2)) fixed;
+    background-color: var(--bg2);
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .app { max-width: 560px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; min-height: 100dvh; }
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  header h1 { font-size: 1.15rem; margin: 0; flex: 1; }
+  .icon-btn {
+    border: 0; background: var(--card); color: var(--text); border-radius: 12px;
+    width: 44px; height: 44px; font-size: 1.2rem; cursor: pointer;
+  }
+  .screen { display: none; flex: 1; flex-direction: column; }
+  .screen.active { display: flex; }
+
+  /* Start */
+  .hero { text-align: center; padding: 24px 8px 8px; }
+  .hero .logo { width: 96px; height: 96px; }
+  .hero h2 { font-size: 1.8rem; margin: 12px 0 6px; }
+  .hero p { color: var(--muted); margin: 0 auto; max-width: 34ch; line-height: 1.45; }
+  .menu { display: grid; gap: 12px; margin-top: 28px; }
+  .menu-btn {
+    display: flex; align-items: center; gap: 14px; text-align: left;
+    border: 0; border-radius: var(--radius); padding: 18px; cursor: pointer;
+    background: var(--card); color: var(--text); font: inherit;
+  }
+  .menu-btn .emoji { font-size: 2rem; }
+  .menu-btn strong { display: block; font-size: 1.1rem; }
+  .menu-btn span.sub { color: var(--muted); font-size: 0.9rem; }
+  .menu-btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .menu-btn.primary span.sub { color: #0b3a5c; }
+  .badge-box {
+    margin-top: 20px; padding: 14px; border-radius: var(--radius);
+    background: var(--card); text-align: center; color: var(--muted); font-size: 0.95rem;
+  }
+  .badge-box.earned { background: rgba(255,209,102,0.15); color: var(--gold); }
+
+  /* Quiz */
+  .progress { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.95rem; margin-bottom: 8px; }
+  .bar { height: 6px; background: var(--card); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+  .bar > div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .photo {
+    position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: var(--radius);
+    overflow: hidden; background: var(--card);
+  }
+  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .25s; }
+  .photo img.loaded { opacity: 1; }
+  .photo .spinner {
+    position: absolute; inset: 0; margin: auto; width: 40px; height: 40px; border-radius: 50%;
+    border: 4px solid var(--card-strong); border-top-color: var(--accent); animation: spin 1s linear infinite;
+  }
+  .photo .err { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 16px; color: var(--muted); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .credit { font-size: 0.75rem; color: var(--muted); margin-top: 6px; min-height: 1.2em; }
+  .credit a { color: var(--muted); }
+  .question { font-size: 1.15rem; font-weight: 600; margin: 14px 0 10px; }
+
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choice {
+    border: 2px solid transparent; border-radius: 14px; padding: 14px 10px; min-height: 56px;
+    background: var(--card); color: var(--text); font: inherit; font-size: 1rem; cursor: pointer;
+  }
+  .choice:disabled { cursor: default; }
+  .choice.correct { background: rgba(61,220,151,0.22); border-color: var(--ok); }
+  .choice.wrong { background: rgba(255,107,107,0.22); border-color: var(--bad); }
+
+  .answer-form { display: flex; gap: 10px; }
+  .answer-form input {
+    flex: 1; min-width: 0; font: inherit; font-size: 1.1rem; padding: 14px;
+    border-radius: 14px; border: 2px solid var(--card-strong); background: var(--card); color: var(--text);
+  }
+  .answer-form input:focus { outline: none; border-color: var(--accent); }
+  .btn {
+    border: 0; border-radius: 14px; padding: 14px 18px; font: inherit; font-weight: 600; font-size: 1rem;
+    background: var(--accent); color: var(--accent-ink); cursor: pointer;
+  }
+  .btn.secondary { background: var(--card-strong); color: var(--text); }
+  .btn:disabled { opacity: .5; }
+
+  .feedback { margin-top: 14px; padding: 14px; border-radius: 14px; display: none; line-height: 1.4; }
+  .feedback.show { display: block; }
+  .feedback.ok { background: rgba(61,220,151,0.15); }
+  .feedback.bad { background: rgba(255,107,107,0.15); }
+  .feedback .title { font-weight: 700; margin-bottom: 4px; }
+  .feedback .fact { color: var(--text); opacity: .9; font-size: 0.95rem; }
+  .next-row { margin-top: 14px; display: none; }
+  .next-row.show { display: block; }
+  .next-row .btn { width: 100%; }
+
+  /* Result */
+  .result { text-align: center; padding-top: 12px; }
+  .result .big { font-size: 3rem; font-weight: 800; margin: 8px 0; }
+  .certificate {
+    margin: 16px 0; padding: 20px; border-radius: var(--radius);
+    border: 2px dashed var(--gold); background: rgba(255,209,102,0.1); color: var(--gold);
+  }
+  .certificate .seahorse { font-size: 3rem; }
+  .certificate h3 { margin: 6px 0; font-size: 1.3rem; }
+  .review { list-style: none; padding: 0; margin: 16px 0; text-align: left; display: grid; gap: 8px; }
+  .review li { display: flex; gap: 10px; align-items: center; background: var(--card); border-radius: 12px; padding: 8px; }
+  .review img { width: 64px; height: 48px; object-fit: cover; border-radius: 8px; background: var(--card-strong); flex: none; }
+  .review .r-text { flex: 1; font-size: 0.95rem; }
+  .review .r-text small { color: var(--muted); display: block; }
+  .review .mark { font-size: 1.3rem; }
+  .result-actions { display: grid; gap: 10px; margin-top: 8px; }
+
+  /* Lexikon */
+  .lex { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .lex li { background: var(--card); border-radius: var(--radius); overflow: hidden; }
+  .lex img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: var(--card-strong); }
+  .lex .body { padding: 12px 14px; }
+  .lex h3 { margin: 0 0 4px; }
+  .lex .latin { color: var(--muted); font-style: italic; font-size: 0.9rem; }
+  .lex p { margin: 6px 0 0; line-height: 1.4; }
+  .lex .credit { padding: 0 14px 10px; margin: 0; }
+
+  .shake { animation: shake .35s; }
+  @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <button class="icon-btn" id="homeBtn" aria-label="Zur Startseite" hidden>←</button>
+    <h1 id="headerTitle">Wal-Quiz</h1>
+  </header>
+
+  <!-- Startseite -->
+  <section class="screen active" id="screen-start">
+    <div class="hero">
+      <img class="logo" src="icons/icon.svg" alt="">
+      <h2>Wal-Quiz</h2>
+      <p>Erkennst du die Wale an ihrem Foto? Übe in Ruhe und hol dir dann das Seepferdchen der Walkunde.</p>
+    </div>
+    <div class="menu">
+      <button class="menu-btn" data-start="practice">
+        <span class="emoji">🐋</span>
+        <span><strong>Üben</strong><span class="sub">Foto ansehen, aus 6 Arten wählen</span></span>
+      </button>
+      <button class="menu-btn primary" data-start="test">
+        <span class="emoji">🎖️</span>
+        <span><strong>Seepferdchen der Walkunde</strong><span class="sub" id="testSub">Test: Namen selbst eintippen</span></span>
+      </button>
+      <button class="menu-btn" data-start="lexikon">
+        <span class="emoji">📖</span>
+        <span><strong>Wal-Lexikon</strong><span class="sub">Alle Arten zum Nachschlagen</span></span>
+      </button>
+    </div>
+    <div class="badge-box" id="badgeBox"></div>
+  </section>
+
+  <!-- Quiz (Üben und Test) -->
+  <section class="screen" id="screen-quiz">
+    <div class="progress"><span id="qCounter"></span><span id="qScore"></span></div>
+    <div class="bar"><div id="qBar"></div></div>
+    <div class="photo">
+      <div class="spinner" id="spinner"></div>
+      <img id="qImg" alt="Foto eines Wals">
+      <div class="err" id="imgErr">Das Foto konnte nicht geladen werden. Bist du online?</div>
+    </div>
+    <div class="credit" id="qCredit"></div>
+    <div class="question">Welcher Wal ist das?</div>
+
+    <div class="choices" id="choices"></div>
+
+    <form class="answer-form" id="answerForm" autocomplete="off">
+      <input id="answerInput" type="text" placeholder="Name der Walart" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done">
+      <button class="btn" type="submit">OK</button>
+    </form>
+
+    <div class="feedback" id="feedback"><div class="title" id="fbTitle"></div><div class="fact" id="fbFact"></div></div>
+    <div class="next-row" id="nextRow"><button class="btn" id="nextBtn">Weiter</button></div>
+  </section>
+
+  <!-- Ergebnis -->
+  <section class="screen" id="screen-result">
+    <div class="result">
+      <div id="resultHead"></div>
+      <div class="big" id="resultScore"></div>
+      <div id="resultCert"></div>
+      <ul class="review" id="review"></ul>
+      <div class="result-actions">
+        <button class="btn" id="againBtn">Nochmal versuchen</button>
+        <button class="btn secondary" data-start="practice">Erst noch üben</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lexikon -->
+  <section class="screen" id="screen-lexikon">
+    <ul class="lex" id="lexList"></ul>
+  </section>
+</div>
+
+<script>
+// Fotos: Wikimedia Commons. "file" ist der Dateiname auf Commons (für Quellenangabe und Ersatz-URL).
+const WALE = [
+  { id: 'blauwal', name: 'Blauwal', latin: 'Balaenoptera musculus',
+    alt: ['blue whale'],
+    file: 'Blue_Whale_001_body_bw.jpg',
+    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Blue_Whale_001_body_bw.jpg/960px-Blue_Whale_001_body_bw.jpg',
+    fakt: 'Das größte Tier, das je gelebt hat: bis zu 30 m lang und über 150 Tonnen schwer.' },
+  { id: 'buckelwal', name: 'Buckelwal', latin: 'Megaptera novaeangliae',
+    alt: ['humpback', 'humpback whale'],
+    file: 'Humpback_whale_(Megaptera_novaeangliae)_with_calf_Moorea_2.jpg',
+    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/87/Humpback_whale_%28Megaptera_novaeangliae%29_with_calf_Moorea_2.jpg/960px-Humpback_whale_%28Megaptera_novaeangliae%29_with_calf_Moorea_2.jpg',
+    fakt: 'Erkennbar an den extrem langen Brustflossen (bis 5 m). Die Männchen singen lange, komplexe Lieder.' },
+  { id: 'finnwal', name: 'Finnwal', latin: 'Balaenoptera physalus',
+    alt: ['fin whale'],
+    file: 'Finhval_(1).jpg',
+    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ce/Finhval_%281%29.jpg/960px-Finhval_%281%29.jpg',
+    fakt: 'Das zweitgrößte Tier der Erde. Sein Unterkiefer ist rechts weiß und links dunkel.' },
+  { id: 'zwergwal', name: 'Zwergwal', auch: 'Minkwal', latin: 'Balaenoptera acutorostrata',
+    alt: ['minkwal', 'minkewal', 'minke', 'minke whale'],
+    file: 'SBNMS_-_Minke_Whale_-_Breach_(28670557361)_(cropped).jpg',
+    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/SBNMS_-_Minke_Whale_-_Breach_%2828670557361%29_%28cropped%29.jpg/960px-SBNMS_-_Minke_Whale_-_Breach_%2828670557361%29_%28cropped%29.jpg',
+    fakt: 'Der kleinste Furchenwal (bis ca. 10 m), oft mit einem weißen Band auf den Brustflossen.' },
+  { id: 'grauwal', name: 'Grauwal', latin: 'Eschrichtius robustus',
+    alt: ['gray whale', 'grey whale'],
+    file: 'Ballena_gris_adulta_con_su_ballenato.jpg',
+    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Ballena_gris_adulta_con_su_ballenato.jpg/960px-Ballena_gris_adulta_con_su_ballenato.jpg',
+    fakt: 'Grau gesprenkelt mit Seepocken. Statt einer Rückenflosse hat er einen Höcker mit einer „Knöchelreihe“.' },
+  { id: 'groenlandwal', name: 'Grönlandwal', auch: 'Polarwal', latin: 'Balaena mysticetus',
+    alt: ['polarwal', 'bowhead', 'bowhead whale'],
+    file: 'Bowhead_Whale_NOAA.jpg',
+    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/Bowhead_Whale_NOAA.jpg/960px-Bowhead_Whale_NOAA.jpg',
+    fakt: 'Lebt im Eismeer, hat einen riesigen gebogenen Kopf und kann über 200 Jahre alt werden.' },
+  { id: 'pottwal', name: 'Pottwal', auch: 'Cachalot', latin: 'Physeter macrocephalus',
+    alt: ['cachalot', 'sperm whale'],
+    file: 'Mother_and_baby_sperm_whale.jpg',
+    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Mother_and_baby_sperm_whale.jpg/960px-Mother_and_baby_sperm_whale.jpg',
+    fakt: 'Der größte Zahnwal mit kastenförmigem Kopf. Er taucht über 2000 m tief, um Tintenfische zu jagen.' },
+  { id: 'schwertwal', name: 'Schwertwal', auch: 'Orca, Killerwal', latin: 'Orcinus orca',
+    alt: ['orca', 'killerwal', 'mörderwal', 'killer whale'],
+    file: 'Killerwhales_jumping.jpg',
+    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Killerwhales_jumping.jpg/960px-Killerwhales_jumping.jpg',
+    fakt: 'Auch Orca genannt. Schwarz-weiß gezeichnet und eigentlich der größte Delfin der Welt.' },
+  { id: 'weisswal', name: 'Weißwal', auch: 'Beluga', latin: 'Delphinapterus leucas',
+    alt: ['beluga', 'belugawal', 'weißer wal'],
+    file: 'Baluga_Whales.jpg',
+    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Baluga_Whales.jpg/960px-Baluga_Whales.jpg',
+    fakt: 'Auch Beluga genannt. Ganz weiß, ohne Rückenflosse, und wegen seiner vielen Laute „Kanarienvogel der Meere“.' },
+  { id: 'narwal', name: 'Narwal', latin: 'Monodon monoceros',
+    alt: ['narwhal'],
+    file: 'Pod_Monodon_monoceros.jpg',
+    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4e/Pod_Monodon_monoceros.jpg/960px-Pod_Monodon_monoceros.jpg',
+    fakt: 'Die Männchen tragen einen bis zu 3 m langen Stoßzahn – ein spiralig gedrehter Zahn.' },
+];
+
+const TEST_PASS = 8;          // so viele Richtige braucht man für das Seepferdchen
+const PRACTICE_CHOICES = 6;
+const STORAGE_KEY = 'walquiz.v1';
+
+const $ = (id) => document.getElementById(id);
+const shuffle = (arr) => {
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+};
+const fallbackUrl = (w) => 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(w.file) + '?width=960';
+const commonsPage = (w) => 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(w.file);
+
+function loadStore() {
+  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+}
+function saveStore(data) {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+}
+
+// ---------- Antwortprüfung für den Test ----------
+function normalize(s) {
+  return s.toLowerCase().trim()
+    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .replace(/[^a-z]/g, '');
+}
+function levenshtein(a, b) {
+  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
+  for (let i = 1; i <= a.length; i++)
+    for (let j = 1; j <= b.length; j++)
+      dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
+  return dp[a.length][b.length];
+}
+// Ergebnis: 'exact' | 'typo' | 'wrong'
+function checkAnswer(input, wal) {
+  const given = normalize(input);
+  if (!given) return 'wrong';
+  const names = [wal.name, ...wal.alt].map(normalize);
+  if (names.includes(given)) return 'exact';
+  // Ein kleiner Tippfehler ist erlaubt, solange die Eingabe nicht genauso gut zu einer anderen Art passt.
+  const close = names.some((n) => n.length >= 5 && levenshtein(given, n) <= 1);
+  if (!close) return 'wrong';
+  const other = WALE.some((w) => w !== wal && [w.name, ...w.alt].map(normalize).some((n) => levenshtein(given, n) <= 1));
+  return other ? 'wrong' : 'typo';
+}
+
+// ---------- Navigation ----------
+const screens = ['start', 'quiz', 'result', 'lexikon'];
+function show(name, title) {
+  screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
+  $('homeBtn').hidden = name === 'start';
+  $('headerTitle').textContent = title || 'Wal-Quiz';
+  window.scrollTo(0, 0);
+}
+$('homeBtn').addEventListener('click', () => { renderStart(); show('start'); });
+document.querySelectorAll('[data-start]').forEach((b) => b.addEventListener('click', () => {
+  const mode = b.dataset.start;
+  if (mode === 'lexikon') { renderLexikon(); show('lexikon', 'Wal-Lexikon'); }
+  else startQuiz(mode);
+}));
+
+function renderStart() {
+  const store = loadStore();
+  const box = $('badgeBox');
+  if (store.seepferdchen) {
+    box.className = 'badge-box earned';
+    box.textContent = '🏅 Du hast das Seepferdchen der Walkunde! Bestes Ergebnis: ' + store.best + '/' + WALE.length;
+  } else {
+    box.className = 'badge-box';
+    box.textContent = 'Seepferdchen: ' + TEST_PASS + ' von ' + WALE.length + ' Walen im Test richtig benennen.'
+      + (store.best != null ? ' Dein Bestes bisher: ' + store.best + '/' + WALE.length : '');
+  }
+}
+
+// ---------- Quiz ----------
+let state = null;
+
+function startQuiz(mode) {
+  state = {
+    mode,
+    deck: shuffle(WALE),
+    index: 0,
+    correct: 0,
+    answered: 0,
+    log: [],
+    locked: false,
+  };
+  $('choices').hidden = mode !== 'practice';
+  $('answerForm').hidden = mode !== 'test';
+  show('quiz', mode === 'test' ? 'Seepferdchen-Test' : 'Üben');
+  nextQuestion();
+}
+
+function setImage(imgEl, wal, onDone) {
+  imgEl.classList.remove('loaded');
+  imgEl.dataset.fallback = '';
+  imgEl.onload = () => { imgEl.classList.add('loaded'); onDone && onDone(true); };
+  imgEl.onerror = () => {
+    if (!imgEl.dataset.fallback) { imgEl.dataset.fallback = '1'; imgEl.src = fallbackUrl(wal); }
+    else onDone && onDone(false);
+  };
+  imgEl.src = wal.img;
+}
+
+function preload(wal) {
+  if (!wal) return;
+  const i = new Image();
+  i.onerror = () => { i.onerror = null; i.src = fallbackUrl(wal); };
+  i.src = wal.img;
+}
+
+function currentWal() { return state.deck[state.index]; }
+
+function nextQuestion() {
+  // Im Übungsmodus endlos: nach einem Durchgang neu mischen (ohne dieselbe Art zweimal hintereinander).
+  if (state.index >= state.deck.length) {
+    if (state.mode === 'test') return showResult();
+    const last = state.deck[state.deck.length - 1];
+    let d;
+    do { d = shuffle(WALE); } while (d[0] === last);
+    state.deck = d;
+    state.index = 0;
+  }
+  const wal = currentWal();
+  state.locked = false;
+
+  if (state.mode === 'test') {
+    $('qCounter').textContent = 'Frage ' + (state.index + 1) + ' von ' + state.deck.length;
+    $('qBar').style.width = (state.index / state.deck.length * 100) + '%';
+  } else {
+    $('qCounter').textContent = 'Übungsrunde';
+    $('qBar').style.width = ((state.index) / state.deck.length * 100) + '%';
+  }
+  $('qScore').textContent = state.answered ? state.correct + ' / ' + state.answered + ' richtig' : '';
+
+  $('spinner').style.display = 'block';
+  $('imgErr').style.display = 'none';
+  setImage($('qImg'), wal, (ok) => {
+    $('spinner').style.display = 'none';
+    if (!ok) $('imgErr').style.display = 'flex';
+  });
+  preload(state.deck[state.index + 1]);
+  // Quellenangabe erst nach der Antwort zeigen – der Dateiname verrät sonst die Art.
+  $('qCredit').textContent = '';
+
+  $('feedback').className = 'feedback';
+  $('nextRow').className = 'next-row';
+
+  if (state.mode === 'practice') renderChoices(wal);
+  else {
+    const input = $('answerInput');
+    input.value = '';
+    input.disabled = false;
+    $('answerForm').querySelector('button').disabled = false;
+    input.focus({ preventScroll: true });
+  }
+}
+
+function renderChoices(wal) {
+  const others = shuffle(WALE.filter((w) => w !== wal)).slice(0, PRACTICE_CHOICES - 1);
+  const options = shuffle([wal, ...others]);
+  const box = $('choices');
+  box.innerHTML = '';
+  options.forEach((opt) => {
+    const b = document.createElement('button');
+    b.className = 'choice';
+    b.type = 'button';
+    b.textContent = opt.name;
+    b.addEventListener('click', () => answerPractice(opt, b));
+    box.appendChild(b);
+  });
+}
+
+function answerPractice(opt, btn) {
+  if (state.locked) return;
+  state.locked = true;
+  const wal = currentWal();
+  const ok = opt === wal;
+  [...$('choices').children].forEach((b) => {
+    b.disabled = true;
+    if (b.textContent === wal.name) b.classList.add('correct');
+  });
+  if (!ok) { btn.classList.add('wrong'); btn.classList.add('shake'); }
+  finishQuestion(ok, ok ? 'Richtig! Das ist ein ' + wal.name + '.' : 'Leider nicht. Das ist ein ' + wal.name + '.');
+}
+
+$('answerForm').addEventListener('submit', (e) => {
+  e.preventDefault();
+  if (state.locked) return;
+  const input = $('answerInput');
+  if (!input.value.trim()) { input.classList.remove('shake'); void input.offsetWidth; input.classList.add('shake'); return; }
+  state.locked = true;
+  const wal = currentWal();
+  const res = checkAnswer(input.value, wal);
+  input.disabled = true;
+  $('answerForm').querySelector('button').disabled = true;
+  input.blur();
+  let msg;
+  if (res === 'exact') msg = 'Richtig! Das ist ein ' + wal.name + '.';
+  else if (res === 'typo') msg = 'Richtig (kleiner Tippfehler) – man schreibt „' + wal.name + '“.';
+  else msg = 'Leider falsch. Das ist ein ' + wal.name + '.';
+  state.log.push({ wal, given: input.value.trim(), ok: res !== 'wrong' });
+  finishQuestion(res !== 'wrong', msg);
+});
+
+function finishQuestion(ok, msg) {
+  const wal = currentWal();
+  state.answered++;
+  if (ok) state.correct++;
+  $('qScore').textContent = state.correct + ' / ' + state.answered + ' richtig';
+  $('fbTitle').textContent = (ok ? '✅ ' : '❌ ') + msg;
+  $('fbFact').textContent = wal.fakt;
+  $('feedback').className = 'feedback show ' + (ok ? 'ok' : 'bad');
+  $('qCredit').innerHTML = 'Foto: <a href="' + commonsPage(wal) + '" target="_blank" rel="noopener">Wikimedia Commons</a>';
+  const last = state.mode === 'test' && state.index === state.deck.length - 1;
+  $('nextBtn').textContent = last ? 'Zum Ergebnis' : 'Weiter';
+  $('nextRow').className = 'next-row show';
+  $('nextBtn').focus({ preventScroll: true });
+  $('nextRow').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+}
+
+$('nextBtn').addEventListener('click', () => { state.index++; nextQuestion(); });
+
+// ---------- Ergebnis ----------
+function showResult() {
+  const total = state.deck.length;
+  const passed = state.correct >= TEST_PASS;
+  const store = loadStore();
+  store.best = Math.max(store.best || 0, state.correct);
+  if (passed) store.seepferdchen = store.seepferdchen || new Date().toISOString().slice(0, 10);
+  saveStore(store);
+
+  $('resultHead').textContent = passed ? 'Bestanden! 🎉' : 'Noch nicht ganz …';
+  $('resultScore').textContent = state.correct + ' / ' + total;
+  $('resultCert').innerHTML = passed
+    ? '<div class="certificate"><div class="seahorse">🌊🐴</div><h3>Seepferdchen der Walkunde</h3>'
+      + '<div>Du kennst die wichtigsten Walarten!</div></div>'
+    : '<p style="color:var(--muted)">Für das Seepferdchen brauchst du mindestens ' + TEST_PASS + ' richtige Antworten. Übe noch ein bisschen!</p>';
+
+  const ul = $('review');
+  ul.innerHTML = '';
+  state.log.forEach((e) => {
+    const li = document.createElement('li');
+    const img = document.createElement('img');
+    img.alt = '';
+    img.onerror = () => { img.onerror = null; img.src = fallbackUrl(e.wal); };
+    img.src = e.wal.img;
+    const t = document.createElement('div');
+    t.className = 'r-text';
+    t.textContent = e.wal.name;
+    if (!e.ok) {
+      const s = document.createElement('small');
+      s.textContent = 'Deine Antwort: ' + (e.given || '–');
+      t.appendChild(s);
+    }
+    const m = document.createElement('span');
+    m.className = 'mark';
+    m.textContent = e.ok ? '✅' : '❌';
+    li.append(img, t, m);
+    ul.appendChild(li);
+  });
+  $('againBtn').onclick = () => startQuiz('test');
+  show('result', 'Ergebnis');
+}
+
+// ---------- Lexikon ----------
+function renderLexikon() {
+  const ul = $('lexList');
+  if (ul.children.length) return;
+  WALE.slice().sort((a, b) => a.name.localeCompare(b.name, 'de')).forEach((w) => {
+    const li = document.createElement('li');
+    li.innerHTML = '<img loading="lazy" alt=""><div class="body"><h3></h3><div class="latin"></div><p></p></div>'
+      + '<div class="credit">Foto: <a target="_blank" rel="noopener">Wikimedia Commons</a></div>';
+    const img = li.querySelector('img');
+    img.onerror = () => { img.onerror = null; img.src = fallbackUrl(w); };
+    img.src = w.img;
+    li.querySelector('h3').textContent = w.name;
+    li.querySelector('.latin').textContent = w.latin + (w.auch ? ' · auch: ' + w.auch : '');
+    li.querySelector('p').textContent = w.fakt;
+    li.querySelector('a').href = commonsPage(w);
+    ul.appendChild(li);
+  });
+}
+
+renderStart();
+
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+}
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <defs>
+    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1d5f99"/>
+      <stop offset="1" stop-color="#0b2a4a"/>
+    </linearGradient>
+    <clipPath id="r"><rect width="512" height="512" rx="112"/></clipPath>
+  </defs>
+  <g clip-path="url(#r)">
+  <rect width="512" height="512" rx="112" fill="url(#sea)"/>
+  <!-- Walflosse -->
+  <path d="M256 330 C 250 270, 240 230, 200 190 C 160 150, 110 150, 80 160 C 120 175, 170 205, 205 250 C 225 278, 238 305, 244 340 Z" fill="#eaf4ff"/>
+  <path d="M256 330 C 262 270, 272 230, 312 190 C 352 150, 402 150, 432 160 C 392 175, 342 205, 307 250 C 287 278, 274 305, 268 340 Z" fill="#eaf4ff"/>
+  <rect x="240" y="320" width="32" height="70" rx="10" fill="#eaf4ff"/>
+  <!-- Wellen -->
+  <path d="M0 390 q 36 -26 72 0 t 72 0 t 72 0 t 72 0 t 72 0 t 72 0 t 72 0 V512 H0 Z" fill="#4fc3f7"/>
+  <path d="M0 430 q 36 -22 72 0 t 72 0 t 72 0 t 72 0 t 72 0 t 72 0 t 72 0 V512 H0 Z" fill="#2b9fd6"/>
+  </g>
+</svg>
