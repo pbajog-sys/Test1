@@ -4,14 +4,22 @@ Eine Web-App (PWA) zum Lernen von Walarten. Sie läuft auf iPhone und Android im
 und lässt sich wie eine App auf den Home-Bildschirm legen.
 
 ## Modi
-- **Üben:** Ein Walfoto wird gezeigt, du wählst aus 6 Arten. Nach jeder Antwort gibt es einen kurzen Steckbrief.
-- **Seepferdchen der Walkunde (Test):** 10 Fotos, den Namen selbst eintippen. Ab 8 richtigen Antworten
-  gibt es das Seepferdchen. Kleine Tippfehler (ein Buchstabe) und gängige Zweitnamen (Orca, Beluga, Minkwal …) zählen als richtig.
-- **Wal-Lexikon:** Alle Arten mit Foto und Steckbrief.
+- **Üben:** Pro Wal 3 Fotos zum Durchwischen, du wählst aus 6 Arten. Der Tipp-Knopf verrät nacheinander
+  Gruppe, Größe/Gewicht, Verbreitung und ein Merkmal. Nach jeder Antwort gibt es den ganzen Steckbrief.
+- **Abzeichen-Test:** 10 Wale, den Namen selbst eintippen. Ab 8 Punkten gibt es das Abzeichen der Stufe
+  (Seepferdchen, Bronze, Silber, Gold). Mit Tipp gibt es nur einen halben Punkt. Kleine Tippfehler,
+  Zweitnamen (Orca, Beluga, Minkwal …), der wissenschaftliche und der englische Name zählen als richtig.
+- **Wal-Lexikon:** Alle Arten mit Foto und Steckbrief, mit Suche und Filter nach Gruppe.
 
-## Arten (10)
-Blauwal, Buckelwal, Finnwal, Zwergwal, Grauwal, Grönlandwal, Pottwal, Schwertwal, Weißwal, Narwal.
-Neue Arten kommen in das Array `WALE` in `index.html`.
+## Arten
+Alle 92 heute lebenden Walarten inklusive Delfine und Schweinswale, in `wale.js`.
+Stufen: Seepferdchen 15 Arten, Bronze 35, Silber 76, Gold 92.
+
+## Fotos
+Die App sucht die Fotos auf dem Gerät über die Wikipedia-Schnittstelle: das Hauptbild des
+englischen Wikipedia-Artikels plus weitere Fotos aus dem Artikel (Karten, Skelette, Zeichnungen usw.
+werden herausgefiltert). Die Treffer werden im Gerät gespeichert. Arten ohne brauchbares Foto werden
+im Quiz übersprungen.
 
 ## Auf dem Handy nutzen
 Die Dateien müssen über HTTPS ausgeliefert werden, z. B. mit GitHub Pages
@@ -24,6 +32,6 @@ Fotos, die einmal angezeigt wurden, sind danach auch offline verfügbar.
 Lokal testen: `python3 -m http.server` im Ordner starten und `http://localhost:8000` öffnen.
 
 ## Bildquellen
-Die Fotos werden direkt von Wikimedia Commons geladen; jede Quelle ist in der App verlinkt.
+Alle Fotos stammen von Wikimedia Commons; jede Quelle ist in der App verlinkt.
 Vor einer öffentlichen Veröffentlichung sollten Urheber und Lizenz je Bild ergänzt werden
 (stehen auf der jeweiligen Commons-Seite).

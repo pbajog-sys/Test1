@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Wal-Quiz</title>
-<meta name="description" content="Lerne die Walarten kennen und mach das Seepferdchen der Walkunde.">
+<meta name="description" content="Lerne alle Walarten kennen und mach das Seepferdchen der Walkunde.">
 <meta name="theme-color" content="#0b2a4a">
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
@@ -48,53 +48,83 @@
   }
   .screen { display: none; flex: 1; flex-direction: column; }
   .screen.active { display: flex; }
+  .muted { color: var(--muted); }
 
   /* Start */
-  .hero { text-align: center; padding: 24px 8px 8px; }
-  .hero .logo { width: 96px; height: 96px; }
-  .hero h2 { font-size: 1.8rem; margin: 12px 0 6px; }
+  .hero { text-align: center; padding: 16px 8px 8px; }
+  .hero .logo { width: 88px; height: 88px; }
+  .hero h2 { font-size: 1.8rem; margin: 10px 0 6px; }
   .hero p { color: var(--muted); margin: 0 auto; max-width: 34ch; line-height: 1.45; }
-  .menu { display: grid; gap: 12px; margin-top: 28px; }
+  .menu { display: grid; gap: 12px; margin-top: 24px; }
   .menu-btn {
-    display: flex; align-items: center; gap: 14px; text-align: left;
-    border: 0; border-radius: var(--radius); padding: 18px; cursor: pointer;
+    display: flex; align-items: center; gap: 14px; text-align: left; width: 100%;
+    border: 0; border-radius: var(--radius); padding: 16px; cursor: pointer;
     background: var(--card); color: var(--text); font: inherit;
   }
-  .menu-btn .emoji { font-size: 2rem; }
+  .menu-btn .emoji { font-size: 2rem; width: 2.4rem; text-align: center; flex: none; }
+  .menu-btn .txt { flex: 1; }
   .menu-btn strong { display: block; font-size: 1.1rem; }
   .menu-btn span.sub { color: var(--muted); font-size: 0.9rem; }
   .menu-btn.primary { background: var(--accent); color: var(--accent-ink); }
   .menu-btn.primary span.sub { color: #0b3a5c; }
-  .badge-box {
-    margin-top: 20px; padding: 14px; border-radius: var(--radius);
-    background: var(--card); text-align: center; color: var(--muted); font-size: 0.95rem;
-  }
-  .badge-box.earned { background: rgba(255,209,102,0.15); color: var(--gold); }
+  .menu-btn .right { color: var(--muted); font-size: 0.85rem; text-align: right; flex: none; }
+  .menu-btn.earned { box-shadow: inset 0 0 0 2px var(--gold); }
+  .badges { display: flex; justify-content: center; gap: 14px; margin-top: 22px; }
+  .badge { text-align: center; font-size: 0.75rem; color: var(--muted); width: 72px; }
+  .badge .b-icon { font-size: 2rem; display: block; filter: grayscale(1) opacity(0.35); }
+  .badge.earned { color: var(--gold); }
+  .badge.earned .b-icon { filter: none; }
+  .pick-title { font-size: 1.05rem; margin: 4px 0 12px; color: var(--muted); }
 
   /* Quiz */
   .progress { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.95rem; margin-bottom: 8px; }
   .bar { height: 6px; background: var(--card); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
   .bar > div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
-  .photo {
-    position: relative; width: 100%; aspect-ratio: 4 / 3; border-radius: var(--radius);
-    overflow: hidden; background: var(--card);
+  .gallery-wrap { position: relative; }
+  .gallery {
+    display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    border-radius: var(--radius); background: var(--card); aspect-ratio: 4 / 3;
   }
-  .photo img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .25s; }
-  .photo img.loaded { opacity: 1; }
-  .photo .spinner {
-    position: absolute; inset: 0; margin: auto; width: 40px; height: 40px; border-radius: 50%;
+  .gallery::-webkit-scrollbar { display: none; }
+  .gallery .slide { flex: 0 0 100%; scroll-snap-align: center; position: relative; }
+  .gallery img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .25s; }
+  .gallery img.loaded { opacity: 1; }
+  .gallery .slide::before {
+    content: ""; position: absolute; inset: 0; margin: auto; width: 36px; height: 36px; border-radius: 50%;
     border: 4px solid var(--card-strong); border-top-color: var(--accent); animation: spin 1s linear infinite;
   }
-  .photo .err { position: absolute; inset: 0; display: none; align-items: center; justify-content: center; text-align: center; padding: 16px; color: var(--muted); }
+  .gallery .slide.done::before { display: none; }
+  .gal-msg {
+    position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px;
+    align-items: center; justify-content: center; text-align: center; padding: 16px; color: var(--muted);
+  }
+  .gal-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%;
+    border: 0; background: rgba(0,0,0,0.45); color: #fff; font-size: 1.1rem; cursor: pointer;
+  }
+  .gal-arrow.prev { left: 8px; } .gal-arrow.next { right: 8px; }
+  .dots { display: flex; justify-content: center; gap: 8px; margin-top: 8px; min-height: 10px; }
+  .dots button { width: 10px; height: 10px; border-radius: 50%; border: 0; padding: 0; background: var(--card-strong); cursor: pointer; }
+  .dots button.on { background: var(--accent); }
   @keyframes spin { to { transform: rotate(360deg); } }
-  .credit { font-size: 0.75rem; color: var(--muted); margin-top: 6px; min-height: 1.2em; }
+  .credit { font-size: 0.75rem; color: var(--muted); margin-top: 4px; min-height: 1.2em; text-align: center; }
   .credit a { color: var(--muted); }
-  .question { font-size: 1.15rem; font-weight: 600; margin: 14px 0 10px; }
+  .q-row { display: flex; align-items: center; gap: 10px; margin: 12px 0 10px; }
+  .question { font-size: 1.15rem; font-weight: 600; flex: 1; }
+  .tip-btn {
+    border: 0; border-radius: 12px; padding: 10px 14px; font: inherit; font-size: 0.95rem;
+    background: rgba(255,209,102,0.15); color: var(--gold); cursor: pointer;
+  }
+  .tip-btn:disabled { opacity: .45; cursor: default; }
+  .tips { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
+  .tips li { background: rgba(255,209,102,0.1); border-radius: 10px; padding: 8px 12px; font-size: 0.95rem; line-height: 1.35; }
+  .tips li b { color: var(--gold); font-weight: 600; }
 
   .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
   .choice {
-    border: 2px solid transparent; border-radius: 14px; padding: 14px 10px; min-height: 56px;
-    background: var(--card); color: var(--text); font: inherit; font-size: 1rem; cursor: pointer;
+    border: 2px solid transparent; border-radius: 14px; padding: 12px 8px; min-height: 56px;
+    background: var(--card); color: var(--text); font: inherit; font-size: 0.98rem; cursor: pointer;
+    overflow-wrap: anywhere; hyphens: auto;
   }
   .choice:disabled { cursor: default; }
   .choice.correct { background: rgba(61,220,151,0.22); border-color: var(--ok); }
@@ -117,8 +147,11 @@
   .feedback.show { display: block; }
   .feedback.ok { background: rgba(61,220,151,0.15); }
   .feedback.bad { background: rgba(255,107,107,0.15); }
-  .feedback .title { font-weight: 700; margin-bottom: 4px; }
-  .feedback .fact { color: var(--text); opacity: .9; font-size: 0.95rem; }
+  .feedback .title { font-weight: 700; margin-bottom: 2px; }
+  .feedback .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 8px; }
+  .facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 0.93rem; margin: 0; }
+  .facts dt { color: var(--muted); }
+  .facts dd { margin: 0; }
   .next-row { margin-top: 14px; display: none; }
   .next-row.show { display: block; }
   .next-row .btn { width: 100%; }
@@ -130,7 +163,7 @@
     margin: 16px 0; padding: 20px; border-radius: var(--radius);
     border: 2px dashed var(--gold); background: rgba(255,209,102,0.1); color: var(--gold);
   }
-  .certificate .seahorse { font-size: 3rem; }
+  .certificate .seal { font-size: 3rem; }
   .certificate h3 { margin: 6px 0; font-size: 1.3rem; }
   .review { list-style: none; padding: 0; margin: 16px 0; text-align: left; display: grid; gap: 8px; }
   .review li { display: flex; gap: 10px; align-items: center; background: var(--card); border-radius: 12px; padding: 8px; }
@@ -141,14 +174,21 @@
   .result-actions { display: grid; gap: 10px; margin-top: 8px; }
 
   /* Lexikon */
+  .lex-tools { display: grid; gap: 8px; margin-bottom: 12px; }
+  .lex-tools input, .lex-tools select {
+    font: inherit; font-size: 1rem; padding: 12px; border-radius: 12px; width: 100%;
+    border: 2px solid var(--card-strong); background: var(--card); color: var(--text);
+  }
+  .lex-tools select option { color: #000; }
   .lex { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
   .lex li { background: var(--card); border-radius: var(--radius); overflow: hidden; }
-  .lex img { width: 100%; aspect-ratio: 16 / 9; object-fit: cover; display: block; background: var(--card-strong); }
-  .lex .body { padding: 12px 14px; }
-  .lex h3 { margin: 0 0 4px; }
-  .lex .latin { color: var(--muted); font-style: italic; font-size: 0.9rem; }
-  .lex p { margin: 6px 0 0; line-height: 1.4; }
-  .lex .credit { padding: 0 14px 10px; margin: 0; }
+  .lex .pic { width: 100%; aspect-ratio: 16 / 9; background: var(--card-strong); display: block; object-fit: cover; }
+  .lex .body { padding: 12px 14px 14px; }
+  .lex h3 { margin: 0 0 2px; display: flex; justify-content: space-between; gap: 8px; }
+  .lex .latin { color: var(--muted); font-style: italic; font-size: 0.9rem; margin-bottom: 8px; }
+  .lex .merkmal { margin: 8px 0 0; line-height: 1.4; }
+  .lex .credit { text-align: left; }
+  .count { color: var(--muted); font-size: 0.9rem; }
 
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
@@ -166,36 +206,49 @@
     <div class="hero">
       <img class="logo" src="icons/icon.svg" alt="">
       <h2>Wal-Quiz</h2>
-      <p>Erkennst du die Wale an ihrem Foto? Übe in Ruhe und hol dir dann das Seepferdchen der Walkunde.</p>
+      <p id="heroText">Erkennst du die Wale an ihren Fotos? Übe in Ruhe und mach dann deine Abzeichen – vom Seepferdchen bis Gold.</p>
     </div>
     <div class="menu">
-      <button class="menu-btn" data-start="practice">
+      <button class="menu-btn" data-go="pick-practice">
         <span class="emoji">🐋</span>
-        <span><strong>Üben</strong><span class="sub">Foto ansehen, aus 6 Arten wählen</span></span>
+        <span class="txt"><strong>Üben</strong><span class="sub">3 Fotos ansehen, aus 6 Arten wählen, Tipps nutzen</span></span>
       </button>
-      <button class="menu-btn primary" data-start="test">
+      <button class="menu-btn primary" data-go="pick-test">
         <span class="emoji">🎖️</span>
-        <span><strong>Seepferdchen der Walkunde</strong><span class="sub" id="testSub">Test: Namen selbst eintippen</span></span>
+        <span class="txt"><strong>Abzeichen-Test</strong><span class="sub">10 Wale, Namen selbst eintippen</span></span>
       </button>
-      <button class="menu-btn" data-start="lexikon">
+      <button class="menu-btn" data-go="lexikon">
         <span class="emoji">📖</span>
-        <span><strong>Wal-Lexikon</strong><span class="sub">Alle Arten zum Nachschlagen</span></span>
+        <span class="txt"><strong>Wal-Lexikon</strong><span class="sub" id="lexSub"></span></span>
       </button>
     </div>
-    <div class="badge-box" id="badgeBox"></div>
+    <div class="badges" id="badges"></div>
+  </section>
+
+  <!-- Stufe wählen -->
+  <section class="screen" id="screen-pick">
+    <div class="pick-title" id="pickTitle"></div>
+    <div class="menu" id="pickList" style="margin-top:0"></div>
   </section>
 
   <!-- Quiz (Üben und Test) -->
   <section class="screen" id="screen-quiz">
     <div class="progress"><span id="qCounter"></span><span id="qScore"></span></div>
     <div class="bar"><div id="qBar"></div></div>
-    <div class="photo">
-      <div class="spinner" id="spinner"></div>
-      <img id="qImg" alt="Foto eines Wals">
-      <div class="err" id="imgErr">Das Foto konnte nicht geladen werden. Bist du online?</div>
+    <div class="gallery-wrap">
+      <div class="gallery" id="gallery"></div>
+      <button class="gal-arrow prev" id="galPrev" aria-label="Vorheriges Foto">‹</button>
+      <button class="gal-arrow next" id="galNext" aria-label="Nächstes Foto">›</button>
+      <div class="gal-msg" id="galMsg" hidden></div>
     </div>
+    <div class="dots" id="dots"></div>
     <div class="credit" id="qCredit"></div>
-    <div class="question">Welcher Wal ist das?</div>
+
+    <div class="q-row">
+      <div class="question">Welcher Wal ist das?</div>
+      <button class="tip-btn" id="tipBtn" type="button">💡 Tipp</button>
+    </div>
+    <ul class="tips" id="tips"></ul>
 
     <div class="choices" id="choices"></div>
 
@@ -204,7 +257,11 @@
       <button class="btn" type="submit">OK</button>
     </form>
 
-    <div class="feedback" id="feedback"><div class="title" id="fbTitle"></div><div class="fact" id="fbFact"></div></div>
+    <div class="feedback" id="feedback">
+      <div class="title" id="fbTitle"></div>
+      <div class="sub" id="fbSub"></div>
+      <dl class="facts" id="fbFacts"></dl>
+    </div>
     <div class="next-row" id="nextRow"><button class="btn" id="nextBtn">Weiter</button></div>
   </section>
 
@@ -217,75 +274,30 @@
       <ul class="review" id="review"></ul>
       <div class="result-actions">
         <button class="btn" id="againBtn">Nochmal versuchen</button>
-        <button class="btn secondary" data-start="practice">Erst noch üben</button>
+        <button class="btn secondary" id="practiceBtn">Diese Stufe üben</button>
       </div>
     </div>
   </section>
 
   <!-- Lexikon -->
   <section class="screen" id="screen-lexikon">
+    <div class="lex-tools">
+      <input id="lexSearch" type="search" placeholder="Suchen …" autocomplete="off">
+      <select id="lexGroup"></select>
+    </div>
+    <div class="count" id="lexCount"></div>
     <ul class="lex" id="lexList"></ul>
   </section>
 </div>
 
+<script src="wale.js"></script>
 <script>
-// Fotos: Wikimedia Commons. "file" ist der Dateiname auf Commons (für Quellenangabe und Ersatz-URL).
-const WALE = [
-  { id: 'blauwal', name: 'Blauwal', latin: 'Balaenoptera musculus',
-    alt: ['blue whale'],
-    file: 'Blue_Whale_001_body_bw.jpg',
-    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/06/Blue_Whale_001_body_bw.jpg/960px-Blue_Whale_001_body_bw.jpg',
-    fakt: 'Das größte Tier, das je gelebt hat: bis zu 30 m lang und über 150 Tonnen schwer.' },
-  { id: 'buckelwal', name: 'Buckelwal', latin: 'Megaptera novaeangliae',
-    alt: ['humpback', 'humpback whale'],
-    file: 'Humpback_whale_(Megaptera_novaeangliae)_with_calf_Moorea_2.jpg',
-    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/8/87/Humpback_whale_%28Megaptera_novaeangliae%29_with_calf_Moorea_2.jpg/960px-Humpback_whale_%28Megaptera_novaeangliae%29_with_calf_Moorea_2.jpg',
-    fakt: 'Erkennbar an den extrem langen Brustflossen (bis 5 m). Die Männchen singen lange, komplexe Lieder.' },
-  { id: 'finnwal', name: 'Finnwal', latin: 'Balaenoptera physalus',
-    alt: ['fin whale'],
-    file: 'Finhval_(1).jpg',
-    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/c/ce/Finhval_%281%29.jpg/960px-Finhval_%281%29.jpg',
-    fakt: 'Das zweitgrößte Tier der Erde. Sein Unterkiefer ist rechts weiß und links dunkel.' },
-  { id: 'zwergwal', name: 'Zwergwal', auch: 'Minkwal', latin: 'Balaenoptera acutorostrata',
-    alt: ['minkwal', 'minkewal', 'minke', 'minke whale'],
-    file: 'SBNMS_-_Minke_Whale_-_Breach_(28670557361)_(cropped).jpg',
-    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/9/9a/SBNMS_-_Minke_Whale_-_Breach_%2828670557361%29_%28cropped%29.jpg/960px-SBNMS_-_Minke_Whale_-_Breach_%2828670557361%29_%28cropped%29.jpg',
-    fakt: 'Der kleinste Furchenwal (bis ca. 10 m), oft mit einem weißen Band auf den Brustflossen.' },
-  { id: 'grauwal', name: 'Grauwal', latin: 'Eschrichtius robustus',
-    alt: ['gray whale', 'grey whale'],
-    file: 'Ballena_gris_adulta_con_su_ballenato.jpg',
-    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/0/00/Ballena_gris_adulta_con_su_ballenato.jpg/960px-Ballena_gris_adulta_con_su_ballenato.jpg',
-    fakt: 'Grau gesprenkelt mit Seepocken. Statt einer Rückenflosse hat er einen Höcker mit einer „Knöchelreihe“.' },
-  { id: 'groenlandwal', name: 'Grönlandwal', auch: 'Polarwal', latin: 'Balaena mysticetus',
-    alt: ['polarwal', 'bowhead', 'bowhead whale'],
-    file: 'Bowhead_Whale_NOAA.jpg',
-    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/d/d3/Bowhead_Whale_NOAA.jpg/960px-Bowhead_Whale_NOAA.jpg',
-    fakt: 'Lebt im Eismeer, hat einen riesigen gebogenen Kopf und kann über 200 Jahre alt werden.' },
-  { id: 'pottwal', name: 'Pottwal', auch: 'Cachalot', latin: 'Physeter macrocephalus',
-    alt: ['cachalot', 'sperm whale'],
-    file: 'Mother_and_baby_sperm_whale.jpg',
-    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/b/b1/Mother_and_baby_sperm_whale.jpg/960px-Mother_and_baby_sperm_whale.jpg',
-    fakt: 'Der größte Zahnwal mit kastenförmigem Kopf. Er taucht über 2000 m tief, um Tintenfische zu jagen.' },
-  { id: 'schwertwal', name: 'Schwertwal', auch: 'Orca, Killerwal', latin: 'Orcinus orca',
-    alt: ['orca', 'killerwal', 'mörderwal', 'killer whale'],
-    file: 'Killerwhales_jumping.jpg',
-    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/3/37/Killerwhales_jumping.jpg/960px-Killerwhales_jumping.jpg',
-    fakt: 'Auch Orca genannt. Schwarz-weiß gezeichnet und eigentlich der größte Delfin der Welt.' },
-  { id: 'weisswal', name: 'Weißwal', auch: 'Beluga', latin: 'Delphinapterus leucas',
-    alt: ['beluga', 'belugawal', 'weißer wal'],
-    file: 'Baluga_Whales.jpg',
-    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/6/6f/Baluga_Whales.jpg/960px-Baluga_Whales.jpg',
-    fakt: 'Auch Beluga genannt. Ganz weiß, ohne Rückenflosse, und wegen seiner vielen Laute „Kanarienvogel der Meere“.' },
-  { id: 'narwal', name: 'Narwal', latin: 'Monodon monoceros',
-    alt: ['narwhal'],
-    file: 'Pod_Monodon_monoceros.jpg',
-    img: 'https://thumb.wikimedia.org/wikipedia/commons/thumb/4/4e/Pod_Monodon_monoceros.jpg/960px-Pod_Monodon_monoceros.jpg',
-    fakt: 'Die Männchen tragen einen bis zu 3 m langen Stoßzahn – ein spiralig gedrehter Zahn.' },
-];
-
-const TEST_PASS = 8;          // so viele Richtige braucht man für das Seepferdchen
+const TEST_LEN = 10;
+const TEST_PASS = 8;           // Punkte für ein Abzeichen (mit Tipp gibt es einen halben Punkt)
 const PRACTICE_CHOICES = 6;
-const STORAGE_KEY = 'walquiz.v1';
+const PHOTOS_PER_WAL = 3;
+const STORE_KEY = 'walquiz.v2';
+const PHOTO_KEY = 'walquiz.photos.v2';
 
 const $ = (id) => document.getElementById(id);
 const shuffle = (arr) => {
@@ -296,20 +308,78 @@ const shuffle = (arr) => {
   }
   return a;
 };
-const fallbackUrl = (w) => 'https://commons.wikimedia.org/wiki/Special:FilePath/' + encodeURIComponent(w.file) + '?width=960';
-const commonsPage = (w) => 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(w.file);
+const fmt = (n) => String(n).replace('.', ',');
+const poolFor = (lvl) => WALE.filter((w) => w.lvl <= lvl);
 
-function loadStore() {
-  try { return JSON.parse(localStorage.getItem(STORAGE_KEY)) || {}; } catch { return {}; }
+function loadJson(key) { try { return JSON.parse(localStorage.getItem(key)) || {}; } catch { return {}; } }
+function saveJson(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch {} }
+
+// ---------- Fotos ----------
+// Die Fotos werden direkt auf dem Gerät über die Wikipedia-Schnittstelle gesucht (Bilder aus dem
+// Artikel der Art auf Wikimedia Commons) und danach im Gerät gemerkt.
+const photoCache = loadJson(PHOTO_KEY);
+const inflight = {};
+const BAD_FILE = /skelet|skull|schädel|cranium|crania|\bmap|range|distribution|verbreitung|size|scale|comparison|vergleich|stamp|briefmarke|museum|model|drawing|zeichnung|illustrat|plate|painting|engrav|lithograph|whaling|harpoon|carcass|bone|jaw|teeth|baleen|fetus|foetus|embryo|logo|flag|coin|sculpt|statue|diagram|chart|book|specimen|preserved|replica|dissect|meat|fleisch|market|fossil|vertebra|anatomy|sound|spectrogram/i;
+const MEH_FILE = /dead|stranded|strandung|beached|necropsy|corpse/i;
+
+function wikiApi(host, params) {
+  const q = new URLSearchParams({ action: 'query', format: 'json', formatversion: '2', origin: '*', redirects: '1', ...params });
+  return fetch('https://' + host + '/w/api.php?' + q).then((r) => {
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  });
 }
-function saveStore(data) {
-  try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch {}
+
+async function articlePhotos(host, title) {
+  const [lead, list] = await Promise.all([
+    wikiApi(host, { titles: title, prop: 'pageimages', piprop: 'thumbnail|name', pithumbsize: '960' }).catch(() => null),
+    wikiApi(host, { titles: title, generator: 'images', gimlimit: '50', prop: 'imageinfo', iiprop: 'url|mime|size', iiurlwidth: '960' }),
+  ]);
+  const out = [];
+  const page = lead && lead.query && lead.query.pages && lead.query.pages[0];
+  const leadName = page && page.pageimage;
+  if (page && page.thumbnail && /\.jpe?g$/i.test(leadName || '') && !BAD_FILE.test(leadName)) {
+    out.push({ src: page.thumbnail.source, page: 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(leadName), name: leadName, prio: 0 });
+  }
+  const files = (list && list.query && list.query.pages) || [];
+  shuffle(files).forEach((f) => {
+    const ii = f.imageinfo && f.imageinfo[0];
+    const name = f.title.replace(/^[^:]+:/, '').replace(/ /g, '_');
+    if (!ii || ii.mime !== 'image/jpeg' || ii.width < 500 || ii.height < 300) return;
+    if (BAD_FILE.test(name) || name === leadName) return;
+    out.push({ src: ii.thumburl || ii.url, page: ii.descriptionurl, name, prio: MEH_FILE.test(name) ? 2 : 1 });
+  });
+  return out;
+}
+
+function loadPhotos(wal) {
+  if (photoCache[wal.id]) return Promise.resolve(photoCache[wal.id]);
+  if (inflight[wal.id]) return inflight[wal.id];
+  inflight[wal.id] = (async () => {
+    let found = await articlePhotos('en.wikipedia.org', wal.wiki);
+    if (found.length < PHOTOS_PER_WAL) {
+      const de = await articlePhotos('de.wikipedia.org', wal.latin).catch(() => []);
+      de.forEach((p) => { if (!found.some((f) => f.name === p.name)) found.push(p); });
+    }
+    found.sort((a, b) => a.prio - b.prio);
+    const photos = found.slice(0, PHOTOS_PER_WAL).map(({ src, page }) => ({ src, page }));
+    photoCache[wal.id] = photos;
+    saveJson(PHOTO_KEY, photoCache);
+    return photos;
+  })().finally(() => { delete inflight[wal.id]; });
+  return inflight[wal.id];
+}
+
+function preloadWal(wal) {
+  if (!wal) return;
+  loadPhotos(wal).then((p) => p.forEach((ph) => { const i = new Image(); i.src = ph.src; })).catch(() => {});
 }
 
 // ---------- Antwortprüfung für den Test ----------
 function normalize(s) {
   return s.toLowerCase().trim()
     .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
+    .replace(/ph/g, 'f')
     .replace(/[^a-z]/g, '');
 }
 function levenshtein(a, b) {
@@ -320,21 +390,23 @@ function levenshtein(a, b) {
       dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
   return dp[a.length][b.length];
 }
+const answerNames = (w) => [w.name, ...w.auch, w.latin, w.wiki].map(normalize);
+const tolerance = (n) => (n.length >= 10 ? 2 : n.length >= 5 ? 1 : 0);
 // Ergebnis: 'exact' | 'typo' | 'wrong'
 function checkAnswer(input, wal) {
   const given = normalize(input);
   if (!given) return 'wrong';
-  const names = [wal.name, ...wal.alt].map(normalize);
+  const names = answerNames(wal);
   if (names.includes(given)) return 'exact';
-  // Ein kleiner Tippfehler ist erlaubt, solange die Eingabe nicht genauso gut zu einer anderen Art passt.
-  const close = names.some((n) => n.length >= 5 && levenshtein(given, n) <= 1);
-  if (!close) return 'wrong';
-  const other = WALE.some((w) => w !== wal && [w.name, ...w.alt].map(normalize).some((n) => levenshtein(given, n) <= 1));
+  const best = Math.min(...names.map((n) => (levenshtein(given, n) <= tolerance(n) ? levenshtein(given, n) : Infinity)));
+  if (best === Infinity) return 'wrong';
+  // Kleine Tippfehler sind erlaubt – aber nicht, wenn die Eingabe genauso gut zu einer anderen Art passt.
+  const other = WALE.some((w) => w !== wal && answerNames(w).some((n) => levenshtein(given, n) <= best));
   return other ? 'wrong' : 'typo';
 }
 
 // ---------- Navigation ----------
-const screens = ['start', 'quiz', 'result', 'lexikon'];
+const screens = ['start', 'pick', 'quiz', 'result', 'lexikon'];
 function show(name, title) {
   screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
   $('homeBtn').hidden = name === 'start';
@@ -342,119 +414,231 @@ function show(name, title) {
   window.scrollTo(0, 0);
 }
 $('homeBtn').addEventListener('click', () => { renderStart(); show('start'); });
-document.querySelectorAll('[data-start]').forEach((b) => b.addEventListener('click', () => {
-  const mode = b.dataset.start;
-  if (mode === 'lexikon') { renderLexikon(); show('lexikon', 'Wal-Lexikon'); }
-  else startQuiz(mode);
+document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => {
+  const go = b.dataset.go;
+  if (go === 'lexikon') { renderLexikon(); show('lexikon', 'Wal-Lexikon'); }
+  else renderPick(go === 'pick-test' ? 'test' : 'practice');
 }));
 
 function renderStart() {
-  const store = loadStore();
-  const box = $('badgeBox');
-  if (store.seepferdchen) {
-    box.className = 'badge-box earned';
-    box.textContent = '🏅 Du hast das Seepferdchen der Walkunde! Bestes Ergebnis: ' + store.best + '/' + WALE.length;
-  } else {
-    box.className = 'badge-box';
-    box.textContent = 'Seepferdchen: ' + TEST_PASS + ' von ' + WALE.length + ' Walen im Test richtig benennen.'
-      + (store.best != null ? ' Dein Bestes bisher: ' + store.best + '/' + WALE.length : '');
-  }
+  const store = loadJson(STORE_KEY);
+  const badges = store.badges || {};
+  $('lexSub').textContent = 'Alle ' + WALE.length + ' Arten mit Steckbrief';
+  $('badges').innerHTML = '';
+  STUFEN.forEach((s) => {
+    const d = document.createElement('div');
+    d.className = 'badge' + (badges[s.lvl] ? ' earned' : '');
+    d.innerHTML = '<span class="b-icon"></span><span></span>';
+    d.firstChild.textContent = s.emoji;
+    d.lastChild.textContent = s.name;
+    $('badges').appendChild(d);
+  });
 }
+
+function renderPick(mode) {
+  const store = loadJson(STORE_KEY);
+  const badges = store.badges || {};
+  $('pickTitle').textContent = mode === 'test'
+    ? 'Welches Abzeichen willst du machen? Du brauchst ' + TEST_PASS + ' von ' + TEST_LEN + ' Punkten.'
+    : 'Welche Wale willst du üben?';
+  const list = $('pickList');
+  list.innerHTML = '';
+  STUFEN.forEach((s) => {
+    const b = document.createElement('button');
+    b.className = 'menu-btn' + (badges[s.lvl] ? ' earned' : '');
+    const best = store.best && store.best[s.lvl];
+    b.innerHTML = '<span class="emoji"></span><span class="txt"><strong></strong><span class="sub"></span></span><span class="right"></span>';
+    b.querySelector('.emoji').textContent = s.emoji;
+    b.querySelector('strong').textContent = s.name;
+    b.querySelector('.sub').textContent = s.text + ' · ' + poolFor(s.lvl).length + ' Arten';
+    b.querySelector('.right').textContent = badges[s.lvl] ? '✅ geschafft' : (mode === 'test' && best != null ? 'Bestes: ' + fmt(best) : '');
+    b.addEventListener('click', () => startQuiz(mode, s.lvl));
+    list.appendChild(b);
+  });
+  show('pick', mode === 'test' ? 'Abzeichen-Test' : 'Üben');
+}
+
+// ---------- Galerie ----------
+let galToken = 0;
+function renderGallery(wal, onReady) {
+  const token = ++galToken;
+  const gal = $('gallery');
+  gal.innerHTML = '';
+  gal.scrollLeft = 0;
+  $('dots').innerHTML = '';
+  $('galMsg').hidden = true;
+  $('galPrev').hidden = $('galNext').hidden = true;
+  const slide = document.createElement('div');
+  slide.className = 'slide';
+  gal.appendChild(slide);
+
+  loadPhotos(wal).then((photos) => {
+    if (token !== galToken) return;
+    gal.innerHTML = '';
+    if (!photos.length) { onReady(photos); return; }
+    photos.forEach((p, i) => {
+      const s = document.createElement('div');
+      s.className = 'slide';
+      const img = document.createElement('img');
+      img.alt = 'Foto ' + (i + 1) + ' von ' + photos.length;
+      img.onload = () => { img.classList.add('loaded'); s.classList.add('done'); };
+      img.onerror = () => { s.classList.add('done'); };
+      img.src = p.src;
+      s.appendChild(img);
+      gal.appendChild(s);
+      const dot = document.createElement('button');
+      dot.setAttribute('aria-label', 'Foto ' + (i + 1));
+      dot.addEventListener('click', () => gal.scrollTo({ left: i * gal.clientWidth, behavior: 'smooth' }));
+      $('dots').appendChild(dot);
+    });
+    updateDots();
+    onReady(photos);
+  }).catch(() => {
+    if (token !== galToken) return;
+    gal.innerHTML = '';
+    const msg = $('galMsg');
+    msg.innerHTML = '<div>Die Fotos konnten nicht geladen werden. Bist du online?</div><button class="btn secondary" type="button">Nochmal versuchen</button>';
+    msg.querySelector('button').addEventListener('click', () => renderGallery(wal, onReady));
+    msg.hidden = false;
+  });
+}
+function galIndex() { const g = $('gallery'); return g.clientWidth ? Math.round(g.scrollLeft / g.clientWidth) : 0; }
+function updateDots() {
+  const n = $('gallery').children.length;
+  const i = galIndex();
+  [...$('dots').children].forEach((d, k) => d.classList.toggle('on', k === i));
+  $('galPrev').hidden = n < 2 || i === 0;
+  $('galNext').hidden = n < 2 || i >= n - 1;
+}
+$('gallery').addEventListener('scroll', () => requestAnimationFrame(updateDots), { passive: true });
+$('galPrev').addEventListener('click', () => { const g = $('gallery'); g.scrollTo({ left: (galIndex() - 1) * g.clientWidth, behavior: 'smooth' }); });
+$('galNext').addEventListener('click', () => { const g = $('gallery'); g.scrollTo({ left: (galIndex() + 1) * g.clientWidth, behavior: 'smooth' }); });
+
+// ---------- Tipps ----------
+function tipsFor(wal) {
+  return [
+    ['Gruppe', GRUPPEN[wal.gruppe]],
+    ['Größe', 'bis ' + wal.laenge + (wal.gewicht !== '?' ? ', bis ' + wal.gewicht : '')],
+    ['Wo er lebt', wal.gebiet],
+    ['Merkmal', wal.merkmal],
+  ];
+}
+function updateTipBtn() {
+  const used = state.tips, max = tipsFor(currentWal()).length;
+  const btn = $('tipBtn');
+  btn.disabled = state.locked || used >= max;
+  btn.textContent = '💡 Tipp ' + (used ? used + '/' + max : '') + (state.mode === 'test' && !used ? ' (−½ Punkt)' : '');
+}
+$('tipBtn').addEventListener('click', () => {
+  if (state.locked) return;
+  const tips = tipsFor(currentWal());
+  if (state.tips >= tips.length) return;
+  const [label, text] = tips[state.tips++];
+  const li = document.createElement('li');
+  li.innerHTML = '<b></b> ';
+  li.firstChild.textContent = label + ':';
+  li.appendChild(document.createTextNode(text));
+  $('tips').appendChild(li);
+  updateTipBtn();
+});
 
 // ---------- Quiz ----------
 let state = null;
 
-function startQuiz(mode) {
+function startQuiz(mode, lvl) {
+  const pool = poolFor(lvl);
+  const deck = shuffle(pool);
   state = {
-    mode,
-    deck: shuffle(WALE),
-    index: 0,
-    correct: 0,
-    answered: 0,
-    log: [],
-    locked: false,
+    mode, lvl, pool,
+    deck: mode === 'test' ? deck.slice(0, TEST_LEN) : deck,
+    spare: mode === 'test' ? deck.slice(TEST_LEN) : [],
+    index: 0, points: 0, answered: 0, log: [], locked: false, tips: 0,
   };
   $('choices').hidden = mode !== 'practice';
   $('answerForm').hidden = mode !== 'test';
-  show('quiz', mode === 'test' ? 'Seepferdchen-Test' : 'Üben');
+  const stufe = STUFEN.find((s) => s.lvl === lvl);
+  show('quiz', (mode === 'test' ? 'Test: ' : 'Üben: ') + stufe.name);
   nextQuestion();
-}
-
-function setImage(imgEl, wal, onDone) {
-  imgEl.classList.remove('loaded');
-  imgEl.dataset.fallback = '';
-  imgEl.onload = () => { imgEl.classList.add('loaded'); onDone && onDone(true); };
-  imgEl.onerror = () => {
-    if (!imgEl.dataset.fallback) { imgEl.dataset.fallback = '1'; imgEl.src = fallbackUrl(wal); }
-    else onDone && onDone(false);
-  };
-  imgEl.src = wal.img;
-}
-
-function preload(wal) {
-  if (!wal) return;
-  const i = new Image();
-  i.onerror = () => { i.onerror = null; i.src = fallbackUrl(wal); };
-  i.src = wal.img;
 }
 
 function currentWal() { return state.deck[state.index]; }
 
 function nextQuestion() {
-  // Im Übungsmodus endlos: nach einem Durchgang neu mischen (ohne dieselbe Art zweimal hintereinander).
   if (state.index >= state.deck.length) {
     if (state.mode === 'test') return showResult();
+    // Üben läuft endlos: neu mischen, ohne dieselbe Art zweimal hintereinander.
     const last = state.deck[state.deck.length - 1];
     let d;
-    do { d = shuffle(WALE); } while (d[0] === last);
+    do { d = shuffle(state.pool); } while (d.length > 1 && d[0] === last);
     state.deck = d;
     state.index = 0;
   }
   const wal = currentWal();
-  state.locked = false;
+  state.locked = true;   // erst freigeben, wenn die Fotos da sind
+  state.tips = 0;
 
   if (state.mode === 'test') {
     $('qCounter').textContent = 'Frage ' + (state.index + 1) + ' von ' + state.deck.length;
     $('qBar').style.width = (state.index / state.deck.length * 100) + '%';
   } else {
     $('qCounter').textContent = 'Übungsrunde';
-    $('qBar').style.width = ((state.index) / state.deck.length * 100) + '%';
+    $('qBar').style.width = (state.index / state.deck.length * 100) + '%';
   }
-  $('qScore').textContent = state.answered ? state.correct + ' / ' + state.answered + ' richtig' : '';
-
-  $('spinner').style.display = 'block';
-  $('imgErr').style.display = 'none';
-  setImage($('qImg'), wal, (ok) => {
-    $('spinner').style.display = 'none';
-    if (!ok) $('imgErr').style.display = 'flex';
-  });
-  preload(state.deck[state.index + 1]);
-  // Quellenangabe erst nach der Antwort zeigen – der Dateiname verrät sonst die Art.
-  $('qCredit').textContent = '';
-
+  $('qScore').textContent = state.answered ? fmt(state.points) + ' / ' + state.answered + ' Punkte' : '';
+  $('qCredit').textContent = '';   // Quelle erst nach der Antwort – der Dateiname verrät sonst die Art
+  $('tips').innerHTML = '';
   $('feedback').className = 'feedback';
   $('nextRow').className = 'next-row';
+  $('choices').innerHTML = '';
+  $('answerInput').value = '';
+  updateTipBtn();
 
-  if (state.mode === 'practice') renderChoices(wal);
-  else {
-    const input = $('answerInput');
-    input.value = '';
-    input.disabled = false;
-    $('answerForm').querySelector('button').disabled = false;
-    input.focus({ preventScroll: true });
+  renderGallery(wal, (photos) => {
+    if (!photos.length) return skipWal();
+    state.skips = 0;
+    state.locked = false;
+    updateTipBtn();
+    if (state.mode === 'practice') renderChoices(wal);
+    else {
+      $('answerInput').disabled = false;
+      $('answerForm').querySelector('button').disabled = false;
+      $('answerInput').focus({ preventScroll: true });
+    }
+  });
+  preloadWal(state.deck[state.index + 1]);
+}
+
+// Für diese Art gibt es keine brauchbaren Fotos: im Test durch eine andere ersetzen, beim Üben überspringen.
+function skipWal() {
+  state.skips = (state.skips || 0) + 1;
+  if (state.skips > state.pool.length) {
+    $('galMsg').innerHTML = '<div>Es konnten keine Fotos gefunden werden.</div>';
+    $('galMsg').hidden = false;
+    return;
   }
+  if (state.mode === 'test' && state.spare.length) state.deck[state.index] = state.spare.shift();
+  else if (state.mode === 'test') state.deck.splice(state.index, 1);
+  else state.index++;
+  nextQuestion();
 }
 
 function renderChoices(wal) {
-  const others = shuffle(WALE.filter((w) => w !== wal)).slice(0, PRACTICE_CHOICES - 1);
-  const options = shuffle([wal, ...others]);
+  // Ablenker bevorzugt aus derselben Gruppe – das macht das Üben lehrreicher.
+  const others = state.pool.filter((w) => w !== wal);
+  const same = shuffle(others.filter((w) => w.gruppe === wal.gruppe)).slice(0, 3);
+  const rest = shuffle(others.filter((w) => !same.includes(w)));
+  let picks = same.concat(rest).slice(0, PRACTICE_CHOICES - 1);
+  if (picks.length < PRACTICE_CHOICES - 1) {
+    picks = picks.concat(shuffle(WALE.filter((w) => w !== wal && !picks.includes(w))).slice(0, PRACTICE_CHOICES - 1 - picks.length));
+  }
   const box = $('choices');
   box.innerHTML = '';
-  options.forEach((opt) => {
+  shuffle([wal, ...picks]).forEach((opt) => {
     const b = document.createElement('button');
     b.className = 'choice';
     b.type = 'button';
     b.textContent = opt.name;
+    b.dataset.id = opt.id;
     b.addEventListener('click', () => answerPractice(opt, b));
     box.appendChild(b);
   });
@@ -467,10 +651,10 @@ function answerPractice(opt, btn) {
   const ok = opt === wal;
   [...$('choices').children].forEach((b) => {
     b.disabled = true;
-    if (b.textContent === wal.name) b.classList.add('correct');
+    if (b.dataset.id === wal.id) b.classList.add('correct');
   });
-  if (!ok) { btn.classList.add('wrong'); btn.classList.add('shake'); }
-  finishQuestion(ok, ok ? 'Richtig! Das ist ein ' + wal.name + '.' : 'Leider nicht. Das ist ein ' + wal.name + '.');
+  if (!ok) btn.classList.add('wrong', 'shake');
+  finishQuestion(ok ? 1 : 0, ok ? 'Richtig! Das ist ein ' + wal.name + '.' : 'Leider nicht. Das ist ein ' + wal.name + '.');
 }
 
 $('answerForm').addEventListener('submit', (e) => {
@@ -484,23 +668,35 @@ $('answerForm').addEventListener('submit', (e) => {
   input.disabled = true;
   $('answerForm').querySelector('button').disabled = true;
   input.blur();
+  const pts = res === 'wrong' ? 0 : (state.tips ? 0.5 : 1);
   let msg;
   if (res === 'exact') msg = 'Richtig! Das ist ein ' + wal.name + '.';
   else if (res === 'typo') msg = 'Richtig (kleiner Tippfehler) – man schreibt „' + wal.name + '“.';
   else msg = 'Leider falsch. Das ist ein ' + wal.name + '.';
-  state.log.push({ wal, given: input.value.trim(), ok: res !== 'wrong' });
-  finishQuestion(res !== 'wrong', msg);
+  if (pts === 0.5) msg += ' Mit Tipp: ½ Punkt.';
+  state.log.push({ wal, given: input.value.trim(), pts });
+  finishQuestion(pts, msg);
 });
 
-function finishQuestion(ok, msg) {
+function finishQuestion(pts, msg) {
   const wal = currentWal();
   state.answered++;
-  if (ok) state.correct++;
-  $('qScore').textContent = state.correct + ' / ' + state.answered + ' richtig';
-  $('fbTitle').textContent = (ok ? '✅ ' : '❌ ') + msg;
-  $('fbFact').textContent = wal.fakt;
-  $('feedback').className = 'feedback show ' + (ok ? 'ok' : 'bad');
-  $('qCredit').innerHTML = 'Foto: <a href="' + commonsPage(wal) + '" target="_blank" rel="noopener">Wikimedia Commons</a>';
+  state.points += pts;
+  updateTipBtn();
+  $('qScore').textContent = fmt(state.points) + ' / ' + state.answered + ' Punkte';
+  $('fbTitle').textContent = (pts ? '✅ ' : '❌ ') + msg;
+  $('fbSub').textContent = wal.latin + (wal.auch.length ? ' · auch: ' + wal.auch.join(', ') : '');
+  const dl = $('fbFacts');
+  dl.innerHTML = '';
+  tipsFor(wal).forEach(([k, v]) => {
+    const dt = document.createElement('dt'); dt.textContent = k;
+    const dd = document.createElement('dd'); dd.textContent = v;
+    dl.append(dt, dd);
+  });
+  $('feedback').className = 'feedback show ' + (pts ? 'ok' : 'bad');
+  const photos = photoCache[wal.id] || [];
+  $('qCredit').innerHTML = 'Fotos: ' + photos.map((p, i) => '<a target="_blank" rel="noopener">' + (i + 1) + '</a>').join(' · ') + ' (Wikimedia Commons)';
+  [...$('qCredit').querySelectorAll('a')].forEach((a, i) => { a.href = photos[i].page; });
   const last = state.mode === 'test' && state.index === state.deck.length - 1;
   $('nextBtn').textContent = last ? 'Zum Ergebnis' : 'Weiter';
   $('nextRow').className = 'next-row show';
@@ -513,18 +709,27 @@ $('nextBtn').addEventListener('click', () => { state.index++; nextQuestion(); })
 // ---------- Ergebnis ----------
 function showResult() {
   const total = state.deck.length;
-  const passed = state.correct >= TEST_PASS;
-  const store = loadStore();
-  store.best = Math.max(store.best || 0, state.correct);
-  if (passed) store.seepferdchen = store.seepferdchen || new Date().toISOString().slice(0, 10);
-  saveStore(store);
+  const passed = state.points >= TEST_PASS;
+  const stufe = STUFEN.find((s) => s.lvl === state.lvl);
+  const store = loadJson(STORE_KEY);
+  store.best = store.best || {};
+  store.badges = store.badges || {};
+  store.best[state.lvl] = Math.max(store.best[state.lvl] || 0, state.points);
+  if (passed && !store.badges[state.lvl]) store.badges[state.lvl] = new Date().toISOString().slice(0, 10);
+  saveJson(STORE_KEY, store);
 
   $('resultHead').textContent = passed ? 'Bestanden! 🎉' : 'Noch nicht ganz …';
-  $('resultScore').textContent = state.correct + ' / ' + total;
-  $('resultCert').innerHTML = passed
-    ? '<div class="certificate"><div class="seahorse">🌊🐴</div><h3>Seepferdchen der Walkunde</h3>'
-      + '<div>Du kennst die wichtigsten Walarten!</div></div>'
-    : '<p style="color:var(--muted)">Für das Seepferdchen brauchst du mindestens ' + TEST_PASS + ' richtige Antworten. Übe noch ein bisschen!</p>';
+  $('resultScore').textContent = fmt(state.points) + ' / ' + total;
+  const cert = $('resultCert');
+  if (passed) {
+    cert.innerHTML = '<div class="certificate"><div class="seal"></div><h3></h3><div></div></div>';
+    cert.querySelector('.seal').textContent = stufe.emoji;
+    cert.querySelector('h3').textContent = stufe.name + ' der Walkunde';
+    cert.querySelector('h3 + div').textContent = 'Du kennst die Wale der Stufe „' + stufe.name + '“!';
+  } else {
+    cert.innerHTML = '<p class="muted"></p>';
+    cert.firstChild.textContent = 'Für das Abzeichen „' + stufe.name + '“ brauchst du mindestens ' + TEST_PASS + ' Punkte. Übe noch ein bisschen!';
+  }
 
   const ul = $('review');
   ul.innerHTML = '';
@@ -532,44 +737,103 @@ function showResult() {
     const li = document.createElement('li');
     const img = document.createElement('img');
     img.alt = '';
-    img.onerror = () => { img.onerror = null; img.src = fallbackUrl(e.wal); };
-    img.src = e.wal.img;
+    const ph = photoCache[e.wal.id];
+    if (ph && ph[0]) img.src = ph[0].src;
     const t = document.createElement('div');
     t.className = 'r-text';
     t.textContent = e.wal.name;
-    if (!e.ok) {
+    if (e.pts < 1) {
       const s = document.createElement('small');
-      s.textContent = 'Deine Antwort: ' + (e.given || '–');
+      s.textContent = e.pts ? 'mit Tipp' : 'Deine Antwort: ' + (e.given || '–');
       t.appendChild(s);
     }
     const m = document.createElement('span');
     m.className = 'mark';
-    m.textContent = e.ok ? '✅' : '❌';
+    m.textContent = e.pts === 1 ? '✅' : e.pts ? '🟡' : '❌';
     li.append(img, t, m);
     ul.appendChild(li);
   });
-  $('againBtn').onclick = () => startQuiz('test');
+  const lvl = state.lvl;
+  $('againBtn').onclick = () => startQuiz('test', lvl);
+  $('practiceBtn').onclick = () => startQuiz('practice', lvl);
   show('result', 'Ergebnis');
 }
 
 // ---------- Lexikon ----------
-function renderLexikon() {
-  const ul = $('lexList');
-  if (ul.children.length) return;
-  WALE.slice().sort((a, b) => a.name.localeCompare(b.name, 'de')).forEach((w) => {
-    const li = document.createElement('li');
-    li.innerHTML = '<img loading="lazy" alt=""><div class="body"><h3></h3><div class="latin"></div><p></p></div>'
-      + '<div class="credit">Foto: <a target="_blank" rel="noopener">Wikimedia Commons</a></div>';
-    const img = li.querySelector('img');
-    img.onerror = () => { img.onerror = null; img.src = fallbackUrl(w); };
-    img.src = w.img;
-    li.querySelector('h3').textContent = w.name;
-    li.querySelector('.latin').textContent = w.latin + (w.auch ? ' · auch: ' + w.auch : '');
-    li.querySelector('p').textContent = w.fakt;
-    li.querySelector('a').href = commonsPage(w);
-    ul.appendChild(li);
+let lexBuilt = false;
+const lexObserver = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
+  entries.forEach((en) => {
+    if (!en.isIntersecting) return;
+    lexObserver.unobserve(en.target);
+    fillLexPhoto(en.target);
   });
+}, { rootMargin: '300px' }) : null;
+
+function fillLexPhoto(li) {
+  const wal = WALE.find((w) => w.id === li.dataset.id);
+  loadPhotos(wal).then((photos) => {
+    const img = li.querySelector('.pic');
+    const credit = li.querySelector('.credit');
+    if (!photos.length) { img.replaceWith(Object.assign(document.createElement('div'), { className: 'pic' })); credit.textContent = 'Kein Foto gefunden'; return; }
+    img.src = photos[0].src;
+    credit.innerHTML = 'Foto: <a target="_blank" rel="noopener">Wikimedia Commons</a>';
+    credit.querySelector('a').href = photos[0].page;
+  }).catch(() => {});
 }
+
+function renderLexikon() {
+  if (!lexBuilt) {
+    lexBuilt = true;
+    const sel = $('lexGroup');
+    sel.innerHTML = '<option value="">Alle Gruppen</option>';
+    Object.entries(GRUPPEN).forEach(([k, v]) => sel.add(new Option(v, k)));
+    const ul = $('lexList');
+    WALE.slice().sort((a, b) => a.name.localeCompare(b.name, 'de')).forEach((w) => {
+      const li = document.createElement('li');
+      li.dataset.id = w.id;
+      li.innerHTML = '<img class="pic" alt="" loading="lazy"><div class="body"><h3><span></span><span class="lvl"></span></h3>'
+        + '<div class="latin"></div><dl class="facts"></dl><p class="merkmal"></p><div class="credit"></div></div>';
+      li.querySelector('h3 span').textContent = w.name;
+      li.querySelector('.lvl').textContent = STUFEN.find((s) => s.lvl === w.lvl).emoji;
+      li.querySelector('.latin').textContent = w.latin + (w.auch.length ? ' · auch: ' + w.auch.join(', ') : '');
+      const dl = li.querySelector('.facts');
+      tipsFor(w).slice(0, 3).forEach(([k, v]) => {
+        const dt = document.createElement('dt'); dt.textContent = k;
+        const dd = document.createElement('dd'); dd.textContent = v;
+        dl.append(dt, dd);
+      });
+      li.querySelector('.merkmal').textContent = w.merkmal;
+      li.search = normalize(w.name + w.auch.join('') + w.latin);
+      ul.appendChild(li);
+      if (lexObserver) lexObserver.observe(li); else fillLexPhoto(li);
+    });
+    $('lexSearch').addEventListener('input', filterLexikon);
+    $('lexGroup').addEventListener('change', filterLexikon);
+  }
+  filterLexikon();
+}
+function filterLexikon() {
+  const q = normalize($('lexSearch').value);
+  const g = $('lexGroup').value;
+  let n = 0;
+  [...$('lexList').children].forEach((li) => {
+    const w = WALE.find((x) => x.id === li.dataset.id);
+    const vis = (!q || li.search.includes(q)) && (!g || w.gruppe === g);
+    li.hidden = !vis;
+    if (vis) n++;
+  });
+  $('lexCount').textContent = n + ' Arten';
+}
+
+// Seepferdchen aus der ersten Version übernehmen
+(() => {
+  const old = loadJson('walquiz.v1');
+  const store = loadJson(STORE_KEY);
+  if (old.seepferdchen && !(store.badges && store.badges[1])) {
+    store.badges = Object.assign({}, store.badges, { 1: old.seepferdchen });
+    saveJson(STORE_KEY, store);
+  }
+})();
 
 renderStart();
 
