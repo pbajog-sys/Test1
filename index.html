@@ -190,6 +190,42 @@
   .lex .credit { text-align: left; }
   .count { color: var(--muted); font-size: 0.9rem; }
 
+  .learn { margin-top: 20px; }
+  .learn .muted { font-size: 0.9rem; margin-bottom: 6px; text-align: center; }
+  .challenge {
+    margin-top: 16px; padding: 16px; border-radius: var(--radius);
+    background: rgba(255,209,102,0.12); border: 2px solid var(--gold);
+  }
+  .challenge p { margin: 0 0 12px; line-height: 1.4; }
+  .challenge .row { display: flex; gap: 10px; }
+  .challenge .row .btn { flex: 1; }
+  .sound-box { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 16px; border-radius: var(--radius); background: var(--card); }
+  .play {
+    width: 96px; height: 96px; border-radius: 50%; border: 0; font-size: 2.4rem; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink);
+  }
+  .play.playing { animation: pulse 1.2s ease-in-out infinite; }
+  .play.playing::after { content: ""; }
+  .play:disabled { opacity: .5; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 14px rgba(79,195,247,0.2); } }
+  .sound-btn {
+    border: 0; border-radius: 12px; padding: 10px 14px; font: inherit; font-size: 0.95rem; margin-top: 10px;
+    background: var(--card-strong); color: var(--text); cursor: pointer;
+  }
+  .sound-btn.playing { background: var(--accent); color: var(--accent-ink); }
+  .sound-btn:disabled { opacity: .6; cursor: default; }
+  .size-svg { display: block; width: 100%; height: auto; max-height: 160px; margin-top: 10px; font-family: inherit; }
+  .tips .size-svg { max-height: 110px; }
+  .vs { font-size: 1.1rem; font-weight: 600; margin: 4px 0 12px; }
+  .share { margin: 18px 0 8px; padding: 14px; border-radius: var(--radius); background: var(--card); text-align: left; }
+  .share label { display: block; color: var(--muted); font-size: 0.9rem; margin-bottom: 6px; }
+  .share .row { display: flex; gap: 10px; }
+  .share input {
+    flex: 1; min-width: 0; font: inherit; font-size: 1rem; padding: 12px; border-radius: 12px;
+    border: 2px solid var(--card-strong); background: var(--card); color: var(--text);
+  }
+  .share .msg { color: var(--muted); font-size: 0.85rem; margin-top: 8px; word-break: break-all; }
+
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
@@ -208,20 +244,29 @@
       <h2>Wal-Quiz</h2>
       <p id="heroText">Erkennst du die Wale an ihren Fotos? Übe in Ruhe und mach dann deine Abzeichen – vom Seepferdchen bis Gold.</p>
     </div>
+    <div class="challenge" id="challengeBox" hidden>
+      <p id="challengeText"></p>
+      <div class="row"><button class="btn" id="challengeGo">Annehmen 💪</button><button class="btn secondary" id="challengeNo">Später</button></div>
+    </div>
     <div class="menu">
       <button class="menu-btn" data-go="pick-practice">
         <span class="emoji">🐋</span>
-        <span class="txt"><strong>Üben</strong><span class="sub">3 Fotos ansehen, aus 6 Arten wählen, Tipps nutzen</span></span>
+        <span class="txt"><strong>Üben</strong><span class="sub">3 Fotos ansehen, aus 6 Arten wählen – was du falsch hast, kommt öfter</span></span>
       </button>
       <button class="menu-btn primary" data-go="pick-test">
         <span class="emoji">🎖️</span>
         <span class="txt"><strong>Abzeichen-Test</strong><span class="sub">10 Wale, Namen selbst eintippen</span></span>
+      </button>
+      <button class="menu-btn" data-go="sound">
+        <span class="emoji">🔊</span>
+        <span class="txt"><strong>Wer ruft da?</strong><span class="sub">Wale an ihren Rufen und Gesängen erkennen</span></span>
       </button>
       <button class="menu-btn" data-go="lexikon">
         <span class="emoji">📖</span>
         <span class="txt"><strong>Wal-Lexikon</strong><span class="sub" id="lexSub"></span></span>
       </button>
     </div>
+    <div class="learn"><div class="muted" id="learnText"></div><div class="bar"><div id="learnBar"></div></div></div>
     <div class="badges" id="badges"></div>
   </section>
 
@@ -235,6 +280,11 @@
   <section class="screen" id="screen-quiz">
     <div class="progress"><span id="qCounter"></span><span id="qScore"></span></div>
     <div class="bar"><div id="qBar"></div></div>
+    <div class="sound-box" id="soundBox" hidden>
+      <button class="play" id="playBtn" type="button" aria-label="Abspielen">▶</button>
+      <div class="muted" id="soundHint"></div>
+    </div>
+    <div id="galleryArea">
     <div class="gallery-wrap">
       <div class="gallery" id="gallery"></div>
       <button class="gal-arrow prev" id="galPrev" aria-label="Vorheriges Foto">‹</button>
@@ -242,10 +292,11 @@
       <div class="gal-msg" id="galMsg" hidden></div>
     </div>
     <div class="dots" id="dots"></div>
+    </div>
     <div class="credit" id="qCredit"></div>
 
     <div class="q-row">
-      <div class="question">Welcher Wal ist das?</div>
+      <div class="question" id="questionText">Welcher Wal ist das?</div>
       <button class="tip-btn" id="tipBtn" type="button">💡 Tipp</button>
     </div>
     <ul class="tips" id="tips"></ul>
@@ -261,6 +312,7 @@
       <div class="title" id="fbTitle"></div>
       <div class="sub" id="fbSub"></div>
       <dl class="facts" id="fbFacts"></dl>
+      <div id="fbExtra"></div>
     </div>
     <div class="next-row" id="nextRow"><button class="btn" id="nextBtn">Weiter</button></div>
   </section>
@@ -270,7 +322,16 @@
     <div class="result">
       <div id="resultHead"></div>
       <div class="big" id="resultScore"></div>
+      <div class="vs" id="resultVs" hidden></div>
       <div id="resultCert"></div>
+      <div class="share">
+        <label for="nameInput">Fordere Freunde mit denselben Walen heraus:</label>
+        <div class="row">
+          <input id="nameInput" type="text" placeholder="Dein Name" maxlength="30" autocomplete="nickname">
+          <button class="btn" id="shareBtn" type="button">📤 Teilen</button>
+        </div>
+        <div class="msg" id="shareMsg"></div>
+      </div>
       <ul class="review" id="review"></ul>
       <div class="result-actions">
         <button class="btn" id="againBtn">Nochmal versuchen</button>
@@ -291,555 +352,7 @@
 </div>
 
 <script src="wale.js"></script>
-<script>
-const TEST_LEN = 10;
-const TEST_PASS = 8;           // Punkte für ein Abzeichen (mit Tipp gibt es einen halben Punkt)
-const PRACTICE_CHOICES = 6;
-const PHOTOS_PER_WAL = 3;
-const STORE_KEY = 'walquiz.v2';
-const PHOTO_KEY = 'walquiz.photos.v2';
-
-const $ = (id) => document.getElementById(id);
-const shuffle = (arr) => {
-  const a = arr.slice();
-  for (let i = a.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [a[i], a[j]] = [a[j], a[i]];
-  }
-  return a;
-};
-const fmt = (n) => String(n).replace('.', ',');
-const poolFor = (lvl) => WALE.filter((w) => w.lvl <= lvl);
-
-function loadJson(key) { try { return JSON.parse(localStorage.getItem(key)) || {}; } catch { return {}; } }
-function saveJson(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch {} }
-
-// ---------- Fotos ----------
-// Die Fotos werden direkt auf dem Gerät über die Wikipedia-Schnittstelle gesucht (Bilder aus dem
-// Artikel der Art auf Wikimedia Commons) und danach im Gerät gemerkt.
-const photoCache = loadJson(PHOTO_KEY);
-const inflight = {};
-const BAD_FILE = /skelet|skull|schädel|cranium|crania|\bmap|range|distribution|verbreitung|size|scale|comparison|vergleich|stamp|briefmarke|museum|model|drawing|zeichnung|illustrat|plate|painting|engrav|lithograph|whaling|harpoon|carcass|bone|jaw|teeth|baleen|fetus|foetus|embryo|logo|flag|coin|sculpt|statue|diagram|chart|book|specimen|preserved|replica|dissect|meat|fleisch|market|fossil|vertebra|anatomy|sound|spectrogram/i;
-const MEH_FILE = /dead|stranded|strandung|beached|necropsy|corpse/i;
-
-function wikiApi(host, params) {
-  const q = new URLSearchParams({ action: 'query', format: 'json', formatversion: '2', origin: '*', redirects: '1', ...params });
-  return fetch('https://' + host + '/w/api.php?' + q).then((r) => {
-    if (!r.ok) throw new Error('HTTP ' + r.status);
-    return r.json();
-  });
-}
-
-async function articlePhotos(host, title) {
-  const [lead, list] = await Promise.all([
-    wikiApi(host, { titles: title, prop: 'pageimages', piprop: 'thumbnail|name', pithumbsize: '960' }).catch(() => null),
-    wikiApi(host, { titles: title, generator: 'images', gimlimit: '50', prop: 'imageinfo', iiprop: 'url|mime|size', iiurlwidth: '960' }),
-  ]);
-  const out = [];
-  const page = lead && lead.query && lead.query.pages && lead.query.pages[0];
-  const leadName = page && page.pageimage;
-  if (page && page.thumbnail && /\.jpe?g$/i.test(leadName || '') && !BAD_FILE.test(leadName)) {
-    out.push({ src: page.thumbnail.source, page: 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(leadName), name: leadName, prio: 0 });
-  }
-  const files = (list && list.query && list.query.pages) || [];
-  shuffle(files).forEach((f) => {
-    const ii = f.imageinfo && f.imageinfo[0];
-    const name = f.title.replace(/^[^:]+:/, '').replace(/ /g, '_');
-    if (!ii || ii.mime !== 'image/jpeg' || ii.width < 500 || ii.height < 300) return;
-    if (BAD_FILE.test(name) || name === leadName) return;
-    out.push({ src: ii.thumburl || ii.url, page: ii.descriptionurl, name, prio: MEH_FILE.test(name) ? 2 : 1 });
-  });
-  return out;
-}
-
-function loadPhotos(wal) {
-  if (photoCache[wal.id]) return Promise.resolve(photoCache[wal.id]);
-  if (inflight[wal.id]) return inflight[wal.id];
-  inflight[wal.id] = (async () => {
-    let found = await articlePhotos('en.wikipedia.org', wal.wiki);
-    if (found.length < PHOTOS_PER_WAL) {
-      const de = await articlePhotos('de.wikipedia.org', wal.latin).catch(() => []);
-      de.forEach((p) => { if (!found.some((f) => f.name === p.name)) found.push(p); });
-    }
-    found.sort((a, b) => a.prio - b.prio);
-    const photos = found.slice(0, PHOTOS_PER_WAL).map(({ src, page }) => ({ src, page }));
-    photoCache[wal.id] = photos;
-    saveJson(PHOTO_KEY, photoCache);
-    return photos;
-  })().finally(() => { delete inflight[wal.id]; });
-  return inflight[wal.id];
-}
-
-function preloadWal(wal) {
-  if (!wal) return;
-  loadPhotos(wal).then((p) => p.forEach((ph) => { const i = new Image(); i.src = ph.src; })).catch(() => {});
-}
-
-// ---------- Antwortprüfung für den Test ----------
-function normalize(s) {
-  return s.toLowerCase().trim()
-    .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
-    .replace(/ph/g, 'f')
-    .replace(/[^a-z]/g, '');
-}
-function levenshtein(a, b) {
-  const dp = Array.from({ length: a.length + 1 }, (_, i) => [i]);
-  for (let j = 1; j <= b.length; j++) dp[0][j] = j;
-  for (let i = 1; i <= a.length; i++)
-    for (let j = 1; j <= b.length; j++)
-      dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
-  return dp[a.length][b.length];
-}
-const answerNames = (w) => [w.name, ...w.auch, w.latin, w.wiki].map(normalize);
-const tolerance = (n) => (n.length >= 10 ? 2 : n.length >= 5 ? 1 : 0);
-// Ergebnis: 'exact' | 'typo' | 'wrong'
-function checkAnswer(input, wal) {
-  const given = normalize(input);
-  if (!given) return 'wrong';
-  const names = answerNames(wal);
-  if (names.includes(given)) return 'exact';
-  const best = Math.min(...names.map((n) => (levenshtein(given, n) <= tolerance(n) ? levenshtein(given, n) : Infinity)));
-  if (best === Infinity) return 'wrong';
-  // Kleine Tippfehler sind erlaubt – aber nicht, wenn die Eingabe genauso gut zu einer anderen Art passt.
-  const other = WALE.some((w) => w !== wal && answerNames(w).some((n) => levenshtein(given, n) <= best));
-  return other ? 'wrong' : 'typo';
-}
-
-// ---------- Navigation ----------
-const screens = ['start', 'pick', 'quiz', 'result', 'lexikon'];
-function show(name, title) {
-  screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
-  $('homeBtn').hidden = name === 'start';
-  $('headerTitle').textContent = title || 'Wal-Quiz';
-  window.scrollTo(0, 0);
-}
-$('homeBtn').addEventListener('click', () => { renderStart(); show('start'); });
-document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => {
-  const go = b.dataset.go;
-  if (go === 'lexikon') { renderLexikon(); show('lexikon', 'Wal-Lexikon'); }
-  else renderPick(go === 'pick-test' ? 'test' : 'practice');
-}));
-
-function renderStart() {
-  const store = loadJson(STORE_KEY);
-  const badges = store.badges || {};
-  $('lexSub').textContent = 'Alle ' + WALE.length + ' Arten mit Steckbrief';
-  $('badges').innerHTML = '';
-  STUFEN.forEach((s) => {
-    const d = document.createElement('div');
-    d.className = 'badge' + (badges[s.lvl] ? ' earned' : '');
-    d.innerHTML = '<span class="b-icon"></span><span></span>';
-    d.firstChild.textContent = s.emoji;
-    d.lastChild.textContent = s.name;
-    $('badges').appendChild(d);
-  });
-}
-
-function renderPick(mode) {
-  const store = loadJson(STORE_KEY);
-  const badges = store.badges || {};
-  $('pickTitle').textContent = mode === 'test'
-    ? 'Welches Abzeichen willst du machen? Du brauchst ' + TEST_PASS + ' von ' + TEST_LEN + ' Punkten.'
-    : 'Welche Wale willst du üben?';
-  const list = $('pickList');
-  list.innerHTML = '';
-  STUFEN.forEach((s) => {
-    const b = document.createElement('button');
-    b.className = 'menu-btn' + (badges[s.lvl] ? ' earned' : '');
-    const best = store.best && store.best[s.lvl];
-    b.innerHTML = '<span class="emoji"></span><span class="txt"><strong></strong><span class="sub"></span></span><span class="right"></span>';
-    b.querySelector('.emoji').textContent = s.emoji;
-    b.querySelector('strong').textContent = s.name;
-    b.querySelector('.sub').textContent = s.text + ' · ' + poolFor(s.lvl).length + ' Arten';
-    b.querySelector('.right').textContent = badges[s.lvl] ? '✅ geschafft' : (mode === 'test' && best != null ? 'Bestes: ' + fmt(best) : '');
-    b.addEventListener('click', () => startQuiz(mode, s.lvl));
-    list.appendChild(b);
-  });
-  show('pick', mode === 'test' ? 'Abzeichen-Test' : 'Üben');
-}
-
-// ---------- Galerie ----------
-let galToken = 0;
-function renderGallery(wal, onReady) {
-  const token = ++galToken;
-  const gal = $('gallery');
-  gal.innerHTML = '';
-  gal.scrollLeft = 0;
-  $('dots').innerHTML = '';
-  $('galMsg').hidden = true;
-  $('galPrev').hidden = $('galNext').hidden = true;
-  const slide = document.createElement('div');
-  slide.className = 'slide';
-  gal.appendChild(slide);
-
-  loadPhotos(wal).then((photos) => {
-    if (token !== galToken) return;
-    gal.innerHTML = '';
-    if (!photos.length) { onReady(photos); return; }
-    photos.forEach((p, i) => {
-      const s = document.createElement('div');
-      s.className = 'slide';
-      const img = document.createElement('img');
-      img.alt = 'Foto ' + (i + 1) + ' von ' + photos.length;
-      img.onload = () => { img.classList.add('loaded'); s.classList.add('done'); };
-      img.onerror = () => { s.classList.add('done'); };
-      img.src = p.src;
-      s.appendChild(img);
-      gal.appendChild(s);
-      const dot = document.createElement('button');
-      dot.setAttribute('aria-label', 'Foto ' + (i + 1));
-      dot.addEventListener('click', () => gal.scrollTo({ left: i * gal.clientWidth, behavior: 'smooth' }));
-      $('dots').appendChild(dot);
-    });
-    updateDots();
-    onReady(photos);
-  }).catch(() => {
-    if (token !== galToken) return;
-    gal.innerHTML = '';
-    const msg = $('galMsg');
-    msg.innerHTML = '<div>Die Fotos konnten nicht geladen werden. Bist du online?</div><button class="btn secondary" type="button">Nochmal versuchen</button>';
-    msg.querySelector('button').addEventListener('click', () => renderGallery(wal, onReady));
-    msg.hidden = false;
-  });
-}
-function galIndex() { const g = $('gallery'); return g.clientWidth ? Math.round(g.scrollLeft / g.clientWidth) : 0; }
-function updateDots() {
-  const n = $('gallery').children.length;
-  const i = galIndex();
-  [...$('dots').children].forEach((d, k) => d.classList.toggle('on', k === i));
-  $('galPrev').hidden = n < 2 || i === 0;
-  $('galNext').hidden = n < 2 || i >= n - 1;
-}
-$('gallery').addEventListener('scroll', () => requestAnimationFrame(updateDots), { passive: true });
-$('galPrev').addEventListener('click', () => { const g = $('gallery'); g.scrollTo({ left: (galIndex() - 1) * g.clientWidth, behavior: 'smooth' }); });
-$('galNext').addEventListener('click', () => { const g = $('gallery'); g.scrollTo({ left: (galIndex() + 1) * g.clientWidth, behavior: 'smooth' }); });
-
-// ---------- Tipps ----------
-function tipsFor(wal) {
-  return [
-    ['Gruppe', GRUPPEN[wal.gruppe]],
-    ['Größe', 'bis ' + wal.laenge + (wal.gewicht !== '?' ? ', bis ' + wal.gewicht : '')],
-    ['Wo er lebt', wal.gebiet],
-    ['Merkmal', wal.merkmal],
-  ];
-}
-function updateTipBtn() {
-  const used = state.tips, max = tipsFor(currentWal()).length;
-  const btn = $('tipBtn');
-  btn.disabled = state.locked || used >= max;
-  btn.textContent = '💡 Tipp ' + (used ? used + '/' + max : '') + (state.mode === 'test' && !used ? ' (−½ Punkt)' : '');
-}
-$('tipBtn').addEventListener('click', () => {
-  if (state.locked) return;
-  const tips = tipsFor(currentWal());
-  if (state.tips >= tips.length) return;
-  const [label, text] = tips[state.tips++];
-  const li = document.createElement('li');
-  li.innerHTML = '<b></b> ';
-  li.firstChild.textContent = label + ':';
-  li.appendChild(document.createTextNode(text));
-  $('tips').appendChild(li);
-  updateTipBtn();
-});
-
-// ---------- Quiz ----------
-let state = null;
-
-function startQuiz(mode, lvl) {
-  const pool = poolFor(lvl);
-  const deck = shuffle(pool);
-  state = {
-    mode, lvl, pool,
-    deck: mode === 'test' ? deck.slice(0, TEST_LEN) : deck,
-    spare: mode === 'test' ? deck.slice(TEST_LEN) : [],
-    index: 0, points: 0, answered: 0, log: [], locked: false, tips: 0,
-  };
-  $('choices').hidden = mode !== 'practice';
-  $('answerForm').hidden = mode !== 'test';
-  const stufe = STUFEN.find((s) => s.lvl === lvl);
-  show('quiz', (mode === 'test' ? 'Test: ' : 'Üben: ') + stufe.name);
-  nextQuestion();
-}
-
-function currentWal() { return state.deck[state.index]; }
-
-function nextQuestion() {
-  if (state.index >= state.deck.length) {
-    if (state.mode === 'test') return showResult();
-    // Üben läuft endlos: neu mischen, ohne dieselbe Art zweimal hintereinander.
-    const last = state.deck[state.deck.length - 1];
-    let d;
-    do { d = shuffle(state.pool); } while (d.length > 1 && d[0] === last);
-    state.deck = d;
-    state.index = 0;
-  }
-  const wal = currentWal();
-  state.locked = true;   // erst freigeben, wenn die Fotos da sind
-  state.tips = 0;
-
-  if (state.mode === 'test') {
-    $('qCounter').textContent = 'Frage ' + (state.index + 1) + ' von ' + state.deck.length;
-    $('qBar').style.width = (state.index / state.deck.length * 100) + '%';
-  } else {
-    $('qCounter').textContent = 'Übungsrunde';
-    $('qBar').style.width = (state.index / state.deck.length * 100) + '%';
-  }
-  $('qScore').textContent = state.answered ? fmt(state.points) + ' / ' + state.answered + ' Punkte' : '';
-  $('qCredit').textContent = '';   // Quelle erst nach der Antwort – der Dateiname verrät sonst die Art
-  $('tips').innerHTML = '';
-  $('feedback').className = 'feedback';
-  $('nextRow').className = 'next-row';
-  $('choices').innerHTML = '';
-  $('answerInput').value = '';
-  updateTipBtn();
-
-  renderGallery(wal, (photos) => {
-    if (!photos.length) return skipWal();
-    state.skips = 0;
-    state.locked = false;
-    updateTipBtn();
-    if (state.mode === 'practice') renderChoices(wal);
-    else {
-      $('answerInput').disabled = false;
-      $('answerForm').querySelector('button').disabled = false;
-      $('answerInput').focus({ preventScroll: true });
-    }
-  });
-  preloadWal(state.deck[state.index + 1]);
-}
-
-// Für diese Art gibt es keine brauchbaren Fotos: im Test durch eine andere ersetzen, beim Üben überspringen.
-function skipWal() {
-  state.skips = (state.skips || 0) + 1;
-  if (state.skips > state.pool.length) {
-    $('galMsg').innerHTML = '<div>Es konnten keine Fotos gefunden werden.</div>';
-    $('galMsg').hidden = false;
-    return;
-  }
-  if (state.mode === 'test' && state.spare.length) state.deck[state.index] = state.spare.shift();
-  else if (state.mode === 'test') state.deck.splice(state.index, 1);
-  else state.index++;
-  nextQuestion();
-}
-
-function renderChoices(wal) {
-  // Ablenker bevorzugt aus derselben Gruppe – das macht das Üben lehrreicher.
-  const others = state.pool.filter((w) => w !== wal);
-  const same = shuffle(others.filter((w) => w.gruppe === wal.gruppe)).slice(0, 3);
-  const rest = shuffle(others.filter((w) => !same.includes(w)));
-  let picks = same.concat(rest).slice(0, PRACTICE_CHOICES - 1);
-  if (picks.length < PRACTICE_CHOICES - 1) {
-    picks = picks.concat(shuffle(WALE.filter((w) => w !== wal && !picks.includes(w))).slice(0, PRACTICE_CHOICES - 1 - picks.length));
-  }
-  const box = $('choices');
-  box.innerHTML = '';
-  shuffle([wal, ...picks]).forEach((opt) => {
-    const b = document.createElement('button');
-    b.className = 'choice';
-    b.type = 'button';
-    b.textContent = opt.name;
-    b.dataset.id = opt.id;
-    b.addEventListener('click', () => answerPractice(opt, b));
-    box.appendChild(b);
-  });
-}
-
-function answerPractice(opt, btn) {
-  if (state.locked) return;
-  state.locked = true;
-  const wal = currentWal();
-  const ok = opt === wal;
-  [...$('choices').children].forEach((b) => {
-    b.disabled = true;
-    if (b.dataset.id === wal.id) b.classList.add('correct');
-  });
-  if (!ok) btn.classList.add('wrong', 'shake');
-  finishQuestion(ok ? 1 : 0, ok ? 'Richtig! Das ist ein ' + wal.name + '.' : 'Leider nicht. Das ist ein ' + wal.name + '.');
-}
-
-$('answerForm').addEventListener('submit', (e) => {
-  e.preventDefault();
-  if (state.locked) return;
-  const input = $('answerInput');
-  if (!input.value.trim()) { input.classList.remove('shake'); void input.offsetWidth; input.classList.add('shake'); return; }
-  state.locked = true;
-  const wal = currentWal();
-  const res = checkAnswer(input.value, wal);
-  input.disabled = true;
-  $('answerForm').querySelector('button').disabled = true;
-  input.blur();
-  const pts = res === 'wrong' ? 0 : (state.tips ? 0.5 : 1);
-  let msg;
-  if (res === 'exact') msg = 'Richtig! Das ist ein ' + wal.name + '.';
-  else if (res === 'typo') msg = 'Richtig (kleiner Tippfehler) – man schreibt „' + wal.name + '“.';
-  else msg = 'Leider falsch. Das ist ein ' + wal.name + '.';
-  if (pts === 0.5) msg += ' Mit Tipp: ½ Punkt.';
-  state.log.push({ wal, given: input.value.trim(), pts });
-  finishQuestion(pts, msg);
-});
-
-function finishQuestion(pts, msg) {
-  const wal = currentWal();
-  state.answered++;
-  state.points += pts;
-  updateTipBtn();
-  $('qScore').textContent = fmt(state.points) + ' / ' + state.answered + ' Punkte';
-  $('fbTitle').textContent = (pts ? '✅ ' : '❌ ') + msg;
-  $('fbSub').textContent = wal.latin + (wal.auch.length ? ' · auch: ' + wal.auch.join(', ') : '');
-  const dl = $('fbFacts');
-  dl.innerHTML = '';
-  tipsFor(wal).forEach(([k, v]) => {
-    const dt = document.createElement('dt'); dt.textContent = k;
-    const dd = document.createElement('dd'); dd.textContent = v;
-    dl.append(dt, dd);
-  });
-  $('feedback').className = 'feedback show ' + (pts ? 'ok' : 'bad');
-  const photos = photoCache[wal.id] || [];
-  $('qCredit').innerHTML = 'Fotos: ' + photos.map((p, i) => '<a target="_blank" rel="noopener">' + (i + 1) + '</a>').join(' · ') + ' (Wikimedia Commons)';
-  [...$('qCredit').querySelectorAll('a')].forEach((a, i) => { a.href = photos[i].page; });
-  const last = state.mode === 'test' && state.index === state.deck.length - 1;
-  $('nextBtn').textContent = last ? 'Zum Ergebnis' : 'Weiter';
-  $('nextRow').className = 'next-row show';
-  $('nextBtn').focus({ preventScroll: true });
-  $('nextRow').scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-}
-
-$('nextBtn').addEventListener('click', () => { state.index++; nextQuestion(); });
-
-// ---------- Ergebnis ----------
-function showResult() {
-  const total = state.deck.length;
-  const passed = state.points >= TEST_PASS;
-  const stufe = STUFEN.find((s) => s.lvl === state.lvl);
-  const store = loadJson(STORE_KEY);
-  store.best = store.best || {};
-  store.badges = store.badges || {};
-  store.best[state.lvl] = Math.max(store.best[state.lvl] || 0, state.points);
-  if (passed && !store.badges[state.lvl]) store.badges[state.lvl] = new Date().toISOString().slice(0, 10);
-  saveJson(STORE_KEY, store);
-
-  $('resultHead').textContent = passed ? 'Bestanden! 🎉' : 'Noch nicht ganz …';
-  $('resultScore').textContent = fmt(state.points) + ' / ' + total;
-  const cert = $('resultCert');
-  if (passed) {
-    cert.innerHTML = '<div class="certificate"><div class="seal"></div><h3></h3><div></div></div>';
-    cert.querySelector('.seal').textContent = stufe.emoji;
-    cert.querySelector('h3').textContent = stufe.name + ' der Walkunde';
-    cert.querySelector('h3 + div').textContent = 'Du kennst die Wale der Stufe „' + stufe.name + '“!';
-  } else {
-    cert.innerHTML = '<p class="muted"></p>';
-    cert.firstChild.textContent = 'Für das Abzeichen „' + stufe.name + '“ brauchst du mindestens ' + TEST_PASS + ' Punkte. Übe noch ein bisschen!';
-  }
-
-  const ul = $('review');
-  ul.innerHTML = '';
-  state.log.forEach((e) => {
-    const li = document.createElement('li');
-    const img = document.createElement('img');
-    img.alt = '';
-    const ph = photoCache[e.wal.id];
-    if (ph && ph[0]) img.src = ph[0].src;
-    const t = document.createElement('div');
-    t.className = 'r-text';
-    t.textContent = e.wal.name;
-    if (e.pts < 1) {
-      const s = document.createElement('small');
-      s.textContent = e.pts ? 'mit Tipp' : 'Deine Antwort: ' + (e.given || '–');
-      t.appendChild(s);
-    }
-    const m = document.createElement('span');
-    m.className = 'mark';
-    m.textContent = e.pts === 1 ? '✅' : e.pts ? '🟡' : '❌';
-    li.append(img, t, m);
-    ul.appendChild(li);
-  });
-  const lvl = state.lvl;
-  $('againBtn').onclick = () => startQuiz('test', lvl);
-  $('practiceBtn').onclick = () => startQuiz('practice', lvl);
-  show('result', 'Ergebnis');
-}
-
-// ---------- Lexikon ----------
-let lexBuilt = false;
-const lexObserver = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
-  entries.forEach((en) => {
-    if (!en.isIntersecting) return;
-    lexObserver.unobserve(en.target);
-    fillLexPhoto(en.target);
-  });
-}, { rootMargin: '300px' }) : null;
-
-function fillLexPhoto(li) {
-  const wal = WALE.find((w) => w.id === li.dataset.id);
-  loadPhotos(wal).then((photos) => {
-    const img = li.querySelector('.pic');
-    const credit = li.querySelector('.credit');
-    if (!photos.length) { img.replaceWith(Object.assign(document.createElement('div'), { className: 'pic' })); credit.textContent = 'Kein Foto gefunden'; return; }
-    img.src = photos[0].src;
-    credit.innerHTML = 'Foto: <a target="_blank" rel="noopener">Wikimedia Commons</a>';
-    credit.querySelector('a').href = photos[0].page;
-  }).catch(() => {});
-}
-
-function renderLexikon() {
-  if (!lexBuilt) {
-    lexBuilt = true;
-    const sel = $('lexGroup');
-    sel.innerHTML = '<option value="">Alle Gruppen</option>';
-    Object.entries(GRUPPEN).forEach(([k, v]) => sel.add(new Option(v, k)));
-    const ul = $('lexList');
-    WALE.slice().sort((a, b) => a.name.localeCompare(b.name, 'de')).forEach((w) => {
-      const li = document.createElement('li');
-      li.dataset.id = w.id;
-      li.innerHTML = '<img class="pic" alt="" loading="lazy"><div class="body"><h3><span></span><span class="lvl"></span></h3>'
-        + '<div class="latin"></div><dl class="facts"></dl><p class="merkmal"></p><div class="credit"></div></div>';
-      li.querySelector('h3 span').textContent = w.name;
-      li.querySelector('.lvl').textContent = STUFEN.find((s) => s.lvl === w.lvl).emoji;
-      li.querySelector('.latin').textContent = w.latin + (w.auch.length ? ' · auch: ' + w.auch.join(', ') : '');
-      const dl = li.querySelector('.facts');
-      tipsFor(w).slice(0, 3).forEach(([k, v]) => {
-        const dt = document.createElement('dt'); dt.textContent = k;
-        const dd = document.createElement('dd'); dd.textContent = v;
-        dl.append(dt, dd);
-      });
-      li.querySelector('.merkmal').textContent = w.merkmal;
-      li.search = normalize(w.name + w.auch.join('') + w.latin);
-      ul.appendChild(li);
-      if (lexObserver) lexObserver.observe(li); else fillLexPhoto(li);
-    });
-    $('lexSearch').addEventListener('input', filterLexikon);
-    $('lexGroup').addEventListener('change', filterLexikon);
-  }
-  filterLexikon();
-}
-function filterLexikon() {
-  const q = normalize($('lexSearch').value);
-  const g = $('lexGroup').value;
-  let n = 0;
-  [...$('lexList').children].forEach((li) => {
-    const w = WALE.find((x) => x.id === li.dataset.id);
-    const vis = (!q || li.search.includes(q)) && (!g || w.gruppe === g);
-    li.hidden = !vis;
-    if (vis) n++;
-  });
-  $('lexCount').textContent = n + ' Arten';
-}
-
-// Seepferdchen aus der ersten Version übernehmen
-(() => {
-  const old = loadJson('walquiz.v1');
-  const store = loadJson(STORE_KEY);
-  if (old.seepferdchen && !(store.badges && store.badges[1])) {
-    store.badges = Object.assign({}, store.badges, { 1: old.seepferdchen });
-    saveJson(STORE_KEY, store);
-  }
-})();
-
-renderStart();
-
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
-}
-</script>
+<script src="groesse.js"></script>
+<script src="app.js"></script>
 </body>
 </html>
