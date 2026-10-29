@@ -1,10 +1,13 @@
 const TEST_LEN = 10;
 const TEST_PASS = 8;           // Punkte für ein Abzeichen (mit Tipp gibt es einen halben Punkt)
 const PRACTICE_CHOICES = 6;
-const PHOTOS_PER_WAL = 3;
+const PHOTOS_PER_WAL = 2;
+const PHOTO_CANDIDATES = 8;     // so viele Fotos werden je Art gemerkt – als Ersatz, wenn eins aussortiert wird
 const SOUND_LVL = 2;           // „Wer ruft da?“ nutzt die Arten bis Bronze – von den seltenen gibt es kaum Aufnahmen
 const STORE_KEY = 'walquiz.v2';
-const PHOTO_KEY = 'walquiz.photos.v2';
+const PHOTO_KEY = 'walquiz.photos.v3';
+const BLOCK_KEY = 'walquiz.fotosperre.v1';
+const CHECK_KEY = 'walquiz.fotogeprueft.v1';
 const SOUND_KEY = 'walquiz.sounds.v1';
 const STATS_KEY = 'walquiz.stats.v1';
 
@@ -55,48 +58,64 @@ function wikiApi(host, params) {
 // ---------- Fotos ----------
 // Die Fotos werden direkt auf dem Gerät über die Wikipedia-Schnittstelle gesucht (Bilder aus dem
 // Artikel der Art auf Wikimedia Commons) und danach im Gerät gemerkt.
+// Echtheit: Bevorzugt werden Bilder mit Kameradaten (EXIF-Hersteller/-Modell). Bilder, die auf Commons
+// als KI-generiert, Zeichnung, Gemälde oder 3D-Modell einsortiert sind, werden nie genommen.
+// In der Prüf-Ansicht aussortierte Fotos landen in der Sperrliste; FOTO_SPERRE ist die feste Liste dazu.
+const FOTO_SPERRE = [];
 const photoCache = loadJson(PHOTO_KEY);
+const photoBlock = loadJson(BLOCK_KEY);
+FOTO_SPERRE.forEach((n) => { photoBlock[n] = true; });
+const photoChecked = loadJson(CHECK_KEY);
 const photoInflight = {};
 const BAD_FILE = /skelet|skull|schädel|cranium|crania|\bmap|range|distribution|verbreitung|size|scale|comparison|vergleich|stamp|briefmarke|museum|model|drawing|zeichnung|illustrat|plate|painting|engrav|lithograph|whaling|harpoon|carcass|bone|jaw|teeth|baleen|fetus|foetus|embryo|logo|flag|coin|sculpt|statue|diagram|chart|book|specimen|preserved|replica|dissect|meat|fleisch|market|fossil|vertebra|anatomy|sound|spectrogram/i;
+const BAD_CATEGORY = /AI-generated|artificial intelligence|Midjourney|DALL-E|Stable Diffusion|computer-generated|CGI|3D render|3D model|renders|illustrations|drawings|paintings|engravings|lithographs|scientific illustrations|clip ?art|diagrams|maps|stamps|skeletons|skulls|museum specimens/i;
 const MEH_FILE = /dead|stranded|strandung|beached|necropsy|corpse|caught|fishing|landed|bycatch/i;
-const hasNoPhotos = (w) => Array.isArray(photoCache[w.id]) && !photoCache[w.id].length;
+// Die angezeigten Fotos einer Art: die besten noch nicht aussortierten Kandidaten (null = noch nicht geladen).
+const photosFor = (w) => (photoCache[w.id] ? photoCache[w.id].filter((p) => !photoBlock[p.name]).slice(0, PHOTOS_PER_WAL) : null);
+const hasNoPhotos = (w) => { const p = photosFor(w); return p !== null && !p.length; };
+
+function hasCameraData(ii) {
+  return (ii.commonmetadata || []).some((m) => (m.name === 'Make' || m.name === 'Model') && String(m.value).trim());
+}
 
 async function articlePhotos(host, title) {
   const [lead, list] = await Promise.all([
-    wikiApi(host, { titles: title, prop: 'pageimages', piprop: 'thumbnail|name', pithumbsize: '960' }).catch(() => null),
-    wikiApi(host, { titles: title, generator: 'images', gimlimit: '50', prop: 'imageinfo', iiprop: 'url|mime|size', iiurlwidth: '960' }),
+    wikiApi(host, { titles: title, prop: 'pageimages', piprop: 'name' }).catch(() => null),
+    wikiApi(host, {
+      titles: title, generator: 'images', gimlimit: '50', prop: 'imageinfo',
+      iiprop: 'url|mime|size|extmetadata|commonmetadata', iiextmetadatafilter: 'Categories', iiurlwidth: '960',
+    }),
   ]);
-  const out = [];
   const page = lead && lead.query && lead.query.pages && lead.query.pages[0];
   const leadName = page && page.pageimage;
-  if (page && page.thumbnail && /\.jpe?g$/i.test(leadName || '') && !BAD_FILE.test(leadName)) {
-    out.push({ src: page.thumbnail.source, page: 'https://commons.wikimedia.org/wiki/File:' + encodeURIComponent(leadName), name: leadName, prio: 0 });
-  }
-  const files = (list && list.query && list.query.pages) || [];
-  shuffle(files).forEach((f) => {
+  const out = [];
+  ((list && list.query && list.query.pages) || []).forEach((f) => {
     const ii = f.imageinfo && f.imageinfo[0];
     const name = f.title.replace(/^[^:]+:/, '').replace(/ /g, '_');
     if (!ii || ii.mime !== 'image/jpeg' || ii.width < 500 || ii.height < 300) return;
-    if (BAD_FILE.test(name) || name === leadName) return;
-    out.push({ src: ii.thumburl || ii.url, page: ii.descriptionurl, name, prio: MEH_FILE.test(name) ? 2 : 1 });
+    const cats = (ii.extmetadata && ii.extmetadata.Categories && ii.extmetadata.Categories.value) || '';
+    if (BAD_FILE.test(name) || BAD_CATEGORY.test(cats)) return;
+    const echt = hasCameraData(ii);
+    // Reihenfolge: echte Fotos zuerst, dann keine toten/gefangenen Tiere, dann das Hauptbild des Artikels.
+    const rank = (echt ? 0 : 4) + (MEH_FILE.test(name) ? 2 : 0) + (name === leadName ? 0 : 1) + Math.random() * 0.5;
+    out.push({ src: ii.thumburl || ii.url, page: ii.descriptionurl, name, echt, rank });
   });
   return out;
 }
 
 function loadPhotos(wal) {
-  if (photoCache[wal.id]) return Promise.resolve(photoCache[wal.id]);
+  if (photoCache[wal.id]) return Promise.resolve(photosFor(wal));
   if (photoInflight[wal.id]) return photoInflight[wal.id];
   photoInflight[wal.id] = (async () => {
     const found = await articlePhotos('en.wikipedia.org', wal.wiki);
-    if (found.length < PHOTOS_PER_WAL) {
+    if (found.filter((f) => f.echt).length < PHOTOS_PER_WAL) {
       const de = await articlePhotos('de.wikipedia.org', wal.latin).catch(() => []);
       de.forEach((p) => { if (!found.some((f) => f.name === p.name)) found.push(p); });
     }
-    found.sort((a, b) => a.prio - b.prio);
-    const photos = found.slice(0, PHOTOS_PER_WAL).map(({ src, page }) => ({ src, page }));
-    photoCache[wal.id] = photos;
+    found.sort((a, b) => a.rank - b.rank);
+    photoCache[wal.id] = found.slice(0, PHOTO_CANDIDATES).map(({ src, page, name, echt }) => ({ src, page, name, echt }));
     saveJson(PHOTO_KEY, photoCache);
-    return photos;
+    return photosFor(wal);
   })().finally(() => { delete photoInflight[wal.id]; });
   return photoInflight[wal.id];
 }
@@ -268,7 +287,7 @@ let pendingChallenge = (() => {
 })();
 
 // ---------- Navigation ----------
-const screens = ['start', 'pick', 'quiz', 'result', 'lexikon'];
+const screens = ['start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen'];
 function show(name, title) {
   stopSound();
   screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
@@ -668,7 +687,7 @@ function finishQuestion(pts, msg) {
 
   const credit = $('qCredit');
   const showCredit = () => {
-    const photos = photoCache[wal.id] || [];
+    const photos = photosFor(wal) || [];
     const snd = state.mode === 'sound' ? (soundCache[wal.id] || [])[0] : null;
     credit.innerHTML = '';
     const add = (text, href) => { const a = document.createElement('a'); a.textContent = text; a.href = href; a.target = '_blank'; a.rel = 'noopener'; credit.append(a, ' '); };
@@ -734,7 +753,7 @@ function showResult() {
     const li = document.createElement('li');
     const img = document.createElement('img');
     img.alt = '';
-    const ph = photoCache[e.wal.id];
+    const ph = photosFor(e.wal);
     if (ph && ph[0]) img.src = ph[0].src;
     const t = document.createElement('div');
     t.className = 'r-text';
@@ -853,6 +872,88 @@ function filterLexikon() {
   });
   $('lexCount').textContent = n + ' Arten';
 }
+
+// ---------- Fotos prüfen ----------
+// Alle Arten der aktuellen Welt mit ihren angezeigten Fotos. ✗ sperrt ein Foto (nächster Kandidat rückt nach),
+// ✓ merkt es als geprüft. Die Sperrliste lässt sich kopieren und dann fest in FOTO_SPERRE eintragen.
+const pruefObserver = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
+  entries.forEach((en) => {
+    if (!en.isIntersecting) return;
+    pruefObserver.unobserve(en.target);
+    fillPruefRow(en.target);
+  });
+}, { rootMargin: '400px' }) : null;
+
+function fillPruefRow(li) {
+  const art = artById(li.dataset.id);
+  const box = li.querySelector('.fotos');
+  box.innerHTML = '<div class="leer">Fotos werden gesucht …</div>';
+  loadPhotos(art).then((photos) => {
+    box.innerHTML = '';
+    if (!photos.length) { box.innerHTML = '<div class="leer">Keine (weiteren) Fotos gefunden.</div>'; return; }
+    photos.forEach((p) => {
+      const d = document.createElement('div');
+      d.className = 'foto' + (photoChecked[p.name] ? ' ok' : '');
+      d.innerHTML = '<img alt="" loading="lazy"><div class="info"></div><div class="btns"><button type="button" class="yes">✓</button><button type="button" class="no">✗</button></div>';
+      d.querySelector('img').src = p.src;
+      const info = d.querySelector('.info');
+      info.append(p.echt ? '📷 mit Kameradaten · ' : '⚠️ ohne Kameradaten · ');
+      const a = document.createElement('a');
+      a.href = p.page; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Quelle';
+      info.appendChild(a);
+      d.querySelector('.yes').classList.toggle('on', !!photoChecked[p.name]);
+      d.querySelector('.yes').addEventListener('click', () => {
+        photoChecked[p.name] = true;
+        saveJson(CHECK_KEY, photoChecked);
+        fillPruefRow(li);
+        updatePruefCount();
+      });
+      d.querySelector('.no').addEventListener('click', () => {
+        photoBlock[p.name] = true;
+        delete photoChecked[p.name];
+        saveJson(BLOCK_KEY, photoBlock);
+        saveJson(CHECK_KEY, photoChecked);
+        fillPruefRow(li);
+        updatePruefCount();
+      });
+      box.appendChild(d);
+    });
+  }).catch(() => { box.innerHTML = '<div class="leer">Konnte nicht geladen werden. Bist du online?</div>'; });
+}
+
+const isGeprueft = (art) => { const p = photosFor(art); return p !== null && p.length > 0 && p.every((x) => photoChecked[x.name]); };
+
+function updatePruefCount() {
+  const arten = ARTEN();
+  $('pruefCount').textContent = arten.filter(isGeprueft).length + ' von ' + arten.length + ' Arten geprüft';
+  $('sperrCount').textContent = Object.keys(photoBlock).filter((n) => !FOTO_SPERRE.includes(n)).length;
+}
+
+function renderPruefen() {
+  const ul = $('pruefList');
+  ul.innerHTML = '';
+  const nurOffen = $('pruefOffen').checked;
+  ARTEN().slice().sort((a, b) => a.name.localeCompare(b.name, 'de')).forEach((art) => {
+    if (nurOffen && isGeprueft(art)) return;
+    const li = document.createElement('li');
+    li.dataset.id = art.id;
+    li.innerHTML = '<h3></h3><div class="latin"></div><div class="fotos"></div>';
+    li.querySelector('h3').textContent = art.name;
+    li.querySelector('.latin').textContent = art.latin;
+    ul.appendChild(li);
+    if (pruefObserver) pruefObserver.observe(li); else fillPruefRow(li);
+  });
+  updatePruefCount();
+  $('sperrMsg').textContent = '';
+}
+$('pruefOpen').addEventListener('click', () => { renderPruefen(); show('pruefen', '🔎 Fotos prüfen'); });
+$('pruefOffen').addEventListener('change', renderPruefen);
+$('sperrCopy').addEventListener('click', async () => {
+  const list = Object.keys(photoBlock).filter((n) => !FOTO_SPERRE.includes(n));
+  const text = 'Gesperrte Fotos (' + list.length + '):\n' + JSON.stringify(list, null, 1);
+  try { await navigator.clipboard.writeText(text); $('sperrMsg').textContent = 'Kopiert – füge die Liste in den Chat mit Claude ein.'; }
+  catch { $('sperrMsg').textContent = text; }
+});
 
 // Seepferdchen aus der ersten Version übernehmen
 (() => {

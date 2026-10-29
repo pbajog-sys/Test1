@@ -7,7 +7,7 @@ Eine Web-App (PWA) zum Lernen von Walarten. Sie läuft auf iPhone und Android im
 und lässt sich wie eine App auf den Home-Bildschirm legen.
 
 ## Modi
-- **Üben:** Pro Wal 3 Fotos zum Durchwischen, du wählst aus 6 Arten. Der Tipp-Knopf verrät nacheinander
+- **Üben:** Pro Art 2 Fotos zum Durchwischen, du wählst aus 6 Arten. Der Tipp-Knopf verrät nacheinander
   Gruppe, Größe/Gewicht, Verbreitung und ein Merkmal. Nach jeder Antwort gibt es den ganzen Steckbrief.
 - **Abzeichen-Test:** 10 Wale, den Namen selbst eintippen. Ab 8 Punkten gibt es das Abzeichen der Stufe
   (Seepferdchen, Bronze, Silber, Gold). Mit Tipp gibt es nur einen halben Punkt. Kleine Tippfehler,
@@ -27,6 +27,12 @@ Neue Arten bitte nur **hinten anhängen** – Challenge-Links speichern die Posi
 Stufen: Seepferdchen 15 Arten, Bronze 35, Silber 76, Gold 92.
 
 ## Fotos
+Pro Art werden **2 Fotos** gezeigt. Echtheits-Prüfung: Bilder mit Kameradaten (EXIF-Hersteller/-Modell) werden
+bevorzugt; Bilder, die auf Commons als KI-generiert, Zeichnung, Gemälde oder 3D-Modell einsortiert sind, werden nie
+genommen. Im Lexikon gibt es unten **„🔎 Fotos prüfen“**: alle Arten mit ihren Fotos, ✓ = passt, ✗ = aussortieren
+(das nächste Foto rückt nach). Die Liste der aussortierten Fotos lässt sich kopieren und in `FOTO_SPERRE` in
+`app.js` fest eintragen.
+
 Die App sucht die Fotos auf dem Gerät über die Wikipedia-Schnittstelle: das Hauptbild des
 englischen Wikipedia-Artikels plus weitere Fotos aus dem Artikel (Karten, Skelette, Zeichnungen usw.
 werden herausgefiltert). Die Treffer werden im Gerät gespeichert. Arten ohne brauchbares Foto werden
