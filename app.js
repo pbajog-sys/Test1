@@ -18,8 +18,28 @@ const shuffle = (arr) => {
   return a;
 };
 const fmt = (n) => String(n).replace('.', ',');
-const poolFor = (lvl) => WALE.filter((w) => w.lvl <= lvl);
+// ---------- Welten: Wale, Haie oder beide zusammen ----------
+// ALLE: Wale zuerst, dann Haie – die Reihenfolge ist Teil der Challenge-Links, darum nur hinten anhängen.
+const ALLE = WALE.concat(HAIE);
+Object.assign(GRUPPEN, HAI_GRUPPEN);
+const WELTEN = {
+  wale:  { emoji: '🐋', name: 'Wale',  title: 'Wal-Quiz',    frage: 'Welcher Wal ist das?',
+           hero: 'Erkennst du die Wale an ihren Fotos? Übe in Ruhe und mach dann deine Abzeichen – vom Seepferdchen bis Gold.',
+           stufen: ['Die bekanntesten Wale', 'Wale, die man oft beobachten kann', 'Fast alle Arten', 'Alle Walarten – auch die seltenen Schnabelwale'] },
+  haie:  { emoji: '🦈', name: 'Haie',  title: 'Hai-Quiz',    frage: 'Welcher Hai ist das?',
+           hero: 'Erkennst du die Haie an ihren Fotos? Vom Weißen Hai bis zum Koboldhai – übe und hol dir deine Abzeichen.',
+           stufen: ['Die bekanntesten Haie', 'Haie, die Taucher oft sehen', 'Fast alle Arten', 'Alle Arten – auch die Tiefseehaie'] },
+  beide: { emoji: '🌊', name: 'Beide', title: 'Meeres-Quiz', frage: 'Wal oder Hai – wer ist das?',
+           hero: 'Wale und Haie gemischt: Erkennst du alle Riesen des Meeres? Die Abzeichen hier sind die Königsklasse.',
+           stufen: ['Die bekanntesten Wale und Haie', 'Oft zu sehen', 'Fast alle Arten', 'Alle Wale und Haie'] },
+};
+let welt = (() => { try { const w = JSON.parse(localStorage.getItem('walquiz.v2') || '{}').welt; return WELTEN[w] ? w : 'wale'; } catch { return 'wale'; } })();
+const ARTEN = () => (welt === 'beide' ? ALLE : ALLE.filter((a) => a.welt === welt));
+const poolFor = (lvl, w = welt) => ALLE.filter((a) => a.lvl <= lvl && (w === 'beide' || a.welt === w));
 const stufeFor = (lvl) => STUFEN.find((s) => s.lvl === lvl);
+const stufenText = (lvl, w = welt) => WELTEN[w].stufen[lvl - 1];
+// Abzeichen je Welt; die Wale behalten ihre alten Schlüssel (1–4), damit frühere Abzeichen bleiben.
+const badgeKey = (lvl, w = welt) => (w === 'wale' ? String(lvl) : w + ':' + lvl);
 
 function loadJson(key) { try { return JSON.parse(localStorage.getItem(key)) || {}; } catch { return {}; } }
 function saveJson(key, v) { try { localStorage.setItem(key, JSON.stringify(v)); } catch {} }
@@ -38,7 +58,7 @@ function wikiApi(host, params) {
 const photoCache = loadJson(PHOTO_KEY);
 const photoInflight = {};
 const BAD_FILE = /skelet|skull|schädel|cranium|crania|\bmap|range|distribution|verbreitung|size|scale|comparison|vergleich|stamp|briefmarke|museum|model|drawing|zeichnung|illustrat|plate|painting|engrav|lithograph|whaling|harpoon|carcass|bone|jaw|teeth|baleen|fetus|foetus|embryo|logo|flag|coin|sculpt|statue|diagram|chart|book|specimen|preserved|replica|dissect|meat|fleisch|market|fossil|vertebra|anatomy|sound|spectrogram/i;
-const MEH_FILE = /dead|stranded|strandung|beached|necropsy|corpse/i;
+const MEH_FILE = /dead|stranded|strandung|beached|necropsy|corpse|caught|fishing|landed|bycatch/i;
 const hasNoPhotos = (w) => Array.isArray(photoCache[w.id]) && !photoCache[w.id].length;
 
 async function articlePhotos(host, title) {
@@ -221,23 +241,23 @@ function checkAnswer(input, wal) {
   const best = Math.min(...names.map((n) => (levenshtein(given, n) <= tolerance(n) ? levenshtein(given, n) : Infinity)));
   if (best === Infinity) return 'wrong';
   // Kleine Tippfehler sind erlaubt – aber nicht, wenn die Eingabe genauso gut zu einer anderen Art passt.
-  const other = WALE.some((w) => w !== wal && answerNames(w).some((n) => levenshtein(given, n) <= best));
+  const other = ALLE.some((w) => w !== wal && answerNames(w).some((n) => levenshtein(given, n) <= best));
   return other ? 'wrong' : 'typo';
 }
 
 // ---------- Challenge-Links ----------
-// Ein Link enthält Stufe, die 10 Arten (als Position in WALE), Name und Punkte der Herausforderin/des Herausforderers.
+// Ein Link enthält Welt, Stufe, die 10 Arten (als Position in ALLE), Name und Punkte der Herausforderin/des Herausforderers.
 function encodeChallenge(c) {
-  const json = JSON.stringify({ l: c.lvl, w: c.wale.map((w) => WALE.indexOf(w)), n: c.name, p: c.points });
+  const json = JSON.stringify({ x: c.welt, l: c.lvl, w: c.wale.map((w) => ALLE.indexOf(w)), n: c.name, p: c.points });
   return btoa(unescape(encodeURIComponent(json))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
 }
 function decodeChallenge(str) {
   try {
     const json = decodeURIComponent(escape(atob(str.replace(/-/g, '+').replace(/_/g, '/'))));
     const c = JSON.parse(json);
-    const wale = (c.w || []).map((i) => WALE[i]).filter(Boolean);
+    const wale = (c.w || []).map((i) => ALLE[i]).filter(Boolean);
     if (!stufeFor(c.l) || !wale.length) return null;
-    return { lvl: c.l, wale, name: String(c.n || 'Jemand').slice(0, 30), points: Number(c.p) || 0 };
+    return { welt: WELTEN[c.x] ? c.x : 'wale', lvl: c.l, wale, name: String(c.n || 'Jemand').slice(0, 30), points: Number(c.p) || 0 };
   } catch { return null; }
 }
 let pendingChallenge = (() => {
@@ -253,37 +273,54 @@ function show(name, title) {
   stopSound();
   screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
   $('homeBtn').hidden = name === 'start';
-  $('headerTitle').textContent = title || 'Wal-Quiz';
+  $('headerTitle').textContent = title || WELTEN[welt].title;
   window.scrollTo(0, 0);
 }
 $('homeBtn').addEventListener('click', () => { renderStart(); show('start'); });
 document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => {
   const go = b.dataset.go;
-  if (go === 'lexikon') { renderLexikon(); show('lexikon', 'Wal-Lexikon'); }
+  if (go === 'lexikon') { renderLexikon(); show('lexikon', WELTEN[welt].emoji + ' Lexikon'); }
   else if (go === 'sound') startQuiz('sound', SOUND_LVL);
   else renderPick(go === 'pick-test' ? 'test' : 'practice');
+}));
+document.querySelectorAll('[data-welt]').forEach((b) => b.addEventListener('click', () => {
+  welt = b.dataset.welt;
+  const store = loadJson(STORE_KEY);
+  store.welt = welt;
+  saveJson(STORE_KEY, store);
+  renderStart();
 }));
 
 function renderStart() {
   const store = loadJson(STORE_KEY);
   const badges = store.badges || {};
-  $('lexSub').textContent = 'Alle ' + WALE.length + ' Arten mit Steckbrief und Größenvergleich';
-  const n = countSicher(WALE);
-  $('learnText').textContent = 'Gelernt: ' + n + ' von ' + WALE.length + ' Arten sicher';
-  $('learnBar').style.width = (n / WALE.length * 100) + '%';
+  const W = WELTEN[welt];
+  const arten = ARTEN();
+  document.title = W.title;
+  $('headerTitle').textContent = W.title;
+  $('heroTitle').textContent = W.title;
+  $('heroText').textContent = W.hero;
+  document.querySelectorAll('[data-welt]').forEach((b) => b.classList.toggle('on', b.dataset.welt === welt));
+  $('soundMenu').hidden = welt === 'haie';
+  $('practiceEmoji').textContent = W.emoji;
+  $('testSub').textContent = TEST_LEN + ' ' + (welt === 'wale' ? 'Wale' : welt === 'haie' ? 'Haie' : 'Tiere') + ', Namen selbst eintippen';
+  $('lexSub').textContent = 'Alle ' + arten.length + ' Arten mit Steckbrief und Größenvergleich';
+  const n = countSicher(arten);
+  $('learnText').textContent = 'Gelernt: ' + n + ' von ' + arten.length + ' Arten sicher';
+  $('learnBar').style.width = (n / arten.length * 100) + '%';
 
   const box = $('challengeBox');
   box.hidden = !pendingChallenge;
   if (pendingChallenge) {
     const c = pendingChallenge;
-    $('challengeText').textContent = c.name + ' fordert dich heraus: ' + stufeFor(c.lvl).emoji + ' ' + stufeFor(c.lvl).name
+    $('challengeText').textContent = c.name + ' fordert dich heraus: ' + WELTEN[c.welt].title + ', ' + stufeFor(c.lvl).emoji + ' ' + stufeFor(c.lvl).name
       + ' mit ' + fmt(c.points) + ' von ' + c.wale.length + ' Punkten. Schaffst du mehr?';
   }
 
   $('badges').innerHTML = '';
   STUFEN.forEach((s) => {
     const d = document.createElement('div');
-    d.className = 'badge' + (badges[s.lvl] ? ' earned' : '');
+    d.className = 'badge' + (badges[badgeKey(s.lvl)] ? ' earned' : '');
     d.innerHTML = '<span class="b-icon"></span><span></span>';
     d.firstChild.textContent = s.emoji;
     d.lastChild.textContent = s.name;
@@ -293,6 +330,7 @@ function renderStart() {
 $('challengeGo').addEventListener('click', () => {
   const c = pendingChallenge;
   pendingChallenge = null;
+  welt = c.welt;
   startQuiz('test', c.lvl, { deck: c.wale, challenge: c });
 });
 $('challengeNo').addEventListener('click', () => { pendingChallenge = null; renderStart(); });
@@ -308,19 +346,19 @@ function renderPick(mode) {
   STUFEN.forEach((s) => {
     const pool = poolFor(s.lvl);
     const b = document.createElement('button');
-    b.className = 'menu-btn' + (badges[s.lvl] ? ' earned' : '');
-    const best = store.best && store.best[s.lvl];
+    b.className = 'menu-btn' + (badges[badgeKey(s.lvl)] ? ' earned' : '');
+    const best = store.best && store.best[badgeKey(s.lvl)];
     b.innerHTML = '<span class="emoji"></span><span class="txt"><strong></strong><span class="sub"></span></span><span class="right"></span>';
     b.querySelector('.emoji').textContent = s.emoji;
     b.querySelector('strong').textContent = s.name;
-    b.querySelector('.sub').textContent = s.text + ' · ' + pool.length + ' Arten';
+    b.querySelector('.sub').textContent = stufenText(s.lvl) + ' · ' + pool.length + ' Arten';
     b.querySelector('.right').textContent = mode === 'test'
-      ? (badges[s.lvl] ? '✅ geschafft' : best != null ? 'Bestes: ' + fmt(best) : '')
+      ? (badges[badgeKey(s.lvl)] ? '✅ geschafft' : best != null ? 'Bestes: ' + fmt(best) : '')
       : countSicher(pool) + '/' + pool.length + ' sicher';
     b.addEventListener('click', () => startQuiz(mode, s.lvl));
     list.appendChild(b);
   });
-  show('pick', mode === 'test' ? 'Abzeichen-Test' : 'Üben');
+  show('pick', (mode === 'test' ? 'Abzeichen-Test' : 'Üben') + ' ' + WELTEN[welt].emoji);
 }
 
 // ---------- Galerie ----------
@@ -433,7 +471,8 @@ $('tipBtn').addEventListener('click', () => {
 let state = null;
 
 function startQuiz(mode, lvl, opts = {}) {
-  const pool = poolFor(lvl);
+  // Rufe gibt es nur von Walen.
+  const pool = mode === 'sound' ? poolFor(lvl, 'wale') : poolFor(lvl);
   const s = { mode, lvl, pool, index: 0, points: 0, answered: 0, log: [], locked: false, tips: 0, skips: 0, spare: [], challenge: opts.challenge || null };
   if (mode === 'test') {
     const deck = opts.deck ? opts.deck.slice() : shuffle(pool);
@@ -447,7 +486,7 @@ function startQuiz(mode, lvl, opts = {}) {
   $('choices').hidden = mode === 'test';
   $('answerForm').hidden = mode !== 'test';
   $('soundBox').hidden = mode !== 'sound';
-  $('questionText').textContent = mode === 'sound' ? 'Wer ruft da?' : 'Welcher Wal ist das?';
+  $('questionText').textContent = mode === 'sound' ? 'Wer ruft da?' : WELTEN[welt].frage;
   const title = mode === 'sound' ? 'Wer ruft da?' : (mode === 'test' ? 'Test: ' : 'Üben: ') + stufeFor(lvl).name;
   show('quiz', state.challenge ? 'Challenge von ' + state.challenge.name : title);
   nextQuestion();
@@ -557,7 +596,7 @@ function renderChoices(wal) {
   const rest = shuffle(others.filter((w) => !same.includes(w)));
   let picks = same.concat(rest).slice(0, PRACTICE_CHOICES - 1);
   if (picks.length < PRACTICE_CHOICES - 1) {
-    picks = picks.concat(shuffle(WALE.filter((w) => w !== wal && !picks.includes(w))).slice(0, PRACTICE_CHOICES - 1 - picks.length));
+    picks = picks.concat(shuffle(ALLE.filter((w) => w !== wal && !picks.includes(w))).slice(0, PRACTICE_CHOICES - 1 - picks.length));
   }
   const box = $('choices');
   box.innerHTML = '';
@@ -624,7 +663,7 @@ function finishQuestion(pts, msg) {
   factsList(wal, $('fbFacts'));
   const extra = $('fbExtra');
   extra.innerHTML = groessenSvg(wal);
-  if (state.mode !== 'sound') extra.appendChild(soundButton(wal));
+  if (state.mode !== 'sound' && wal.welt === 'wale') extra.appendChild(soundButton(wal));
   $('feedback').className = 'feedback show ' + (pts ? 'ok' : 'bad');
 
   const credit = $('qCredit');
@@ -660,8 +699,9 @@ function showResult() {
   const store = loadJson(STORE_KEY);
   store.best = store.best || {};
   store.badges = store.badges || {};
-  store.best[state.lvl] = Math.max(store.best[state.lvl] || 0, state.points);
-  if (passed && !store.badges[state.lvl]) store.badges[state.lvl] = new Date().toISOString().slice(0, 10);
+  const key = badgeKey(state.lvl);
+  store.best[key] = Math.max(store.best[key] || 0, state.points);
+  if (passed && !store.badges[key]) store.badges[key] = new Date().toISOString().slice(0, 10);
   saveJson(STORE_KEY, store);
 
   $('resultHead').textContent = passed ? 'Bestanden! 🎉' : 'Noch nicht ganz …';
@@ -681,8 +721,8 @@ function showResult() {
   if (passed) {
     cert.innerHTML = '<div class="certificate"><div class="seal"></div><h3></h3><div></div></div>';
     cert.querySelector('.seal').textContent = stufe.emoji;
-    cert.querySelector('h3').textContent = stufe.name + ' der Walkunde';
-    cert.querySelector('h3 + div').textContent = 'Du kennst die Wale der Stufe „' + stufe.name + '“!';
+    cert.querySelector('h3').textContent = stufe.name + ' der ' + { wale: 'Walkunde', haie: 'Haikunde', beide: 'Meereskunde' }[welt];
+    cert.querySelector('h3 + div').textContent = 'Du kennst die ' + { wale: 'Wale', haie: 'Haie', beide: 'Wale und Haie' }[welt] + ' der Stufe „' + stufe.name + '“!';
   } else {
     cert.innerHTML = '<p class="muted"></p>';
     cert.firstChild.textContent = 'Für das Abzeichen „' + stufe.name + '“ brauchst du mindestens ' + TEST_PASS + ' Punkte. Übe noch ein bisschen!';
@@ -714,7 +754,7 @@ function showResult() {
   $('nameInput').value = store.name || '';
   $('shareMsg').textContent = '';
   const lvl = state.lvl;
-  const result = { lvl, wale: state.deck.slice(), points: state.points };
+  const result = { welt, lvl, wale: state.deck.slice(), points: state.points };
   $('shareBtn').onclick = () => shareChallenge(result);
   $('againBtn').onclick = () => startQuiz('test', lvl);
   $('practiceBtn').onclick = () => startQuiz('practice', lvl);
@@ -728,10 +768,11 @@ async function shareChallenge(result) {
   saveJson(STORE_KEY, store);
   const url = location.origin + location.pathname + '?c=' + encodeChallenge({ ...result, name });
   const stufe = stufeFor(result.lvl);
-  const text = name + ' hat im Wal-Quiz (' + stufe.emoji + ' ' + stufe.name + ') ' + fmt(result.points) + ' von ' + result.wale.length
-    + ' Punkten. Dieselben ' + result.wale.length + ' Wale – schaffst du mehr? 🐋';
+  const text = name + ' hat im ' + WELTEN[result.welt].title + ' (' + stufe.emoji + ' ' + stufe.name + ') ' + fmt(result.points) + ' von ' + result.wale.length
+    + ' Punkten. Dieselben ' + result.wale.length + ' ' + { wale: 'Wale', haie: 'Haie', beide: 'Tiere' }[result.welt]
+    + ' – schaffst du mehr? ' + WELTEN[result.welt].emoji;
   if (navigator.share) {
-    try { await navigator.share({ title: 'Wal-Quiz Challenge', text, url }); return; }
+    try { await navigator.share({ title: WELTEN[result.welt].title + ' Challenge', text, url }); return; }
     catch (e) { if (e && e.name === 'AbortError') return; }
   }
   try {
@@ -743,7 +784,9 @@ async function shareChallenge(result) {
 }
 
 // ---------- Lexikon ----------
+// Das Lexikon enthält alle Arten; angezeigt werden die der aktuellen Welt.
 let lexBuilt = false;
+let lexWelt = null;
 const lexObserver = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
   entries.forEach((en) => {
     if (!en.isIntersecting) return;
@@ -751,10 +794,11 @@ const lexObserver = 'IntersectionObserver' in window ? new IntersectionObserver(
     fillLexPhoto(en.target);
   });
 }, { rootMargin: '300px' }) : null;
+const artById = (id) => ALLE.find((a) => a.id === id);
 
 function fillLexPhoto(li) {
-  const wal = WALE.find((w) => w.id === li.dataset.id);
-  loadPhotos(wal).then((photos) => {
+  const art = artById(li.dataset.id);
+  loadPhotos(art).then((photos) => {
     const img = li.querySelector('.pic');
     const credit = li.querySelector('.credit');
     if (!photos.length) { img.replaceWith(Object.assign(document.createElement('div'), { className: 'pic' })); credit.textContent = 'Kein Foto gefunden'; return; }
@@ -767,13 +811,11 @@ function fillLexPhoto(li) {
 function renderLexikon() {
   if (!lexBuilt) {
     lexBuilt = true;
-    const sel = $('lexGroup');
-    sel.innerHTML = '<option value="">Alle Gruppen</option><option value="offen">Noch nicht sicher</option>';
-    Object.entries(GRUPPEN).forEach(([k, v]) => sel.add(new Option(v, k)));
     const ul = $('lexList');
-    WALE.slice().sort((a, b) => a.name.localeCompare(b.name, 'de')).forEach((w) => {
+    ALLE.slice().sort((a, b) => a.name.localeCompare(b.name, 'de')).forEach((w) => {
       const li = document.createElement('li');
       li.dataset.id = w.id;
+      li.hidden = true;
       li.innerHTML = '<img class="pic" alt="" loading="lazy"><div class="body"><h3><span></span><span class="lvl"></span></h3>'
         + '<div class="latin"></div><dl class="facts"></dl><p class="merkmal"></p><div class="size"></div><div class="credit"></div></div>';
       li.querySelector('h3 span').textContent = w.name;
@@ -781,13 +823,20 @@ function renderLexikon() {
       factsList(w, li.querySelector('.facts'), 3);
       li.querySelector('.merkmal').textContent = w.merkmal;
       li.querySelector('.size').innerHTML = groessenSvg(w);
-      li.querySelector('.size').appendChild(soundButton(w));
+      if (w.welt === 'wale') li.querySelector('.size').appendChild(soundButton(w));
       li.search = normalize(w.name + w.auch.join('') + w.latin);
       ul.appendChild(li);
       if (lexObserver) lexObserver.observe(li); else fillLexPhoto(li);
     });
     $('lexSearch').addEventListener('input', filterLexikon);
     $('lexGroup').addEventListener('change', filterLexikon);
+  }
+  if (lexWelt !== welt) {
+    lexWelt = welt;
+    const sel = $('lexGroup');
+    sel.innerHTML = '<option value="">Alle Gruppen</option><option value="offen">Noch nicht sicher</option>';
+    const groups = new Set(ARTEN().map((a) => a.gruppe));
+    Object.entries(GRUPPEN).forEach(([k, v]) => { if (groups.has(k)) sel.add(new Option(v, k)); });
   }
   filterLexikon();
 }
@@ -796,9 +845,9 @@ function filterLexikon() {
   const g = $('lexGroup').value;
   let n = 0;
   [...$('lexList').children].forEach((li) => {
-    const w = WALE.find((x) => x.id === li.dataset.id);
+    const w = artById(li.dataset.id);
     li.querySelector('.lvl').textContent = (isSicher(w) ? '✔︎ ' : '') + stufeFor(w.lvl).emoji;
-    const vis = (!q || li.search.includes(q)) && (!g || (g === 'offen' ? !isSicher(w) : w.gruppe === g));
+    const vis = (welt === 'beide' || w.welt === welt) && (!q || li.search.includes(q)) && (!g || (g === 'offen' ? !isSicher(w) : w.gruppe === g));
     li.hidden = !vis;
     if (vis) n++;
   });

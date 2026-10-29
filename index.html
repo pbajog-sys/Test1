@@ -190,6 +190,12 @@
   .lex .credit { text-align: left; }
   .count { color: var(--muted); font-size: 0.9rem; }
 
+  .welt-switch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: var(--card); }
+  .welt-switch button {
+    border: 0; border-radius: 10px; padding: 10px 4px; font: inherit; font-size: 0.98rem; cursor: pointer;
+    background: transparent; color: var(--muted);
+  }
+  .welt-switch button.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
   .learn { margin-top: 20px; }
   .learn .muted { font-size: 0.9rem; margin-bottom: 6px; text-align: center; }
   .challenge {
@@ -239,9 +245,14 @@
 
   <!-- Startseite -->
   <section class="screen active" id="screen-start">
+    <div class="welt-switch" role="tablist" aria-label="Welt wählen">
+      <button data-welt="wale" type="button">🐋 Wale</button>
+      <button data-welt="haie" type="button">🦈 Haie</button>
+      <button data-welt="beide" type="button">🌊 Beide</button>
+    </div>
     <div class="hero">
       <img class="logo" src="icons/icon.svg" alt="">
-      <h2>Wal-Quiz</h2>
+      <h2 id="heroTitle">Wal-Quiz</h2>
       <p id="heroText">Erkennst du die Wale an ihren Fotos? Übe in Ruhe und mach dann deine Abzeichen – vom Seepferdchen bis Gold.</p>
     </div>
     <div class="challenge" id="challengeBox" hidden>
@@ -250,20 +261,20 @@
     </div>
     <div class="menu">
       <button class="menu-btn" data-go="pick-practice">
-        <span class="emoji">🐋</span>
+        <span class="emoji" id="practiceEmoji">🐋</span>
         <span class="txt"><strong>Üben</strong><span class="sub">3 Fotos ansehen, aus 6 Arten wählen – was du falsch hast, kommt öfter</span></span>
       </button>
       <button class="menu-btn primary" data-go="pick-test">
         <span class="emoji">🎖️</span>
-        <span class="txt"><strong>Abzeichen-Test</strong><span class="sub">10 Wale, Namen selbst eintippen</span></span>
+        <span class="txt"><strong>Abzeichen-Test</strong><span class="sub" id="testSub">10 Wale, Namen selbst eintippen</span></span>
       </button>
-      <button class="menu-btn" data-go="sound">
+      <button class="menu-btn" data-go="sound" id="soundMenu">
         <span class="emoji">🔊</span>
         <span class="txt"><strong>Wer ruft da?</strong><span class="sub">Wale an ihren Rufen und Gesängen erkennen</span></span>
       </button>
       <button class="menu-btn" data-go="lexikon">
         <span class="emoji">📖</span>
-        <span class="txt"><strong>Wal-Lexikon</strong><span class="sub" id="lexSub"></span></span>
+        <span class="txt"><strong>Lexikon</strong><span class="sub" id="lexSub"></span></span>
       </button>
     </div>
     <div class="learn"><div class="muted" id="learnText"></div><div class="bar"><div id="learnBar"></div></div></div>
@@ -352,6 +363,7 @@
 </div>
 
 <script src="wale.js"></script>
+<script src="haie.js"></script>
 <script src="groesse.js"></script>
 <script src="app.js"></script>
 </body>

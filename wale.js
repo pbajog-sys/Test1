@@ -130,5 +130,5 @@ const STUFEN = [
 
 const WALE = WAL_DATEN.map(([name, latin, wiki, lvl, gruppe, laenge, gewicht, gebiet, merkmal, auch = []]) => ({
   id: latin.toLowerCase().replace(/\s+/g, '-'),
-  name, latin, wiki, lvl, gruppe, laenge, gewicht, gebiet, merkmal, auch,
+  welt: 'wale', name, latin, wiki, lvl, gruppe, laenge, gewicht, gebiet, merkmal, auch,
 }));
