@@ -21,10 +21,11 @@ const shuffle = (arr) => {
   return a;
 };
 const fmt = (n) => String(n).replace('.', ',');
-// ---------- Welten: Wale, Haie oder beide zusammen ----------
-// ALLE: Wale zuerst, dann Haie – die Reihenfolge ist Teil der Challenge-Links, darum nur hinten anhängen.
-const ALLE = WALE.concat(HAIE);
-Object.assign(GRUPPEN, HAI_GRUPPEN);
+
+// ---------- Welten: Wale, Haie, beide zusammen oder Porsche ----------
+// ALLE: Wale, Haie, Porsche – die Reihenfolge ist Teil der Challenge-Links, darum nur hinten anhängen.
+const ALLE = WALE.concat(HAIE, PORSCHE);
+Object.assign(GRUPPEN, HAI_GRUPPEN, PORSCHE_GRUPPEN);
 const WELTEN = {
   wale:  { emoji: '🐋', name: 'Wale',  title: 'Wal-Quiz',    frage: 'Welcher Wal ist das?',
            hero: 'Erkennst du die Wale an ihren Fotos? Übe in Ruhe und mach dann deine Abzeichen – vom Seepferdchen bis Gold.',
@@ -35,10 +36,20 @@ const WELTEN = {
   beide: { emoji: '🌊', name: 'Beide', title: 'Meeres-Quiz', frage: 'Wal oder Hai – wer ist das?',
            hero: 'Wale und Haie gemischt: Erkennst du alle Riesen des Meeres? Die Abzeichen hier sind die Königsklasse.',
            stufen: ['Die bekanntesten Wale und Haie', 'Oft zu sehen', 'Fast alle Arten', 'Alle Wale und Haie'] },
+  porsche: { emoji: '🏎️', name: 'Porsche', title: 'Porsche-Quiz', frage: 'Welcher Porsche ist das?',
+           hero: 'Erkennst du jeden Porsche – vom 356 bis zum Taycan, vom G-Modell bis zum 992? Inoffizielles Fan-Quiz.',
+           stufen: ['Die bekanntesten Modelle', 'Alle Elfer-Generationen', 'Fast alle Modelle', 'Alle Modelle und Generationen'] },
 };
 let welt = (() => { try { const w = JSON.parse(localStorage.getItem('walquiz.v2') || '{}').welt; return WELTEN[w] ? w : 'wale'; } catch { return 'wale'; } })();
-const ARTEN = () => (welt === 'beide' ? ALLE : ALLE.filter((a) => a.welt === welt));
-const poolFor = (lvl, w = welt) => ALLE.filter((a) => a.lvl <= lvl && (w === 'beide' || a.welt === w));
+// „Beide“ heißt Wale und Haie zusammen – Porsche bleibt eine eigene Welt.
+const inWelt = (a, w = welt) => (w === 'beide' ? a.welt === 'wale' || a.welt === 'haie' : a.welt === w);
+const ARTEN = () => ALLE.filter((a) => inWelt(a));
+const poolFor = (lvl, w = welt) => ALLE.filter((a) => a.lvl <= lvl && inWelt(a, w));
+const WORT = { wale: 'Wale', haie: 'Haie', beide: 'Tiere', porsche: 'Porsche' };
+const KUNDE = { wale: 'Walkunde', haie: 'Haikunde', beide: 'Meereskunde', porsche: 'Porsche-Kunde' };
+// So wird eine Art im Satz genannt („Das ist ein …“).
+const artenWort = () => (welt === 'porsche' ? 'Modelle' : 'Arten');
+const artLabel = (a) => (a.welt === 'porsche' ? 'Porsche ' + a.name : a.name);
 const stufeFor = (lvl) => STUFEN.find((s) => s.lvl === lvl);
 const stufenText = (lvl, w = welt) => WELTEN[w].stufen[lvl - 1];
 // Abzeichen je Welt; die Wale behalten ihre alten Schlüssel (1–4), damit frühere Abzeichen bleiben.
@@ -78,39 +89,65 @@ function hasCameraData(ii) {
   return (ii.commonmetadata || []).some((m) => (m.name === 'Make' || m.name === 'Model') && String(m.value).trim());
 }
 
-async function articlePhotos(host, title) {
+// Bei Autos sind Museen, Modell-Bezeichnungen usw. normal – dafür fliegen Innenraum, Motor, Felgen, Spielzeugautos raus.
+const BAD_CAR_FILE = /interior|innenraum|cockpit|dashboard|armatur|engine|motor|wheel|felge|\brim\b|badge|logo|emblem|crest|wappen|\bkey|seat|sitz|steering|lenkrad|toy|lego|scale.?model|modellauto|diecast|drawing|sketch|diagram|chart|brochure|prospekt|poster|stamp|crash|wreck|unfall|replica|nachbau/i;
+const MEH_CAR_FILE = /race|rennen|racing|rally|rallye|tuning|tuned|modified|umbau|conversion|ruf_|singer|gemballa|techart|mansory|police|polizei/i;
+
+function filePhoto(f, leadName, art) {
+  const ii = f.imageinfo && f.imageinfo[0];
+  const name = f.title.replace(/^[^:]+:/, '').replace(/ /g, '_');
+  if (!ii || ii.mime !== 'image/jpeg' || ii.width < 500 || ii.height < 300) return null;
+  const cats = (ii.extmetadata && ii.extmetadata.Categories && ii.extmetadata.Categories.value) || '';
+  const auto = art.welt === 'porsche';
+  if ((auto ? BAD_CAR_FILE : BAD_FILE).test(name) || BAD_CATEGORY.test(cats)) return null;
+  const echt = hasCameraData(ii);
+  // Reihenfolge: echte Fotos zuerst, dann keine toten/gefangenen Tiere bzw. Renn-/Tuning-Autos, dann das Hauptbild.
+  const meh = (auto ? MEH_CAR_FILE : MEH_FILE).test(name);
+  const rank = (echt ? 0 : 4) + (meh ? 2 : 0) + (name === leadName ? 0 : 1) + Math.random() * 0.5;
+  return { src: ii.thumburl || ii.url, page: ii.descriptionurl, name, echt, rank };
+}
+const IMAGE_INFO = { prop: 'imageinfo', iiprop: 'url|mime|size|extmetadata|commonmetadata', iiextmetadatafilter: 'Categories', iiurlwidth: '960' };
+
+async function articlePhotos(host, title, art) {
   const [lead, list] = await Promise.all([
     wikiApi(host, { titles: title, prop: 'pageimages', piprop: 'name' }).catch(() => null),
-    wikiApi(host, {
-      titles: title, generator: 'images', gimlimit: '50', prop: 'imageinfo',
-      iiprop: 'url|mime|size|extmetadata|commonmetadata', iiextmetadatafilter: 'Categories', iiurlwidth: '960',
-    }),
+    wikiApi(host, { titles: title, generator: 'images', gimlimit: '50', ...IMAGE_INFO }),
   ]);
   const page = lead && lead.query && lead.query.pages && lead.query.pages[0];
   const leadName = page && page.pageimage;
-  const out = [];
-  ((list && list.query && list.query.pages) || []).forEach((f) => {
-    const ii = f.imageinfo && f.imageinfo[0];
-    const name = f.title.replace(/^[^:]+:/, '').replace(/ /g, '_');
-    if (!ii || ii.mime !== 'image/jpeg' || ii.width < 500 || ii.height < 300) return;
-    const cats = (ii.extmetadata && ii.extmetadata.Categories && ii.extmetadata.Categories.value) || '';
-    if (BAD_FILE.test(name) || BAD_CATEGORY.test(cats)) return;
-    const echt = hasCameraData(ii);
-    // Reihenfolge: echte Fotos zuerst, dann keine toten/gefangenen Tiere, dann das Hauptbild des Artikels.
-    const rank = (echt ? 0 : 4) + (MEH_FILE.test(name) ? 2 : 0) + (name === leadName ? 0 : 1) + Math.random() * 0.5;
-    out.push({ src: ii.thumburl || ii.url, page: ii.descriptionurl, name, echt, rank });
-  });
-  return out;
+  return ((list && list.query && list.query.pages) || []).map((f) => filePhoto(f, leadName, art)).filter(Boolean);
+}
+
+async function categoryPhotos(category, art) {
+  const list = await wikiApi('commons.wikimedia.org', { generator: 'categorymembers', gcmtitle: category, gcmtype: 'file', gcmlimit: '50', ...IMAGE_INFO });
+  return ((list && list.query && list.query.pages) || []).map((f) => filePhoto(f, null, art)).filter(Boolean);
+}
+
+// Woher die Fotos kommen: Tiere aus dem englischen, notfalls deutschen Artikel;
+// Porsche aus der Quellenliste des Modells (Artikel oder Commons-Kategorie), der Reihe nach.
+function photoSources(art) {
+  if (art.quellen) {
+    return art.quellen.map((q) => {
+      const [kind, ...rest] = q.split(':');
+      const title = rest.join(':');
+      return kind === 'commons' ? () => categoryPhotos(title, art) : () => articlePhotos(kind + '.wikipedia.org', title, art);
+    });
+  }
+  return [() => articlePhotos('en.wikipedia.org', art.wiki, art), () => articlePhotos('de.wikipedia.org', art.latin, art)];
 }
 
 function loadPhotos(wal) {
   if (photoCache[wal.id]) return Promise.resolve(photosFor(wal));
   if (photoInflight[wal.id]) return photoInflight[wal.id];
   photoInflight[wal.id] = (async () => {
-    const found = await articlePhotos('en.wikipedia.org', wal.wiki);
-    if (found.filter((f) => f.echt).length < PHOTOS_PER_WAL) {
-      const de = await articlePhotos('de.wikipedia.org', wal.latin).catch(() => []);
-      de.forEach((p) => { if (!found.some((f) => f.name === p.name)) found.push(p); });
+    const found = [];
+    let failed = 0;
+    const sources = photoSources(wal);
+    for (const source of sources) {
+      if (found.filter((f) => f.echt).length >= PHOTOS_PER_WAL) break;
+      // Die erste Quelle darf scheitern (dann ist man wohl offline → Fehler anzeigen); spätere werden übersprungen.
+      const got = await source().catch((e) => { failed++; if (failed === sources.length) throw e; return []; });
+      got.forEach((p) => { if (!found.some((f) => f.name === p.name)) found.push(p); });
     }
     found.sort((a, b) => a.rank - b.rank);
     photoCache[wal.id] = found.slice(0, PHOTO_CANDIDATES).map(({ src, page, name, echt }) => ({ src, page, name, echt }));
@@ -239,7 +276,7 @@ function normalize(s) {
   return s.toLowerCase().trim()
     .replace(/ä/g, 'ae').replace(/ö/g, 'oe').replace(/ü/g, 'ue').replace(/ß/g, 'ss')
     .replace(/ph/g, 'f')
-    .replace(/[^a-z]/g, '');
+    .replace(/[^a-z0-9]/g, '');
 }
 function levenshtein(a, b) {
   const dp = Array.from({ length: a.length + 1 }, (_, i) => [i]);
@@ -249,14 +286,16 @@ function levenshtein(a, b) {
       dp[i][j] = Math.min(dp[i-1][j] + 1, dp[i][j-1] + 1, dp[i-1][j-1] + (a[i-1] === b[j-1] ? 0 : 1));
   return dp[a.length][b.length];
 }
-const answerNames = (w) => [w.name, ...w.auch, w.latin, w.wiki].map(normalize);
+const answerNames = (w) => [w.name, ...w.auch, w.latin, w.wiki].filter(Boolean).map(normalize);
 const tolerance = (n) => (n.length >= 10 ? 2 : n.length >= 5 ? 1 : 0);
-// Ergebnis: 'exact' | 'typo' | 'wrong'
+// Ergebnis: 'exact' | 'typo' | 'reihe' (nur die Porsche-Baureihe, z. B. „Cayenne“) | 'wrong'
 function checkAnswer(input, wal) {
-  const given = normalize(input);
+  let given = normalize(input);
+  if (wal.welt === 'porsche') given = given.replace(/^porsche/, '');
   if (!given) return 'wrong';
   const names = answerNames(wal);
   if (names.includes(given)) return 'exact';
+  if (wal.reihen && wal.reihen.map(normalize).includes(given)) return 'reihe';
   const best = Math.min(...names.map((n) => (levenshtein(given, n) <= tolerance(n) ? levenshtein(given, n) : Infinity)));
   if (best === Infinity) return 'wrong';
   // Kleine Tippfehler sind erlaubt – aber nicht, wenn die Eingabe genauso gut zu einer anderen Art passt.
@@ -320,12 +359,14 @@ function renderStart() {
   $('heroTitle').textContent = W.title;
   $('heroText').textContent = W.hero;
   document.querySelectorAll('[data-welt]').forEach((b) => b.classList.toggle('on', b.dataset.welt === welt));
-  $('soundMenu').hidden = welt === 'haie';
+  $('soundMenu').hidden = welt === 'haie' || welt === 'porsche';
+  $('heroLogo').hidden = welt === 'porsche';
+  $('heroEmoji').hidden = welt !== 'porsche';
   $('practiceEmoji').textContent = W.emoji;
-  $('testSub').textContent = TEST_LEN + ' ' + (welt === 'wale' ? 'Wale' : welt === 'haie' ? 'Haie' : 'Tiere') + ', Namen selbst eintippen';
-  $('lexSub').textContent = 'Alle ' + arten.length + ' Arten mit Steckbrief und Größenvergleich';
+  $('testSub').textContent = TEST_LEN + ' ' + WORT[welt] + ', Namen selbst eintippen';
+  $('lexSub').textContent = 'Alle ' + arten.length + ' ' + artenWort() + (welt === 'porsche' ? ' mit Steckbrief' : ' mit Steckbrief und Größenvergleich');
   const n = countSicher(arten);
-  $('learnText').textContent = 'Gelernt: ' + n + ' von ' + arten.length + ' Arten sicher';
+  $('learnText').textContent = 'Gelernt: ' + n + ' von ' + arten.length + ' ' + artenWort() + ' sicher';
   $('learnBar').style.width = (n / arten.length * 100) + '%';
 
   const box = $('challengeBox');
@@ -370,7 +411,7 @@ function renderPick(mode) {
     b.innerHTML = '<span class="emoji"></span><span class="txt"><strong></strong><span class="sub"></span></span><span class="right"></span>';
     b.querySelector('.emoji').textContent = s.emoji;
     b.querySelector('strong').textContent = s.name;
-    b.querySelector('.sub').textContent = stufenText(s.lvl) + ' · ' + pool.length + ' Arten';
+    b.querySelector('.sub').textContent = stufenText(s.lvl) + ' · ' + pool.length + ' ' + artenWort();
     b.querySelector('.right').textContent = mode === 'test'
       ? (badges[badgeKey(s.lvl)] ? '✅ geschafft' : best != null ? 'Bestes: ' + fmt(best) : '')
       : countSicher(pool) + '/' + pool.length + ' sicher';
@@ -449,6 +490,14 @@ $('galNext').addEventListener('click', () => { const g = $('gallery'); g.scrollT
 
 // ---------- Tipps ----------
 function tipsFor(wal) {
+  if (wal.welt === 'porsche') {
+    return [
+      ['Gruppe', GRUPPEN[wal.gruppe]],
+      ['Bauzeit', wal.bauzeit],
+      ['Motor', wal.motor],
+      ['Merkmal', wal.merkmal],
+    ];
+  }
   return [
     ['Gruppe', GRUPPEN[wal.gruppe]],
     ['Größe', 'bis ' + wal.laenge + (wal.gewicht !== '?' ? ', bis ' + wal.gewicht : '')],
@@ -537,7 +586,7 @@ function nextQuestion() {
     $('qBar').style.width = (state.index / state.deck.length * 100) + '%';
   } else if (state.mode === 'practice') {
     const n = countSicher(state.pool);
-    $('qCounter').textContent = n + ' von ' + state.pool.length + ' Arten sicher';
+    $('qCounter').textContent = n + ' von ' + state.pool.length + ' ' + artenWort() + ' sicher';
     $('qBar').style.width = (n / state.pool.length * 100) + '%';
   } else {
     $('qCounter').textContent = 'Hör-Runde';
@@ -641,7 +690,7 @@ function answerChoice(opt, btn) {
   });
   if (!ok) btn.classList.add('wrong', 'shake');
   if (state.mode === 'practice') recordAnswer(wal, !ok ? 'falsch' : state.tips ? 'mitTipp' : 'richtig');
-  finishQuestion(ok ? 1 : 0, ok ? 'Richtig! Das ist ein ' + wal.name + '.' : 'Leider nicht. Das ist ein ' + wal.name + '.');
+  finishQuestion(ok ? 1 : 0, (ok ? 'Richtig! Das ist ein ' : 'Leider nicht. Das ist ein ') + artLabel(wal) + '.');
 }
 
 $('answerForm').addEventListener('submit', (e) => {
@@ -655,12 +704,15 @@ $('answerForm').addEventListener('submit', (e) => {
   input.disabled = true;
   $('answerForm').querySelector('button').disabled = true;
   input.blur();
-  const pts = res === 'wrong' ? 0 : (state.tips ? 0.5 : 1);
+  // Nur die Baureihe gewusst: im Seepferdchen-Test voller Punkt, sonst ein halber. Mit Tipp höchstens ein halber.
+  let pts = res === 'wrong' ? 0 : res === 'reihe' && state.lvl > 1 ? 0.5 : 1;
+  if (state.tips) pts = Math.min(pts, 0.5);
   let msg;
-  if (res === 'exact') msg = 'Richtig! Das ist ein ' + wal.name + '.';
+  if (res === 'exact') msg = 'Richtig! Das ist ein ' + artLabel(wal) + '.';
   else if (res === 'typo') msg = 'Richtig (kleiner Tippfehler) – man schreibt „' + wal.name + '“.';
-  else msg = 'Leider falsch. Das ist ein ' + wal.name + '.';
-  if (pts === 0.5) msg += ' Mit Tipp: ½ Punkt.';
+  else if (res === 'reihe') msg = 'Die Baureihe stimmt! Genau ist es ein ' + artLabel(wal) + '.' + (state.lvl > 1 ? ' Ohne Generation: ½ Punkt.' : '');
+  else msg = 'Leider falsch. Das ist ein ' + artLabel(wal) + '.';
+  if (state.tips && pts === 0.5) msg += ' Mit Tipp: ½ Punkt.';
   state.log.push({ wal, given: input.value.trim(), pts });
   recordAnswer(wal, pts === 1 ? 'richtig' : pts ? 'mitTipp' : 'falsch');
   finishQuestion(pts, msg);
@@ -674,14 +726,14 @@ function finishQuestion(pts, msg) {
   $('qScore').textContent = fmt(state.points) + ' / ' + state.answered + ' Punkte';
   if (state.mode === 'practice') {
     const n = countSicher(state.pool);
-    $('qCounter').textContent = n + ' von ' + state.pool.length + ' Arten sicher';
+    $('qCounter').textContent = n + ' von ' + state.pool.length + ' ' + artenWort() + ' sicher';
     $('qBar').style.width = (n / state.pool.length * 100) + '%';
   }
   $('fbTitle').textContent = (pts ? '✅ ' : '❌ ') + msg;
   $('fbSub').textContent = wal.latin + (wal.auch.length ? ' · auch: ' + wal.auch.join(', ') : '');
   factsList(wal, $('fbFacts'));
   const extra = $('fbExtra');
-  extra.innerHTML = groessenSvg(wal);
+  extra.innerHTML = wal.welt === 'porsche' ? '' : groessenSvg(wal);
   if (state.mode !== 'sound' && wal.welt === 'wale') extra.appendChild(soundButton(wal));
   $('feedback').className = 'feedback show ' + (pts ? 'ok' : 'bad');
 
@@ -740,8 +792,8 @@ function showResult() {
   if (passed) {
     cert.innerHTML = '<div class="certificate"><div class="seal"></div><h3></h3><div></div></div>';
     cert.querySelector('.seal').textContent = stufe.emoji;
-    cert.querySelector('h3').textContent = stufe.name + ' der ' + { wale: 'Walkunde', haie: 'Haikunde', beide: 'Meereskunde' }[welt];
-    cert.querySelector('h3 + div').textContent = 'Du kennst die ' + { wale: 'Wale', haie: 'Haie', beide: 'Wale und Haie' }[welt] + ' der Stufe „' + stufe.name + '“!';
+    cert.querySelector('h3').textContent = stufe.name + ' der ' + KUNDE[welt];
+    cert.querySelector('h3 + div').textContent = 'Du kennst die ' + (welt === 'beide' ? 'Wale und Haie' : welt === 'porsche' ? 'Porsche-Modelle' : WORT[welt]) + ' der Stufe „' + stufe.name + '“!';
   } else {
     cert.innerHTML = '<p class="muted"></p>';
     cert.firstChild.textContent = 'Für das Abzeichen „' + stufe.name + '“ brauchst du mindestens ' + TEST_PASS + ' Punkte. Übe noch ein bisschen!';
@@ -788,7 +840,7 @@ async function shareChallenge(result) {
   const url = location.origin + location.pathname + '?c=' + encodeChallenge({ ...result, name });
   const stufe = stufeFor(result.lvl);
   const text = name + ' hat im ' + WELTEN[result.welt].title + ' (' + stufe.emoji + ' ' + stufe.name + ') ' + fmt(result.points) + ' von ' + result.wale.length
-    + ' Punkten. Dieselben ' + result.wale.length + ' ' + { wale: 'Wale', haie: 'Haie', beide: 'Tiere' }[result.welt]
+    + ' Punkten. Dieselben ' + result.wale.length + ' ' + WORT[result.welt]
     + ' – schaffst du mehr? ' + WELTEN[result.welt].emoji;
   if (navigator.share) {
     try { await navigator.share({ title: WELTEN[result.welt].title + ' Challenge', text, url }); return; }
@@ -841,7 +893,7 @@ function renderLexikon() {
       li.querySelector('.latin').textContent = w.latin + (w.auch.length ? ' · auch: ' + w.auch.join(', ') : '');
       factsList(w, li.querySelector('.facts'), 3);
       li.querySelector('.merkmal').textContent = w.merkmal;
-      li.querySelector('.size').innerHTML = groessenSvg(w);
+      if (w.welt !== 'porsche') li.querySelector('.size').innerHTML = groessenSvg(w);
       if (w.welt === 'wale') li.querySelector('.size').appendChild(soundButton(w));
       li.search = normalize(w.name + w.auch.join('') + w.latin);
       ul.appendChild(li);
@@ -866,11 +918,11 @@ function filterLexikon() {
   [...$('lexList').children].forEach((li) => {
     const w = artById(li.dataset.id);
     li.querySelector('.lvl').textContent = (isSicher(w) ? '✔︎ ' : '') + stufeFor(w.lvl).emoji;
-    const vis = (welt === 'beide' || w.welt === welt) && (!q || li.search.includes(q)) && (!g || (g === 'offen' ? !isSicher(w) : w.gruppe === g));
+    const vis = inWelt(w) && (!q || li.search.includes(q)) && (!g || (g === 'offen' ? !isSicher(w) : w.gruppe === g));
     li.hidden = !vis;
     if (vis) n++;
   });
-  $('lexCount').textContent = n + ' Arten';
+  $('lexCount').textContent = n + ' ' + artenWort();
 }
 
 // ---------- Fotos prüfen ----------
@@ -925,7 +977,7 @@ const isGeprueft = (art) => { const p = photosFor(art); return p !== null && p.l
 
 function updatePruefCount() {
   const arten = ARTEN();
-  $('pruefCount').textContent = arten.filter(isGeprueft).length + ' von ' + arten.length + ' Arten geprüft';
+  $('pruefCount').textContent = arten.filter(isGeprueft).length + ' von ' + arten.length + ' ' + artenWort() + ' geprüft';
   $('sperrCount').textContent = Object.keys(photoBlock).filter((n) => !FOTO_SPERRE.includes(n)).length;
 }
 

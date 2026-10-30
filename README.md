@@ -1,7 +1,16 @@
 # Wal-Quiz – Seepferdchen der Walkunde
 
-Mit Umschalter zwischen drei Welten: 🐋 Wale, 🦈 Haie und 🌊 Beide (gemischt). Jede Welt hat
-eigene Abzeichen; Lernstand und Lexikon funktionieren überall.
+Mit Umschalter zwischen vier Welten: 🐋 Wale, 🦈 Haie, 🌊 Beide (Wale und Haie gemischt) und
+🏎️ Porsche. Jede Welt hat eigene Abzeichen; Lernstand und Lexikon funktionieren überall.
+
+## Porsche
+33 Serienmodelle mit ihren Generationen in `porsche.js` – vom 356 über alle 911-Generationen (Urmodell bis 992),
+die Frontmotor-Modelle (924, 944, 968, 928), Boxster/Cayman, die Supersportwagen (959, Carrera GT, 918) bis zu
+Cayenne, Macan, Panamera und Taycan. Stufen: 14/25/31/33. Tipps: Gruppe, Bauzeit, Motor, Merkmal.
+Im Test zählt die Generation („964“, „Porsche 964“, „911 (964)“); nur die Baureihe („911“, „Elfer“, „Cayenne“)
+gibt im Seepferdchen-Test den vollen Punkt, sonst einen halben. Die Fotos kommen aus generationsgenauen Quellen
+(Wikipedia-Artikel oder Commons-Kategorie, der Reihe nach probiert); Innenraum, Motorraum, Felgen, Logos und
+Spielzeugautos werden aussortiert, Renn- und Tuning-Autos nach hinten gestellt. Inoffizielles Fan-Quiz, ohne Logos.
 
 Eine Web-App (PWA) zum Lernen von Walarten. Sie läuft auf iPhone und Android im Browser
 und lässt sich wie eine App auf den Home-Bildschirm legen.
@@ -41,7 +50,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 ## Dateien
 - `index.html` – Aufbau und Aussehen
 - `app.js` – Quiz-Logik, Fotos, Töne, Karteikasten, Challenge
-- `wale.js`, `haie.js` – Artenlisten mit Steckbriefen
+- `wale.js`, `haie.js`, `porsche.js` – Listen mit Steckbriefen
 - `groesse.js` – Größenvergleich
 - `sw.js`, `manifest.webmanifest`, `icons/` – Installation und Offline-Nutzung
 

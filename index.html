@@ -53,6 +53,7 @@
   /* Start */
   .hero { text-align: center; padding: 16px 8px 8px; }
   .hero .logo { width: 88px; height: 88px; }
+  .hero .hero-emoji { font-size: 72px; line-height: 88px; }
   .hero h2 { font-size: 1.8rem; margin: 10px 0 6px; }
   .hero p { color: var(--muted); margin: 0 auto; max-width: 34ch; line-height: 1.45; }
   .menu { display: grid; gap: 12px; margin-top: 24px; }
@@ -206,9 +207,9 @@
   .lex .credit { text-align: left; }
   .count { color: var(--muted); font-size: 0.9rem; }
 
-  .welt-switch { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: var(--card); }
+  .welt-switch { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: var(--card); }
   .welt-switch button {
-    border: 0; border-radius: 10px; padding: 10px 4px; font: inherit; font-size: 0.98rem; cursor: pointer;
+    border: 0; border-radius: 10px; padding: 10px 2px; font: inherit; font-size: 0.85rem; cursor: pointer; white-space: nowrap;
     background: transparent; color: var(--muted);
   }
   .welt-switch button.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
@@ -265,9 +266,11 @@
       <button data-welt="wale" type="button">🐋 Wale</button>
       <button data-welt="haie" type="button">🦈 Haie</button>
       <button data-welt="beide" type="button">🌊 Beide</button>
+      <button data-welt="porsche" type="button">🏎️ Porsche</button>
     </div>
     <div class="hero">
-      <img class="logo" src="icons/icon.svg" alt="">
+      <img class="logo" id="heroLogo" src="icons/icon.svg" alt="">
+      <div class="hero-emoji" id="heroEmoji" hidden>🏎️</div>
       <h2 id="heroTitle">Wal-Quiz</h2>
       <p id="heroText">Erkennst du die Wale an ihren Fotos? Übe in Ruhe und mach dann deine Abzeichen – vom Seepferdchen bis Gold.</p>
     </div>
@@ -278,7 +281,7 @@
     <div class="menu">
       <button class="menu-btn" data-go="pick-practice">
         <span class="emoji" id="practiceEmoji">🐋</span>
-        <span class="txt"><strong>Üben</strong><span class="sub">2 Fotos ansehen, aus 6 Arten wählen – was du falsch hast, kommt öfter</span></span>
+        <span class="txt"><strong>Üben</strong><span class="sub">2 Fotos ansehen, aus 6 Antworten wählen – was du falsch hast, kommt öfter</span></span>
       </button>
       <button class="menu-btn primary" data-go="pick-test">
         <span class="emoji">🎖️</span>
@@ -396,6 +399,7 @@
 
 <script src="wale.js"></script>
 <script src="haie.js"></script>
+<script src="porsche.js"></script>
 <script src="groesse.js"></script>
 <script src="app.js"></script>
 </body>
