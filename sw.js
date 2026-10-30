@@ -1,5 +1,5 @@
 // Service Worker: App offline verfügbar machen. Walfotos werden beim ersten Anzeigen zwischengespeichert.
-const VERSION = 'walquiz-v7';
+const VERSION = 'walquiz-v8';
 const SHELL = [
   './',
   'index.html',
@@ -8,12 +8,27 @@ const SHELL = [
   'porsche.js',
   'dackel.js',
   'groesse.js',
+  'gretchen.js',
   'app.js',
   'manifest.webmanifest',
   'icons/icon.svg',
   'icons/icon-192.png',
   'icons/icon-512.png',
   'icons/apple-touch-icon.png',
+  'img/gretchen/avatar.jpg',
+  'img/gretchen/avatar-denkt.jpg',
+  'img/gretchen/g01.jpg',
+  'img/gretchen/g02.jpg',
+  'img/gretchen/g03.jpg',
+  'img/gretchen/g04.jpg',
+  'img/gretchen/g05.jpg',
+  'img/gretchen/g06.jpg',
+  'img/gretchen/g07.jpg',
+  'img/gretchen/g08.jpg',
+  'img/gretchen/g09.jpg',
+  'img/gretchen/g10.jpg',
+  'img/gretchen/g11.jpg',
+  'img/gretchen/g12.jpg',
 ];
 
 self.addEventListener('install', (event) => {

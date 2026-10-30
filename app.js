@@ -42,7 +42,7 @@ const WELTEN = {
            hero: 'Erkennst du jeden Porsche – vom 356 bis zum Taycan, vom G-Modell bis zum 992? Inoffizielles Fan-Quiz.',
            stufen: ['Die bekanntesten Modelle', 'Alle Elfer-Generationen', 'Fast alle Modelle', 'Alle Modelle und Generationen'] },
   dackel: { emoji: '🐕', name: 'Dackel', title: 'Dackel-Quiz', frage: '',
-           hero: 'Wie gut kennst du Dackel? Herkunft, Jagd, Fellfarben und Kurioses – vier Antworten, eine stimmt.',
+           hero: 'Hi, ich bin Gretchen! 🐾 Wie gut kennst du uns Dackel? Herkunft, Jagd, Fellfarben und Kurioses – vier Antworten, eine stimmt.',
            stufen: ['Grundwissen', 'Für Dackelfreunde', 'Für Kenner', 'Für echte Dackel-Profis'] },
 };
 let welt = (() => { try { const w = JSON.parse(localStorage.getItem('walquiz.v2') || '{}').welt; return WELTEN[w] ? w : 'wale'; } catch { return 'wale'; } })();
@@ -355,6 +355,12 @@ document.querySelectorAll('[data-welt]').forEach((b) => b.addEventListener('clic
   renderStart();
 }));
 
+// Die Dackel-Welt hat ihr eigenes, rosa Gretchen-Design.
+function applyTheme() {
+  document.body.classList.toggle('theme-dackel', welt === 'dackel');
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', welt === 'dackel' ? '#fdf1f4' : '#0b2a4a');
+}
+
 function renderStart() {
   const store = loadJson(STORE_KEY);
   const badges = store.badges || {};
@@ -365,8 +371,10 @@ function renderStart() {
   $('heroTitle').textContent = W.title;
   $('heroText').textContent = W.hero;
   document.querySelectorAll('[data-welt]').forEach((b) => b.classList.toggle('on', b.dataset.welt === welt));
+  applyTheme();
   $('heroLogo').hidden = welt === 'porsche' || welt === 'dackel';
-  $('heroEmoji').hidden = !$('heroLogo').hidden;
+  $('heroEmoji').hidden = welt !== 'porsche';
+  gretchenStart(welt === 'dackel');
   $('heroEmoji').textContent = W.emoji;
   $('soundMenu').hidden = !['wale', 'beide'].includes(welt);
   $('practiceSub').textContent = welt === 'dackel' ? 'Fragen mit 4 Antworten – was du falsch hast, kommt öfter'
@@ -571,6 +579,7 @@ function startQuiz(mode, lvl, opts = {}) {
     s.deck = [];
   }
   state = s;
+  applyTheme();
   if (mode !== 'test') { growDeck(); growDeck(); }
   // Im Dackel-Quiz wird auch im Test angeklickt statt getippt.
   const tippen = mode === 'test' && welt !== 'dackel';
@@ -639,6 +648,7 @@ function nextQuestion() {
   if (istFrage(wal)) {
     $('galleryArea').hidden = true;
     $('questionText').textContent = wal.frage;
+    gretchenFrage();
     ready();
   } else if (state.mode === 'sound') {
     $('galleryArea').hidden = true;
@@ -660,6 +670,7 @@ function nextQuestion() {
     });
     loadSounds(state.deck[state.index + 1] || wal).catch(() => {});
   } else {
+    gretchenAus();
     $('galleryArea').hidden = false;
     renderGallery(wal, (photos) => { if (!photos.length) skipWal(); else ready(); });
     preloadWal(state.deck[state.index + 1]);
@@ -776,6 +787,12 @@ function finishQuestion(pts, msg) {
   factsList(wal, $('fbFacts'));
   const extra = $('fbExtra');
   extra.innerHTML = wal.welt === 'porsche' || istFrage(wal) ? '' : groessenSvg(wal);
+  if (istFrage(wal)) {
+    // Gretchen reagiert – oben in der Sprechblase und mit einem Foto in der Erklärung.
+    gretchenAntwort(pts > 0);
+    extra.innerHTML = '<div class="gretchen-moment"><img alt="Gretchen"><span>Gretchen-Moment 💕</span></div>';
+    extra.querySelector('img').src = $('gretchenImg').src;
+  }
   if (state.mode !== 'sound' && wal.welt === 'wale') extra.appendChild(soundButton(wal));
   $('feedback').className = 'feedback show ' + (pts ? 'ok' : 'bad');
 
@@ -819,6 +836,7 @@ function showResult() {
   saveJson(STORE_KEY, store);
 
   $('resultHead').textContent = passed ? 'Bestanden! 🎉' : 'Noch nicht ganz …';
+  gretchenErgebnis(welt === 'dackel', passed, state.points, total, stufe);
   $('resultScore').textContent = fmt(state.points) + ' / ' + total;
 
   const vs = $('resultVs');

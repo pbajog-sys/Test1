@@ -7,6 +7,9 @@
 <meta name="description" content="Lerne alle Walarten kennen und mach das Seepferdchen der Walkunde.">
 <meta name="theme-color" content="#0b2a4a">
 <link rel="manifest" href="manifest.webmanifest">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -254,6 +257,68 @@
   }
   .share .msg { color: var(--muted); font-size: 0.85rem; margin-top: 8px; word-break: break-all; }
 
+
+  /* ---------- Dackel-Welt: rosa, verspielt, mit Gretchen ---------- */
+  body.theme-dackel {
+    --bg1: #fdf1f4; --bg2: #f6d6e1;
+    --card: rgba(255,255,255,0.75); --card-strong: rgba(194,87,122,0.14);
+    --text: #5a3428; --muted: #9b6f6a;
+    --accent: #e0839f; --accent-ink: #ffffff;
+    --ok: #2f9e6e; --bad: #d4545b; --gold: #c2577a;
+    font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body.theme-dackel .hero h2 { font-family: "Caveat", cursive; font-size: 3.2rem; font-weight: 600; margin: 4px 0; color: #6b3d2e; }
+  body.theme-dackel header h1 { font-family: "Caveat", cursive; font-size: 1.8rem; font-weight: 600; }
+  body.theme-dackel .menu-btn.primary span.sub { color: rgba(255,255,255,0.9); }
+  body.theme-dackel .choice { background: #fff; border-color: rgba(224,131,159,0.35); box-shadow: 0 2px 8px rgba(194,87,122,0.08); }
+  body.theme-dackel .feedback.ok { background: rgba(47,158,110,0.12); }
+  body.theme-dackel .feedback.bad { background: rgba(212,84,91,0.12); }
+  body.theme-dackel .certificate { border-color: #e0839f; background: #fff; color: #c2577a; }
+  body.theme-dackel .badge.earned { color: #c2577a; }
+  body.theme-dackel .tip-btn { background: #fff; color: #c2577a; }
+  body.theme-dackel::before {
+    content: "🐾"; position: fixed; right: -10px; bottom: 40px; font-size: 140px; opacity: 0.06; transform: rotate(-20deg); pointer-events: none;
+  }
+  .ig-ring { display: inline-block; padding: 4px; border-radius: 50%; background: linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7); }
+  .ig-ring img { display: block; width: 116px; height: 116px; border-radius: 50%; object-fit: cover; border: 4px solid var(--bg1); }
+  .ig-ring.small img { width: 64px; height: 64px; border-width: 3px; }
+  .ig-ring:has(img[hidden]) { display: none; }
+  .gretchen-start { display: grid; gap: 12px; margin-top: 18px; }
+  .g-card { background: var(--card); border-radius: var(--radius); padding: 14px; }
+  .g-title { font-family: "Caveat", cursive; font-size: 1.9rem; color: #c2577a; line-height: 1; margin-bottom: 8px; }
+  .g-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .g-chips li { background: #fff; border: 1px solid rgba(224,131,159,0.4); border-radius: 999px; padding: 5px 11px; font-size: 0.88rem; }
+  .g-feed { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; scrollbar-width: none; }
+  .g-feed::-webkit-scrollbar { display: none; }
+  .g-feed figure { margin: 0; flex: 0 0 150px; scroll-snap-align: start; background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(194,87,122,0.12); }
+  .g-feed img { width: 150px; height: 170px; object-fit: cover; display: block; }
+  .g-feed figcaption { font-size: 0.78rem; padding: 6px 8px 8px; line-height: 1.25; }
+  .g-insta { text-align: center; font-size: 0.9rem; color: #c2577a; font-weight: 600; text-decoration: none; padding: 8px; }
+  .gretchen-box { display: flex; align-items: center; gap: 12px; margin: 4px 0 6px; }
+  .bubble {
+    position: relative; background: #fff; color: var(--text); border-radius: 18px; padding: 10px 14px;
+    font-weight: 600; box-shadow: 0 2px 10px rgba(194,87,122,0.12); line-height: 1.3;
+  }
+  .gretchen-box .bubble::before {
+    content: ""; position: absolute; left: -8px; top: 50%; transform: translateY(-50%);
+    border: 8px solid transparent; border-right-color: #fff; border-left: 0;
+  }
+  .gretchen-box.froh .bubble { background: #e9f7f0; } .gretchen-box.froh .bubble::before { border-right-color: #e9f7f0; }
+  .gretchen-box.traurig .bubble { background: #fdeef0; } .gretchen-box.traurig .bubble::before { border-right-color: #fdeef0; }
+  .gretchen-moment { margin-top: 12px; border-radius: 16px; overflow: hidden; position: relative; }
+  .gretchen-moment img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+  .gretchen-moment span {
+    position: absolute; left: 10px; bottom: 10px; background: rgba(255,255,255,0.92); color: #5a3428;
+    border-radius: 999px; padding: 4px 10px; font-size: 0.8rem; font-weight: 600;
+  }
+  .gretchen-result { display: grid; gap: 10px; justify-items: center; margin: 8px 0 16px; }
+  .gretchen-result img { width: 100%; max-width: 360px; aspect-ratio: 1; object-fit: cover; border-radius: 22px; box-shadow: 0 6px 20px rgba(194,87,122,0.25); }
+  .gretchen-result .btn { width: 100%; }
+  .gretchen-result .msg { color: var(--muted); font-size: 0.9rem; }
+  .konfetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
+  .konfetti span { position: absolute; top: -40px; animation-name: fall; animation-timing-function: linear; animation-fill-mode: forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(380deg); } }
+
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
@@ -277,8 +342,17 @@
     <div class="hero">
       <img class="logo" id="heroLogo" src="icons/icon.svg" alt="">
       <div class="hero-emoji" id="heroEmoji" hidden>🏎️</div>
+      <span class="ig-ring" id="heroAvatarRing"><img id="heroAvatar" alt="Gretchen" hidden></span>
       <h2 id="heroTitle">Wal-Quiz</h2>
       <p id="heroText">Erkennst du die Wale an ihren Fotos? Übe in Ruhe und mach dann deine Abzeichen – vom Seepferdchen bis Gold.</p>
+    </div>
+    <div class="gretchen-start" id="gretchenStart" hidden>
+      <div class="g-card">
+        <div class="g-title">Das ist Gretchen 💕</div>
+        <ul class="g-chips" id="gretchenSteckbrief"></ul>
+      </div>
+      <div class="g-feed" id="gretchenFeed"></div>
+      <a class="g-insta" id="gretchenInsta" target="_blank" rel="noopener">📸 Gretchen auf Instagram folgen · @chrissi_und_gretchen</a>
     </div>
     <div class="challenge" id="challengeBox" hidden>
       <p id="challengeText"></p>
@@ -316,6 +390,10 @@
   <section class="screen" id="screen-quiz">
     <div class="progress"><span id="qCounter"></span><span id="qScore"></span></div>
     <div class="bar"><div id="qBar"></div></div>
+    <div class="gretchen-box" id="gretchenBox" hidden>
+      <span class="ig-ring small"><img id="gretchenImg" alt="Gretchen"></span>
+      <div class="bubble" id="gretchenBubble"></div>
+    </div>
     <div class="sound-box" id="soundBox" hidden>
       <button class="play" id="playBtn" type="button" aria-label="Abspielen">▶</button>
       <div class="muted" id="soundHint"></div>
@@ -360,6 +438,12 @@
       <div class="big" id="resultScore"></div>
       <div class="vs" id="resultVs" hidden></div>
       <div id="resultCert"></div>
+      <div class="gretchen-result" id="gretchenResult" hidden>
+        <img id="gretchenResultImg" alt="Gretchen">
+        <div class="bubble" id="gretchenResultText"></div>
+        <button class="btn" id="storyBtn" type="button">📸 Story-Bild für Instagram</button>
+        <div class="msg" id="storyMsg"></div>
+      </div>
       <div class="share">
         <label for="nameInput">Fordere Freunde mit denselben Walen heraus:</label>
         <div class="row">
@@ -408,6 +492,7 @@
 <script src="porsche.js"></script>
 <script src="dackel.js"></script>
 <script src="groesse.js"></script>
+<script src="gretchen.js"></script>
 <script src="app.js"></script>
 </body>
 </html>

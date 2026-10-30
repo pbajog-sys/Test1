@@ -8,6 +8,11 @@ Ein Wissensquiz statt Foto-Raten: 40 Fragen in `dackel.js` (Herkunft, Aussehen, 
 Kultur) mit je vier Antworten und einer Erklärung. Auch im Test wird angeklickt. Statt Tipps gibt es einen
 50:50-Joker, der im Test einen halben Punkt kostet. Stufen: 14/24/34/40.
 
+**Gretchen** (Fotos mit freundlicher Erlaubnis von [@chrissi_und_gretchen](https://www.instagram.com/chrissi_und_gretchen/))
+ist das Maskottchen der Dackel-Welt: eigenes rosa Design, Steckbrief und Foto-Feed auf der Startseite,
+Sprechblasen und ein „Gretchen-Moment“-Foto nach jeder Antwort, Pfoten-Konfetti und ein Story-Bild (1080 × 1920)
+zum Teilen auf Instagram. Code in `gretchen.js`, Fotos in `img/gretchen/`.
+
 ## Porsche
 33 Serienmodelle mit ihren Generationen in `porsche.js` – vom 356 über alle 911-Generationen (Urmodell bis 992),
 die Frontmotor-Modelle (924, 944, 968, 928), Boxster/Cayman, die Supersportwagen (959, Carrera GT, 918) bis zu
@@ -57,6 +62,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `app.js` – Quiz-Logik, Fotos, Töne, Karteikasten, Challenge
 - `wale.js`, `haie.js`, `porsche.js` – Listen mit Steckbriefen
 - `dackel.js` – Fragen fürs Dackel-Quiz
+- `gretchen.js`, `img/gretchen/` – Gretchen als Maskottchen
 - `groesse.js` – Größenvergleich
 - `sw.js`, `manifest.webmanifest`, `icons/` – Installation und Offline-Nutzung
 
