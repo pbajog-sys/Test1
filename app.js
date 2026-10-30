@@ -23,9 +23,11 @@ const shuffle = (arr) => {
 const fmt = (n) => String(n).replace('.', ',');
 
 // ---------- Welten: Wale, Haie, beide zusammen oder Porsche ----------
-// ALLE: Wale, Haie, Porsche – die Reihenfolge ist Teil der Challenge-Links, darum nur hinten anhängen.
-const ALLE = WALE.concat(HAIE, PORSCHE);
-Object.assign(GRUPPEN, HAI_GRUPPEN, PORSCHE_GRUPPEN);
+// ALLE: Wale, Haie, Porsche, Dackel-Fragen – die Reihenfolge ist Teil der Challenge-Links, darum nur hinten anhängen.
+const ALLE = WALE.concat(HAIE, PORSCHE, DACKEL);
+Object.assign(GRUPPEN, HAI_GRUPPEN, PORSCHE_GRUPPEN, DACKEL_GRUPPEN);
+// Die Dackel-Welt ist ein Wissensquiz: Fragen mit 4 Antworten statt Fotos.
+const istFrage = (a) => a.welt === 'dackel';
 const WELTEN = {
   wale:  { emoji: '🐋', name: 'Wale',  title: 'Wal-Quiz',    frage: 'Welcher Wal ist das?',
            hero: 'Erkennst du die Wale an ihren Fotos? Übe in Ruhe und mach dann deine Abzeichen – vom Seepferdchen bis Gold.',
@@ -39,16 +41,19 @@ const WELTEN = {
   porsche: { emoji: '🏎️', name: 'Porsche', title: 'Porsche-Quiz', frage: 'Welcher Porsche ist das?',
            hero: 'Erkennst du jeden Porsche – vom 356 bis zum Taycan, vom G-Modell bis zum 992? Inoffizielles Fan-Quiz.',
            stufen: ['Die bekanntesten Modelle', 'Alle Elfer-Generationen', 'Fast alle Modelle', 'Alle Modelle und Generationen'] },
+  dackel: { emoji: '🐕', name: 'Dackel', title: 'Dackel-Quiz', frage: '',
+           hero: 'Wie gut kennst du Dackel? Herkunft, Jagd, Fellfarben und Kurioses – vier Antworten, eine stimmt.',
+           stufen: ['Grundwissen', 'Für Dackelfreunde', 'Für Kenner', 'Für echte Dackel-Profis'] },
 };
 let welt = (() => { try { const w = JSON.parse(localStorage.getItem('walquiz.v2') || '{}').welt; return WELTEN[w] ? w : 'wale'; } catch { return 'wale'; } })();
 // „Beide“ heißt Wale und Haie zusammen – Porsche bleibt eine eigene Welt.
 const inWelt = (a, w = welt) => (w === 'beide' ? a.welt === 'wale' || a.welt === 'haie' : a.welt === w);
 const ARTEN = () => ALLE.filter((a) => inWelt(a));
 const poolFor = (lvl, w = welt) => ALLE.filter((a) => a.lvl <= lvl && inWelt(a, w));
-const WORT = { wale: 'Wale', haie: 'Haie', beide: 'Tiere', porsche: 'Porsche' };
-const KUNDE = { wale: 'Walkunde', haie: 'Haikunde', beide: 'Meereskunde', porsche: 'Porsche-Kunde' };
+const WORT = { wale: 'Wale', haie: 'Haie', beide: 'Tiere', porsche: 'Porsche', dackel: 'Fragen' };
+const KUNDE = { wale: 'Walkunde', haie: 'Haikunde', beide: 'Meereskunde', porsche: 'Porsche-Kunde', dackel: 'Dackelkunde' };
 // So wird eine Art im Satz genannt („Das ist ein …“).
-const artenWort = () => (welt === 'porsche' ? 'Modelle' : 'Arten');
+const artenWort = (n = 2) => (welt === 'porsche' ? (n === 1 ? 'Modell' : 'Modelle') : welt === 'dackel' ? (n === 1 ? 'Frage' : 'Fragen') : (n === 1 ? 'Art' : 'Arten'));
 const artLabel = (a) => (a.welt === 'porsche' ? 'Porsche ' + a.name : a.name);
 const stufeFor = (lvl) => STUFEN.find((s) => s.lvl === lvl);
 const stufenText = (lvl, w = welt) => WELTEN[w].stufen[lvl - 1];
@@ -137,6 +142,7 @@ function photoSources(art) {
 }
 
 function loadPhotos(wal) {
+  if (istFrage(wal)) return Promise.resolve([]);
   if (photoCache[wal.id]) return Promise.resolve(photosFor(wal));
   if (photoInflight[wal.id]) return photoInflight[wal.id];
   photoInflight[wal.id] = (async () => {
@@ -299,7 +305,7 @@ function checkAnswer(input, wal) {
   const best = Math.min(...names.map((n) => (levenshtein(given, n) <= tolerance(n) ? levenshtein(given, n) : Infinity)));
   if (best === Infinity) return 'wrong';
   // Kleine Tippfehler sind erlaubt – aber nicht, wenn die Eingabe genauso gut zu einer anderen Art passt.
-  const other = ALLE.some((w) => w !== wal && answerNames(w).some((n) => levenshtein(given, n) <= best));
+  const other = ALLE.some((w) => w !== wal && !istFrage(w) && answerNames(w).some((n) => levenshtein(given, n) <= best));
   return other ? 'wrong' : 'typo';
 }
 
@@ -359,12 +365,17 @@ function renderStart() {
   $('heroTitle').textContent = W.title;
   $('heroText').textContent = W.hero;
   document.querySelectorAll('[data-welt]').forEach((b) => b.classList.toggle('on', b.dataset.welt === welt));
-  $('soundMenu').hidden = welt === 'haie' || welt === 'porsche';
-  $('heroLogo').hidden = welt === 'porsche';
-  $('heroEmoji').hidden = welt !== 'porsche';
+  $('heroLogo').hidden = welt === 'porsche' || welt === 'dackel';
+  $('heroEmoji').hidden = !$('heroLogo').hidden;
+  $('heroEmoji').textContent = W.emoji;
+  $('soundMenu').hidden = !['wale', 'beide'].includes(welt);
+  $('practiceSub').textContent = welt === 'dackel' ? 'Fragen mit 4 Antworten – was du falsch hast, kommt öfter'
+    : '2 Fotos ansehen, aus 6 Antworten wählen – was du falsch hast, kommt öfter';
   $('practiceEmoji').textContent = W.emoji;
-  $('testSub').textContent = TEST_LEN + ' ' + WORT[welt] + ', Namen selbst eintippen';
-  $('lexSub').textContent = 'Alle ' + arten.length + ' ' + artenWort() + (welt === 'porsche' ? ' mit Steckbrief' : ' mit Steckbrief und Größenvergleich');
+  $('testSub').textContent = welt === 'dackel' ? TEST_LEN + ' Fragen – der 50:50-Joker kostet einen halben Punkt'
+    : TEST_LEN + ' ' + WORT[welt] + ', Namen selbst eintippen';
+  $('lexSub').textContent = 'Alle ' + arten.length + ' ' + artenWort()
+    + (welt === 'dackel' ? ' mit Antwort und Erklärung' : welt === 'porsche' ? ' mit Steckbrief' : ' mit Steckbrief und Größenvergleich');
   const n = countSicher(arten);
   $('learnText').textContent = 'Gelernt: ' + n + ' von ' + arten.length + ' ' + artenWort() + ' sicher';
   $('learnBar').style.width = (n / arten.length * 100) + '%';
@@ -490,6 +501,7 @@ $('galNext').addEventListener('click', () => { const g = $('gallery'); g.scrollT
 
 // ---------- Tipps ----------
 function tipsFor(wal) {
+  if (istFrage(wal)) return [['Erklärung', wal.erklaerung]];
   if (wal.welt === 'porsche') {
     return [
       ['Gruppe', GRUPPEN[wal.gruppe]],
@@ -514,14 +526,23 @@ function factsList(wal, dl, count = 4) {
   });
 }
 function updateTipBtn() {
-  const used = state.tips, max = tipsFor(currentWal()).length;
+  const joker = istFrage(currentWal());
+  const used = state.tips, max = joker ? 1 : tipsFor(currentWal()).length;
   const btn = $('tipBtn');
   btn.disabled = state.locked || used >= max;
-  btn.textContent = '💡 Tipp ' + (used ? used + '/' + max : '') + (state.mode === 'test' && !used ? ' (−½ Punkt)' : '');
+  btn.textContent = (joker ? '🎲 50:50' : '💡 Tipp ' + (used ? used + '/' + max : '')) + (state.mode === 'test' && !used ? ' (−½ Punkt)' : '');
 }
 $('tipBtn').addEventListener('click', () => {
   if (state.locked) return;
   const wal = currentWal();
+  if (istFrage(wal)) {
+    // 50:50-Joker: zwei falsche Antworten verschwinden.
+    if (state.tips) return;
+    state.tips = 1;
+    shuffle([...$('choices').children].filter((b) => b.dataset.id !== wal.id)).slice(0, 2).forEach((b) => { b.disabled = true; b.classList.add('gone'); });
+    updateTipBtn();
+    return;
+  }
   const tips = tipsFor(wal);
   if (state.tips >= tips.length) return;
   const [label, text] = tips[state.tips++];
@@ -551,8 +572,10 @@ function startQuiz(mode, lvl, opts = {}) {
   }
   state = s;
   if (mode !== 'test') { growDeck(); growDeck(); }
-  $('choices').hidden = mode === 'test';
-  $('answerForm').hidden = mode !== 'test';
+  // Im Dackel-Quiz wird auch im Test angeklickt statt getippt.
+  const tippen = mode === 'test' && welt !== 'dackel';
+  $('choices').hidden = tippen;
+  $('answerForm').hidden = !tippen;
   $('soundBox').hidden = mode !== 'sound';
   $('questionText').textContent = mode === 'sound' ? 'Wer ruft da?' : WELTEN[welt].frage;
   const title = mode === 'sound' ? 'Wer ruft da?' : (mode === 'test' ? 'Test: ' : 'Üben: ') + stufeFor(lvl).name;
@@ -606,14 +629,18 @@ function nextQuestion() {
     state.skips = 0;
     state.locked = false;
     updateTipBtn();
-    if (state.mode === 'test') {
+    if (state.mode === 'test' && !istFrage(wal)) {
       $('answerInput').disabled = false;
       $('answerForm').querySelector('button').disabled = false;
       $('answerInput').focus({ preventScroll: true });
     } else renderChoices(wal);
   };
 
-  if (state.mode === 'sound') {
+  if (istFrage(wal)) {
+    $('galleryArea').hidden = true;
+    $('questionText').textContent = wal.frage;
+    ready();
+  } else if (state.mode === 'sound') {
     $('galleryArea').hidden = true;
     const play = $('playBtn');
     play.disabled = true;
@@ -657,6 +684,14 @@ function showNothingFound() {
 }
 
 function renderChoices(wal) {
+  if (istFrage(wal)) {
+    const opts = [wal, ...wal.falsch.map((t, i) => ({ id: wal.id + '-f' + i, name: t }))];
+    $('choices').innerHTML = '';
+    $('choices').classList.add('list');
+    shuffle(opts).forEach((opt) => $('choices').appendChild(choiceButton(opt)));
+    return;
+  }
+  $('choices').classList.remove('list');
   // Ablenker bevorzugt aus derselben Gruppe – das macht das Üben lehrreicher.
   const usable = (w) => (state.mode === 'sound' ? !hasNoSound(w) : true);
   const others = state.pool.filter((w) => w !== wal && usable(w));
@@ -668,15 +703,16 @@ function renderChoices(wal) {
   }
   const box = $('choices');
   box.innerHTML = '';
-  shuffle([wal, ...picks]).forEach((opt) => {
-    const b = document.createElement('button');
-    b.className = 'choice';
-    b.type = 'button';
-    b.textContent = opt.name;
-    b.dataset.id = opt.id;
-    b.addEventListener('click', () => answerChoice(opt, b));
-    box.appendChild(b);
-  });
+  shuffle([wal, ...picks]).forEach((opt) => box.appendChild(choiceButton(opt)));
+}
+function choiceButton(opt) {
+  const b = document.createElement('button');
+  b.className = 'choice';
+  b.type = 'button';
+  b.textContent = opt.name;
+  b.dataset.id = opt.id;
+  b.addEventListener('click', () => answerChoice(opt, b));
+  return b;
 }
 
 function answerChoice(opt, btn) {
@@ -689,8 +725,14 @@ function answerChoice(opt, btn) {
     if (b.dataset.id === wal.id) b.classList.add('correct');
   });
   if (!ok) btn.classList.add('wrong', 'shake');
-  if (state.mode === 'practice') recordAnswer(wal, !ok ? 'falsch' : state.tips ? 'mitTipp' : 'richtig');
-  finishQuestion(ok ? 1 : 0, (ok ? 'Richtig! Das ist ein ' : 'Leider nicht. Das ist ein ') + artLabel(wal) + '.');
+  if (state.mode !== 'sound') recordAnswer(wal, !ok ? 'falsch' : state.tips ? 'mitTipp' : 'richtig');
+  // Angeklickt wird nur im Test des Dackel-Quiz: dort kostet der Joker einen halben Punkt.
+  const pts = !ok ? 0 : state.mode === 'test' && state.tips ? 0.5 : 1;
+  if (state.mode === 'test') state.log.push({ wal, given: opt.name, pts });
+  let msg = istFrage(wal) ? (ok ? 'Richtig!' : 'Leider nicht. Richtig ist: ' + wal.name)
+    : (ok ? 'Richtig! Das ist ein ' : 'Leider nicht. Das ist ein ') + artLabel(wal) + '.';
+  if (pts === 0.5) msg += ' Mit Joker: ½ Punkt.';
+  finishQuestion(pts, msg);
 }
 
 $('answerForm').addEventListener('submit', (e) => {
@@ -730,10 +772,10 @@ function finishQuestion(pts, msg) {
     $('qBar').style.width = (n / state.pool.length * 100) + '%';
   }
   $('fbTitle').textContent = (pts ? '✅ ' : '❌ ') + msg;
-  $('fbSub').textContent = wal.latin + (wal.auch.length ? ' · auch: ' + wal.auch.join(', ') : '');
+  $('fbSub').textContent = istFrage(wal) ? '' : wal.latin + (wal.auch.length ? ' · auch: ' + wal.auch.join(', ') : '');
   factsList(wal, $('fbFacts'));
   const extra = $('fbExtra');
-  extra.innerHTML = wal.welt === 'porsche' ? '' : groessenSvg(wal);
+  extra.innerHTML = wal.welt === 'porsche' || istFrage(wal) ? '' : groessenSvg(wal);
   if (state.mode !== 'sound' && wal.welt === 'wale') extra.appendChild(soundButton(wal));
   $('feedback').className = 'feedback show ' + (pts ? 'ok' : 'bad');
 
@@ -747,7 +789,8 @@ function finishQuestion(pts, msg) {
     if (snd) { credit.append(photos.length ? '· ' : ''); add('Ton', snd.page); }
     credit.append('(Wikimedia Commons)');
   };
-  if (state.mode === 'sound') {
+  if (istFrage(wal)) credit.textContent = '';
+  else if (state.mode === 'sound') {
     // Jetzt den Wal zeigen, den man gehört hat.
     $('galleryArea').hidden = false;
     renderGallery(wal, showCredit);
@@ -809,16 +852,17 @@ function showResult() {
     if (ph && ph[0]) img.src = ph[0].src;
     const t = document.createElement('div');
     t.className = 'r-text';
-    t.textContent = e.wal.name;
-    if (e.pts < 1) {
+    t.textContent = istFrage(e.wal) ? e.wal.frage : e.wal.name;
+    if (e.pts < 1 || istFrage(e.wal)) {
       const s = document.createElement('small');
-      s.textContent = e.pts ? 'mit Tipp' : 'Deine Antwort: ' + (e.given || '–');
+      const hinweis = e.pts === 0.5 ? (istFrage(e.wal) ? 'mit Joker' : 'mit Tipp') : e.pts ? '' : 'Deine Antwort: ' + (e.given || '–');
+      s.textContent = istFrage(e.wal) ? 'Richtig: ' + e.wal.name + (hinweis ? ' · ' + hinweis : '') : hinweis;
       t.appendChild(s);
     }
     const m = document.createElement('span');
     m.className = 'mark';
     m.textContent = e.pts === 1 ? '✅' : e.pts ? '🟡' : '❌';
-    li.append(img, t, m);
+    if (istFrage(e.wal)) li.append(t, m); else li.append(img, t, m);
     ul.appendChild(li);
   });
 
@@ -883,12 +927,23 @@ function renderLexikon() {
   if (!lexBuilt) {
     lexBuilt = true;
     const ul = $('lexList');
-    ALLE.slice().sort((a, b) => a.name.localeCompare(b.name, 'de')).forEach((w) => {
+    ALLE.filter((w) => !istFrage(w)).sort((a, b) => a.name.localeCompare(b.name, 'de')).concat(ALLE.filter(istFrage)).forEach((w) => {
       const li = document.createElement('li');
       li.dataset.id = w.id;
       li.hidden = true;
       li.innerHTML = '<img class="pic" alt="" loading="lazy"><div class="body"><h3><span></span><span class="lvl"></span></h3>'
         + '<div class="latin"></div><dl class="facts"></dl><p class="merkmal"></p><div class="size"></div><div class="credit"></div></div>';
+      if (istFrage(w)) {
+        // Dackel-Fragen: Frage, Antwort und Erklärung, ohne Foto
+        li.querySelector('.pic').remove();
+        li.querySelector('.credit').remove();
+        li.querySelector('h3 span').textContent = w.frage;
+        li.querySelector('.latin').textContent = 'Antwort: ' + w.name;
+        li.querySelector('.merkmal').textContent = w.erklaerung;
+        li.search = normalize(w.frage + w.name);
+        ul.appendChild(li);
+        return;
+      }
       li.querySelector('h3 span').textContent = w.name;
       li.querySelector('.latin').textContent = w.latin + (w.auch.length ? ' · auch: ' + w.auch.join(', ') : '');
       factsList(w, li.querySelector('.facts'), 3);
@@ -904,6 +959,7 @@ function renderLexikon() {
   }
   if (lexWelt !== welt) {
     lexWelt = welt;
+    updatePruefButton();
     const sel = $('lexGroup');
     sel.innerHTML = '<option value="">Alle Gruppen</option><option value="offen">Noch nicht sicher</option>';
     const groups = new Set(ARTEN().map((a) => a.gruppe));
@@ -922,7 +978,7 @@ function filterLexikon() {
     li.hidden = !vis;
     if (vis) n++;
   });
-  $('lexCount').textContent = n + ' ' + artenWort();
+  $('lexCount').textContent = n + ' ' + artenWort(n);
 }
 
 // ---------- Fotos prüfen ----------
@@ -998,6 +1054,7 @@ function renderPruefen() {
   updatePruefCount();
   $('sperrMsg').textContent = '';
 }
+function updatePruefButton() { $('pruefOpen').hidden = welt === 'dackel'; }
 $('pruefOpen').addEventListener('click', () => { renderPruefen(); show('pruefen', '🔎 Fotos prüfen'); });
 $('pruefOffen').addEventListener('change', renderPruefen);
 $('sperrCopy').addEventListener('click', async () => {

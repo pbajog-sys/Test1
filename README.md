@@ -1,7 +1,12 @@
 # Wal-Quiz – Seepferdchen der Walkunde
 
-Mit Umschalter zwischen vier Welten: 🐋 Wale, 🦈 Haie, 🌊 Beide (Wale und Haie gemischt) und
-🏎️ Porsche. Jede Welt hat eigene Abzeichen; Lernstand und Lexikon funktionieren überall.
+Mit Umschalter zwischen fünf Welten: 🐋 Wale, 🦈 Haie, 🌊 Beide (Wale und Haie gemischt),
+🏎️ Porsche und 🐕 Dackel. Jede Welt hat eigene Abzeichen; Lernstand und Lexikon funktionieren überall.
+
+## Dackel
+Ein Wissensquiz statt Foto-Raten: 40 Fragen in `dackel.js` (Herkunft, Aussehen, Gesundheit, Jagd, Charakter,
+Kultur) mit je vier Antworten und einer Erklärung. Auch im Test wird angeklickt. Statt Tipps gibt es einen
+50:50-Joker, der im Test einen halben Punkt kostet. Stufen: 14/24/34/40.
 
 ## Porsche
 33 Serienmodelle mit ihren Generationen in `porsche.js` – vom 356 über alle 911-Generationen (Urmodell bis 992),
@@ -51,6 +56,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `index.html` – Aufbau und Aussehen
 - `app.js` – Quiz-Logik, Fotos, Töne, Karteikasten, Challenge
 - `wale.js`, `haie.js`, `porsche.js` – Listen mit Steckbriefen
+- `dackel.js` – Fragen fürs Dackel-Quiz
 - `groesse.js` – Größenvergleich
 - `sw.js`, `manifest.webmanifest`, `icons/` – Installation und Offline-Nutzung
 
