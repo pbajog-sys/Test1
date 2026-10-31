@@ -364,7 +364,7 @@ function show(name, title) {
   screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
   aktuellerScreen = name;
   $('homeBtn').hidden = name === 'hub';
-  document.querySelector('header').hidden = name === 'hub';
+  document.querySelector('header').hidden = ['hub', 'farben', 'cello'].includes(name);   // die Spiele haben eine eigene Kopfzeile
   $('headerTitle').textContent = title || WELTEN[welt].title;
   window.scrollTo(0, 0);
 }

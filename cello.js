@@ -130,7 +130,9 @@ const stufeCello = (lvl) => CELLO_STUFEN.find((s) => s.lvl === lvl);
 // ---------- Griffbrett-Ausschnitt einer Lage als SVG ----------
 // Spieler-Sicht: Saiten von links C, G, D, A. Gezeigt wird der Teil des Griffbretts, auf dem die Hand liegt;
 // links eine kleine Hals-Karte, die zeigt, wo dieser Ausschnitt auf der ganzen Saite liegt.
-function griffbrettSvg(lageId, { markiert = null, loesung = null, falsch = null, klickbar = false } = {}) {
+// nurStamm: ohne Vorzeichen – Finger, die keinen Stammton ergeben, werden ausgegraut (so greifen Anfänger:
+// z. B. 1. Lage D-Saite: D, E = 1., F = 2., 3. Finger frei, G = 4.). Jede Reihe ist ein Halbton.
+function griffbrettSvg(lageId, { markiert = null, loesung = null, falsch = null, klickbar = false, nurStamm = false } = {}) {
   const g = griffe(lageId);
   const offs = g.map((x) => x.off);
   const mitSattel = offs.includes(0);
@@ -157,7 +159,8 @@ function griffbrettSvg(lageId, { markiert = null, loesung = null, falsch = null,
   SAITEN.forEach((sa, i) => {
     g.forEach(({ finger, off }) => {
       const id = i + '-' + off, x = xs[i], y = yOff(off);
-      const cls = ['punkt', klickbar ? 'klick' : '', markiert === id ? 'markiert' : '', loesung === id ? 'loesung' : '', falsch === id ? 'falsch' : ''].join(' ');
+      const frei = nurStamm && HALBTOENE.indexOf((sa.midi + off) % 12) < 0 && ![markiert, loesung, falsch].includes(id);
+      const cls = ['punkt', frei ? 'frei' : klickbar ? 'klick' : '', markiert === id ? 'markiert' : '', loesung === id ? 'loesung' : '', falsch === id ? 'falsch' : ''].join(' ');
       s += `<g class="${cls}" data-pos="${id}"><circle cx="${x}" cy="${y}" r="${off === 0 ? 13 : 17}"/><text class="finger" x="${x}" y="${y + 5}">${finger}</text></g>`;
     });
   });
@@ -289,10 +292,12 @@ function celloNeueAufgabe() {
   griff.hidden = a.modus === 'lesen';
   $('celloLageName').hidden = griff.hidden;
   $('celloLageName').textContent = lageName;
+  $('celloLegende').hidden = griff.hidden;
+  $('celloLegende').textContent = 'Eine Reihe = Halbton' + (a.vz ? '' : ' · gestrichelt = Finger wird hier nicht gebraucht');
   $('cello-spiel').classList.toggle('mit-griff', !griff.hidden);
   if (!griff.hidden) {
-    griff.innerHTML = griffbrettSvg(a.lageId, { markiert: a.modus === 'benennen' ? a.pos : null, klickbar: a.modus === 'finden' });
-    if (a.modus === 'finden') griff.querySelectorAll('.punkt').forEach((p) => p.addEventListener('click', () => celloAntwort(p.dataset.pos)));
+    griff.innerHTML = griffbrettSvg(a.lageId, { markiert: a.modus === 'benennen' ? a.pos : null, klickbar: a.modus === 'finden', nurStamm: !a.vz });
+    if (a.modus === 'finden') griff.querySelectorAll('.punkt.klick').forEach((p) => p.addEventListener('click', () => celloAntwort(p.dataset.pos)));
   }
   const tasten = $('celloTasten');
   tasten.hidden = a.modus === 'finden';
@@ -332,8 +337,10 @@ function celloAntwort(wert, knopf) {
   $('celloSchluesselName').textContent = SCHLUESSEL[a.schluessel].name;
   $('celloGriff').hidden = false;
   $('celloLageName').hidden = false;
+  $('celloLegende').hidden = false;
+  $('celloLegende').textContent = 'Eine Reihe = Halbton' + (a.vz ? '' : ' · gestrichelt = Finger wird hier nicht gebraucht');
   $('cello-spiel').classList.add('mit-griff');
-  $('celloGriff').innerHTML = griffbrettSvg(a.lageId, { loesung: a.pos, falsch: a.modus === 'finden' && !ok ? wert : null });
+  $('celloGriff').innerHTML = griffbrettSvg(a.lageId, { loesung: a.pos, falsch: a.modus === 'finden' && !ok ? wert : null, nurStamm: !a.vz });
   $('celloTasten').querySelectorAll('.taste').forEach((b) => {
     if (Number(b.dataset.pc) === a.midi % 12) b.classList.add('richtig');
     else if (b === knopf) b.classList.add('falsch');

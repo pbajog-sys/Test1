@@ -84,6 +84,9 @@ header h1 { font-weight: 800; letter-spacing: -0.01em; }
 
 /* ---------- Bildschirm-Wechsel & Auftritte ---------- */
 .screen.active { animation: reinGleiten .45s var(--ease-out); }
+/* Die Spiele haben eine eigene Vollbild-Bühne (position: fixed). Eine Animation mit transform auf dem
+   Bildschirm würde Safari dazu bringen, die Bühne nur innerhalb des Bildschirms zu zeichnen („Fenster im Fenster“). */
+#screen-farben.active, #screen-cello.active { animation: none; }
 @keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
@@ -576,6 +579,10 @@ body.theme-hub {
 .griff-svg .saite { fill: #f3d9a4; font-weight: 800; font-size: 16px; text-anchor: middle; }
 .griff-svg .punkt circle { fill: rgba(243,217,164,0.10); stroke: rgba(243,217,164,0.35); stroke-width: 1.5; transition: fill .2s, transform .2s; }
 .griff-svg .punkt.klick { cursor: pointer; }
+/* Finger, die man ohne Vorzeichen nicht braucht: ausgegraut und gestrichelt */
+.griff-svg .punkt.frei circle { fill: transparent; stroke: rgba(243,217,164,0.25); stroke-dasharray: 3 3; }
+.griff-svg .punkt.frei .finger { fill: rgba(243,217,164,0.22); }
+.cello-legende { text-align: center; font-size: 0.75rem; opacity: .7; margin-top: -4px; }
 .griff-svg .punkt.klick:active circle { fill: rgba(243,217,164,0.45); }
 .griff-svg .punkt.markiert circle { fill: #f3d9a4; stroke: #fff; stroke-width: 3; animation: pulsieren 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 .griff-svg .punkt.loesung circle { fill: #2fbf71; stroke: #fff; stroke-width: 3; }
