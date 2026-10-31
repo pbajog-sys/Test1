@@ -476,6 +476,109 @@ body.theme-hub {
 /* Zoom-Übergang von der Karte zur Welt */
 .zoom-layer { position: fixed; z-index: 90; pointer-events: none; box-shadow: 0 30px 80px rgba(0,0,0,0.5); }
 
+/* ===================================================================
+   🎻 Cello-Noten – warmes Holz, cremefarbenes Notenpapier
+   =================================================================== */
+.hub-cello { background: linear-gradient(#1e120c, #1e120c) padding-box, linear-gradient(90deg, #c8894f, #f3d9a4, #8a4b25, #c8894f) border-box; background-size: 100% 100%, 300% 100%; box-shadow: 0 16px 50px rgba(200,137,79,0.25); margin-top: 12px; animation-delay: .55s, 0s; }
+.hub-cello .hg-titel { font-family: "Playfair Display", Georgia, serif; font-style: italic; background: linear-gradient(90deg, #f3d9a4, #e0a96d); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hc-cello-icon { font-size: 2.8rem; flex: none; width: 74px; text-align: center; animation: streichen 2.6s ease-in-out infinite; transform-origin: 50% 80%; }
+@keyframes streichen { 0%, 100% { transform: rotate(-8deg); } 50% { transform: rotate(8deg); } }
+
+.cello-buehne {
+  position: fixed; inset: 0; z-index: 20; overflow-y: auto; color: #f6ead6;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  background:
+    radial-gradient(120% 60% at 50% 0%, rgba(214,140,70,0.35), transparent 60%),
+    repeating-linear-gradient(92deg, rgba(0,0,0,0.06) 0 3px, transparent 3px 11px),
+    linear-gradient(160deg, #5a2e18, #2a140b 60%, #160a05);
+  font-family: "Outfit", system-ui, sans-serif;
+}
+.cello-buehne > * { max-width: 520px; margin-left: auto; margin-right: auto; }
+.cello-buehne .farb-kopf .icon-btn { background: rgba(255,255,255,0.12); color: inherit; }
+.cello-teil { display: grid; gap: 14px; animation: reinGleiten .4s var(--ease-out); }
+.cello-titel { font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 3rem; margin: 10px 0 0; text-align: center; color: #f3d9a4; text-shadow: 0 4px 24px rgba(0,0,0,0.5); }
+.cello-lead { text-align: center; margin: 0 auto; max-width: 34ch; color: #e6cfae; line-height: 1.45; }
+.cello-modi { display: grid; gap: 10px; }
+.cello-modi button {
+  display: grid; grid-template-columns: 44px 1fr; grid-template-rows: auto auto; column-gap: 10px; text-align: left; align-items: center;
+  border: 2px solid rgba(243,217,164,0.18); background: rgba(255,240,215,0.06); color: inherit; border-radius: 18px; padding: 12px 14px;
+  font: inherit; cursor: pointer; transition: transform .2s var(--ease-spring), border-color .2s, background .2s;
+  animation: aufploppen .45s var(--ease-spring) backwards;
+}
+.cello-modi button:nth-child(2) { animation-delay: .06s; } .cello-modi button:nth-child(3) { animation-delay: .12s; }
+.cello-modi button span { grid-row: span 2; font-size: 1.8rem; text-align: center; }
+.cello-modi button small { opacity: .7; }
+.cello-modi button.on { border-color: #f3d9a4; background: rgba(243,217,164,0.16); transform: scale(1.02); }
+.cello-optionen { display: grid; gap: 10px; background: rgba(0,0,0,0.18); border-radius: 18px; padding: 12px 14px; }
+.cello-label { font-size: 0.85rem; opacity: .75; margin-bottom: 6px; }
+.cello-chips { display: flex; gap: 8px; }
+.cello-chips button { flex: 1; border: 2px solid rgba(243,217,164,0.25); background: transparent; color: inherit; border-radius: 999px; padding: 8px; font: inherit; font-weight: 600; cursor: pointer; }
+.cello-chips button.on { background: #f3d9a4; color: #3a1d0c; border-color: #f3d9a4; }
+.cello-schalter { display: flex; align-items: center; gap: 10px; font-weight: 600; cursor: pointer; }
+.cello-schalter input { position: absolute; opacity: 0; }
+.cello-schalter span { width: 46px; height: 28px; border-radius: 14px; background: rgba(255,255,255,0.18); position: relative; transition: background .2s; flex: none; }
+.cello-schalter span::after { content: ""; position: absolute; top: 3px; left: 3px; width: 22px; height: 22px; border-radius: 50%; background: #fff; transition: transform .25s var(--ease-spring); }
+.cello-schalter input:checked + span { background: #c8894f; }
+.cello-schalter input:checked + span::after { transform: translateX(18px); }
+.cello-buehne .btn { width: 100%; }
+.cello-buehne .btn.cello-los { background: linear-gradient(135deg, #f3d9a4, #c8894f); color: #2a140b; font-size: 1.15rem; padding: 16px; box-shadow: 0 10px 30px rgba(0,0,0,0.35); }
+.cello-buehne .btn.secondary { background: rgba(255,255,255,0.1); color: inherit; box-shadow: none; }
+.cello-best { text-align: center; font-size: 0.85rem; opacity: .75; }
+
+.cello-leiste { display: flex; justify-content: space-between; font-weight: 600; }
+.cello-zeit { display: flex; align-items: center; gap: 10px; font-variant-numeric: tabular-nums; font-weight: 700; }
+.cello-zeitbar { flex: 1; height: 8px; background: rgba(255,255,255,0.15); border-radius: 4px; overflow: hidden; }
+.cello-zeitbar i { display: block; height: 100%; width: 100%; background: linear-gradient(90deg, #c8894f, #f3d9a4); transition: width .1s linear; }
+.cello-papier {
+  background: #fbf5e9; border-radius: 18px; padding: 6px 8px 4px; box-shadow: 0 14px 40px rgba(0,0,0,0.4), inset 0 0 40px rgba(160,120,60,0.15);
+  animation: aufploppen .4s var(--ease-spring);
+}
+.noten-svg { display: block; width: 100%; height: auto; }
+.noten-svg line { stroke: #2b2118; stroke-width: 1.4; }
+.noten-svg line.hilf { stroke-width: 1.6; }
+.noten-svg .schluessel { font-family: "Noto Music", "Bravura", "Apple Symbols", serif; fill: #2b2118; }
+.noten-svg .note ellipse { fill: #1d1510; }
+.noten-svg .note line.hals { stroke: #1d1510; stroke-width: 1.8; }
+.noten-svg .note .vz { font-family: "Noto Music", "Apple Symbols", serif; font-size: 34px; fill: #1d1510; }
+.noten-svg .note { animation: notePlopp .35s var(--ease-spring); transform-box: fill-box; transform-origin: center; }
+@keyframes notePlopp { from { transform: translateY(-10px); opacity: 0; } }
+.noten-svg .note.ok ellipse, .noten-svg .note.ok .vz { fill: #1f8a4c; } .noten-svg .note.ok line { stroke: #1f8a4c; }
+.noten-svg .note.bad ellipse, .noten-svg .note.bad .vz { fill: #c0392b; } .noten-svg .note.bad line { stroke: #c0392b; }
+.noten-svg .frage { font-family: "Playfair Display", serif; font-size: 40px; fill: #b08850; text-anchor: middle; }
+.cello-schluesselname { text-align: center; color: #8a6a45; font-size: 0.8rem; padding-bottom: 4px; min-height: 1em; }
+.cello-feedback { text-align: center; font-weight: 600; min-height: 1.4em; transition: color .2s; }
+.cello-feedback.ok { color: #9ef0b9; animation: aufploppen .35s var(--ease-spring); }
+.cello-feedback.bad { color: #ffb3a8; animation: shake .35s; }
+
+.cello-griff { display: flex; justify-content: center; }
+.griff-svg { width: 100%; max-width: 330px; height: auto; max-height: 44dvh; filter: drop-shadow(0 14px 30px rgba(0,0,0,0.45)); }
+/* Mit Griffbrett wird es eng: Notenblatt kleiner, Abstände knapper */
+#cello-spiel.mit-griff { gap: 8px; }
+#cello-spiel.mit-griff .noten-svg { max-height: 20dvh; margin: 0 auto; }
+#cello-spiel.mit-griff .cello-schluesselname { display: none; }
+.griff-svg .saite { fill: #f3d9a4; font-weight: 800; font-size: 16px; text-anchor: middle; }
+.griff-svg .punkt circle { fill: rgba(243,217,164,0.10); stroke: rgba(243,217,164,0.35); stroke-width: 1.5; transition: fill .2s, transform .2s; }
+.griff-svg .punkt.klick { cursor: pointer; }
+.griff-svg .punkt.klick:active circle { fill: rgba(243,217,164,0.45); }
+.griff-svg .punkt.markiert circle { fill: #f3d9a4; stroke: #fff; stroke-width: 3; animation: pulsieren 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
+.griff-svg .punkt.loesung circle { fill: #2fbf71; stroke: #fff; stroke-width: 3; }
+.griff-svg .punkt.falsch circle { fill: #e74c3c; stroke: #fff; stroke-width: 2; }
+.griff-svg .finger { fill: #fff; font-weight: 800; font-size: 15px; text-anchor: middle; pointer-events: none; }
+@keyframes pulsieren { 50% { transform: scale(1.18); } }
+
+.cello-tasten { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }
+.cello-tasten.alle { grid-template-columns: repeat(6, 1fr); }
+.taste {
+  border: 0; border-radius: 0 0 12px 12px; padding: 18px 2px 12px; font: inherit; font-weight: 800; font-size: 1.05rem; cursor: pointer;
+  background: linear-gradient(#fffdf8, #efe3cc); color: #2b2118; box-shadow: 0 4px 0 #b9a27c, 0 8px 18px rgba(0,0,0,0.3);
+  transition: transform .12s, box-shadow .12s; animation: aufploppen .3s var(--ease-spring) backwards;
+}
+.taste.schwarz { background: linear-gradient(#3a2a20, #120c08); color: #f3d9a4; box-shadow: 0 4px 0 #000, 0 8px 18px rgba(0,0,0,0.4); font-size: 0.78rem; }
+.taste:active { transform: translateY(3px); box-shadow: 0 1px 0 #b9a27c; }
+.taste.richtig { background: linear-gradient(#5ee39a, #239e5b); color: #fff; box-shadow: 0 4px 0 #1a6e40, 0 0 24px rgba(47,191,113,0.6); }
+.taste.falsch { background: linear-gradient(#ff8a7a, #c0392b); color: #fff; animation: shake .35s; }
+.cello-ergebnis { text-align: center; font-family: "Playfair Display", serif; font-size: 3.6rem; color: #f3d9a4; padding-top: 6vh; }
+
 /* ---------- Weniger Bewegung, wenn gewünscht ---------- */
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }

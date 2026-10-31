@@ -2,7 +2,7 @@
 // Bewusst ohne Token in der App – die Seite ist öffentlich, ein Schlüssel wäre für jeden auslesbar.
 // Wer meldet, braucht ein (kostenloses) GitHub-Konto; die Meldungen sind öffentlich sichtbar.
 const MELDE_REPO = 'pbajog-sys/Test1';
-const APP_STAND = 'walquiz-v13';   // gleich halten mit VERSION in sw.js
+const APP_STAND = 'walquiz-v14';   // gleich halten mit VERSION in sw.js
 
 const MELDE_ARTEN = {
   foto: { label: '🖼️ Foto passt nicht', hint: 'falsche Art, Zeichnung, totes Tier, unscharf …', titel: 'Foto' },

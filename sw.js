@@ -1,5 +1,5 @@
 // Service Worker: App offline verfügbar machen. Walfotos werden beim ersten Anzeigen zwischengespeichert.
-const VERSION = 'walquiz-v13';
+const VERSION = 'walquiz-v14';
 const SHELL = [
   './',
   'index.html',
@@ -15,6 +15,7 @@ const SHELL = [
   'melden.js',
   'hub.js',
   'farben.js',
+  'cello.js',
   'fotos.json',
   'manifest.webmanifest',
   'icons/icon.svg',
@@ -68,8 +69,8 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Walfotos von Wikimedia: erst Cache, sonst Netz und merken.
-  if (url.hostname.endsWith('wikimedia.org')) {
+  // Fotos von Wikimedia und Schriften von Google Fonts: erst Cache, sonst Netz und merken.
+  if (url.hostname.endsWith('wikimedia.org') || url.hostname === 'fonts.googleapis.com' || url.hostname === 'fonts.gstatic.com') {
     event.respondWith(
       caches.match(req).then((cached) => cached || fetch(req).then((res) => {
         const copy = res.clone();

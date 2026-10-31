@@ -69,6 +69,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `stil.css`, `effekte.js` – Design und Animationen der Welten
 - `farben.js` – Farb-Gedächtnis
 - `hub.js` – Dashboard „Spiele“ mit Zoom-Übergang
+- `cello.js` – Cello-Noten
 - `groesse.js` – Größenvergleich
 - `sw.js`, `manifest.webmanifest`, `icons/` – Installation und Offline-Nutzung
 
@@ -116,4 +117,12 @@ Eigenes Spiel, angelehnt an das Prinzip „Farbe merken und nachmischen“: Eine
 Punkte 0–10 pro Farbe nach dem Farbabstand CIEDE2000 (ab Abstand 50 gibt es 0), fünf Farben = bis zu 50 Punkte.
 Bestwerte je Stufe, Tagesfarben (aus dem Datum berechnet, für alle gleich) und Challenge-Links mit denselben Farben.
 Code in `farben.js`, Design in `stil.css`.
+
+## 🎻 Cello-Noten (Game)
+Eigenes Lernspiel fürs Cello mit deutschen Notennamen (H, B, Fis, Es …):
+- **Noten lesen** im Bass-, Tenor- und Violinschlüssel (frei kombinierbar), optional mit Vorzeichen.
+- **Griffbrett finden:** Note sehen, Stelle auf dem Griffbrett tippen (Saiten C, G, D, A, 1. Lage inkl. halbe Lage).
+- **Griffbrett lesen:** Eine Stelle leuchtet, den Ton benennen; danach erscheint er im Notensystem.
+Jeder Ton erklingt mit einem im Browser erzeugten Streicherklang (Web Audio). Üben ohne Zeitlimit oder
+60-Sekunden-Runde mit Rekord. Notenschrift: Noto Music (Google Fonts, offline zwischengespeichert). Code in `cello.js`.
 

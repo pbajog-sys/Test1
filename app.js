@@ -357,7 +357,7 @@ let pendingChallenge = (() => {
 })();
 
 // ---------- Navigation ----------
-const screens = ['hub', 'start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen', 'farben'];
+const screens = ['hub', 'start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen', 'farben', 'cello'];
 let aktuellerScreen = 'hub';
 function show(name, title) {
   stopSound();

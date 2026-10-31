@@ -65,6 +65,8 @@ function renderHub() {
     box.appendChild(b);
   });
   $('hubFarbBest').textContent = farbBest ? 'Rekord ' + fmt(farbBest) + ' / 50' : 'Noch kein Rekord';
+  const celloBest = Math.max(0, ...Object.values(loadJson('walquiz.cello.v1').best || {}));
+  $('hubCelloBest').textContent = celloBest ? 'Rekord ' + celloBest + ' Noten in 60 Sek.' : 'Noch kein Rekord';
 }
 
 function zeigeHub() {
@@ -94,6 +96,7 @@ function zoomZu(karte, weiter) {
   };
 }
 
+$('hubCello').addEventListener('click', () => zoomZu($('hubCello'), () => { show('cello', '🎻 Cello-Noten'); celloIntro(); }));
 $('hubFarben').addEventListener('click', () => zoomZu($('hubFarben'), () => { show('farben', '🎨 Farb-Gedächtnis'); farbenIntro(); }));
 
 // Beim Start: Dashboard – außer ein Quiz-Challenge-Link wurde geöffnet, dann direkt in dessen Welt.
