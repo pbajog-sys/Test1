@@ -2,7 +2,7 @@
 // Bewusst ohne Token in der App – die Seite ist öffentlich, ein Schlüssel wäre für jeden auslesbar.
 // Wer meldet, braucht ein (kostenloses) GitHub-Konto; die Meldungen sind öffentlich sichtbar.
 const MELDE_REPO = 'pbajog-sys/Test1';
-const APP_STAND = 'walquiz-v9';   // gleich halten mit VERSION in sw.js
+const APP_STAND = 'walquiz-v10';   // gleich halten mit VERSION in sw.js
 
 const MELDE_ARTEN = {
   foto: { label: '🖼️ Foto passt nicht', hint: 'falsche Art, Zeichnung, totes Tier, unscharf …', titel: 'Foto' },
@@ -69,6 +69,8 @@ function meldenOeffnen(art = null, opts = {}) {
   });
   meldeFotosZeigen();
   $('meldeText').value = '';
+  $('meldeVorschlag').value = '';
+  $('meldeVorschlagHinweis').textContent = '';
   if (typeof dlg.showModal === 'function') dlg.showModal(); else dlg.setAttribute('open', '');
 }
 
@@ -82,7 +84,21 @@ function meldeFotosZeigen() {
 
 // Baut Titel und Text der Meldung und öffnet sie auf GitHub.
 // alleFotos: die angezeigten Fotos der Art (für die Nummer), fotos: die gemeldeten davon.
-function meldungSenden({ art, kind, alleFotos = [], fotos = [], text = '', extra = '' }) {
+// Aus einem Wikimedia-Link (Commons, Wikipedia-Dateiseite oder upload.wikimedia.org) den Dateinamen holen.
+// Nur Wikimedia: dort sind die Fotos frei lizenziert und haben eine Quellenseite.
+function commonsDatei(link) {
+  let u;
+  try { u = new URL(link.trim()); } catch { return null; }
+  if (!/(^|\.)(wikimedia|wikipedia)\.org$/.test(u.hostname)) return null;
+  const pfad = decodeURIComponent(u.pathname + u.hash);
+  let m = pfad.match(/(?:File|Datei|Image|Bild):([^/?#]+)/i)
+    || (u.hostname === 'upload.wikimedia.org' && pfad.match(/\/commons\/(?:thumb\/)?[0-9a-f]\/[0-9a-f]{2}\/([^/]+)/));
+  if (!m) return null;
+  const name = m[1].replace(/ /g, '_');
+  return /\.(jpe?g|png|webp)$/i.test(name) ? name : null;
+}
+
+function meldungSenden({ art, kind, alleFotos = [], fotos = [], text = '', extra = '', vorschlag = null }) {
   const name = art ? (istFrage(art) ? 'Dackel-Frage ' + art.id.replace('dackel-', '') : (art.welt === 'porsche' ? 'Porsche ' : '') + art.name) : WELTEN[welt].title;
   const titel = '[' + MELDE_ARTEN[kind].titel + '] ' + name
     + (kind === 'foto' && fotos.length === 1 ? ' – Foto ' + (alleFotos.indexOf(fotos[0]) + 1) : '');
@@ -95,21 +111,37 @@ function meldungSenden({ art, kind, alleFotos = [], fotos = [], text = '', extra
   ];
   const az = artZeile(art);
   if (az) zeilen.push('- ' + az);
-  fotos.forEach((p) => zeilen.push('- Foto ' + (alleFotos.indexOf(p) + 1) + ': [' + p.name + '](' + p.page + ')' + (p.echt ? '' : ' (ohne Kameradaten)')));
+  fotos.forEach((p) => zeilen.push('- Foto ' + (alleFotos.indexOf(p) + 1) + ': [' + p.name + '](' + p.page.replace(/\(/g, '%28').replace(/\)/g, '%29') + ')' + (p.echt ? '' : ' (ohne Kameradaten)')));
+  if (kind === 'foto') {
+    zeilen.push('', '### Besseres Foto (Vorschlag)',
+      vorschlag ? '[' + vorschlag + '](https://commons.wikimedia.org/wiki/File:' + urlName(vorschlag) + ')'
+        : '_optional: Link zu einem Foto auf commons.wikimedia.org hier einfügen_');
+  }
   if (extra) zeilen.push('', extra);
   zeilen.push('', '### Technik', '- App-Stand: ' + APP_STAND, '- Gerät: ' + geraet(), '- Gemeldet: ' + new Date().toLocaleString('de-DE'));
   // Gemeldete Fotos werden auch gleich auf diesem Gerät aussortiert.
   if (kind === 'foto') { fotos.forEach((p) => { photoBlock[p.name] = true; }); saveJson(BLOCK_KEY, photoBlock); }
+  // Maschinenlesbar, damit Meldungen ohne Abtippen in fotos.json übernommen werden können.
+  const daten = { typ: kind, art: art ? art.id : null };
+  if (kind === 'foto') { daten.sperre = fotos.map((p) => p.name); daten.vorschlag = vorschlag; }
+  zeilen.push('', '<!-- walquiz-meldung ' + JSON.stringify(daten) + ' -->');
   window.open(meldeUrl(titel, zeilen.join('\n')), '_blank', 'noopener');
 }
 
 function meldungAbschicken() {
   const kind = meldeArt();
+  const link = $('meldeVorschlag').value.trim();
+  const vorschlag = kind === 'foto' && link ? commonsDatei(link) : null;
+  if (kind === 'foto' && link && !vorschlag) {
+    $('meldeVorschlagHinweis').textContent = 'Bitte einen Link zu einem Foto auf commons.wikimedia.org (oder einer Wikipedia-Dateiseite) einfügen.';
+    $('meldeVorschlag').focus();
+    return;
+  }
   const gewaehlt = [...$('meldeFotos').querySelectorAll('input:checked')].map((x) => meldung.fotos[Number(x.value)]);
   meldungSenden({
     art: meldung.art, kind, alleFotos: meldung.fotos,
     fotos: kind === 'foto' ? (gewaehlt.length ? gewaehlt : meldung.fotos) : [],
-    text: $('meldeText').value.trim(), extra: meldung.extra,
+    text: $('meldeText').value.trim(), extra: meldung.extra, vorschlag,
   });
   meldenSchliessen();
 }

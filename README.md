@@ -88,6 +88,13 @@ Außerdem gibt es unter jeder Antwort, bei jedem Lexikon-Eintrag und auf der Sta
 was falsch ist (Foto, Info, App-Fehler, Idee), bei Fotos auch welches, und öffnet dann ein **vorausgefülltes
 GitHub-Issue** in diesem Repo – mit Welt, Art bzw. Frage, Foto-Links, App-Stand und Gerät. Dort nur noch „Create“.
 Gemeldete Fotos werden auf dem eigenen Gerät sofort aussortiert. In der Prüf-Ansicht lässt sich die ganze
-Sperrliste mit „📮 Auf GitHub melden“ als Issue schicken. Es gibt bewusst keinen Schlüssel in der App –
+Sperrliste mit „📮 Auf GitHub melden“ als Issue schicken. Bei Foto-Meldungen kann man einen **Link zu einem besseren Foto** von Wikimedia Commons angeben (im Dialog oder
+nachträglich im Issue). Jede Meldung enthält einen versteckten, maschinenlesbaren Block
+(`<!-- walquiz-meldung {...} -->`), damit sie ohne Abtippen übernommen werden kann.
+
+`fotos.json` gilt für alle Geräte: `sperre` = Fotos, die nie gezeigt werden; `wahl` = pro Art-ID fest gewählte
+Commons-Dateinamen, die zuerst gezeigt werden (dann sucht die App für diese Art gar nicht mehr).
+
+Es gibt bewusst keinen Schlüssel in der App –
 wer meldet, braucht ein GitHub-Konto, und die Meldungen sind öffentlich. Code in `melden.js`.
 

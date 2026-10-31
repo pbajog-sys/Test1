@@ -349,6 +349,11 @@
   .melde-foto img { width: 100%; height: 84px; object-fit: cover; border-radius: 10px; display: block; }
   .melde-foto input { position: absolute; top: 8px; left: 8px; width: 20px; height: 20px; }
   .melde-foto span { font-size: 0.8rem; color: var(--muted); }
+  #meldeVorschlag {
+    width: 100%; font: inherit; font-size: 0.95rem; padding: 10px; border-radius: 12px; margin-bottom: 4px;
+    border: 2px solid var(--card-strong); background: var(--card); color: var(--text);
+  }
+  .melde-hinweis { color: var(--bad); font-size: 0.82rem; margin-bottom: 8px; min-height: 0; }
   dialog.melde textarea {
     width: 100%; font: inherit; font-size: 1rem; padding: 10px; border-radius: 12px; resize: vertical;
     border: 2px solid var(--card-strong); background: var(--card); color: var(--text);
@@ -531,7 +536,9 @@
   <h3 id="meldeTitel">Melden</h3>
   <div class="muted" id="meldeBetrifft"></div>
   <div class="melde-arten" id="meldeArten"></div>
-  <div id="meldeFotoWahl"><div class="muted">Welches Foto?</div><div class="melde-fotos" id="meldeFotos"></div></div>
+  <div id="meldeFotoWahl"><div class="muted">Welches Foto?</div><div class="melde-fotos" id="meldeFotos"></div>
+    <input id="meldeVorschlag" type="url" inputmode="url" placeholder="Besseres Foto: Link von commons.wikimedia.org (optional)" autocomplete="off">
+    <div class="melde-hinweis" id="meldeVorschlagHinweis"></div></div>
   <textarea id="meldeText" rows="2" placeholder="Was ist dir aufgefallen? (optional)"></textarea>
   <p class="melde-info">Öffnet eine fertige Meldung auf GitHub – dort nur noch „Create“ tippen. Braucht ein GitHub-Konto, die Meldung ist öffentlich.</p>
   <div class="row"><button class="btn secondary" id="meldeAbbrechen" type="button">Abbrechen</button><button class="btn" id="meldeSenden" type="button">Zu GitHub ↗</button></div>

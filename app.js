@@ -76,20 +76,41 @@ function wikiApi(host, params) {
 // Artikel der Art auf Wikimedia Commons) und danach im Gerät gemerkt.
 // Echtheit: Bevorzugt werden Bilder mit Kameradaten (EXIF-Hersteller/-Modell). Bilder, die auf Commons
 // als KI-generiert, Zeichnung, Gemälde oder 3D-Modell einsortiert sind, werden nie genommen.
-// In der Prüf-Ansicht aussortierte Fotos landen in der Sperrliste; FOTO_SPERRE ist die feste Liste dazu.
-const FOTO_SPERRE = [
-  'Balaenoptera_acutorostrata_Saint-Laurent_01a.jpg',   // #2 Zwergwal: nicht gut erkennbar
-];
+// In der Prüf-Ansicht aussortierte Fotos landen in der Sperrliste dieses Geräts. Für alle Geräte gilt fotos.json:
+// „sperre“ = Fotos, die nie gezeigt werden, „wahl“ = pro Art fest gewählte Commons-Fotos, die zuerst kommen.
 const photoCache = loadJson(PHOTO_KEY);
 const photoBlock = loadJson(BLOCK_KEY);
-FOTO_SPERRE.forEach((n) => { photoBlock[n] = true; });
+let FOTO_SPERRE = [];
+let FOTO_WAHL = {};
+const fotosBereit = fetch('fotos.json', { cache: 'no-cache' })
+  .then((r) => (r.ok ? r.json() : {}))
+  .catch(() => ({}))
+  .then((d) => {
+    FOTO_SPERRE = d.sperre || [];
+    FOTO_WAHL = d.wahl || {};
+    FOTO_SPERRE.forEach((n) => { photoBlock[n] = true; });
+  });
+// Dateinamen für URLs kodieren – auch Klammern, sonst brechen Markdown-Links in den Meldungen.
+const urlName = (name) => encodeURIComponent(name).replace(/\(/g, '%28').replace(/\)/g, '%29');
+// Ein Commons-Foto nur über seinen Dateinamen – ohne Suche, Commons liefert die passende Größe.
+const commonsFoto = (name) => ({
+  src: 'https://commons.wikimedia.org/wiki/Special:FilePath/' + urlName(name) + '?width=960',
+  page: 'https://commons.wikimedia.org/wiki/File:' + urlName(name),
+  name, echt: true, fest: true,
+});
 const photoChecked = loadJson(CHECK_KEY);
 const photoInflight = {};
 const BAD_FILE = /skelet|skull|schädel|cranium|crania|\bmap|range|distribution|verbreitung|size|scale|comparison|vergleich|stamp|briefmarke|museum|model|drawing|zeichnung|illustrat|plate|painting|engrav|lithograph|whaling|harpoon|carcass|bone|jaw|teeth|baleen|fetus|foetus|embryo|logo|flag|coin|sculpt|statue|diagram|chart|book|specimen|preserved|replica|dissect|meat|fleisch|market|fossil|vertebra|anatomy|sound|spectrogram/i;
 const BAD_CATEGORY = /AI-generated|artificial intelligence|Midjourney|DALL-E|Stable Diffusion|computer-generated|CGI|3D render|3D model|renders|illustrations|drawings|paintings|engravings|lithographs|scientific illustrations|clip ?art|diagrams|maps|stamps|skeletons|skulls|museum specimens/i;
 const MEH_FILE = /dead|stranded|strandung|beached|necropsy|corpse|caught|fishing|landed|bycatch/i;
-// Die angezeigten Fotos einer Art: die besten noch nicht aussortierten Kandidaten (null = noch nicht geladen).
-const photosFor = (w) => (photoCache[w.id] ? photoCache[w.id].filter((p) => !photoBlock[p.name]).slice(0, PHOTOS_PER_WAL) : null);
+// Die angezeigten Fotos einer Art: fest gewählte zuerst, dann die besten noch nicht aussortierten Kandidaten
+// (null = es muss erst gesucht werden).
+function photosFor(w) {
+  const fest = (FOTO_WAHL[w.id] || []).map(commonsFoto).filter((p) => !photoBlock[p.name]);
+  if (!photoCache[w.id]) return fest.length >= PHOTOS_PER_WAL ? fest.slice(0, PHOTOS_PER_WAL) : null;
+  const rest = photoCache[w.id].filter((p) => !photoBlock[p.name] && !fest.some((f) => f.name === p.name));
+  return fest.concat(rest).slice(0, PHOTOS_PER_WAL);
+}
 const hasNoPhotos = (w) => { const p = photosFor(w); return p !== null && !p.length; };
 
 function hasCameraData(ii) {
@@ -145,7 +166,9 @@ function photoSources(art) {
 
 function loadPhotos(wal) {
   if (istFrage(wal)) return Promise.resolve([]);
-  if (photoCache[wal.id]) return Promise.resolve(photosFor(wal));
+  return fotosBereit.then(() => photosFor(wal) || suchePhotos(wal));
+}
+function suchePhotos(wal) {
   if (photoInflight[wal.id]) return photoInflight[wal.id];
   photoInflight[wal.id] = (async () => {
     const found = [];
@@ -1020,7 +1043,7 @@ function filterLexikon() {
 
 // ---------- Fotos prüfen ----------
 // Alle Arten der aktuellen Welt mit ihren angezeigten Fotos. ✗ sperrt ein Foto (nächster Kandidat rückt nach),
-// ✓ merkt es als geprüft. Die Sperrliste lässt sich kopieren und dann fest in FOTO_SPERRE eintragen.
+// ✓ merkt es als geprüft. Die Sperrliste lässt sich als Meldung schicken und kommt dann in fotos.json.
 const pruefObserver = 'IntersectionObserver' in window ? new IntersectionObserver((entries) => {
   entries.forEach((en) => {
     if (!en.isIntersecting) return;
@@ -1042,7 +1065,7 @@ function fillPruefRow(li) {
       d.innerHTML = '<img alt="" loading="lazy"><div class="info"></div><div class="btns"><button type="button" class="yes">✓</button><button type="button" class="no">✗</button></div>';
       d.querySelector('img').src = p.src;
       const info = d.querySelector('.info');
-      info.append(p.echt ? '📷 mit Kameradaten · ' : '⚠️ ohne Kameradaten · ');
+      info.append(p.fest ? '📌 fest gewählt · ' : p.echt ? '📷 mit Kameradaten · ' : '⚠️ ohne Kameradaten · ');
       const a = document.createElement('a');
       a.href = p.page; a.target = '_blank'; a.rel = 'noopener'; a.textContent = 'Quelle';
       info.appendChild(a);
@@ -1097,8 +1120,9 @@ $('pruefOffen').addEventListener('change', renderPruefen);
 $('sperrMelden').addEventListener('click', () => {
   const list = Object.keys(photoBlock).filter((n) => !FOTO_SPERRE.includes(n));
   if (!list.length) { $('sperrMsg').textContent = 'Noch keine Fotos aussortiert.'; return; }
-  const text = ['Diese Fotos wurden in der Prüf-Ansicht aussortiert und sollen fest in `FOTO_SPERRE` (app.js):', '',
-    '```json', JSON.stringify(list, null, 1), '```', '', '- App-Stand: ' + APP_STAND, '- Welt: ' + WELTEN[welt].title].join('\n');
+  const text = ['Diese Fotos wurden in der Prüf-Ansicht aussortiert und sollen fest in die Sperrliste (`fotos.json`):', '',
+    '```json', JSON.stringify(list, null, 1), '```', '', '- App-Stand: ' + APP_STAND, '- Welt: ' + WELTEN[welt].title,
+    '', '<!-- walquiz-meldung ' + JSON.stringify({ typ: 'foto', sperre: list }) + ' -->'].join('\n');
   window.open(meldeUrl('[Fotos] ' + list.length + (list.length === 1 ? ' aussortiertes Foto' : ' aussortierte Fotos'), text), '_blank', 'noopener');
 });
 $('sperrCopy').addEventListener('click', async () => {

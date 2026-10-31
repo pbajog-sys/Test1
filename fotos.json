@@ -1,0 +1,7 @@
+{
+  "_hinweis": "sperre: Dateinamen von Wikimedia-Commons-Fotos, die nie gezeigt werden. wahl: pro Art-ID fest gewählte Commons-Fotos (werden zuerst gezeigt). Pflege über die Meldungen (GitHub-Issues).",
+  "sperre": [
+    "Balaenoptera_acutorostrata_Saint-Laurent_01a.jpg"
+  ],
+  "wahl": {}
+}
