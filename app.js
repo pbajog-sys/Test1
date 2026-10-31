@@ -1160,5 +1160,11 @@ $('sperrCopy').addEventListener('click', async () => {
 renderStart();
 
 if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').catch(() => {}));
+  // Kommt ein Update, einmal neu laden – damit nicht alte und neue Dateien gemischt werden
+  const hatteSchonSw = !!navigator.serviceWorker.controller;
+  let neuGeladen = false;
+  navigator.serviceWorker.addEventListener('controllerchange', () => {
+    if (hatteSchonSw && !neuGeladen) { neuGeladen = true; location.reload(); }
+  });
+  window.addEventListener('load', () => navigator.serviceWorker.register('sw.js').then((r) => r.update()).catch(() => {}));
 }

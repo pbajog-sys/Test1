@@ -1,5 +1,5 @@
 // Service Worker: App offline verfügbar machen. Walfotos werden beim ersten Anzeigen zwischengespeichert.
-const VERSION = 'walquiz-v16';
+const VERSION = 'walquiz-v17';
 const SHELL = [
   './',
   'index.html',
@@ -58,13 +58,14 @@ self.addEventListener('fetch', (event) => {
   // Eigene Dateien: erst Netz (damit Updates ankommen), sonst Cache.
   if (url.origin === location.origin) {
     event.respondWith(
-      fetch(req)
+      // cache: 'no-cache' – nicht die bis zu 10 Minuten alte Kopie aus dem Browser-Zwischenspeicher nehmen
+      fetch(req, { cache: 'no-cache' })
         .then((res) => {
           const copy = res.clone();
           caches.open(VERSION).then((c) => c.put(req, copy));
           return res;
         })
-        .catch(() => caches.match(req).then((r) => r || caches.match('index.html')))
+        .catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || caches.match('index.html')))
     );
     return;
   }
