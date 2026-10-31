@@ -77,7 +77,9 @@ function wikiApi(host, params) {
 // Echtheit: Bevorzugt werden Bilder mit Kameradaten (EXIF-Hersteller/-Modell). Bilder, die auf Commons
 // als KI-generiert, Zeichnung, Gemälde oder 3D-Modell einsortiert sind, werden nie genommen.
 // In der Prüf-Ansicht aussortierte Fotos landen in der Sperrliste; FOTO_SPERRE ist die feste Liste dazu.
-const FOTO_SPERRE = [];
+const FOTO_SPERRE = [
+  'Balaenoptera_acutorostrata_Saint-Laurent_01a.jpg',   // #2 Zwergwal: nicht gut erkennbar
+];
 const photoCache = loadJson(PHOTO_KEY);
 const photoBlock = loadJson(BLOCK_KEY);
 FOTO_SPERRE.forEach((n) => { photoBlock[n] = true; });
