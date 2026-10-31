@@ -467,6 +467,20 @@ function renderGallery(wal, onReady) {
       img.onerror = () => { s.classList.add('done'); };
       img.src = p.src;
       s.appendChild(img);
+      // ⚑ direkt im Foto: meldet genau dieses Foto mit einem Tipp
+      const flag = document.createElement('button');
+      flag.type = 'button';
+      flag.className = 'gal-flag';
+      flag.textContent = '⚑';
+      flag.setAttribute('aria-label', 'Foto ' + (i + 1) + ' melden');
+      flag.addEventListener('click', (e) => {
+        e.stopPropagation();
+        if (s.classList.contains('gemeldet')) return;
+        fotoDirektMelden(wal, p, photos);
+        s.classList.add('gemeldet');
+        flag.textContent = '✓ Gemeldet';
+      });
+      s.appendChild(flag);
       gal.appendChild(s);
       const dot = document.createElement('button');
       dot.setAttribute('aria-label', 'Foto ' + (i + 1));

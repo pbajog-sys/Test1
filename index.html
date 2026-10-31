@@ -107,6 +107,12 @@
     border: 0; background: rgba(0,0,0,0.45); color: #fff; font-size: 1.1rem; cursor: pointer;
   }
   .gal-arrow.prev { left: 8px; } .gal-arrow.next { right: 8px; }
+  .gal-flag {
+    position: absolute; top: 8px; right: 8px; min-width: 36px; height: 36px; padding: 0 10px; border-radius: 18px;
+    border: 0; background: rgba(0,0,0,0.45); color: #fff; font: inherit; font-size: 1rem; cursor: pointer;
+  }
+  .slide.gemeldet img { opacity: 0.35 !important; filter: grayscale(1); }
+  .slide.gemeldet .gal-flag { background: rgba(255,107,107,0.9); font-size: 0.85rem; font-weight: 600; }
   .dots { display: flex; justify-content: center; gap: 8px; margin-top: 8px; min-height: 10px; }
   .dots button { width: 10px; height: 10px; border-radius: 50%; border: 0; padding: 0; background: var(--card-strong); cursor: pointer; }
   .dots button.on { background: var(--accent); }

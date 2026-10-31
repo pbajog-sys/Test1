@@ -80,34 +80,45 @@ function meldeFotosZeigen() {
   $('meldeFotoWahl').hidden = meldeArt() !== 'foto' || !meldung.fotos.length;
 }
 
-function meldungAbschicken() {
-  const art = meldeArt();
-  const a = meldung.art;
-  const gewaehlt = [...$('meldeFotos').querySelectorAll('input:checked')].map((x) => meldung.fotos[Number(x.value)]);
-  const fotos = art === 'foto' ? (gewaehlt.length ? gewaehlt : meldung.fotos) : [];
-  const name = a ? (istFrage(a) ? 'Dackel-Frage ' + a.id.replace('dackel-', '') : (a.welt === 'porsche' ? 'Porsche ' : '') + a.name) : WELTEN[welt].title;
-  const titel = '[' + MELDE_ARTEN[art].titel + '] ' + name
-    + (art === 'foto' && fotos.length === 1 ? ' – Foto ' + (meldung.fotos.indexOf(fotos[0]) + 1) : '');
-
-  const text = $('meldeText').value.trim();
+// Baut Titel und Text der Meldung und öffnet sie auf GitHub.
+// alleFotos: die angezeigten Fotos der Art (für die Nummer), fotos: die gemeldeten davon.
+function meldungSenden({ art, kind, alleFotos = [], fotos = [], text = '', extra = '' }) {
+  const name = art ? (istFrage(art) ? 'Dackel-Frage ' + art.id.replace('dackel-', '') : (art.welt === 'porsche' ? 'Porsche ' : '') + art.name) : WELTEN[welt].title;
+  const titel = '[' + MELDE_ARTEN[kind].titel + '] ' + name
+    + (kind === 'foto' && fotos.length === 1 ? ' – Foto ' + (alleFotos.indexOf(fotos[0]) + 1) : '');
   const zeilen = [
-    '### Was ist ' + (art === 'idee' ? 'die Idee' : 'falsch') + '?',
+    '### Was ist ' + (kind === 'idee' ? 'die Idee' : 'falsch') + '?',
     text || '_(bitte hier beschreiben)_',
     '',
     '### Betrifft',
     '- Welt: ' + WELTEN[welt].title,
   ];
-  const az = artZeile(a);
+  const az = artZeile(art);
   if (az) zeilen.push('- ' + az);
-  fotos.forEach((p) => zeilen.push('- Foto ' + (meldung.fotos.indexOf(p) + 1) + ': [' + p.name + '](' + p.page + ')' + (p.echt ? '' : ' (ohne Kameradaten)')));
-  if (meldung.extra) zeilen.push('', meldung.extra);
+  fotos.forEach((p) => zeilen.push('- Foto ' + (alleFotos.indexOf(p) + 1) + ': [' + p.name + '](' + p.page + ')' + (p.echt ? '' : ' (ohne Kameradaten)')));
+  if (extra) zeilen.push('', extra);
   zeilen.push('', '### Technik', '- App-Stand: ' + APP_STAND, '- Gerät: ' + geraet(), '- Gemeldet: ' + new Date().toLocaleString('de-DE'));
   // Gemeldete Fotos werden auch gleich auf diesem Gerät aussortiert.
-  if (art === 'foto') { fotos.forEach((p) => { photoBlock[p.name] = true; }); saveJson(BLOCK_KEY, photoBlock); }
-
+  if (kind === 'foto') { fotos.forEach((p) => { photoBlock[p.name] = true; }); saveJson(BLOCK_KEY, photoBlock); }
   window.open(meldeUrl(titel, zeilen.join('\n')), '_blank', 'noopener');
+}
+
+function meldungAbschicken() {
+  const kind = meldeArt();
+  const gewaehlt = [...$('meldeFotos').querySelectorAll('input:checked')].map((x) => meldung.fotos[Number(x.value)]);
+  meldungSenden({
+    art: meldung.art, kind, alleFotos: meldung.fotos,
+    fotos: kind === 'foto' ? (gewaehlt.length ? gewaehlt : meldung.fotos) : [],
+    text: $('meldeText').value.trim(), extra: meldung.extra,
+  });
   meldenSchliessen();
 }
+
+// Ein Tipp auf ⚑ im Foto: dieses Foto sofort melden, ohne Dialog.
+function fotoDirektMelden(art, foto, alleFotos) {
+  meldungSenden({ art, kind: 'foto', alleFotos, fotos: [foto] });
+}
+
 function meldenSchliessen() {
   const dlg = $('meldeDialog');
   if (typeof dlg.close === 'function') dlg.close(); else dlg.removeAttribute('open');

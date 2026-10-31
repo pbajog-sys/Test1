@@ -83,7 +83,8 @@ Vor einer öffentlichen Veröffentlichung sollten Urheber und Lizenz je Bild erg
 (stehen auf der jeweiligen Commons-Seite).
 
 ## Fehler und Fotos melden
-Unter jeder Antwort, bei jedem Lexikon-Eintrag und auf der Startseite gibt es **„⚑ Melden“**. Der Dialog fragt,
+Auf jedem Quiz-Foto sitzt oben rechts ein **⚑**: ein Tipp öffnet sofort die fertige Meldung für genau dieses Foto.
+Außerdem gibt es unter jeder Antwort, bei jedem Lexikon-Eintrag und auf der Startseite **„⚑ Melden“**. Der Dialog fragt,
 was falsch ist (Foto, Info, App-Fehler, Idee), bei Fotos auch welches, und öffnet dann ein **vorausgefülltes
 GitHub-Issue** in diesem Repo – mit Welt, Art bzw. Frage, Foto-Links, App-Stand und Gerät. Dort nur noch „Create“.
 Gemeldete Fotos werden auf dem eigenen Gerät sofort aussortiert. In der Prüf-Ansicht lässt sich die ganze
