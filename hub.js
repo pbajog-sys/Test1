@@ -69,6 +69,8 @@ function renderHub() {
   // cello.js lädt erst nach dem Dashboard – darum die Abzeichen-Symbole hier direkt
   const celloAbz = ['🐴', '🥉', '🥈', '🥇'].map((e, i) => ((cello.badges || {})[i + 1] ? e : '·')).join(' ');
   $('hubCelloBest').textContent = 'Lagen-Abzeichen: ' + celloAbz;
+  const tonBest = Math.max(0, ...Object.values(loadJson('walquiz.toene.v1').best || {}));
+  $('hubToeneBest').textContent = tonBest ? 'Rekord ' + fmt(tonBest) + ' / 50' : 'Noch kein Rekord';
 }
 
 function zeigeHub() {

@@ -89,7 +89,7 @@ header h1 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes einblenden { from { opacity: 0; } to { opacity: 1; } }
 /* Die Spiele haben eine eigene Vollbild-Bühne (position: fixed). Eine Animation mit transform auf dem
    Bildschirm würde Safari dazu bringen, die Bühne nur innerhalb des Bildschirms zu zeichnen („Fenster im Fenster“). */
-#screen-farben.active, #screen-cello.active { animation: none; }
+#screen-farben.active, #screen-cello.active, #screen-toene.active { animation: none; }
 @keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
@@ -657,6 +657,80 @@ body.theme-hub {
 .taste.richtig { background: linear-gradient(#5ee39a, #239e5b); color: #fff; box-shadow: 0 4px 0 #1a6e40, 0 0 24px rgba(47,191,113,0.6); }
 .taste.falsch { background: linear-gradient(#ff8a7a, #c0392b); color: #fff; animation: shake .35s; }
 .cello-ergebnis { text-align: center; font-family: "Playfair Display", serif; font-size: 3.6rem; color: #f3d9a4; padding-top: 6vh; }
+
+/* ===================================================================
+   🎧 Ton-Gedächtnis – dunkles Studio, Neon-Schwingung
+   =================================================================== */
+.hub-toene { background: linear-gradient(#07110f, #07110f) padding-box, linear-gradient(90deg, #22d3ee, #a3e635, #22d3ee) border-box; background-size: 100% 100%, 300% 100%; box-shadow: 0 16px 50px rgba(34,211,238,0.2); margin-top: 12px; animation-delay: .65s, 0s; }
+.hub-toene .hg-titel { background: linear-gradient(90deg, #67e8f9, #bef264); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hc-toene-icon, .ton-logo { display: flex; align-items: center; justify-content: center; gap: 4px; flex: none; }
+.hc-toene-icon { width: 74px; height: 54px; }
+.hc-toene-icon i, .ton-logo i { display: block; width: 5px; border-radius: 3px; background: linear-gradient(#67e8f9, #bef264); animation: pegel 1s ease-in-out infinite; }
+.hc-toene-icon i { height: 40px; } .ton-logo i { width: 9px; height: 70px; border-radius: 5px; }
+.hc-toene-icon i:nth-child(2n), .ton-logo i:nth-child(2n) { animation-delay: -.3s; }
+.hc-toene-icon i:nth-child(3n), .ton-logo i:nth-child(3n) { animation-delay: -.6s; }
+.hc-toene-icon i:nth-child(5n), .ton-logo i:nth-child(5n) { animation-delay: -.15s; }
+@keyframes pegel { 0%, 100% { transform: scaleY(.25); } 50% { transform: scaleY(1); } }
+
+.ton-buehne {
+  position: fixed; inset: 0; z-index: 20; overflow-y: auto; color: #e6fffb;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  background: radial-gradient(100% 60% at 50% 0%, rgba(34,211,238,0.18), transparent 60%), radial-gradient(80% 50% at 50% 100%, rgba(163,230,53,0.12), transparent 60%), #050b0a;
+  font-family: "Outfit", system-ui, sans-serif;
+}
+.ton-buehne > * { max-width: 520px; margin-left: auto; margin-right: auto; }
+.ton-buehne .farb-kopf .icon-btn { background: rgba(255,255,255,0.1); color: inherit; }
+.ton-teil { display: grid; gap: 14px; animation: aufploppen .4s var(--ease-spring); }
+#ton-intro { text-align: center; padding-top: 3vh; }
+.ton-titel { font-size: 2.6rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; background: linear-gradient(90deg, #67e8f9, #bef264, #67e8f9); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: farbfluss 5s linear infinite; }
+.ton-lead { margin: 0 auto; max-width: 34ch; line-height: 1.5; color: #b5d6d1; }
+.ton-hinweis { margin: 0; font-size: 0.85rem; color: #8fb5b0; }
+.ton-challenge { background: rgba(190,242,100,0.12); border: 1px solid rgba(190,242,100,0.5); border-radius: 14px; padding: 12px; }
+.ton-stufen button small { font-size: 0.7rem; }
+.ton-buehne .btn { width: 100%; }
+.ton-buehne .btn.ton-gross { font-size: 1.15rem; padding: 16px; background: linear-gradient(90deg, #22d3ee, #a3e635); color: #04201c; box-shadow: 0 10px 30px rgba(34,211,238,0.25); }
+.ton-buehne .btn.secondary { background: rgba(255,255,255,0.1); color: inherit; box-shadow: none; }
+.ton-best { font-size: 0.85rem; color: #8fb5b0; }
+.ton-mitte { min-height: 70dvh; place-content: center; text-align: center; }
+.ton-merk { text-align: center; font-size: 1.3rem; font-weight: 600; opacity: .85; }
+.ton-welle { height: 150px; }
+.ton-welle.klein { height: 110px; }
+.welle-svg { width: 100%; height: 100%; display: block; overflow: visible; }
+.welle-svg path { fill: none; stroke-linecap: round; }
+.welle-svg .w1 { stroke: #67e8f9; stroke-width: 3.5; filter: drop-shadow(0 0 8px rgba(103,232,249,0.9)); }
+.welle-svg .w2 { stroke: #bef264; stroke-width: 2; opacity: .55; filter: drop-shadow(0 0 6px rgba(190,242,100,0.8)); }
+.ton-countdown { font-size: 2.4rem; font-weight: 800; font-variant-numeric: tabular-nums; min-height: 1.2em; }
+.ton-hz { text-align: center; font-size: 2.6rem; font-weight: 800; font-variant-numeric: tabular-nums; letter-spacing: -0.02em; }
+.ton-regler {
+  -webkit-appearance: none; appearance: none; width: 100%; height: 44px; border-radius: 22px; margin: 0; touch-action: none;
+  background: linear-gradient(90deg, rgba(34,211,238,0.35) var(--pos, 50%), rgba(255,255,255,0.08) var(--pos, 50%));
+  box-shadow: inset 0 0 0 1px rgba(103,232,249,0.35);
+}
+.ton-regler::-webkit-slider-thumb { -webkit-appearance: none; width: 44px; height: 44px; border-radius: 50%; background: radial-gradient(circle, #fff 30%, #67e8f9 31%); box-shadow: 0 0 20px rgba(103,232,249,0.8); cursor: grab; }
+.ton-regler::-moz-range-thumb { width: 40px; height: 40px; border-radius: 50%; background: #fff; border: 6px solid #67e8f9; }
+.ton-skala { display: flex; justify-content: space-between; font-size: 0.8rem; opacity: .6; margin-top: -8px; }
+.ton-tipp-klein { text-align: center; font-size: 0.85rem; opacity: .65; }
+.ton-punkte { text-align: center; font-size: 3rem; font-weight: 800; line-height: 1; padding-top: 2vh; }
+.ton-kommentar { text-align: center; font-size: 1.2rem; font-weight: 600; }
+.ton-analyse { display: grid; gap: 12px; background: rgba(255,255,255,0.05); border: 1px solid rgba(103,232,249,0.2); border-radius: 18px; padding: 14px; animation: aufploppen .45s var(--ease-spring) .15s backwards; }
+.ton-skala-bild { position: relative; height: 12px; border-radius: 6px; background: linear-gradient(90deg, #0e7490, #22d3ee, #a3e635, #facc15); margin: 8px 6px 0; }
+.ton-skala-bild i { position: absolute; top: 50%; width: 16px; height: 16px; margin: -8px 0 0 -8px; border: 2px solid #fff; box-shadow: 0 1px 6px rgba(0,0,0,0.6); }
+.ton-skala-bild .tz { transform: rotate(45deg); border-radius: 2px; background: #050b0a; }
+.ton-skala-bild .tm { border-radius: 50%; background: #fff; }
+.ton-legende { display: flex; justify-content: space-between; font-size: 0.75rem; opacity: .65; }
+.ton-tabelle td { font-size: 1rem; }
+.ton-tabelle tr.diff.gut td { color: #4ade80; } .ton-tabelle tr.diff.mittel td { color: #fbbf24; } .ton-tabelle tr.diff.weit td { color: #f87171; }
+.ton-hoer { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.ton-hoer button { border: 1.5px solid rgba(103,232,249,0.4); background: rgba(103,232,249,0.08); color: inherit; border-radius: 12px; padding: 10px 4px; font: inherit; font-weight: 600; cursor: pointer; }
+.ton-hoer button:active { transform: scale(.96); background: rgba(103,232,249,0.25); }
+#ton-aufloesung #tonWeiter { position: sticky; bottom: 0; z-index: 2; }
+.ton-liste { list-style: none; padding: 0; margin: 0; display: grid; gap: 8px; }
+.ton-liste li { display: grid; grid-template-columns: 1fr auto 56px; align-items: center; gap: 10px; padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,0.06); cursor: pointer; animation: aufploppen .4s var(--ease-spring) backwards; }
+.ton-liste li:nth-child(2) { animation-delay: .08s; } .ton-liste li:nth-child(3) { animation-delay: .16s; }
+.ton-liste li:nth-child(4) { animation-delay: .24s; } .ton-liste li:nth-child(5) { animation-delay: .32s; }
+.ton-liste .tl-n { font-weight: 600; }
+.ton-liste .tl-c { font-size: 0.85rem; opacity: .7; font-variant-numeric: tabular-nums; }
+.ton-liste b { text-align: right; font-size: 1.2rem; }
 
 /* ---------- Weniger Bewegung, wenn gewünscht ---------- */
 @media (prefers-reduced-motion: reduce) {

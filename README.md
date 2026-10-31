@@ -70,6 +70,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `farben.js` – Farb-Gedächtnis
 - `hub.js` – Dashboard „Spiele“ mit Zoom-Übergang
 - `cello.js` – Cello-Noten
+- `toene.js` – Ton-Gedächtnis
 - `groesse.js` – Größenvergleich
 - `sw.js`, `manifest.webmanifest`, `icons/` – Installation und Offline-Nutzung
 
@@ -133,3 +134,12 @@ Stufen: 🐴 Seepferdchen = 1. Lage · 🥉 Bronze = bis 4. Lage · 🥈 Silber 
 Übungen: **Griff finden** (Note → Saite und Finger in der Lage tippen), **Griff lesen** (Finger sehen → Ton nennen),
 **Noten lesen** (Bass-, Tenor-, Violinschlüssel je nach Stufe) und **Abzeichen-Test** (10 gemischte Aufgaben,
 8 richtig). Jeder Ton erklingt (Web Audio). Code in `cello.js`.
+
+## 🎧 Ton-Gedächtnis (Game)
+Eigenes Spiel, angelehnt an das Prinzip „Ton hören und nachbauen“: Ein Sinuston erklingt (Leicht 3 s und einmal
+wiederholbar, Mittel 2 s, Profi 1 s), danach sucht man ihn mit einem logarithmischen Frequenz-Schieber
+(100–2000 Hz). Solange man den Schieber festhält, klingt der eigene Ton live. Punkte 0–10 pro Ton nach dem
+Abstand in Cent (100 Cent = ein Halbton; 10 − Cent/50, ab einer Quarte 0). Auswertung: Frequenz und nächste Note
+(z. B. „A4 +20 ct“) für Original und eigenen Ton, Differenz in Hz und Cent, Tipp („1,2 Halbtöne zu hoch“),
+Position auf der Skala, beide Töne zum Vergleichen. Tagestöne, Bestwerte, Challenge-Links. Code in `toene.js`.
+

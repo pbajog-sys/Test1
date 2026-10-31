@@ -366,7 +366,7 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=19">
+<link rel="stylesheet" href="stil.css?v=20">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -395,6 +395,11 @@
     <button class="hub-game hub-cello" id="hubCello" type="button">
       <span class="hc-cello-icon" aria-hidden="true">🎻</span>
       <span class="hg-text"><span class="hg-titel">Cello-Noten</span><span class="hg-sub">Lagen, Finger und Noten fürs Cello.</span><span class="hg-best" id="hubCelloBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-toene" id="hubToene" type="button">
+      <span class="hc-toene-icon" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <span class="hg-text"><span class="hg-titel">Ton-Gedächtnis</span><span class="hg-sub">Ton hören. Nachbauen. Wie gut ist dein Gehör?</span><span class="hg-best" id="hubToeneBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <div class="hub-mehr">Bald mehr Games ✨</div>
@@ -679,6 +684,80 @@
       </div>
     </div>
   </section>
+
+  <!-- Ton-Gedächtnis -->
+  <section class="screen" id="screen-toene">
+    <div class="ton-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="tonZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="tonRunde"></span>
+      </div>
+
+      <div class="ton-teil" id="ton-intro">
+        <div class="ton-logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <h2 class="ton-titel">Ton-Gedächtnis</h2>
+        <p class="ton-lead">Ein Ton erklingt kurz. Danach suchst du ihn mit dem Schieber – solange du ihn festhältst, hörst du deinen Ton. Fünf Töne, bis zu 50 Punkte.</p>
+        <p class="ton-hinweis">🔔 iPhone: Stumm-Schalter ausschalten und Lautstärke hoch.</p>
+        <div class="ton-challenge" id="tonChallenge" hidden></div>
+        <div class="farb-stufen ton-stufen" id="tonStufen">
+          <button type="button" data-stufe="leicht">Leicht<small>3 Sek. · 2× hören</small></button>
+          <button type="button" data-stufe="mittel">Mittel<small>2 Sek.</small></button>
+          <button type="button" data-stufe="profi">Profi<small>1 Sek.</small></button>
+        </div>
+        <button class="btn ton-gross" id="tonLos" type="button">Los geht’s 🎧</button>
+        <button class="btn secondary" id="tonTagBtn" type="button">📅 Tagestöne</button>
+        <div class="ton-best" id="tonBest"></div>
+      </div>
+
+      <div class="ton-teil ton-mitte" id="ton-hoeren" hidden>
+        <div class="ton-merk">Hör gut zu …</div>
+        <div class="ton-welle" id="tonWelle"></div>
+        <div class="ton-countdown" id="tonCountdown"></div>
+        <button class="btn secondary" id="tonNochmal" type="button" hidden>🔁 Nochmal anhören</button>
+        <button class="btn ton-gross" id="tonWeiterHoeren" type="button" hidden>Jetzt nachbauen →</button>
+      </div>
+
+      <div class="ton-teil" id="ton-treffen" hidden>
+        <div class="ton-merk">Finde den Ton</div>
+        <div class="ton-welle klein" id="tonWelleMix"></div>
+        <div class="ton-hz" id="tonMixHz"></div>
+        <input class="ton-regler" type="range" id="tonRegler" min="0" max="1000" step="1" aria-label="Tonhöhe">
+        <div class="ton-skala"><span>tief</span><span>hoch</span></div>
+        <div class="ton-tipp-klein">Schieber festhalten = Ton hören</div>
+        <button class="btn secondary" id="tonProbe" type="button">🔊 Meinen Ton kurz anhören</button>
+        <button class="btn ton-gross" id="tonFertig" type="button">Fertig ✓</button>
+      </div>
+
+      <div class="ton-teil" id="ton-aufloesung" hidden>
+        <div class="ton-punkte" id="tonPunkte"></div>
+        <div class="ton-kommentar" id="tonKommentar"></div>
+        <div class="ton-analyse">
+          <div class="farb-tipp" id="tonTipp"></div>
+          <div class="ton-skala-bild"><i class="tz" id="tonSkalaZiel"></i><i class="tm" id="tonSkalaMix"></i></div>
+          <div class="ton-legende"><span>◆ Original</span><span>● Deiner</span></div>
+          <table class="farb-tabelle ton-tabelle" id="tonTabelle"></table>
+          <div class="ton-hoer">
+            <button type="button" id="tonHoerZiel">▶ Original</button>
+            <button type="button" id="tonHoerMix">▶ Deiner</button>
+            <button type="button" id="tonHoerBeide">▶ Beide</button>
+          </div>
+          <div class="farb-deltae">100 Cent = ein Halbton. Unter etwa 10 Cent hören die meisten keinen Unterschied.</div>
+        </div>
+        <button class="btn ton-gross" id="tonWeiter" type="button">Nächster Ton</button>
+      </div>
+
+      <div class="ton-teil" id="ton-ende" hidden>
+        <div class="farb-summe" id="tonSumme"></div>
+        <div class="farb-rekord" id="tonRekord"></div>
+        <div class="farb-rekord" id="tonVergleich" hidden></div>
+        <ul class="ton-liste" id="tonListe"></ul>
+        <div class="ton-tipp-klein">Tippe eine Zeile an, um beide Töne zu hören.</div>
+        <button class="btn ton-gross" id="tonTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="tonTeilenMsg"></div>
+        <button class="btn secondary" id="tonNochmalSpiel" type="button">Nochmal spielen</button>
+      </div>
+    </div>
+  </section>
 </div>
 
 <dialog class="melde" id="meldeDialog" aria-labelledby="meldeTitel">
@@ -692,17 +771,18 @@
   <p class="melde-info">Öffnet eine fertige Meldung auf GitHub – dort nur noch „Create“ tippen. Braucht ein GitHub-Konto, die Meldung ist öffentlich.</p>
   <div class="row"><button class="btn secondary" id="meldeAbbrechen" type="button">Abbrechen</button><button class="btn" id="meldeSenden" type="button">Zu GitHub ↗</button></div>
 </dialog>
-<script src="wale.js?v=19"></script>
-<script src="haie.js?v=19"></script>
-<script src="porsche.js?v=19"></script>
-<script src="dackel.js?v=19"></script>
-<script src="groesse.js?v=19"></script>
-<script src="gretchen.js?v=19"></script>
-<script src="effekte.js?v=19"></script>
-<script src="app.js?v=19"></script>
-<script src="melden.js?v=19"></script>
-<script src="hub.js?v=19"></script>
-<script src="farben.js?v=19"></script>
-<script src="cello.js?v=19"></script>
+<script src="wale.js?v=20"></script>
+<script src="haie.js?v=20"></script>
+<script src="porsche.js?v=20"></script>
+<script src="dackel.js?v=20"></script>
+<script src="groesse.js?v=20"></script>
+<script src="gretchen.js?v=20"></script>
+<script src="effekte.js?v=20"></script>
+<script src="app.js?v=20"></script>
+<script src="melden.js?v=20"></script>
+<script src="hub.js?v=20"></script>
+<script src="farben.js?v=20"></script>
+<script src="cello.js?v=20"></script>
+<script src="toene.js?v=20"></script>
 </body>
 </html>
