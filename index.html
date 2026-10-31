@@ -7,9 +7,7 @@
 <meta name="description" content="Lerne alle Walarten kennen und mach das Seepferdchen der Walkunde.">
 <meta name="theme-color" content="#0b2a4a">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Noto+Music&family=Playfair+Display:ital,wght@0,700;1,700&family=Caveat:wght@600&family=Nunito:wght@400;600;800&family=Outfit:wght@400;600;800&family=Russo+One&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="fonts/fonts.css?v=22">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -363,10 +361,43 @@
   dialog.melde .row .btn { white-space: nowrap; }
   dialog.melde { max-height: 92dvh; overflow: auto; }
 
+  /* ---------- Konto ---------- */
+  .hub-zeile { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 36px; }
+  .konto-btn {
+    flex: 0 1 auto; min-width: 0; border: 1px solid rgba(255,255,255,0.18); border-radius: 999px;
+    background: rgba(255,255,255,0.08); color: var(--text); font: inherit; font-size: 0.9rem; font-weight: 600;
+    padding: 6px 12px; cursor: pointer; max-width: 42vw; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .konto-btn.an { border-color: var(--accent); }
+  dialog.konto > div > .btn, dialog.konto > .btn, #kontoCodeZeile .btn { width: 100%; margin-top: 8px; }
+  .konto-feld {
+    width: 100%; font: inherit; font-size: 1rem; padding: 10px; border-radius: 12px;
+    border: 2px solid var(--card-strong); background: var(--card); color: var(--text); min-width: 0;
+  }
+  .konto-code { margin-top: 10px; text-align: center; letter-spacing: 0.4em; font-size: 1.4rem; }
+  .konto-label { display: block; font-size: 0.85rem; color: var(--muted); margin-bottom: 4px; }
+  .konto-reihe { display: flex; gap: 8px; margin-top: 8px; }
+  .konto-reihe .btn { flex: 0 0 auto; white-space: nowrap; }
+  .konto-reihe .konto-feld { flex: 1; }
+  .konto-block { background: var(--card); border-radius: 14px; padding: 10px 12px; margin-top: 14px; }
+  .konto-block .muted { margin: 6px 0; }
+  #famGruenden { width: 100%; }
+  .fam-code { font-weight: 800; letter-spacing: 0.15em; color: var(--text); }
+  .konto-sync { font-size: 0.85rem; color: var(--muted); margin-top: 12px; }
+  .konto-weg { color: var(--bad); }
+  .konto-msg { min-height: 1.2em; font-size: 0.9rem; margin: 10px 0 0; }
+  dialog.konto .melde-info a { color: var(--muted); }
+  .familie-liste { list-style: none; margin: 0; padding: 6px 12px; border-radius: 18px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+  .familie-liste li { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, 2.6em); gap: 2px; padding: 8px 0; align-items: center; text-align: center; font-variant-numeric: tabular-nums; }
+  .familie-liste li + li { border-top: 1px solid rgba(255,255,255,0.07); }
+  .familie-liste li .fn { text-align: left; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .familie-liste li.kopf { font-size: 0.85rem; padding: 4px 0; }
+  .familie-liste li.ich { color: var(--accent); }
+
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=20">
+<link rel="stylesheet" href="stil.css?v=22">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -380,9 +411,12 @@
   <!-- Dashboard -->
   <section class="screen active" id="screen-hub">
     <div class="hub-kopf">
-      <div class="hub-gruss">Hey! 👋 Was spielen wir?</div>
+      <div class="hub-zeile"><div class="hub-gruss">Hey! 👋 Was spielen wir?</div><button class="konto-btn" id="kontoBtn" type="button" hidden>👤 Anmelden</button></div>
       <h1 class="hub-titel">Spiele</h1>
-      <div class="hub-stats" id="hubStats"></div>
+    </div>
+    <div class="hub-familie" id="hubFamilie" hidden>
+      <h2 class="hub-h"><span>👨‍👩‍👧</span> Familie</h2>
+      <ul class="familie-liste" id="familieListe"></ul>
     </div>
     <h2 class="hub-h"><span>🧠</span> Quizzes</h2>
     <div class="hub-quiz" id="hubQuiz"></div>
@@ -771,18 +805,54 @@
   <p class="melde-info">Öffnet eine fertige Meldung auf GitHub – dort nur noch „Create“ tippen. Braucht ein GitHub-Konto, die Meldung ist öffentlich.</p>
   <div class="row"><button class="btn secondary" id="meldeAbbrechen" type="button">Abbrechen</button><button class="btn" id="meldeSenden" type="button">Zu GitHub ↗</button></div>
 </dialog>
-<script src="wale.js?v=20"></script>
-<script src="haie.js?v=20"></script>
-<script src="porsche.js?v=20"></script>
-<script src="dackel.js?v=20"></script>
-<script src="groesse.js?v=20"></script>
-<script src="gretchen.js?v=20"></script>
-<script src="effekte.js?v=20"></script>
-<script src="app.js?v=20"></script>
-<script src="melden.js?v=20"></script>
-<script src="hub.js?v=20"></script>
-<script src="farben.js?v=20"></script>
-<script src="cello.js?v=20"></script>
-<script src="toene.js?v=20"></script>
+<dialog class="melde konto" id="kontoDialog" aria-labelledby="kontoTitel">
+  <h3 id="kontoTitel">👤 Konto</h3>
+  <div id="kontoAus">
+    <p class="muted">Mit einem Konto ist dein Fortschritt auf allen Geräten da – und du kannst dich mit deiner Familie messen. Ohne Konto bleibt alles nur auf diesem Gerät.</p>
+    <input id="kontoMail" class="konto-feld" type="email" inputmode="email" autocomplete="email" placeholder="deine@email.de">
+    <button class="btn" id="kontoCodeSenden" type="button">Code per E-Mail schicken</button>
+    <div id="kontoCodeZeile" hidden>
+      <input id="kontoCode" class="konto-feld konto-code" type="text" inputmode="numeric" autocomplete="one-time-code" maxlength="6" placeholder="123456">
+      <button class="btn" id="kontoAnmelden" type="button">Anmelden</button>
+    </div>
+  </div>
+  <div id="kontoAn" hidden>
+    <p class="muted">Angemeldet als <b id="kontoEmail"></b></p>
+    <label class="konto-label" for="kontoName">Dein Name (sieht deine Familie)</label>
+    <div class="konto-reihe"><input id="kontoName" class="konto-feld" type="text" maxlength="30" autocomplete="nickname" placeholder="z. B. Paul"><button class="btn secondary" id="kontoNameSpeichern" type="button">Speichern</button></div>
+    <div class="konto-block">
+      <b>👨‍👩‍👧 Familie</b>
+      <div id="famDrin" hidden>
+        <p class="muted">Euer Familien-Code: <span class="fam-code" id="famCode"></span></p>
+        <div class="konto-reihe"><button class="btn secondary" id="famTeilen" type="button">Code teilen</button><button class="btn secondary" id="famVerlassen" type="button">Verlassen</button></div>
+      </div>
+      <div id="famDraussen" hidden>
+        <p class="muted">Gründe eine Familie oder gib den Code ein, den du bekommen hast.</p>
+        <button class="btn secondary" id="famGruenden" type="button">Familie gründen</button>
+        <div class="konto-reihe"><input id="famEingabe" class="konto-feld" type="text" maxlength="6" autocapitalize="characters" autocomplete="off" placeholder="Code, z. B. K7MQ2X"><button class="btn secondary" id="famBeitreten" type="button">Beitreten</button></div>
+      </div>
+    </div>
+    <div class="konto-sync"><span id="kontoSync"></span> <button class="melde-btn" id="kontoSyncJetzt" type="button">Jetzt speichern</button></div>
+    <div class="konto-reihe"><button class="btn secondary" id="kontoAbmelden" type="button">Abmelden</button><button class="btn secondary konto-weg" id="kontoLoeschen" type="button">Konto löschen</button></div>
+  </div>
+  <p class="konto-msg" id="kontoMsg" aria-live="polite"></p>
+  <p class="melde-info"><a href="datenschutz.html" target="_blank" rel="noopener">Datenschutz</a></p>
+  <button class="btn" id="kontoSchliessen" type="button">Fertig</button>
+</dialog>
+<script src="wale.js?v=22"></script>
+<script src="haie.js?v=22"></script>
+<script src="porsche.js?v=22"></script>
+<script src="dackel.js?v=22"></script>
+<script src="groesse.js?v=22"></script>
+<script src="gretchen.js?v=22"></script>
+<script src="effekte.js?v=22"></script>
+<script src="app.js?v=22"></script>
+<script src="melden.js?v=22"></script>
+<script src="hub.js?v=22"></script>
+<script src="farben.js?v=22"></script>
+<script src="cello.js?v=22"></script>
+<script src="toene.js?v=22"></script>
+<script src="konto-config.js?v=22"></script>
+<script src="konto.js?v=22"></script>
 </body>
 </html>

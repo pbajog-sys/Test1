@@ -453,16 +453,6 @@ body.theme-hub {
   -webkit-background-clip: text; background-clip: text; color: transparent;
   animation: aufploppen .7s var(--ease-spring) .05s backwards, farbfluss 8s linear infinite;
 }
-.hub-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
-.hub-stat {
-  display: grid; justify-items: start; gap: 0; padding: 10px 12px; border-radius: 16px;
-  background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-  animation: aufploppen .5s var(--ease-spring) backwards;
-}
-.hub-stat:nth-child(2) { animation-delay: .06s; } .hub-stat:nth-child(3) { animation-delay: .12s; }
-.hub-stat .hs-e { font-size: 1.1rem; }
-.hub-stat b { font-size: 1.5rem; line-height: 1.1; }
-.hub-stat small { color: var(--muted); font-size: 0.78rem; }
 .hub-h { font-size: 1.35rem; margin: 26px 2px 12px; display: flex; gap: 8px; align-items: center; font-weight: 800; letter-spacing: -0.01em; }
 .hub-h span { display: inline-block; animation: wackeln 3s var(--ease-spring) infinite; }
 

@@ -19,19 +19,6 @@ function renderHub() {
   const badges = store.badges || {};
   const farben = loadJson('walquiz.farben.v1');
   const farbBest = Math.max(0, ...Object.values(farben.best || {}));
-  const abzeichen = Object.values(badges).filter(Boolean).length;
-  const sicher = countSicher(ALLE);
-  $('hubStats').innerHTML = '';
-  [['🏅', abzeichen, 'Abzeichen'], ['📚', sicher, 'gelernt'], ['🎨', farbBest ? fmt(farbBest) : '–', 'Farb-Rekord']].forEach(([e, z, t]) => {
-    const d = document.createElement('div');
-    d.className = 'hub-stat';
-    d.innerHTML = '<span class="hs-e"></span><b></b><small></small>';
-    d.querySelector('.hs-e').textContent = e;
-    d.querySelector('b').textContent = z;
-    d.querySelector('small').textContent = t;
-    $('hubStats').appendChild(d);
-  });
-
   const box = $('hubQuiz');
   box.innerHTML = '';
   HUB_KARTEN.forEach((k, i) => {
@@ -77,6 +64,8 @@ function zeigeHub() {
   setHubTheme();
   renderHub();
   show('hub');
+  // Konto (konto.js lädt später): Fortschritt sichern und Familien-Bestenliste auffrischen
+  if (typeof syncBald === 'function') { syncBald(); zeigeFamilie(); }
 }
 
 // Übergang: Die angetippte Karte wächst auf den ganzen Bildschirm, dann erscheint das Ziel.

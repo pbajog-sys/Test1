@@ -72,6 +72,9 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `cello.js` – Cello-Noten
 - `toene.js` – Ton-Gedächtnis
 - `groesse.js` – Größenvergleich
+- `konto.js`, `konto-config.js`, `supabase/schema.sql` – Konten (optional, siehe unten)
+- `fonts/` – selbst gehostete Schriften (SIL Open Font License), `vendor/supabase/` – supabase-js (MIT)
+- `datenschutz.html` – Datenschutzhinweise
 - `sw.js`, `manifest.webmanifest`, `icons/` – Installation und Offline-Nutzung
 
 ## Auf dem Handy nutzen
@@ -142,4 +145,13 @@ wiederholbar, Mittel 2 s, Profi 1 s), danach sucht man ihn mit einem logarithmis
 Abstand in Cent (100 Cent = ein Halbton; 10 − Cent/50, ab einer Quarte 0). Auswertung: Frequenz und nächste Note
 (z. B. „A4 +20 ct“) für Original und eigenen Ton, Differenz in Hz und Cent, Tipp („1,2 Halbtöne zu hoch“),
 Position auf der Skala, beide Töne zum Vergleichen. Tagestöne, Bestwerte, Challenge-Links. Code in `toene.js`.
+
+## 👤 Konten und Familie (optional)
+Ohne Konto bleibt alles auf dem Gerät. Mit Konto (Anmeldung per 6-stelligem Code aus der E-Mail, kein Passwort):
+- Fortschritt, Abzeichen und Rekorde sind auf allen Geräten da – beim Zusammenführen gewinnt immer der bessere Stand.
+- **Familie:** Einer gründet eine Familie, die anderen treten mit dem 6-stelligen Code bei. Im Dashboard erscheint dann die Familien-Bestenliste (Abzeichen, gelernte Arten, Farb- und Ton-Rekord).
+- Teilen sich mehrere ein Gerät, wird der Stand des einen nicht ins Konto des anderen gemischt.
+- „Konto löschen“ entfernt Anmeldung, Profil und Fortschritt sofort aus der Cloud.
+
+Daten liegen bei Supabase in Frankfurt; jeder sieht nur seine eigenen Daten und von der Familie nur Name und Kurzübersicht (Row Level Security). Einrichtung: siehe [SUPABASE.md](SUPABASE.md).
 
