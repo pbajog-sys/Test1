@@ -509,6 +509,21 @@ body.theme-hub {
 .cello-modi button span { grid-row: span 2; font-size: 1.8rem; text-align: center; }
 .cello-modi button small { opacity: .7; }
 .cello-modi button.on { border-color: #f3d9a4; background: rgba(243,217,164,0.16); transform: scale(1.02); }
+.cello-stufen { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; }
+.cello-stufen button {
+  display: grid; justify-items: center; gap: 1px; padding: 10px 2px; border-radius: 16px; cursor: pointer; font: inherit; color: inherit;
+  border: 2px solid rgba(243,217,164,0.18); background: rgba(255,240,215,0.06); transition: transform .2s var(--ease-spring), border-color .2s, background .2s;
+}
+.cello-stufen button span { font-size: 1.6rem; filter: grayscale(.7) opacity(.7); }
+.cello-stufen button.geschafft span, .cello-stufen button.on span { filter: none; }
+.cello-stufen button b { font-size: 0.8rem; }
+.cello-stufen button small { font-size: 0.68rem; opacity: .7; }
+.cello-stufen button.on { border-color: #f3d9a4; background: rgba(243,217,164,0.16); transform: scale(1.04); }
+.cello-stufen button.geschafft { box-shadow: inset 0 0 0 2px rgba(47,191,113,0.6); }
+.cello-lagen { flex-wrap: wrap; }
+.cello-lagen button { flex: 0 0 auto; min-width: 46px; padding: 6px 10px; }
+.cello-lagename { text-align: center; font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 1.15rem; color: #f3d9a4; margin-bottom: -4px; }
+.griff-svg .karte { fill: rgba(243,217,164,0.7); font-size: 10px; }
 .cello-optionen { display: grid; gap: 10px; background: rgba(0,0,0,0.18); border-radius: 18px; padding: 12px 14px; }
 .cello-label { font-size: 0.85rem; opacity: .75; margin-bottom: 6px; }
 .cello-chips { display: flex; gap: 8px; }
@@ -554,7 +569,9 @@ body.theme-hub {
 .griff-svg { width: 100%; max-width: 330px; height: auto; max-height: 44dvh; filter: drop-shadow(0 14px 30px rgba(0,0,0,0.45)); }
 /* Mit Griffbrett wird es eng: Notenblatt kleiner, Abstände knapper */
 #cello-spiel.mit-griff { gap: 8px; }
-#cello-spiel.mit-griff .noten-svg { max-height: 20dvh; margin: 0 auto; }
+#cello-spiel.mit-griff .noten-svg { max-height: 17dvh; margin: 0 auto; }
+#cello-spiel.mit-griff .griff-svg { max-height: 40dvh; }
+#cello-spiel.mit-griff .taste { padding: 12px 2px 8px; }
 #cello-spiel.mit-griff .cello-schluesselname { display: none; }
 .griff-svg .saite { fill: #f3d9a4; font-weight: 800; font-size: 16px; text-anchor: middle; }
 .griff-svg .punkt circle { fill: rgba(243,217,164,0.10); stroke: rgba(243,217,164,0.35); stroke-width: 1.5; transition: fill .2s, transform .2s; }
@@ -563,7 +580,9 @@ body.theme-hub {
 .griff-svg .punkt.markiert circle { fill: #f3d9a4; stroke: #fff; stroke-width: 3; animation: pulsieren 1.2s ease-in-out infinite; transform-box: fill-box; transform-origin: center; }
 .griff-svg .punkt.loesung circle { fill: #2fbf71; stroke: #fff; stroke-width: 3; }
 .griff-svg .punkt.falsch circle { fill: #e74c3c; stroke: #fff; stroke-width: 2; }
-.griff-svg .finger { fill: #fff; font-weight: 800; font-size: 15px; text-anchor: middle; pointer-events: none; }
+.griff-svg .finger { fill: rgba(243,217,164,0.55); font-weight: 800; font-size: 14px; text-anchor: middle; pointer-events: none; }
+.griff-svg .punkt.markiert .finger, .griff-svg .punkt.loesung .finger, .griff-svg .punkt.falsch .finger { fill: #fff; }
+.griff-svg .punkt.markiert .finger { fill: #3a1d0c; }
 @keyframes pulsieren { 50% { transform: scale(1.18); } }
 
 .cello-tasten { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; }

@@ -394,7 +394,7 @@
     </button>
     <button class="hub-game hub-cello" id="hubCello" type="button">
       <span class="hc-cello-icon" aria-hidden="true">🎻</span>
-      <span class="hg-text"><span class="hg-titel">Cello-Noten</span><span class="hg-sub">Noten lesen und das Griffbrett lernen.</span><span class="hg-best" id="hubCelloBest"></span></span>
+      <span class="hg-text"><span class="hg-titel">Cello-Noten</span><span class="hg-sub">Lagen, Finger und Noten fürs Cello.</span><span class="hg-best" id="hubCelloBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <div class="hub-mehr">Bald mehr Games ✨</div>
@@ -625,19 +625,18 @@
 
       <div class="cello-teil" id="cello-intro">
         <h2 class="cello-titel">Cello-Noten</h2>
-        <p class="cello-lead">Noten lesen in allen drei Cello-Schlüsseln und das Griffbrett in der 1. Lage – jeder Ton erklingt.</p>
+        <p class="cello-lead">Lerne die Lagen auf dem Griffbrett – mit den Fingern, die man dort wirklich nimmt. Jeder Ton erklingt.</p>
+        <div class="cello-stufen" id="celloStufen"></div>
         <div class="cello-modi" id="celloModi">
-          <button type="button" data-modus="lesen"><span>📖</span><b>Noten lesen</b><small>Note sehen, Namen tippen</small></button>
-          <button type="button" data-modus="finden"><span>🎻</span><b>Griffbrett finden</b><small>Note sehen, Stelle tippen</small></button>
-          <button type="button" data-modus="benennen"><span>🔎</span><b>Griffbrett lesen</b><small>Stelle sehen, Ton nennen</small></button>
+          <button type="button" data-modus="finden"><span>🎻</span><b>Griff finden</b><small>Note sehen – Saite und Finger in der Lage tippen</small></button>
+          <button type="button" data-modus="benennen"><span>🔎</span><b>Griff lesen</b><small>Finger auf dem Griffbrett sehen – Ton nennen</small></button>
+          <button type="button" data-modus="lesen"><span>📖</span><b>Noten lesen</b><small>Note sehen – Namen tippen</small></button>
+          <button type="button" data-modus="test"><span>🎖️</span><b>Abzeichen-Test</b><small>10 gemischte Aufgaben, 8 richtig = Abzeichen</small></button>
         </div>
         <div class="cello-optionen">
-          <div id="celloSchluesselZeile"><div class="cello-label">Schlüssel</div>
-            <div class="cello-chips" id="celloSchluessel">
-              <button type="button" data-s="bass">Bass</button><button type="button" data-s="tenor">Tenor</button><button type="button" data-s="violin">Violin</button>
-            </div></div>
+          <div id="celloLagenZeile"><div class="cello-label">Lage</div><div class="cello-chips cello-lagen" id="celloLagen"></div></div>
           <label class="cello-schalter"><input type="checkbox" id="celloVz"><span></span>Vorzeichen (♯ ♭)</label>
-          <label class="cello-schalter"><input type="checkbox" id="celloSpeed"><span></span>60-Sekunden-Runde</label>
+          <label class="cello-schalter" id="celloSpeedZeile"><input type="checkbox" id="celloSpeed"><span></span>60-Sekunden-Runde</label>
         </div>
         <button class="btn cello-los" id="celloLos" type="button">Los geht’s 🎵</button>
         <div class="cello-best" id="celloBest"></div>
@@ -648,6 +647,7 @@
         <div class="cello-zeit" id="celloZeitBox"><div class="cello-zeitbar"><i id="celloZeitBar"></i></div><span id="celloZeit"></span></div>
         <div class="cello-papier"><div id="celloNoten"></div><div class="cello-schluesselname" id="celloSchluesselName"></div></div>
         <div class="cello-feedback" id="celloFeedback"></div>
+        <div class="cello-lagename" id="celloLageName"></div>
         <div class="cello-griff" id="celloGriff"></div>
         <div class="cello-tasten" id="celloTasten"></div>
         <button class="btn secondary" id="celloStopp" type="button">Beenden</button>

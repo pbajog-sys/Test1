@@ -119,10 +119,13 @@ Bestwerte je Stufe, Tagesfarben (aus dem Datum berechnet, für alle gleich) und 
 Code in `farben.js`, Design in `stil.css`.
 
 ## 🎻 Cello-Noten (Game)
-Eigenes Lernspiel fürs Cello mit deutschen Notennamen (H, B, Fis, Es …):
-- **Noten lesen** im Bass-, Tenor- und Violinschlüssel (frei kombinierbar), optional mit Vorzeichen.
-- **Griffbrett finden:** Note sehen, Stelle auf dem Griffbrett tippen (Saiten C, G, D, A, 1. Lage inkl. halbe Lage).
-- **Griffbrett lesen:** Eine Stelle leuchtet, den Ton benennen; danach erscheint er im Notensystem.
-Jeder Ton erklingt mit einem im Browser erzeugten Streicherklang (Web Audio). Üben ohne Zeitlimit oder
-60-Sekunden-Runde mit Rekord. Notenschrift: Noto Music (Google Fonts, offline zwischengespeichert). Code in `cello.js`.
+Lernspiel für die **Lagen auf dem Cello** mit deutschen Notennamen (H, B, Fis, Es …).
+Lagen-Zählung wie in deutschen Celloschulen: Die Lage bestimmt der **2. Finger** auf den Stammtönen der A-Saite
+(halbe Lage = H, 1. = C, 2. = D, 3. = E, 4. = F, 5. = G, 6. = A, 7. = H, Daumenlage = C eine Oktave höher), Finger in
+enger Haltung je einen Halbton auseinander. Halbe bis 4. Lage mit vier Fingern, 5.–7. Lage mit drei, Daumenlage mit
+Daumen auf der Oktave. (Quellen: celloschmidt.de „Die Lagen auf dem Violoncello“, cellolabstudio.com „Cello positions“.)
 
+Stufen: 🐴 Seepferdchen = 1. Lage · 🥉 Bronze = bis 4. Lage · 🥈 Silber = bis 7. Lage · 🥇 Gold = mit Daumenlage.
+Übungen: **Griff finden** (Note → Saite und Finger in der Lage tippen), **Griff lesen** (Finger sehen → Ton nennen),
+**Noten lesen** (Bass-, Tenor-, Violinschlüssel je nach Stufe) und **Abzeichen-Test** (10 gemischte Aufgaben,
+8 richtig). Jeder Ton erklingt (Web Audio). Code in `cello.js`.

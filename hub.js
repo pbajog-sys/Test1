@@ -65,8 +65,10 @@ function renderHub() {
     box.appendChild(b);
   });
   $('hubFarbBest').textContent = farbBest ? 'Rekord ' + fmt(farbBest) + ' / 50' : 'Noch kein Rekord';
-  const celloBest = Math.max(0, ...Object.values(loadJson('walquiz.cello.v1').best || {}));
-  $('hubCelloBest').textContent = celloBest ? 'Rekord ' + celloBest + ' Noten in 60 Sek.' : 'Noch kein Rekord';
+  const cello = loadJson('walquiz.cello.v1');
+  // cello.js lädt erst nach dem Dashboard – darum die Abzeichen-Symbole hier direkt
+  const celloAbz = ['🐴', '🥉', '🥈', '🥇'].map((e, i) => ((cello.badges || {})[i + 1] ? e : '·')).join(' ');
+  $('hubCelloBest').textContent = 'Lagen-Abzeichen: ' + celloAbz;
 }
 
 function zeigeHub() {
