@@ -65,6 +65,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `gretchen.js`, `img/gretchen/` – Gretchen als Maskottchen
 - `melden.js` – Fehler und Fotos als GitHub-Issue melden
 - `stil.css`, `effekte.js` – Design und Animationen der Welten
+- `farben.js` – Farb-Gedächtnis
 - `groesse.js` – Größenvergleich
 - `sw.js`, `manifest.webmanifest`, `icons/` – Installation und Offline-Nutzung
 
@@ -105,4 +106,11 @@ Jede Welt hat ihren eigenen Look (`stil.css`) und eine animierte Kulisse (`effek
 🌊 Sonnenuntergang mit Wellen · 🏎️ Rennstrecke mit Speed-Linien und Rennstreifen · 🐕 Gretchen-Rosa mit Pfoten.
 Dazu: gleitender Welt-Umschalter, aufploppende Antworten, „+1“ bei richtigen Antworten, hochzählende Punkte und
 Konfetti je Welt. Mit „Bewegung reduzieren“ (iPhone/Android-Einstellung) bleibt alles ruhig.
+
+## 🎨 Farb-Gedächtnis (Bonus-Spiel)
+Eigenes Spiel, angelehnt an das Prinzip „Farbe merken und nachmischen“: Eine Farbe füllt kurz den Bildschirm
+(Leicht 5 s, Mittel 3 s, Profi 1,5 s), dann wird sie mit Farbton, Sättigung und Helligkeit nachgemischt.
+Punkte 0–10 pro Farbe nach dem Farbabstand CIEDE2000 (ab Abstand 50 gibt es 0), fünf Farben = bis zu 50 Punkte.
+Bestwerte je Stufe, Tagesfarben (aus dem Datum berechnet, für alle gleich) und Challenge-Links mit denselben Farben.
+Code in `farben.js`, Design in `stil.css`.
 

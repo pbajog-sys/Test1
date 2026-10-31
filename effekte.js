@@ -106,7 +106,7 @@ function hochzaehlen(el, ziel, nachher = '') {
   const schritt = (t) => {
     const k = Math.min(1, (t - start) / dauer);
     const wert = Math.round(ziel * (1 - Math.pow(1 - k, 3)) * 2) / 2;   // in halben Punkten
-    el.textContent = fmt(wert) + nachher;
+    el.textContent = fmt(k < 1 ? wert : ziel) + nachher;   // am Ende immer der genaue Wert
     if (k < 1) requestAnimationFrame(schritt);
     else { el.classList.remove('zaehlt'); void el.offsetWidth; el.classList.add('zaehlt'); }
   };

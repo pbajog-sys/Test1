@@ -357,7 +357,7 @@ let pendingChallenge = (() => {
 })();
 
 // ---------- Navigation ----------
-const screens = ['start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen'];
+const screens = ['start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen', 'farben'];
 function show(name, title) {
   stopSound();
   screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));

@@ -418,6 +418,10 @@
         <span class="emoji">🔊</span>
         <span class="txt"><strong>Wer ruft da?</strong><span class="sub">Wale an ihren Rufen und Gesängen erkennen</span></span>
       </button>
+      <button class="menu-btn farb-menu" id="farbMenu" type="button">
+        <span class="emoji">🎨</span>
+        <span class="txt"><strong>Farb-Gedächtnis</strong><span class="sub">Bonus-Spiel: Farbe merken, nachmischen, Punkte holen</span></span>
+      </button>
       <button class="menu-btn" data-go="lexikon">
         <span class="emoji">📖</span>
         <span class="txt"><strong>Lexikon</strong><span class="sub" id="lexSub"></span></span>
@@ -533,6 +537,64 @@
       <div class="msg" id="sperrMsg"></div>
     </div>
   </section>
+
+  <!-- Farb-Gedächtnis -->
+  <section class="screen" id="screen-farben">
+    <div class="farb-buehne" id="farbBuehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="farbZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="farbRunde"></span>
+      </div>
+
+      <div class="farb-teil" id="farb-intro">
+        <div class="farb-logo" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+        <h2>Farb-Gedächtnis</h2>
+        <p>Eine Farbe blitzt kurz auf. Dann mischst du sie aus dem Kopf nach – mit Farbton, Sättigung und Helligkeit. Fünf Farben, bis zu 50 Punkte.</p>
+        <div class="farb-challenge" id="farbChallenge" hidden></div>
+        <div class="farb-stufen" id="farbStufen">
+          <button type="button" data-stufe="leicht">Leicht<small>5 Sek.</small></button>
+          <button type="button" data-stufe="mittel">Mittel<small>3 Sek.</small></button>
+          <button type="button" data-stufe="profi">Profi<small>1,5 Sek.</small></button>
+        </div>
+        <button class="btn farb-gross" id="farbLos" type="button">Los geht’s 🎨</button>
+        <button class="btn secondary" id="farbTagBtn" type="button">📅 Tagesfarben</button>
+        <div class="muted farb-best" id="farbBest"></div>
+      </div>
+
+      <div class="farb-teil farb-mitte" id="farb-zeigen" hidden>
+        <div class="farb-merk">Merk dir diese Farbe</div>
+        <div class="farb-countdown" id="farbCountdown"></div>
+      </div>
+
+      <div class="farb-teil" id="farb-mischen" hidden>
+        <div class="farb-vorschau" id="farbVorschau"><span>Deine Farbe</span></div>
+        <label class="farb-regler">Farbton<input type="range" id="farbRegler-h" min="0" max="360" step="1"></label>
+        <label class="farb-regler">Sättigung<input type="range" id="farbRegler-s" min="0" max="100" step="1"></label>
+        <label class="farb-regler">Helligkeit<input type="range" id="farbRegler-v" min="0" max="100" step="1"></label>
+        <button class="btn farb-gross" id="farbFertig" type="button">Fertig ✓</button>
+      </div>
+
+      <div class="farb-teil" id="farb-aufloesung" hidden>
+        <div class="farb-vergleich">
+          <div class="farb-halb" id="farbZiel"><span>Original</span></div>
+          <div class="farb-halb" id="farbDein"><span>Deine</span></div>
+        </div>
+        <div class="farb-punkte" id="farbPunkte"></div>
+        <div class="farb-kommentar" id="farbKommentar"></div>
+        <button class="btn farb-gross" id="farbWeiter" type="button">Nächste Farbe</button>
+      </div>
+
+      <div class="farb-teil" id="farb-ende" hidden>
+        <div class="farb-summe" id="farbSumme"></div>
+        <div class="farb-rekord" id="farbRekord"></div>
+        <div class="farb-rekord" id="farbVergleich" hidden></div>
+        <ul class="farb-liste" id="farbListe"></ul>
+        <button class="btn farb-gross" id="farbTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="farbTeilenMsg"></div>
+        <button class="btn secondary" id="farbNochmal" type="button">Nochmal spielen</button>
+      </div>
+    </div>
+  </section>
 </div>
 
 <dialog class="melde" id="meldeDialog" aria-labelledby="meldeTitel">
@@ -555,5 +617,6 @@
 <script src="effekte.js"></script>
 <script src="app.js"></script>
 <script src="melden.js"></script>
+<script src="farben.js"></script>
 </body>
 </html>
