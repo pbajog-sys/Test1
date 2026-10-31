@@ -369,7 +369,39 @@ body.theme-dackel .bar > div { background: linear-gradient(90deg, #f4a3bb, #e083
 .farb-halb:last-child { animation: vonRechts .5s var(--ease-out); }
 @keyframes vonLinks { from { transform: translateX(-30%); opacity: 0; } }
 @keyframes vonRechts { from { transform: translateX(30%); opacity: 0; } }
-.farb-punkte { text-align: center; font-size: 3.6rem; font-weight: 800; line-height: 1; }
+.farb-punkte { text-align: center; font-size: 2.7rem; font-weight: 800; line-height: 1; }
+#farb-aufloesung .farb-vergleich { height: 21dvh; }
+#farb-aufloesung { gap: 10px; }
+.farb-halb span { display: grid; gap: 2px; }
+.farb-halb small { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.85rem; opacity: .85; }
+.farb-analyse { display: grid; gap: 10px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); border-radius: 18px; padding: 14px; animation: aufploppen .45s var(--ease-spring) .15s backwards; }
+.farb-tipp { font-weight: 600; line-height: 1.35; }
+.farb-abschnitt { font-size: 0.75rem; text-transform: uppercase; letter-spacing: .06em; opacity: .6; margin-top: 2px; }
+.farb-rgb { display: grid; gap: 8px; }
+.rgb-zeile { display: grid; grid-template-columns: 16px 1fr 78px 44px; align-items: center; gap: 8px; font-variant-numeric: tabular-nums; }
+.rgb-zeile b { font-size: 0.95rem; }
+.rgb-R b { color: #ff6b6b; } .rgb-G b { color: #4ade80; } .rgb-B b { color: #60a5fa; }
+.rgb-spur { position: relative; height: 10px; border-radius: 5px; }
+.rgb-R .rgb-spur { background: linear-gradient(90deg, #000, #ff3b3b); }
+.rgb-G .rgb-spur { background: linear-gradient(90deg, #000, #22c55e); }
+.rgb-B .rgb-spur { background: linear-gradient(90deg, #000, #3b82f6); }
+.rgb-weg { position: absolute; top: -3px; bottom: -3px; border-radius: 4px; background: rgba(255,255,255,0.35); animation: wegWachsen .6s var(--ease-out) .2s backwards; transform-origin: left; }
+@keyframes wegWachsen { from { transform: scaleX(0); } }
+.rgb-z, .rgb-m { position: absolute; top: 50%; width: 14px; height: 14px; margin: -7px 0 0 -7px; border: 2px solid #fff; box-shadow: 0 1px 4px rgba(0,0,0,0.6); }
+.rgb-z { transform: rotate(45deg); border-radius: 2px; background: #111; }
+.rgb-m { border-radius: 50%; background: #fff; }
+.rgb-zahl { font-size: 0.82rem; opacity: .85; text-align: right; }
+.rgb-diff { font-size: 0.82rem; font-weight: 800; text-align: right; }
+.rgb-diff.gut { color: #4ade80; } .rgb-diff.mittel { color: #fbbf24; } .rgb-diff.weit { color: #f87171; }
+.farb-regler-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
+.regler-chip { display: grid; justify-items: center; padding: 8px 4px; border-radius: 12px; background: rgba(248,113,113,0.12); }
+.regler-chip.gut { background: rgba(74,222,128,0.12); }
+.regler-chip small { font-size: 0.72rem; opacity: .7; }
+.regler-chip b { font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.farb-deltae { font-size: 0.78rem; opacity: .65; line-height: 1.4; }
+#farb-aufloesung #farbWeiter { position: sticky; bottom: 0; z-index: 2; box-shadow: 0 -10px 30px rgba(0,0,0,0.35); }
+.farb-liste b { display: grid; justify-items: center; line-height: 1.1; }
+.farb-liste b small { font-size: 0.68rem; font-weight: 600; opacity: .65; }
 .farb-kommentar { text-align: center; font-size: 1.2rem; font-weight: 600; }
 .farb-summe { text-align: center; font-size: 4.5rem; font-weight: 800; line-height: 1; padding-top: 4vh; }
 .farb-rekord { text-align: center; font-weight: 600; }

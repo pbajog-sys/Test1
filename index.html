@@ -366,7 +366,7 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=17">
+<link rel="stylesheet" href="stil.css?v=18">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -595,11 +595,19 @@
 
       <div class="farb-teil" id="farb-aufloesung" hidden>
         <div class="farb-vergleich">
-          <div class="farb-halb" id="farbZiel"><span>Original</span></div>
-          <div class="farb-halb" id="farbDein"><span>Deine</span></div>
+          <div class="farb-halb" id="farbZiel"><span>Original<small id="farbZielHex"></small></span></div>
+          <div class="farb-halb" id="farbDein"><span>Deine<small id="farbDeinHex"></small></span></div>
         </div>
         <div class="farb-punkte" id="farbPunkte"></div>
         <div class="farb-kommentar" id="farbKommentar"></div>
+        <div class="farb-analyse">
+          <div class="farb-tipp" id="farbTipp"></div>
+          <div class="farb-abschnitt">RGB · ◆ Original → ● deine Farbe</div>
+          <div class="farb-rgb" id="farbRgb"></div>
+          <div class="farb-abschnitt">So weit lagen deine Regler daneben</div>
+          <div class="farb-regler-chips" id="farbRegler"></div>
+          <div class="farb-deltae" id="farbDeltaE"></div>
+        </div>
         <button class="btn farb-gross" id="farbWeiter" type="button">Nächste Farbe</button>
       </div>
 
@@ -675,17 +683,17 @@
   <p class="melde-info">Öffnet eine fertige Meldung auf GitHub – dort nur noch „Create“ tippen. Braucht ein GitHub-Konto, die Meldung ist öffentlich.</p>
   <div class="row"><button class="btn secondary" id="meldeAbbrechen" type="button">Abbrechen</button><button class="btn" id="meldeSenden" type="button">Zu GitHub ↗</button></div>
 </dialog>
-<script src="wale.js?v=17"></script>
-<script src="haie.js?v=17"></script>
-<script src="porsche.js?v=17"></script>
-<script src="dackel.js?v=17"></script>
-<script src="groesse.js?v=17"></script>
-<script src="gretchen.js?v=17"></script>
-<script src="effekte.js?v=17"></script>
-<script src="app.js?v=17"></script>
-<script src="melden.js?v=17"></script>
-<script src="hub.js?v=17"></script>
-<script src="farben.js?v=17"></script>
-<script src="cello.js?v=17"></script>
+<script src="wale.js?v=18"></script>
+<script src="haie.js?v=18"></script>
+<script src="porsche.js?v=18"></script>
+<script src="dackel.js?v=18"></script>
+<script src="groesse.js?v=18"></script>
+<script src="gretchen.js?v=18"></script>
+<script src="effekte.js?v=18"></script>
+<script src="app.js?v=18"></script>
+<script src="melden.js?v=18"></script>
+<script src="hub.js?v=18"></script>
+<script src="farben.js?v=18"></script>
+<script src="cello.js?v=18"></script>
 </body>
 </html>

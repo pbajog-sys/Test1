@@ -50,6 +50,29 @@ function deltaE2000([L1, a1, b1], [L2, a2, b2]) {
   return Math.sqrt(Math.pow(dL / SL, 2) + Math.pow(dC / SC, 2) + Math.pow(dH / SH, 2) + RT * (dC / SC) * (dH / SH));
 }
 
+// ---------- Auswertung: wie weit lag man daneben? ----------
+const hexText = ([r, g, b]) => '#' + [r, g, b].map((x) => x.toString(16).padStart(2, '0')).join('').toUpperCase();
+const FARBNAMEN = [[0, 'Rot'], [20, 'Orange'], [45, 'Gelb'], [75, 'Gelbgrün'], [105, 'Grün'], [160, 'Türkis'], [195, 'Hellblau'], [225, 'Blau'], [265, 'Violett'], [295, 'Magenta'], [330, 'Pink'], [350, 'Rot']];
+const farbName = (h) => FARBNAMEN.reduce((n, [g, name]) => (h >= g ? name : n), 'Rot');
+
+function farbAnalyse(ziel, mix) {
+  const rz = hsvZuRgb(ziel.h, ziel.s, ziel.v), rm = hsvZuRgb(mix.h, mix.s, mix.v);
+  let dh = mix.h - ziel.h;                    // kürzester Weg auf dem Farbkreis
+  if (dh > 180) dh -= 360; else if (dh < -180) dh += 360;
+  const ds = mix.s - ziel.s, dv = mix.v - ziel.v;
+  const dE = deltaE2000(rgbZuLab(rz), rgbZuLab(rm));
+  const tipps = [];
+  const etwas = (x, grenze) => (Math.abs(x) < grenze ? 'etwas ' : '');
+  if (Math.abs(dv) >= 6) tipps.push(etwas(dv, 15) + (dv < 0 ? 'zu dunkel' : 'zu hell'));
+  if (Math.abs(ds) >= 8) tipps.push(etwas(ds, 20) + (ds < 0 ? 'zu blass' : 'zu kräftig'));
+  // Der Farbton zählt nur, wenn die Farbe nicht fast grau ist
+  if (Math.abs(dh) >= 8 && ziel.s >= 15) {
+    const nz = farbName(ziel.h), nm = farbName(mix.h);
+    tipps.push(nz !== nm ? 'Farbton zu sehr ' + nm + ' statt ' + nz : 'Farbton um ' + Math.abs(dh) + '° verschoben');
+  }
+  return { rz, rm, dh, ds, dv, dE, tipps, maxRgb: Math.max(...rz.map((x, i) => Math.abs(rm[i] - x))) };
+}
+
 // 0–10 Punkte: gleich = 10, ab einem Abstand von 50 gibt es 0
 function farbPunkte(ziel, mix) {
   const d = deltaE2000(rgbZuLab(hsvZuRgb(ziel.h, ziel.s, ziel.v)), rgbZuLab(hsvZuRgb(mix.h, mix.s, mix.v)));
@@ -139,12 +162,53 @@ function farbPhase(phase) {
     $('farbDein').style.background = hsvText(fs.mix);
     $('farbZiel').classList.toggle('hell', !helleSchrift(ziel));
     $('farbDein').classList.toggle('hell', !helleSchrift(fs.mix));
+    zeigeAnalyse(farbAnalyse(ziel, fs.mix));
     hochzaehlen($('farbPunkte'), p, ' / 10');
     $('farbKommentar').textContent = p >= 9.5 ? 'Volltreffer! 🎯' : p >= 8.5 ? 'Richtig nah dran 🔥' : p >= 7 ? 'Gut gemerkt 👍' : p >= 5 ? 'Na ja … 🤔' : 'Ganz woanders 🙈';
     if (navigator.vibrate) navigator.vibrate(p >= 8.5 ? [30, 40, 30] : 20);
     if (p >= 9.5) konfetti(24, ['🎨', '✨', '🎯', '🌈']);
     $('farbWeiter').textContent = fs.runde === FARB_RUNDEN - 1 ? 'Zum Ergebnis' : 'Nächste Farbe';
   }
+}
+
+const vz = (x, einheit = '') => (x > 0 ? '+' : x < 0 ? '−' : '±') + Math.abs(Math.round(x)) + einheit;
+function zeigeAnalyse(a) {
+  $('farbZielHex').textContent = hexText(a.rz);
+  $('farbDeinHex').textContent = hexText(a.rm);
+  $('farbTipp').textContent = a.tipps.length ? 'Deine Farbe war ' + a.tipps.join(' · ') + '.' : 'Fast perfekt getroffen – kaum ein Unterschied.';
+  // RGB: je Kanal ein Balken 0–255 mit Original (◆) und deiner Farbe (●)
+  const box = $('farbRgb');
+  box.innerHTML = '';
+  ['R', 'G', 'B'].forEach((k, i) => {
+    const z = a.rz[i], m = a.rm[i], d = m - z;
+    const zeile = document.createElement('div');
+    zeile.className = 'rgb-zeile rgb-' + k;
+    zeile.innerHTML = '<b></b><span class="rgb-spur"><i class="rgb-weg"></i><i class="rgb-z"></i><i class="rgb-m"></i></span><span class="rgb-zahl"></span><span class="rgb-diff"></span>';
+    zeile.querySelector('b').textContent = k;
+    const weg = zeile.querySelector('.rgb-weg');
+    weg.style.left = (Math.min(z, m) / 255 * 100) + '%';
+    weg.style.width = (Math.abs(d) / 255 * 100) + '%';
+    zeile.querySelector('.rgb-z').style.left = (z / 255 * 100) + '%';
+    zeile.querySelector('.rgb-m').style.left = (m / 255 * 100) + '%';
+    zeile.querySelector('.rgb-zahl').textContent = z + ' → ' + m;
+    const diff = zeile.querySelector('.rgb-diff');
+    diff.textContent = vz(d);
+    diff.className = 'rgb-diff ' + (Math.abs(d) <= 10 ? 'gut' : Math.abs(d) <= 35 ? 'mittel' : 'weit');
+    box.appendChild(zeile);
+  });
+  // Abweichung in den drei Reglern, die man benutzt hat
+  const regler = [['Farbton', vz(a.dh, '°'), Math.abs(a.dh) <= 6], ['Sättigung', vz(a.ds, ' %'), Math.abs(a.ds) <= 6], ['Helligkeit', vz(a.dv, ' %'), Math.abs(a.dv) <= 6]];
+  $('farbRegler').innerHTML = '';
+  regler.forEach(([name, wert, gut]) => {
+    const d = document.createElement('div');
+    d.className = 'regler-chip' + (gut ? ' gut' : '');
+    d.innerHTML = '<small></small><b></b>';
+    d.querySelector('small').textContent = name;
+    d.querySelector('b').textContent = wert;
+    $('farbRegler').appendChild(d);
+  });
+  $('farbDeltaE').textContent = 'Farbabstand ΔE ' + fmt(Math.round(a.dE * 10) / 10)
+    + ' – unter 1 sieht man keinen Unterschied, ab etwa 2–3 einen kleinen, über 10 einen deutlichen.';
 }
 
 function farbMischAktualisieren() {
@@ -182,10 +246,13 @@ function farbEnde() {
   liste.innerHTML = '';
   fs.farben.forEach((z, i) => {
     const li = document.createElement('li');
-    li.innerHTML = '<span class="fz"></span><span class="fd"></span><b></b>';
+    const an = farbAnalyse(z, fs.mixe[i]);
+    li.innerHTML = '<span class="fz"></span><span class="fd"></span><b><span></span><small></small></b>';
     li.querySelector('.fz').style.background = hsvText(z);
     li.querySelector('.fd').style.background = hsvText(fs.mixe[i]);
-    li.querySelector('b').textContent = fmt(fs.punkte[i]);
+    li.querySelector('b span').textContent = fmt(fs.punkte[i]);
+    li.querySelector('b small').textContent = 'RGB ±' + an.maxRgb;
+    li.title = an.tipps.join(', ');
     liste.appendChild(li);
   });
   if (summe >= 40) setTimeout(() => konfetti(50, ['🎨', '🌈', '✨', '🏆']), 400);
