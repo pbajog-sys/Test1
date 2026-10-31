@@ -1,0 +1,303 @@
+/* =====================================================================
+   Wal-Quiz – Design der Welten und Animationen
+   Jede Welt setzt über body.theme-<welt> ihre Farben, Schrift und Kulisse.
+   Die Grundbausteine (Abstände, Raster) stehen in index.html.
+   ===================================================================== */
+
+:root {
+  --font-head: "Outfit", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  --glow: rgba(79, 195, 247, 0.45);
+  --line: rgba(255, 255, 255, 0.10);
+  --ease-out: cubic-bezier(.2, .8, .2, 1);
+  --ease-spring: cubic-bezier(.34, 1.56, .64, 1);
+}
+
+body { overflow-x: hidden; transition: background-color .4s; }
+.app { position: relative; z-index: 1; }
+header h1, .hero h2, .result .big, .certificate h3, .pick-title { font-family: var(--font-head); }
+.hero h2 { font-size: 2.4rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.05; }
+header h1 { font-weight: 800; letter-spacing: -0.01em; }
+
+/* ---------- Kulisse (Hintergrund-Animationen) ---------- */
+#ambient { position: fixed; inset: 0; z-index: 0; pointer-events: none; overflow: hidden; }
+#ambient > * { position: absolute; will-change: transform, opacity; }
+
+/* Luftblasen */
+.blase {
+  bottom: -40px; border-radius: 50%;
+  background: radial-gradient(circle at 30% 30%, rgba(255,255,255,0.55), rgba(255,255,255,0.08) 60%, transparent 70%);
+  border: 1px solid rgba(255,255,255,0.25);
+  animation: steigen linear infinite;
+}
+@keyframes steigen {
+  0% { transform: translate(0, 0); opacity: 0; }
+  10% { opacity: 0.8; }
+  50% { transform: translate(14px, -55vh); }
+  100% { transform: translate(-10px, -115vh); opacity: 0; }
+}
+
+/* Lichtstrahlen von der Wasseroberfläche */
+.ray {
+  top: -20vh; height: 120vh; width: 22vw; left: 0;
+  background: linear-gradient(180deg, rgba(120,230,255,0.22), rgba(120,230,255,0) 70%);
+  filter: blur(6px); transform-origin: top center;
+  animation: strahl 9s ease-in-out infinite alternate;
+}
+@keyframes strahl {
+  from { transform: rotate(14deg) translateX(0); opacity: 0.35; }
+  to   { transform: rotate(4deg) translateX(8vw); opacity: 0.8; }
+}
+
+/* Wellen (SVG) unten am Rand */
+.welle { left: 0; bottom: 0; width: 200%; height: 90px; animation: welle linear infinite; }
+.welle svg { width: 100%; height: 100%; display: block; }
+@keyframes welle { from { transform: translateX(0); } to { transform: translateX(-50%); } }
+
+/* Haiflosse, die ab und zu durchs Bild zieht */
+.flosse { bottom: 46px; left: -120px; width: 90px; height: 60px; animation: flosse 16s linear infinite; }
+.flosse svg { width: 100%; height: 100%; display: block; }
+@keyframes flosse {
+  0%   { transform: translateX(0) translateY(0); }
+  45%  { transform: translateX(calc(100vw + 240px)) translateY(-4px); }
+  100% { transform: translateX(calc(100vw + 240px)); }
+}
+.wasserlinie {
+  left: 0; right: 0; bottom: 0; height: 64px;
+  background: linear-gradient(180deg, rgba(255,59,59,0) 0%, rgba(20,40,60,0.85) 30%, #05090d 100%);
+  border-top: 1px solid rgba(255,255,255,0.08);
+}
+
+/* Speed-Linien (Rennstrecke) */
+.speed {
+  right: -40vw; height: 2px; width: 30vw; border-radius: 2px;
+  background: linear-gradient(90deg, rgba(255,255,255,0), rgba(255,255,255,0.55));
+  animation: speed linear infinite;
+}
+@keyframes speed { from { transform: translateX(0); } to { transform: translateX(-180vw); } }
+.zielflagge {
+  top: 0; right: -30px; width: 180px; height: 100%; opacity: 0.05; transform: skewX(-12deg);
+  background: repeating-conic-gradient(#fff 0 25%, transparent 0 50%) 0 0 / 30px 30px;
+}
+
+/* Pfoten (Dackel) */
+.pfote { bottom: -50px; font-size: 26px; opacity: 0; animation: steigen linear infinite; }
+
+/* ---------- Bildschirm-Wechsel & Auftritte ---------- */
+.screen.active { animation: reinGleiten .45s var(--ease-out); }
+@keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+
+.screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
+  animation: aufploppen .5s var(--ease-spring) backwards;
+}
+.screen.active .menu > *:nth-child(1) { animation-delay: .05s; }
+.screen.active .menu > *:nth-child(2) { animation-delay: .11s; }
+.screen.active .menu > *:nth-child(3) { animation-delay: .17s; }
+.screen.active .menu > *:nth-child(4) { animation-delay: .23s; }
+.screen.active .menu > *:nth-child(5) { animation-delay: .29s; }
+.screen.active .badges > *:nth-child(2) { animation-delay: .1s; }
+.screen.active .badges > *:nth-child(3) { animation-delay: .2s; }
+.screen.active .badges > *:nth-child(4) { animation-delay: .3s; }
+@keyframes aufploppen { from { opacity: 0; transform: translateY(16px) scale(.96); } to { opacity: 1; transform: none; } }
+
+.hero .logo, .hero .hero-emoji, .ig-ring { animation: schweben 4.5s ease-in-out infinite; }
+@keyframes schweben { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+
+/* Antworten ploppen nacheinander auf */
+.choices .choice { animation: aufploppen .38s var(--ease-spring) backwards; }
+.choices .choice:nth-child(2) { animation-delay: .04s; }
+.choices .choice:nth-child(3) { animation-delay: .08s; }
+.choices .choice:nth-child(4) { animation-delay: .12s; }
+.choices .choice:nth-child(5) { animation-delay: .16s; }
+.choices .choice:nth-child(6) { animation-delay: .20s; }
+
+/* Drücken fühlt sich an wie Drücken */
+.menu-btn, .choice, .btn, .tip-btn, .icon-btn, .welt-switch button {
+  transition: transform .18s var(--ease-spring), box-shadow .25s, background-color .25s, border-color .25s;
+}
+.menu-btn:active, .choice:not(:disabled):active, .btn:active, .tip-btn:active, .icon-btn:active { transform: scale(.96); }
+@media (hover: hover) {
+  .menu-btn:hover, .choice:not(:disabled):hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
+}
+
+.choice.correct { animation: richtig .6s var(--ease-spring); box-shadow: 0 0 0 3px var(--ok), 0 0 26px var(--ok); }
+@keyframes richtig { 0% { transform: scale(1); } 40% { transform: scale(1.06); } 100% { transform: scale(1); } }
+.feedback.show { animation: reinGleiten .4s var(--ease-out); }
+.tips li { animation: aufploppen .35s var(--ease-spring) backwards; }
+
+/* „+1“, das aus einer richtigen Antwort aufsteigt */
+.plus {
+  position: fixed; z-index: 60; pointer-events: none; font-family: var(--font-head); font-weight: 800; font-size: 1.6rem;
+  color: var(--ok); text-shadow: 0 2px 12px rgba(0,0,0,0.35); animation: plus .9s var(--ease-out) forwards;
+}
+@keyframes plus { from { opacity: 0; transform: translate(-50%, 0) scale(.6); } 20% { opacity: 1; transform: translate(-50%, -10px) scale(1.15); } to { opacity: 0; transform: translate(-50%, -70px) scale(1); } }
+
+/* Fortschrittsbalken mit Schimmer */
+.bar > div { position: relative; overflow: hidden; transition: width .6s var(--ease-out); box-shadow: 0 0 12px var(--glow); }
+.bar > div::after {
+  content: ""; position: absolute; inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.55), transparent);
+  transform: translateX(-100%); animation: schimmer 2.4s ease-in-out infinite;
+}
+@keyframes schimmer { to { transform: translateX(100%); } }
+
+/* Ergebnis */
+.result .big { font-size: 4.2rem; font-weight: 800; letter-spacing: -0.03em; }
+.result .big.zaehlt { animation: zaehlen .5s var(--ease-spring); }
+@keyframes zaehlen { from { transform: scale(.7); opacity: .3; } to { transform: none; opacity: 1; } }
+.certificate { animation: aufploppen .7s var(--ease-spring) .3s backwards; }
+
+/* Welt-Umschalter mit gleitender Markierung */
+.welt-switch { position: relative; }
+.welt-pill {
+  position: absolute; top: 4px; bottom: 4px; left: 4px; width: 0; border-radius: 10px; background: var(--accent);
+  box-shadow: 0 4px 18px var(--glow); transition: left .45s var(--ease-spring), width .45s var(--ease-spring), background-color .4s;
+}
+.welt-switch button { position: relative; z-index: 1; }
+.welt-switch button.on { background: transparent !important; }
+.welt-switch button.on span { animation: wackeln .5s var(--ease-spring); display: inline-block; }
+@keyframes wackeln { 30% { transform: rotate(-14deg) scale(1.2); } 60% { transform: rotate(10deg) scale(1.1); } }
+
+/* ===================================================================
+   🐋 Wale – Tiefsee
+   =================================================================== */
+body.theme-wale {
+  --bg1: #03203d; --bg2: #000710;
+  --card: rgba(120, 200, 255, 0.07); --card-strong: rgba(120, 200, 255, 0.16);
+  --text: #e6f7ff; --muted: #8fb7cf;
+  --accent: #38e1ff; --accent-ink: #001826; --glow: rgba(56, 225, 255, 0.5);
+  --ok: #3dffb0; --bad: #ff6b8b; --gold: #ffe08a;
+  --line: rgba(120, 220, 255, 0.16);
+  --font-head: "Outfit", system-ui, sans-serif;
+  background: radial-gradient(120% 70% at 50% -10%, #0a4f80 0%, transparent 60%), linear-gradient(180deg, var(--bg1), var(--bg2)) fixed;
+  background-color: var(--bg2);
+}
+body.theme-wale .hero h2 {
+  background: linear-gradient(90deg, #bff4ff, #38e1ff 40%, #9d8cff 80%, #bff4ff);
+  background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent;
+  animation: farbfluss 6s linear infinite; filter: drop-shadow(0 0 18px rgba(56,225,255,0.35));
+}
+@keyframes farbfluss { to { background-position: 200% center; } }
+body.theme-wale .menu-btn, body.theme-wale .choice, body.theme-wale .g-card, body.theme-wale .feedback, body.theme-wale .lex li {
+  border: 1px solid var(--line); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);
+}
+body.theme-wale .menu-btn.primary { background: linear-gradient(135deg, #38e1ff, #4f7dff); box-shadow: 0 8px 30px rgba(56,225,255,0.35); }
+body.theme-wale .btn { background: linear-gradient(135deg, #38e1ff, #4f7dff); box-shadow: 0 6px 20px rgba(56,225,255,0.3); }
+body.theme-wale .btn.secondary { background: var(--card-strong); box-shadow: none; }
+body.theme-wale .gallery { box-shadow: 0 0 0 1px var(--line), 0 18px 50px rgba(0,0,0,0.5); }
+
+/* ===================================================================
+   🦈 Haie – Hai-Alarm
+   =================================================================== */
+body.theme-haie {
+  --bg1: #101e2a; --bg2: #04080c;
+  --card: rgba(255, 255, 255, 0.05); --card-strong: rgba(255, 255, 255, 0.11);
+  --text: #eef3f7; --muted: #8fa3b3;
+  --accent: #ff3b3b; --accent-ink: #ffffff; --glow: rgba(255, 59, 59, 0.45);
+  --ok: #4dffa6; --bad: #ff3b3b; --gold: #ffcf3b;
+  --line: rgba(255, 255, 255, 0.09);
+  --font-head: "Bebas Neue", "Oswald", Impact, sans-serif;
+  --radius: 6px;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.018) 0 2px, transparent 2px 4px),
+    radial-gradient(90% 60% at 80% 0%, rgba(255,59,59,0.16), transparent 60%),
+    linear-gradient(180deg, var(--bg1), var(--bg2)) fixed;
+  background-color: var(--bg2);
+}
+body.theme-haie .hero h2 { font-size: 3.6rem; font-weight: 400; letter-spacing: 0.03em; text-transform: uppercase; text-shadow: 3px 3px 0 rgba(255,59,59,0.6); }
+body.theme-haie header h1 { font-size: 1.6rem; font-weight: 400; letter-spacing: 0.05em; text-transform: uppercase; }
+body.theme-haie .result .big { font-weight: 400; font-size: 5rem; }
+body.theme-haie .menu-btn, body.theme-haie .choice, body.theme-haie .g-card, body.theme-haie .feedback {
+  border-radius: 6px; border-left: 4px solid var(--accent);
+  clip-path: polygon(0 0, calc(100% - 14px) 0, 100% 14px, 100% 100%, 0 100%);
+}
+body.theme-haie .menu-btn.primary { background: linear-gradient(100deg, #ff3b3b, #b3121f); border-left-color: #ffcf3b; }
+body.theme-haie .menu-btn.primary span.sub { color: rgba(255,255,255,0.85); }
+body.theme-haie .btn { border-radius: 6px; text-transform: uppercase; letter-spacing: 0.06em; }
+body.theme-haie .gallery { border-radius: 6px; clip-path: polygon(0 0, calc(100% - 22px) 0, 100% 22px, 100% 100%, 22px 100%, 0 calc(100% - 22px)); }
+body.theme-haie .choice.correct { box-shadow: 0 0 0 3px var(--ok), 0 0 26px rgba(77,255,166,0.6); }
+
+/* ===================================================================
+   🌊 Beide – Ozean bei Sonnenuntergang
+   =================================================================== */
+body.theme-beide {
+  --bg1: #ff8f6b; --bg2: #0b1d3a;
+  --card: rgba(255, 255, 255, 0.12); --card-strong: rgba(255, 255, 255, 0.22);
+  --text: #ffffff; --muted: #ffe3d6;
+  --accent: #ffd166; --accent-ink: #3a1800; --glow: rgba(255, 209, 102, 0.55);
+  --ok: #5dffb5; --bad: #ff5d7a; --gold: #ffd166;
+  --line: rgba(255, 255, 255, 0.22);
+  --font-head: "Outfit", system-ui, sans-serif;
+  background: linear-gradient(180deg, #ff9a76 0%, #e0708f 22%, #8a5cc4 48%, #2e3f8f 72%, #0b1d3a 100%) fixed;
+  background-color: #0b1d3a;
+}
+body.theme-beide .hero h2 { text-shadow: 0 4px 30px rgba(255,140,90,0.8); }
+body.theme-beide .menu-btn, body.theme-beide .choice, body.theme-beide .g-card, body.theme-beide .feedback {
+  border: 1px solid var(--line); backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px); border-radius: 20px;
+}
+body.theme-beide .menu-btn.primary { background: linear-gradient(135deg, #ffd166, #ff8f6b); }
+body.theme-beide .menu-btn.primary span.sub { color: #5a2a00; }
+body.theme-beide .btn { background: linear-gradient(135deg, #ffd166, #ff8f6b); border-radius: 20px; }
+body.theme-beide .btn.secondary { background: var(--card-strong); color: #fff; }
+body.theme-beide .sun {
+  top: 6vh; left: 50%; width: 260px; height: 260px; margin-left: -130px; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,226,140,0.9), rgba(255,160,100,0.35) 45%, transparent 70%);
+  animation: sonne 7s ease-in-out infinite alternate;
+}
+@keyframes sonne { from { transform: scale(.92); opacity: .7; } to { transform: scale(1.06); opacity: 1; } }
+
+/* ===================================================================
+   🏎️ Porsche – Rennstrecke
+   =================================================================== */
+body.theme-porsche {
+  --bg1: #1a1a1d; --bg2: #070708;
+  --card: rgba(28, 28, 31, 0.94); --card-strong: rgba(48, 48, 53, 0.96);
+  --text: #f4f4f5; --muted: #a1a1aa;
+  --accent: #e10600; --accent-ink: #ffffff; --glow: rgba(225, 6, 0, 0.55);
+  --ok: #22e57a; --bad: #ff4d4d; --gold: #ffcc00;
+  --line: rgba(255, 255, 255, 0.08);
+  --font-head: "Russo One", "Saira", Impact, sans-serif;
+  --radius: 4px;
+  background:
+    linear-gradient(115deg, transparent 0 86%, rgba(225,6,0,0.75) 86% 88%, transparent 88% 89.5%, rgba(255,204,0,0.7) 89.5% 90.5%, transparent 90.5%) fixed,
+    radial-gradient(rgba(255,255,255,0.035) 1px, transparent 1px) 0 0 / 4px 4px,
+    linear-gradient(180deg, var(--bg1), var(--bg2)) fixed;
+  background-color: var(--bg2);
+}
+body.theme-porsche .hero h2, body.theme-porsche header h1, body.theme-porsche .result .big {
+  font-weight: 400; font-style: italic; transform: skewX(-8deg); text-transform: uppercase; letter-spacing: 0.02em;
+}
+body.theme-porsche .hero h2 { font-size: 2.6rem; text-shadow: 4px 0 0 rgba(225,6,0,0.7); }
+body.theme-porsche header h1 { display: inline-block; flex: 1; }
+body.theme-porsche .menu-btn, body.theme-porsche .choice, body.theme-porsche .g-card, body.theme-porsche .feedback {
+  border-radius: 4px; border: 1px solid var(--line);
+  clip-path: polygon(10px 0, 100% 0, calc(100% - 10px) 100%, 0 100%);
+}
+body.theme-porsche .menu-btn.primary {
+  background: linear-gradient(100deg, #e10600 0 70%, #ffcc00 70% 72%, #e10600 72%);
+}
+body.theme-porsche .menu-btn.primary span.sub { color: rgba(255,255,255,0.85); }
+body.theme-porsche .btn { border-radius: 4px; text-transform: uppercase; letter-spacing: 0.08em; font-style: italic; clip-path: polygon(8px 0, 100% 0, calc(100% - 8px) 100%, 0 100%); }
+body.theme-porsche .gallery { border-radius: 4px; }
+body.theme-porsche .feedback.ok { background: #10261a; }
+body.theme-porsche .feedback.bad { background: #2a1214; }
+body.theme-porsche .bar { height: 8px; border-radius: 0; background: repeating-linear-gradient(90deg, #2a2a2e 0 10px, #1d1d20 10px 20px); }
+body.theme-porsche .bar > div { border-radius: 0; background: linear-gradient(90deg, #e10600, #ffcc00); }
+body.theme-porsche .welt-pill { border-radius: 4px; }
+
+/* ===================================================================
+   🐕 Dackel – Gretchen (Farben stehen in index.html, hier nur die Bewegung)
+   =================================================================== */
+body.theme-dackel .ig-ring { animation: schweben 3.5s ease-in-out infinite, wedeln 6s ease-in-out infinite; }
+@keyframes wedeln { 0%, 90%, 100% { rotate: 0deg; } 93% { rotate: -6deg; } 96% { rotate: 6deg; } }
+body.theme-dackel .choice, body.theme-dackel .menu-btn, body.theme-dackel .g-card { border-radius: 22px; }
+body.theme-dackel .choice.correct { box-shadow: 0 0 0 3px #2f9e6e, 0 0 24px rgba(47,158,110,0.45); }
+body.theme-dackel .g-feed figure { transition: transform .25s var(--ease-spring); }
+body.theme-dackel .g-feed figure:nth-child(odd) { transform: rotate(-1.5deg); }
+body.theme-dackel .g-feed figure:nth-child(even) { transform: rotate(1.5deg); }
+body.theme-dackel .bar > div { background: linear-gradient(90deg, #f4a3bb, #e0839f); }
+
+/* ---------- Weniger Bewegung, wenn gewünscht ---------- */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { animation-duration: 0.001ms !important; animation-iteration-count: 1 !important; transition-duration: 0.001ms !important; }
+  #ambient { display: none; }
+}

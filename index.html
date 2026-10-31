@@ -9,7 +9,7 @@
 <link rel="manifest" href="manifest.webmanifest">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Caveat:wght@600&family=Nunito:wght@400;600;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Caveat:wght@600&family=Nunito:wght@400;600;800&family=Outfit:wght@400;600;800&family=Russo+One&display=swap" rel="stylesheet">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -366,8 +366,10 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
+<link rel="stylesheet" href="stil.css">
 </head>
 <body>
+<div id="ambient" aria-hidden="true"></div>
 <div class="app">
   <header>
     <button class="icon-btn" id="homeBtn" aria-label="Zur Startseite" hidden>←</button>
@@ -377,6 +379,7 @@
   <!-- Startseite -->
   <section class="screen active" id="screen-start">
     <div class="welt-switch" role="tablist" aria-label="Welt wählen">
+      <span class="welt-pill" id="weltPill"></span>
       <button data-welt="wale" type="button"><span>🐋</span>Wale</button>
       <button data-welt="haie" type="button"><span>🦈</span>Haie</button>
       <button data-welt="beide" type="button"><span>🌊</span>Beide</button>
@@ -490,7 +493,7 @@
         <div class="msg" id="storyMsg"></div>
       </div>
       <div class="share">
-        <label for="nameInput">Fordere Freunde mit denselben Walen heraus:</label>
+        <label for="nameInput" id="shareLabel">Fordere Freunde mit denselben Walen heraus:</label>
         <div class="row">
           <input id="nameInput" type="text" placeholder="Dein Name" maxlength="30" autocomplete="nickname">
           <button class="btn" id="shareBtn" type="button">📤 Teilen</button>
@@ -549,6 +552,7 @@
 <script src="dackel.js"></script>
 <script src="groesse.js"></script>
 <script src="gretchen.js"></script>
+<script src="effekte.js"></script>
 <script src="app.js"></script>
 <script src="melden.js"></script>
 </body>

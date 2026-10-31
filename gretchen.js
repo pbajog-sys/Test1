@@ -76,12 +76,12 @@ function gretchenErgebnis(an, bestanden, punkte, gesamt, stufe) {
 }
 
 // ---------- Konfetti aus Pfoten, Knochen und Herzen ----------
-function konfetti(anzahl) {
+function konfetti(anzahl, emojis = ['🐾', '🦴', '💕', '🧀', '✨', '🎀']) {
   const box = document.createElement('div');
   box.className = 'konfetti';
   for (let i = 0; i < anzahl; i++) {
     const s = document.createElement('span');
-    s.textContent = zufall(['🐾', '🦴', '💕', '🧀', '✨', '🎀']);
+    s.textContent = zufall(emojis);
     s.style.left = Math.random() * 100 + 'vw';
     s.style.animationDelay = Math.random() * 0.6 + 's';
     s.style.animationDuration = 1.8 + Math.random() * 1.4 + 's';

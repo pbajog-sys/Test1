@@ -64,6 +64,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `dackel.js` – Fragen fürs Dackel-Quiz
 - `gretchen.js`, `img/gretchen/` – Gretchen als Maskottchen
 - `melden.js` – Fehler und Fotos als GitHub-Issue melden
+- `stil.css`, `effekte.js` – Design und Animationen der Welten
 - `groesse.js` – Größenvergleich
 - `sw.js`, `manifest.webmanifest`, `icons/` – Installation und Offline-Nutzung
 
@@ -97,4 +98,11 @@ Commons-Dateinamen, die zuerst gezeigt werden (dann sucht die App für diese Art
 
 Es gibt bewusst keinen Schlüssel in der App –
 wer meldet, braucht ein GitHub-Konto, und die Meldungen sind öffentlich. Code in `melden.js`.
+
+## Design
+Jede Welt hat ihren eigenen Look (`stil.css`) und eine animierte Kulisse (`effekte.js`):
+🐋 Tiefsee mit Lichtstrahlen und Luftblasen · 🦈 Hai-Alarm mit kantigen Karten und vorbeiziehender Flosse ·
+🌊 Sonnenuntergang mit Wellen · 🏎️ Rennstrecke mit Speed-Linien und Rennstreifen · 🐕 Gretchen-Rosa mit Pfoten.
+Dazu: gleitender Welt-Umschalter, aufploppende Antworten, „+1“ bei richtigen Antworten, hochzählende Punkte und
+Konfetti je Welt. Mit „Bewegung reduzieren“ (iPhone/Android-Einstellung) bleibt alles ruhig.
 

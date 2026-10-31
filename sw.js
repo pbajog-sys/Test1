@@ -1,14 +1,16 @@
 // Service Worker: App offline verfügbar machen. Walfotos werden beim ersten Anzeigen zwischengespeichert.
-const VERSION = 'walquiz-v10';
+const VERSION = 'walquiz-v11';
 const SHELL = [
   './',
   'index.html',
+  'stil.css',
   'wale.js',
   'haie.js',
   'porsche.js',
   'dackel.js',
   'groesse.js',
   'gretchen.js',
+  'effekte.js',
   'app.js',
   'melden.js',
   'fotos.json',

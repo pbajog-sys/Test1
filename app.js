@@ -380,10 +380,12 @@ document.querySelectorAll('[data-welt]').forEach((b) => b.addEventListener('clic
   renderStart();
 }));
 
-// Die Dackel-Welt hat ihr eigenes, rosa Gretchen-Design.
+// Jede Welt hat ihr eigenes Design (stil.css) und ihre eigene Kulisse (effekte.js).
 function applyTheme() {
-  document.body.classList.toggle('theme-dackel', welt === 'dackel');
-  document.querySelector('meta[name="theme-color"]').setAttribute('content', welt === 'dackel' ? '#fdf1f4' : '#0b2a4a');
+  Object.keys(WELTEN).forEach((w) => document.body.classList.toggle('theme-' + w, w === welt));
+  document.querySelector('meta[name="theme-color"]').setAttribute('content', WELT_FARBE[welt]);
+  setAmbient(welt);
+  requestAnimationFrame(positionPill);
 }
 
 function renderStart() {
@@ -775,6 +777,7 @@ function answerChoice(opt, btn) {
     if (b.dataset.id === wal.id) b.classList.add('correct');
   });
   if (!ok) btn.classList.add('wrong', 'shake');
+  else plusEins(btn, state.mode === 'test' && state.tips ? '+½' : '+1');
   if (state.mode !== 'sound') recordAnswer(wal, !ok ? 'falsch' : state.tips ? 'mitTipp' : 'richtig');
   // Angeklickt wird nur im Test des Dackel-Quiz: dort kostet der Joker einen halben Punkt.
   const pts = !ok ? 0 : state.mode === 'test' && state.tips ? 0.5 : 1;
@@ -806,6 +809,7 @@ $('answerForm').addEventListener('submit', (e) => {
   else msg = 'Leider falsch. Das ist ein ' + artLabel(wal) + '.';
   if (state.tips && pts === 0.5) msg += ' Mit Tipp: ½ Punkt.';
   state.log.push({ wal, given: input.value.trim(), pts });
+  if (pts) plusEins(input, pts === 1 ? '+1' : '+½');
   recordAnswer(wal, pts === 1 ? 'richtig' : pts ? 'mitTipp' : 'falsch');
   finishQuestion(pts, msg);
 });
@@ -877,7 +881,8 @@ function showResult() {
 
   $('resultHead').textContent = passed ? 'Bestanden! 🎉' : 'Noch nicht ganz …';
   gretchenErgebnis(welt === 'dackel', passed, state.points, total, stufe);
-  $('resultScore').textContent = fmt(state.points) + ' / ' + total;
+  hochzaehlen($('resultScore'), state.points, ' / ' + total);
+  if (passed && welt !== 'dackel') setTimeout(() => konfetti(60, WELT_KONFETTI[welt]), 500);
 
   const vs = $('resultVs');
   vs.hidden = !state.challenge;
@@ -924,6 +929,8 @@ function showResult() {
     ul.appendChild(li);
   });
 
+  $('shareLabel').textContent = 'Fordere Freunde mit denselben '
+    + { wale: 'Walen', haie: 'Haien', beide: 'Tieren', porsche: 'Modellen', dackel: 'Fragen' }[welt] + ' heraus:';
   $('nameInput').value = store.name || '';
   $('shareMsg').textContent = '';
   const lvl = state.lvl;
