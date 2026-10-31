@@ -226,8 +226,7 @@ $('farbWeiter').addEventListener('click', () => {
 });
 $('farbNochmal').addEventListener('click', () => farbenStart({ stufe: fs.stufe, taeglich: false }));
 $('farbTeilen').addEventListener('click', farbTeilen);
-$('farbZurueck').addEventListener('click', () => { clearInterval(farbTimer); farbBuehne(null); renderStart(); show('start'); });
-$('farbMenu').addEventListener('click', () => { show('farben', '🎨 Farb-Gedächtnis'); farbenIntro(); });
+$('farbZurueck').addEventListener('click', () => { clearInterval(farbTimer); farbBuehne(null); zeigeHub(); });
 
 // Challenge-Link: ?farben=<seed>&stufe=…&n=…&p=…
 (() => {

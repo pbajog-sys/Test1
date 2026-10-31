@@ -377,7 +377,25 @@
   </header>
 
   <!-- Startseite -->
-  <section class="screen active" id="screen-start">
+  <!-- Dashboard -->
+  <section class="screen active" id="screen-hub">
+    <div class="hub-kopf">
+      <div class="hub-gruss">Hey! 👋 Was spielen wir?</div>
+      <h1 class="hub-titel">Spiele</h1>
+      <div class="hub-stats" id="hubStats"></div>
+    </div>
+    <h2 class="hub-h"><span>🧠</span> Quizzes</h2>
+    <div class="hub-quiz" id="hubQuiz"></div>
+    <h2 class="hub-h"><span>🎮</span> Games</h2>
+    <button class="hub-game" id="hubFarben" type="button">
+      <span class="farb-logo" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span>
+      <span class="hg-text"><span class="hg-titel">Farb-Gedächtnis</span><span class="hg-sub">Farbe merken. Nachmischen. Punkte holen.</span><span class="hg-best" id="hubFarbBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <div class="hub-mehr">Bald mehr Games ✨</div>
+  </section>
+
+  <section class="screen" id="screen-start">
     <div class="welt-switch" role="tablist" aria-label="Welt wählen">
       <span class="welt-pill" id="weltPill"></span>
       <button data-welt="wale" type="button"><span>🐋</span>Wale</button>
@@ -417,10 +435,6 @@
       <button class="menu-btn" data-go="sound" id="soundMenu">
         <span class="emoji">🔊</span>
         <span class="txt"><strong>Wer ruft da?</strong><span class="sub">Wale an ihren Rufen und Gesängen erkennen</span></span>
-      </button>
-      <button class="menu-btn farb-menu" id="farbMenu" type="button">
-        <span class="emoji">🎨</span>
-        <span class="txt"><strong>Farb-Gedächtnis</strong><span class="sub">Bonus-Spiel: Farbe merken, nachmischen, Punkte holen</span></span>
       </button>
       <button class="menu-btn" data-go="lexikon">
         <span class="emoji">📖</span>
@@ -617,6 +631,7 @@
 <script src="effekte.js"></script>
 <script src="app.js"></script>
 <script src="melden.js"></script>
+<script src="hub.js"></script>
 <script src="farben.js"></script>
 </body>
 </html>

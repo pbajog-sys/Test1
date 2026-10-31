@@ -357,15 +357,22 @@ let pendingChallenge = (() => {
 })();
 
 // ---------- Navigation ----------
-const screens = ['start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen', 'farben'];
+const screens = ['hub', 'start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen', 'farben'];
+let aktuellerScreen = 'hub';
 function show(name, title) {
   stopSound();
   screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
-  $('homeBtn').hidden = name === 'start';
+  aktuellerScreen = name;
+  $('homeBtn').hidden = name === 'hub';
+  document.querySelector('header').hidden = name === 'hub';
   $('headerTitle').textContent = title || WELTEN[welt].title;
   window.scrollTo(0, 0);
 }
-$('homeBtn').addEventListener('click', () => { renderStart(); show('start'); });
+// ←: von der Quiz-Startseite zurück zum Dashboard, sonst zur Startseite der Welt
+$('homeBtn').addEventListener('click', () => {
+  if (aktuellerScreen === 'start') zeigeHub();
+  else { renderStart(); show('start'); }
+});
 document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => {
   const go = b.dataset.go;
   if (go === 'lexikon') { renderLexikon(); show('lexikon', WELTEN[welt].emoji + ' Lexikon'); }
@@ -382,6 +389,7 @@ document.querySelectorAll('[data-welt]').forEach((b) => b.addEventListener('clic
 
 // Jede Welt hat ihr eigenes Design (stil.css) und ihre eigene Kulisse (effekte.js).
 function applyTheme() {
+  document.body.classList.remove('theme-hub');
   Object.keys(WELTEN).forEach((w) => document.body.classList.toggle('theme-' + w, w === welt));
   document.querySelector('meta[name="theme-color"]').setAttribute('content', WELT_FARBE[welt]);
   setAmbient(welt);

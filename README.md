@@ -1,6 +1,8 @@
 # Wal-Quiz – Seepferdchen der Walkunde
 
-Mit Umschalter zwischen fünf Welten: 🐋 Wale, 🦈 Haie, 🌊 Beide (Wale und Haie gemischt),
+Die App startet mit dem **Dashboard „Spiele“**: oben Statistiken (Abzeichen, gelernte Arten, Farb-Rekord),
+darunter die **Quizzes** als Karten im Look ihrer Welt und die **Games** (Farb-Gedächtnis). Eine Karte zoomt beim
+Antippen auf den ganzen Bildschirm und wird zur Welt; ← führt zurück zum Dashboard. Es gibt fünf Welten: 🐋 Wale, 🦈 Haie, 🌊 Beide (Wale und Haie gemischt),
 🏎️ Porsche und 🐕 Dackel. Jede Welt hat eigene Abzeichen; Lernstand und Lexikon funktionieren überall.
 
 ## Dackel
@@ -66,6 +68,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `melden.js` – Fehler und Fotos als GitHub-Issue melden
 - `stil.css`, `effekte.js` – Design und Animationen der Welten
 - `farben.js` – Farb-Gedächtnis
+- `hub.js` – Dashboard „Spiele“ mit Zoom-Übergang
 - `groesse.js` – Größenvergleich
 - `sw.js`, `manifest.webmanifest`, `icons/` – Installation und Offline-Nutzung
 
