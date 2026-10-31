@@ -63,6 +63,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `wale.js`, `haie.js`, `porsche.js` – Listen mit Steckbriefen
 - `dackel.js` – Fragen fürs Dackel-Quiz
 - `gretchen.js`, `img/gretchen/` – Gretchen als Maskottchen
+- `melden.js` – Fehler und Fotos als GitHub-Issue melden
 - `groesse.js` – Größenvergleich
 - `sw.js`, `manifest.webmanifest`, `icons/` – Installation und Offline-Nutzung
 
@@ -80,3 +81,12 @@ Lokal testen: `python3 -m http.server` im Ordner starten und `http://localhost:8
 Alle Fotos stammen von Wikimedia Commons; jede Quelle ist in der App verlinkt.
 Vor einer öffentlichen Veröffentlichung sollten Urheber und Lizenz je Bild ergänzt werden
 (stehen auf der jeweiligen Commons-Seite).
+
+## Fehler und Fotos melden
+Unter jeder Antwort, bei jedem Lexikon-Eintrag und auf der Startseite gibt es **„⚑ Melden“**. Der Dialog fragt,
+was falsch ist (Foto, Info, App-Fehler, Idee), bei Fotos auch welches, und öffnet dann ein **vorausgefülltes
+GitHub-Issue** in diesem Repo – mit Welt, Art bzw. Frage, Foto-Links, App-Stand und Gerät. Dort nur noch „Create“.
+Gemeldete Fotos werden auf dem eigenen Gerät sofort aussortiert. In der Prüf-Ansicht lässt sich die ganze
+Sperrliste mit „📮 Auf GitHub melden“ als Issue schicken. Es gibt bewusst keinen Schlüssel in der App –
+wer meldet, braucht ein GitHub-Konto, und die Meldungen sind öffentlich. Code in `melden.js`.
+

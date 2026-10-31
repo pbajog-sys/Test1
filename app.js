@@ -794,6 +794,7 @@ function finishQuestion(pts, msg) {
     extra.querySelector('img').src = $('gretchenImg').src;
   }
   if (state.mode !== 'sound' && wal.welt === 'wale') extra.appendChild(soundButton(wal));
+  extra.appendChild(meldeKnopf(wal));
   $('feedback').className = 'feedback show ' + (pts ? 'ok' : 'bad');
 
   const credit = $('qCredit');
@@ -958,6 +959,7 @@ function renderLexikon() {
         li.querySelector('h3 span').textContent = w.frage;
         li.querySelector('.latin').textContent = 'Antwort: ' + w.name;
         li.querySelector('.merkmal').textContent = w.erklaerung;
+        li.querySelector('.body').appendChild(meldeKnopf(w, { art: 'info' }));
         li.search = normalize(w.frage + w.name);
         ul.appendChild(li);
         return;
@@ -968,6 +970,7 @@ function renderLexikon() {
       li.querySelector('.merkmal').textContent = w.merkmal;
       if (w.welt !== 'porsche') li.querySelector('.size').innerHTML = groessenSvg(w);
       if (w.welt === 'wale') li.querySelector('.size').appendChild(soundButton(w));
+      li.querySelector('.body').appendChild(meldeKnopf(w));
       li.search = normalize(w.name + w.auch.join('') + w.latin);
       ul.appendChild(li);
       if (lexObserver) lexObserver.observe(li); else fillLexPhoto(li);
@@ -1075,6 +1078,13 @@ function renderPruefen() {
 function updatePruefButton() { $('pruefOpen').hidden = welt === 'dackel'; }
 $('pruefOpen').addEventListener('click', () => { renderPruefen(); show('pruefen', '🔎 Fotos prüfen'); });
 $('pruefOffen').addEventListener('change', renderPruefen);
+$('sperrMelden').addEventListener('click', () => {
+  const list = Object.keys(photoBlock).filter((n) => !FOTO_SPERRE.includes(n));
+  if (!list.length) { $('sperrMsg').textContent = 'Noch keine Fotos aussortiert.'; return; }
+  const text = ['Diese Fotos wurden in der Prüf-Ansicht aussortiert und sollen fest in `FOTO_SPERRE` (app.js):', '',
+    '```json', JSON.stringify(list, null, 1), '```', '', '- App-Stand: ' + APP_STAND, '- Welt: ' + WELTEN[welt].title].join('\n');
+  window.open(meldeUrl('[Fotos] ' + list.length + (list.length === 1 ? ' aussortiertes Foto' : ' aussortierte Fotos'), text), '_blank', 'noopener');
+});
 $('sperrCopy').addEventListener('click', async () => {
   const list = Object.keys(photoBlock).filter((n) => !FOTO_SPERRE.includes(n));
   const text = 'Gesperrte Fotos (' + list.length + '):\n' + JSON.stringify(list, null, 1);
