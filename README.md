@@ -116,8 +116,9 @@ Eigenes Spiel, angelehnt an das Prinzip „Farbe merken und nachmischen“: Eine
 (Leicht 5 s, Mittel 3 s, Profi 1,5 s), dann wird sie mit Farbton, Sättigung und Helligkeit nachgemischt.
 Punkte 0–10 pro Farbe nach dem Farbabstand CIEDE2000 (ab Abstand 50 gibt es 0), fünf Farben = bis zu 50 Punkte.
 Bestwerte je Stufe, Tagesfarben (aus dem Datum berechnet, für alle gleich) und Challenge-Links mit denselben Farben.
-Auswertung je Farbe: Hex-Codes, RGB-Vergleich je Kanal (Balken mit ◆ Original und ● deiner Farbe, Abweichung
-farbig nach Größe), Abweichung in Farbton/Sättigung/Helligkeit, Klartext-Tipp (z. B. „etwas zu dunkel · zu blass ·
+Gemischt wird standardmäßig mit **Rot-, Grün- und Blau-Schiebern (0–255)**, wahlweise mit Farbton/Sättigung/Helligkeit.
+Auswertung je Farbe: Tabelle mit R, G, B und Hex für Original und deine Farbe plus Differenz je Kanal (farbig nach
+Größe), im Farbton-Modus zusätzlich die Abweichung in Farbton/Sättigung/Helligkeit, Klartext-Tipp (z. B. „etwas zu dunkel · zu blass ·
 Farbton zu sehr Gelb statt Orange“) und der Farbabstand ΔE mit Einordnung.
 Code in `farben.js`, Design in `stil.css`.
 

@@ -393,6 +393,24 @@ body.theme-dackel .bar > div { background: linear-gradient(90deg, #f4a3bb, #e083
 .rgb-zahl { font-size: 0.82rem; opacity: .85; text-align: right; }
 .rgb-diff { font-size: 0.82rem; font-weight: 800; text-align: right; }
 .rgb-diff.gut { color: #4ade80; } .rgb-diff.mittel { color: #fbbf24; } .rgb-diff.weit { color: #f87171; }
+.farb-tabelle { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; text-align: center; }
+.farb-tabelle th, .farb-tabelle td { padding: 7px 4px; }
+.farb-tabelle tr + tr { border-top: 1px solid rgba(255,255,255,0.08); }
+.farb-tabelle tr:first-child th { font-size: 0.8rem; opacity: .75; }
+.farb-tabelle th.r { color: #ff6b6b; opacity: 1; } .farb-tabelle th.g { color: #4ade80; opacity: 1; } .farb-tabelle th.b { color: #60a5fa; opacity: 1; }
+.farb-tabelle tr th:first-child { text-align: left; font-weight: 600; font-size: 0.9rem; }
+.farb-tabelle td { font-size: 1.1rem; font-weight: 700; }
+.farb-tabelle td.hex { font-family: ui-monospace, "SF Mono", Menlo, monospace; font-size: 0.85rem; font-weight: 600; opacity: .85; }
+.farb-tabelle tr.diff td { font-weight: 800; }
+.farb-tabelle td.gut { color: #4ade80; } .farb-tabelle td.mittel { color: #fbbf24; } .farb-tabelle td.weit { color: #f87171; }
+.farb-reglergruppe { display: grid; gap: 14px; }
+.farb-regler > span { display: flex; justify-content: space-between; }
+.farb-regler > span b { font-variant-numeric: tabular-nums; min-width: 3ch; text-align: right; }
+.farb-regler.rgb-r > span { color: #ff8a8a; } .farb-regler.rgb-g > span { color: #7cf0a8; } .farb-regler.rgb-b > span { color: #93c5fd; }
+.farb-wahl { display: flex; align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; font-size: 0.85rem; }
+.farb-wahl span { opacity: .7; }
+.farb-wahl button { border: 1.5px solid rgba(255,255,255,0.2); background: transparent; color: inherit; border-radius: 999px; padding: 6px 12px; font: inherit; font-weight: 600; cursor: pointer; }
+.farb-wahl button.on { background: #fff; color: #111; border-color: #fff; }
 .farb-regler-chips { display: grid; grid-template-columns: repeat(3, 1fr); gap: 6px; }
 .regler-chip { display: grid; justify-items: center; padding: 8px 4px; border-radius: 12px; background: rgba(248,113,113,0.12); }
 .regler-chip.gut { background: rgba(74,222,128,0.12); }

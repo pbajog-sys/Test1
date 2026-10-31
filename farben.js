@@ -14,6 +14,12 @@ function hsvZuRgb(h, s, v) {
   const f = (n) => { const k = (n + h / 60) % 6; return v - v * s * Math.max(0, Math.min(k, 4 - k, 1)); };
   return [f(5), f(3), f(1)].map((x) => Math.round(x * 255));
 }
+function rgbZuHsv([r, g, b]) {
+  const max = Math.max(r, g, b), min = Math.min(r, g, b), d = max - min;
+  let h = 0;
+  if (d) h = max === r ? 60 * (((g - b) / d) % 6) : max === g ? 60 * ((b - r) / d + 2) : 60 * ((r - g) / d + 4);
+  return { h: (h + 360) % 360, s: max ? (d / max) * 100 : 0, v: (max / 255) * 100 };
+}
 const rgbText = ([r, g, b]) => 'rgb(' + r + ',' + g + ',' + b + ')';
 const hsvText = (c) => rgbText(hsvZuRgb(c.h, c.s, c.v));
 
@@ -112,6 +118,7 @@ function farbenStart(opts = {}) {
 function farbenIntro() {
   const st = farbStore();
   $('farbStufen').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.stufe === (fs?.stufe || 'leicht')));
+  $('farbReglerWahl').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.regler === farbRegler()));
   const best = st.best || {};
   $('farbBest').textContent = 'Bestwerte: ' + Object.entries(FARB_STUFEN).map(([k, v]) => v.name + ' ' + (best[k] != null ? fmt(best[k]) : '–')).join(' · ');
   const t = st.tag && st.tag[heute()];
@@ -150,8 +157,17 @@ function farbPhase(phase) {
     zeigeFarbTeil('mischen');
     farbBuehne(null);   // neutraler Hintergrund – sonst könnte man die Zielfarbe einfach abgleichen
     // Startwert der Regler: zufällig, damit man nicht einfach in der Mitte bleibt
-    fs.mix = { h: Math.round(Math.random() * 360), s: 50, v: 50 };
-    ['h', 's', 'v'].forEach((k) => { $('farbRegler-' + k).value = fs.mix[k]; });
+    const rgbModus = farbRegler() === 'rgb';
+    $('farbReglerRgb').hidden = !rgbModus;
+    $('farbReglerHsb').hidden = rgbModus;
+    if (rgbModus) {
+      fs.rgb = [0, 0, 0].map(() => Math.round(40 + Math.random() * 175));
+      fs.mix = rgbZuHsv(fs.rgb);
+      ['r', 'g', 'b'].forEach((k, i) => { $('farbRegler-' + k).value = fs.rgb[i]; });
+    } else {
+      fs.mix = { h: Math.round(Math.random() * 360), s: 50, v: 50 };
+      ['h', 's', 'v'].forEach((k) => { $('farbRegler-' + k).value = fs.mix[k]; });
+    }
     farbMischAktualisieren();
   } else if (phase === 'aufloesung') {
     const p = farbPunkte(ziel, fs.mix);
@@ -176,27 +192,30 @@ function zeigeAnalyse(a) {
   $('farbZielHex').textContent = hexText(a.rz);
   $('farbDeinHex').textContent = hexText(a.rm);
   $('farbTipp').textContent = a.tipps.length ? 'Deine Farbe war ' + a.tipps.join(' · ') + '.' : 'Fast perfekt getroffen – kaum ein Unterschied.';
-  // RGB: je Kanal ein Balken 0–255 mit Original (◆) und deiner Farbe (●)
-  const box = $('farbRgb');
-  box.innerHTML = '';
-  ['R', 'G', 'B'].forEach((k, i) => {
-    const z = a.rz[i], m = a.rm[i], d = m - z;
-    const zeile = document.createElement('div');
-    zeile.className = 'rgb-zeile rgb-' + k;
-    zeile.innerHTML = '<b></b><span class="rgb-spur"><i class="rgb-weg"></i><i class="rgb-z"></i><i class="rgb-m"></i></span><span class="rgb-zahl"></span><span class="rgb-diff"></span>';
-    zeile.querySelector('b').textContent = k;
-    const weg = zeile.querySelector('.rgb-weg');
-    weg.style.left = (Math.min(z, m) / 255 * 100) + '%';
-    weg.style.width = (Math.abs(d) / 255 * 100) + '%';
-    zeile.querySelector('.rgb-z').style.left = (z / 255 * 100) + '%';
-    zeile.querySelector('.rgb-m').style.left = (m / 255 * 100) + '%';
-    zeile.querySelector('.rgb-zahl').textContent = z + ' → ' + m;
-    const diff = zeile.querySelector('.rgb-diff');
-    diff.textContent = vz(d);
-    diff.className = 'rgb-diff ' + (Math.abs(d) <= 10 ? 'gut' : Math.abs(d) <= 35 ? 'mittel' : 'weit');
-    box.appendChild(zeile);
-  });
+  // RGB-Tabelle: Original, deine Farbe und die Differenz je Kanal
+  const tab = $('farbRgb');
+  tab.innerHTML = '<tr><th></th><th class="r">R</th><th class="g">G</th><th class="b">B</th><th>Hex</th></tr>';
+  const zeile = (name, werte, hex, klasse = '') => {
+    const tr = document.createElement('tr');
+    tr.className = klasse;
+    tr.innerHTML = '<th></th>' + werte.map(() => '<td></td>').join('') + '<td class="hex"></td>';
+    tr.querySelector('th').textContent = name;
+    werte.forEach((w, i) => {
+      const td = tr.querySelectorAll('td')[i];
+      td.textContent = w.text;
+      if (w.klasse) td.className = w.klasse;
+    });
+    tr.querySelector('.hex').textContent = hex;
+    tab.appendChild(tr);
+  };
+  zeile('Original', a.rz.map((x) => ({ text: x })), hexText(a.rz));
+  zeile('Deine', a.rm.map((x) => ({ text: x })), hexText(a.rm));
+  zeile('Differenz', a.rm.map((x, i) => {
+    const d = x - a.rz[i];
+    return { text: vz(d), klasse: Math.abs(d) <= 10 ? 'gut' : Math.abs(d) <= 35 ? 'mittel' : 'weit' };
+  }), '', 'diff');
   // Abweichung in den drei Reglern, die man benutzt hat
+  $('farbHsbBlock').hidden = farbRegler() === 'rgb';
   const regler = [['Farbton', vz(a.dh, '°'), Math.abs(a.dh) <= 6], ['Sättigung', vz(a.ds, ' %'), Math.abs(a.ds) <= 6], ['Helligkeit', vz(a.dv, ' %'), Math.abs(a.dv) <= 6]];
   $('farbRegler').innerHTML = '';
   regler.forEach(([name, wert, gut]) => {
@@ -211,10 +230,21 @@ function zeigeAnalyse(a) {
     + ' – unter 1 sieht man keinen Unterschied, ab etwa 2–3 einen kleinen, über 10 einen deutlichen.';
 }
 
+// Welche Regler: 'rgb' (Rot, Grün, Blau) oder 'hsb' (Farbton, Sättigung, Helligkeit)
+const farbRegler = () => farbStore().regler || 'rgb';
+
 function farbMischAktualisieren() {
   const m = fs.mix;
   $('farbVorschau').style.background = hsvText(m);
   $('farbVorschau').classList.toggle('hell', !helleSchrift(m));
+  if (farbRegler() === 'rgb') {
+    const [r, g, b] = fs.rgb;
+    $('farbRegler-r').style.background = `linear-gradient(90deg, rgb(0,${g},${b}), rgb(255,${g},${b}))`;
+    $('farbRegler-g').style.background = `linear-gradient(90deg, rgb(${r},0,${b}), rgb(${r},255,${b}))`;
+    $('farbRegler-b').style.background = `linear-gradient(90deg, rgb(${r},${g},0), rgb(${r},${g},255))`;
+    $('farbWert-r').textContent = r; $('farbWert-g').textContent = g; $('farbWert-b').textContent = b;
+    return;
+  }
   // Reglerspuren zeigen, was passiert, wenn man sie verschiebt
   const stops = (f) => Array.from({ length: 7 }, (_, i) => f(i / 6)).join(',');
   $('farbRegler-h').style.background = 'linear-gradient(90deg,' + stops((t) => hsvText({ h: t * 360, s: m.s, v: m.v })) + ')';
@@ -222,6 +252,17 @@ function farbMischAktualisieren() {
   $('farbRegler-v').style.background = 'linear-gradient(90deg,' + stops((t) => hsvText({ h: m.h, s: m.s, v: t * 100 })) + ')';
 }
 ['h', 's', 'v'].forEach((k) => $('farbRegler-' + k).addEventListener('input', (e) => { fs.mix[k] = Number(e.target.value); farbMischAktualisieren(); }));
+['r', 'g', 'b'].forEach((k, i) => $('farbRegler-' + k).addEventListener('input', (e) => {
+  fs.rgb[i] = Number(e.target.value);
+  fs.mix = rgbZuHsv(fs.rgb);
+  farbMischAktualisieren();
+}));
+$('farbReglerWahl').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+  const st = farbStore();
+  st.regler = b.dataset.regler;
+  saveJson(FARB_KEY, st);
+  farbenIntro();
+}));
 
 function farbEnde() {
   const summe = Math.round(fs.punkte.reduce((a, b) => a + b, 0) * 10) / 10;

@@ -366,7 +366,7 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=18">
+<link rel="stylesheet" href="stil.css?v=19">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -570,6 +570,9 @@
         <h2>Farb-Gedächtnis</h2>
         <p>Eine Farbe blitzt kurz auf. Dann mischst du sie aus dem Kopf nach – mit Farbton, Sättigung und Helligkeit. Fünf Farben, bis zu 50 Punkte.</p>
         <div class="farb-challenge" id="farbChallenge" hidden></div>
+        <div class="farb-wahl" id="farbReglerWahl">
+          <span>Regler:</span><button type="button" data-regler="rgb">Rot · Grün · Blau</button><button type="button" data-regler="hsb">Farbton · Sättigung · Helligkeit</button>
+        </div>
         <div class="farb-stufen" id="farbStufen">
           <button type="button" data-stufe="leicht">Leicht<small>5 Sek.</small></button>
           <button type="button" data-stufe="mittel">Mittel<small>3 Sek.</small></button>
@@ -587,9 +590,16 @@
 
       <div class="farb-teil" id="farb-mischen" hidden>
         <div class="farb-vorschau" id="farbVorschau"><span>Deine Farbe</span></div>
-        <label class="farb-regler">Farbton<input type="range" id="farbRegler-h" min="0" max="360" step="1"></label>
-        <label class="farb-regler">Sättigung<input type="range" id="farbRegler-s" min="0" max="100" step="1"></label>
-        <label class="farb-regler">Helligkeit<input type="range" id="farbRegler-v" min="0" max="100" step="1"></label>
+        <div class="farb-reglergruppe" id="farbReglerRgb">
+          <label class="farb-regler rgb-r"><span>Rot <b id="farbWert-r"></b></span><input type="range" id="farbRegler-r" min="0" max="255" step="1"></label>
+          <label class="farb-regler rgb-g"><span>Grün <b id="farbWert-g"></b></span><input type="range" id="farbRegler-g" min="0" max="255" step="1"></label>
+          <label class="farb-regler rgb-b"><span>Blau <b id="farbWert-b"></b></span><input type="range" id="farbRegler-b" min="0" max="255" step="1"></label>
+        </div>
+        <div class="farb-reglergruppe" id="farbReglerHsb" hidden>
+          <label class="farb-regler">Farbton<input type="range" id="farbRegler-h" min="0" max="360" step="1"></label>
+          <label class="farb-regler">Sättigung<input type="range" id="farbRegler-s" min="0" max="100" step="1"></label>
+          <label class="farb-regler">Helligkeit<input type="range" id="farbRegler-v" min="0" max="100" step="1"></label>
+        </div>
         <button class="btn farb-gross" id="farbFertig" type="button">Fertig ✓</button>
       </div>
 
@@ -602,10 +612,9 @@
         <div class="farb-kommentar" id="farbKommentar"></div>
         <div class="farb-analyse">
           <div class="farb-tipp" id="farbTipp"></div>
-          <div class="farb-abschnitt">RGB · ◆ Original → ● deine Farbe</div>
-          <div class="farb-rgb" id="farbRgb"></div>
-          <div class="farb-abschnitt">So weit lagen deine Regler daneben</div>
-          <div class="farb-regler-chips" id="farbRegler"></div>
+          <table class="farb-tabelle" id="farbRgb"></table>
+          <div id="farbHsbBlock"><div class="farb-abschnitt">So weit lagen deine Regler daneben</div>
+          <div class="farb-regler-chips" id="farbRegler"></div></div>
           <div class="farb-deltae" id="farbDeltaE"></div>
         </div>
         <button class="btn farb-gross" id="farbWeiter" type="button">Nächste Farbe</button>
@@ -683,17 +692,17 @@
   <p class="melde-info">Öffnet eine fertige Meldung auf GitHub – dort nur noch „Create“ tippen. Braucht ein GitHub-Konto, die Meldung ist öffentlich.</p>
   <div class="row"><button class="btn secondary" id="meldeAbbrechen" type="button">Abbrechen</button><button class="btn" id="meldeSenden" type="button">Zu GitHub ↗</button></div>
 </dialog>
-<script src="wale.js?v=18"></script>
-<script src="haie.js?v=18"></script>
-<script src="porsche.js?v=18"></script>
-<script src="dackel.js?v=18"></script>
-<script src="groesse.js?v=18"></script>
-<script src="gretchen.js?v=18"></script>
-<script src="effekte.js?v=18"></script>
-<script src="app.js?v=18"></script>
-<script src="melden.js?v=18"></script>
-<script src="hub.js?v=18"></script>
-<script src="farben.js?v=18"></script>
-<script src="cello.js?v=18"></script>
+<script src="wale.js?v=19"></script>
+<script src="haie.js?v=19"></script>
+<script src="porsche.js?v=19"></script>
+<script src="dackel.js?v=19"></script>
+<script src="groesse.js?v=19"></script>
+<script src="gretchen.js?v=19"></script>
+<script src="effekte.js?v=19"></script>
+<script src="app.js?v=19"></script>
+<script src="melden.js?v=19"></script>
+<script src="hub.js?v=19"></script>
+<script src="farben.js?v=19"></script>
+<script src="cello.js?v=19"></script>
 </body>
 </html>
