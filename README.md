@@ -183,5 +183,7 @@ nötigen Denkschritte bestimmen die Schwierigkeit und liefern die Erklärungen f
 - **Weiterspielen** ganz oben: das zuletzt gespielte Spiel bzw. die zuletzt gespielte Quiz-Welt (je Profil).
 - **Alle Spiele** als gleichförmige Cover-Karten mit echten Bildern (Fotomosaik, Villa, Farbfächer, Notenblatt, Wellenform),
   darunter Fortschritt in klaren Worten; die Quiz-Welten im selben Muster mit Foto und Fortschrittsbalken.
-- Keine Dauer-Animationen und kein Weichzeichner im Dashboard (Akku); Bewegung nur beim Antippen. „Bewegung reduzieren“ wird beachtet.
+- Animierte Cover: Quiz-Diashow mit Kamera-Zoom, Villa mit glühenden Fenstern und Gestalt am Erker, atmender Farbfächer,
+  Spielkopf über dem Notenblatt, laufende Welle; Karten gleiten beim Öffnen herein, warmes Licht wandert durch den Hintergrund.
+- Akku: nur Bewegung/Transparenz (Grafikchip), kein Weichzeichner; Cover außerhalb des Bildschirms pausieren. „Bewegung reduzieren“ wird beachtet.
 

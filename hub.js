@@ -1,5 +1,15 @@
 // Dashboard „Spiele“: Weiterspielen, alle Spiele als Cover-Karten, Bestenliste.
-// Bewusst ohne Dauer-Animationen – Bewegung gibt es nur als Rückmeldung beim Antippen (spart Akku).
+// Die Cover sind animiert (nur Bewegung und Transparenz) und pausieren, sobald sie nicht zu sehen sind.
+const coverIO = 'IntersectionObserver' in window
+  ? new IntersectionObserver((eintraege) => eintraege.forEach((e) => e.target.classList.toggle('sichtbar', e.isIntersecting)), { rootMargin: '40px' })
+  : null;
+function coverBeobachten() {
+  document.querySelectorAll('.cover-bild:not([data-beobachtet])').forEach((el) => {
+    el.dataset.beobachtet = '1';
+    if (coverIO) coverIO.observe(el); else el.classList.add('sichtbar');
+  });
+}
+
 // Gesicht jeder Welt: ein echtes Foto aus dem Quiz (wie Gretchen beim Dackel-Quiz)
 const HUB_GESICHT = { wale: 'Buckelwal', haie: 'Weißer Hai', beide: 'Schwertwal', porsche: '911 (993)' };
 
@@ -77,7 +87,10 @@ function hubWeiterspielen() {
     const g = HUB_SPIELE[z.typ];
     $('hubWeiterTitel').textContent = g.titel;
     $('hubWeiterMeta').textContent = g.meta();
-    bild.replaceChildren($(g.knopf).querySelector('.cover-bild').cloneNode(true));
+    const kopie = $(g.knopf).querySelector('.cover-bild').cloneNode(true);
+    delete kopie.dataset.beobachtet;
+    kopie.classList.remove('sichtbar');
+    bild.replaceChildren(kopie);
   } else box.hidden = true;
 }
 $('hubWeiterBtn').addEventListener('click', () => {
@@ -141,7 +154,17 @@ function renderHub() {
   });
   // Quiz-Cover: Fotomosaik der vier Welten (bis die Fotos da sind: Farbfläche)
   const stapel = $('hubQuizStapel');
-  if (!stapel.childElementCount) ['wale', 'haie', 'porsche', 'dackel'].forEach((w) => stapel.appendChild(weltKachel(w)));
+  // Quiz-Cover: Diashow durch die Welten mit langsamem Kamera-Zoom
+  if (!stapel.childElementCount) ['wale', 'haie', 'porsche', 'dackel'].forEach((w, i) => {
+    const dia = weltKachel(w);
+    dia.classList.add('cb-dia');
+    dia.style.setProperty('--i', i);
+    const name = document.createElement('span');
+    name.className = 'cb-dia-name';
+    name.textContent = { wale: 'Wale', haie: 'Haie', porsche: 'Porsche', dackel: 'Dackel' }[w];
+    dia.appendChild(name);
+    stapel.appendChild(dia);
+  });
   const abz = Object.values(badges).filter(Boolean).length;
   const gelernt = countSicher(ALLE.filter((a) => !istFrage(a)));
   $('hubQuizStand').textContent = abz || gelernt ? abz + (abz === 1 ? ' Abzeichen' : ' Abzeichen') + ' · ' + gelernt + ' sicher erkannt' : '5 Welten · neu';
@@ -157,6 +180,7 @@ function renderHub() {
   $('hubKrimiBest').textContent = (faelle ? faelle + ' Rätsel gelöst' : 'Noch nichts gelöst') + (krimi.aktenGeloest ? ' · ' + krimi.aktenGeloest + (krimi.aktenGeloest === 1 ? ' Akte' : ' Akten') : '');
   hubGruss();
   hubWeiterspielen();
+  if (typeof coverBeobachten === 'function') coverBeobachten();
   if (typeof profilHub === 'function') profilHub();   // profile.js lädt später
 }
 
@@ -172,6 +196,9 @@ function zeigeHub() {
   setHubTheme();
   renderHub();
   show('hub');
+  // Karten gleiten nacheinander herein (einmalig beim Öffnen)
+  const hub = $('screen-hub');
+  hub.classList.remove('auftritt'); void hub.offsetWidth; hub.classList.add('auftritt');
 }
 
 // Übergang: Die angetippte Karte wächst auf den ganzen Bildschirm, dann erscheint das Ziel.

@@ -1356,3 +1356,69 @@ body.theme-hub #ambient { display: none; }
 /* alte Welt-Karten-Stile auf den neuen Covern neutralisieren */
 .cover.cover-welt { background: none !important; color: var(--text) !important; clip-path: none !important; border-radius: 0 !important; min-height: 0; padding: 0; box-shadow: none !important; animation: none; }
 .cover.cover-welt::before, .cover.cover-welt::after { display: none !important; }
+
+/* ===================================================================
+   Dashboard mit Leben: animierte Cover.
+   Nur transform/opacity (läuft auf dem Grafikchip, ohne Weichzeichner). Cover außerhalb des Bildes pausieren.
+   =================================================================== */
+.cover-bild:not(.sichtbar), .cover-bild:not(.sichtbar) * { animation-play-state: paused !important; }
+
+/* Warmes Licht, das langsam durch den Hintergrund wandert (ein großer Verlauf, kein Blur) */
+.hub-licht {
+  position: fixed; left: -30vmax; top: -30vmax; width: 110vmax; height: 110vmax; pointer-events: none; z-index: -1;
+  background: radial-gradient(circle, rgba(224,166,74,0.10), rgba(224,166,74,0.04) 35%, transparent 60%);
+  animation: lichtWandert 38s ease-in-out infinite alternate; will-change: transform;
+}
+@keyframes lichtWandert { from { transform: translate(0, 0); } to { transform: translate(45vw, 55vh); } }
+#screen-hub { position: relative; }
+
+/* Karten gleiten nacheinander herein */
+#screen-hub.auftritt .regal .cover, #screen-hub.auftritt .weiter-karte { animation: coverAuftritt .55s cubic-bezier(.2,.8,.2,1) backwards; }
+#screen-hub.auftritt .regal .cover:nth-child(2) { animation-delay: .06s; }
+#screen-hub.auftritt .regal .cover:nth-child(3) { animation-delay: .12s; }
+#screen-hub.auftritt .regal .cover:nth-child(4) { animation-delay: .18s; }
+#screen-hub.auftritt .regal .cover:nth-child(5) { animation-delay: .24s; }
+@keyframes coverAuftritt { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: none; } }
+.theme-hub .hub-titel { animation: titelAuftritt .7s cubic-bezier(.2,.8,.2,1) both; }
+@keyframes titelAuftritt { from { opacity: 0; transform: translateY(10px); letter-spacing: 0.04em; } to { opacity: 1; transform: none; } }
+.cover:hover .cover-bild { transform: translateY(-3px); }
+
+/* Quizzes: Diashow mit langsamem Kamera-Zoom */
+.cb-quiz { display: block; background: #0d0c0b; }
+.cb-dia { position: absolute; inset: 0; opacity: 0; animation: diaWechsel 16s infinite; animation-delay: calc(var(--i) * 4s); }
+.cb-dia img { animation: kenBurns 16s ease-in-out infinite; animation-delay: calc(var(--i) * 4s); transform-origin: 60% 40%; }
+@keyframes diaWechsel { 0% { opacity: 0; } 4% { opacity: 1; } 25% { opacity: 1; } 30% { opacity: 0; } 100% { opacity: 0; } }
+@keyframes kenBurns { 0% { transform: scale(1.02) translate(0, 0); } 30% { transform: scale(1.14) translate(-3%, -2%); } 100% { transform: scale(1.14) translate(-3%, -2%); } }
+.cb-dia-name {
+  position: absolute; left: 10px; bottom: 10px; z-index: 1; padding: 3px 10px; border-radius: 999px;
+  background: rgba(20,18,16,0.72); color: #f2ede6; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em;
+}
+
+/* Krimi: Villa mit den Animationen aus dem Krimi */
+.cb-krimi .cb-villa { position: absolute; left: 4%; right: 4%; bottom: -2%; }
+.cb-krimi .cb-villa img { position: static; display: block; width: 100%; height: auto; }
+.cb-sterne { position: absolute; inset: 0 0 45% 0; background: radial-gradient(1px 1px at 12% 20%, #fff8e0 60%, transparent), radial-gradient(1px 1px at 30% 8%, #fff8e0 60%, transparent), radial-gradient(1.2px 1.2px at 48% 26%, #fff8e0 60%, transparent), radial-gradient(1px 1px at 66% 12%, #fff8e0 60%, transparent), radial-gradient(1px 1px at 90% 38%, #fff8e0 60%, transparent); animation: sterneFunkeln 4s ease-in-out infinite alternate; }
+@keyframes sterneFunkeln { from { opacity: .45; } to { opacity: 1; } }
+
+/* Farben: der Fächer atmet – öffnet und schließt sich */
+.cb-farben i { animation: faecher 5s ease-in-out infinite alternate; }
+@keyframes faecher { from { transform: rotate(calc(var(--d) * 0.35)); } to { transform: rotate(calc(var(--d) * 1.15)); } }
+
+/* Cello: ein Spielkopf läuft übers Notenblatt, die Noten leuchten auf */
+.cb-spielkopf { animation: spielkopf 4s linear infinite; }
+@keyframes spielkopf { from { transform: translateX(0); opacity: 0; } 8% { opacity: 1; } 85% { opacity: 1; } to { transform: translateX(118px); opacity: 0; } }
+.cb-note { transform-box: fill-box; transform-origin: 50% 100%; animation: noteLeuchtet 4s ease-out infinite; animation-delay: calc(var(--n) * 0.85s + 0.4s); }
+@keyframes noteLeuchtet { 0%, 100% { fill: #3b2a1d; stroke: #3b2a1d; transform: none; } 6% { fill: #d9822b; stroke: #d9822b; transform: translateY(-4px); } 18% { fill: #3b2a1d; stroke: #3b2a1d; transform: none; } }
+
+/* Töne: die Welle läuft wie auf einem Oszilloskop */
+.cb-welle { animation: welleLaeuft 3.2s linear infinite; }
+@keyframes welleLaeuft { from { transform: translateX(0); } to { transform: translateX(-200px); } }
+.cb-toene svg { filter: drop-shadow(0 0 6px rgba(94,234,212,0.55)); }
+
+/* Quiz-Welten: sanfter Zoom auf dem Foto */
+.cover-welt .cb-kachel img { animation: kenBurns 18s ease-in-out infinite alternate; }
+
+@media (prefers-reduced-motion: reduce) {
+  .hub-licht, .cb-dia img, .cb-spielkopf, .cb-note, .cb-welle, .cb-farben i, .cover-welt .cb-kachel img, .cb-sterne { animation: none !important; }
+  .cb-dia { animation: none !important; opacity: 0; } .cb-dia:first-child { opacity: 1; }
+}
