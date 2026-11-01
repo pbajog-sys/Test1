@@ -1,5 +1,9 @@
 // 🎨 Grafiken für „Wer war's?“: Porträts und Icons liegen in img/krimi/ (aus den generierten Bildern
 // zugeschnitten), dazu die gezeichnete Villa fürs Titelbild.
+// Anmeldung der Krimi-Spiele (Reihenfolge = Reihenfolge im Menü)
+const KRIMI_MODI = {};
+function krimiModus(id, def) { KRIMI_MODI[id] = { id, ...def }; }
+
 const KRIMI_BILD = (name) => 'img/krimi/' + name + '.webp';
 // Möbel → Bilddatei
 const KRIMI_MOEBEL_BILD = {

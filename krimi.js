@@ -422,61 +422,23 @@ function erzeugeFall(stufe, rnd) {
   return notfall;
 }
 
-// ---------- Spiel ----------
-let kf = null;   // laufender Fall: { fall, platz[], kreuz:Set, wahl, modus, start, hilfen, timer, tag }
+// ---------- Spiel „Tatort“ (Mörder-Sudoku) ----------
+let kf = null;   // laufender Fall: { fall, platz[], kreuz:Set, wahl, modus, hilfen, tag }
 const kStand = () => loadJson(KRIMI_KEY);
-let krimiStufe = (kStand().stufe in KRIMI_STUFEN) ? kStand().stufe : 'leicht';
-
-function krimiTeil(id) {
-  ['intro', 'spiel', 'ende'].forEach((t) => { $('krimi-' + t).hidden = t !== id; });
-  window.scrollTo(0, 0);
-  $('krimiBuehne').scrollTop = 0;
-}
-
-function krimiIntro() {
-  clearInterval(kf && kf.timer);
-  kf = null;
-  krimiTeil('intro');
-  $('krimiRunde').textContent = '';
-  document.querySelectorAll('#krimiStufen button').forEach((b) => b.classList.toggle('on', b.dataset.stufe === krimiStufe));
-  const st = kStand();
-  const geloest = Object.values(st.geloest || {}).reduce((a, b) => a + b, 0);
-  const best = (st.best || {})[krimiStufe];
-  $('krimiBest').textContent = geloest
-    ? '🔎 ' + geloest + (geloest === 1 ? ' Fall' : ' Fälle') + ' gelöst' + (best ? ' · Bestzeit ' + KRIMI_STUFEN[krimiStufe].name + ': ' + zeitText(best) : '')
-    : 'Noch kein Fall gelöst';
-  $('krimiTagBtn').replaceChildren(krimiIcon('schluessel', 'mini'), (st.tag || {})[heute() + ':' + krimiStufe] ? ' Fall des Tages ✓' : ' Fall des Tages');
-}
 const zeitText = (s) => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 
-function krimiStart(tag) {
-  const seed = tag ? 'krimi:' + heute() + ':' + krimiStufe : 'krimi:' + Date.now() + ':' + Math.random();
-  $('krimiLos').disabled = true;
-  // kurz warten, damit „Fall wird ausgedacht …“ erscheint, bevor gerechnet wird
-  $('krimiLos').textContent = '🕵️ Fall wird ausgedacht …';
-  setTimeout(() => {
-    const fall = erzeugeFall(krimiStufe, zufallsGenerator(seed));
-    $('krimiLos').disabled = false;
-    $('krimiLos').textContent = 'Neuer Fall';
-    if (!fall) return;
-    kf = { fall, platz: new Array(fall.personen.length).fill(-1), kreuz: new Set(), wahl: 0, modus: 'setzen', start: Date.now(), hilfen: 0, tag };
-    kf.timer = setInterval(krimiUhr, 1000);
-    $('krimiTippText').hidden = true;
-    const opfer = fall.personen[fall.personen.length - 1];
-    $('krimiOpfer').replaceChildren(krimiFigur(opfer, 'ko-bild'), Object.assign(document.createElement('span'), { textContent: opfer.voll + ' (' + opfer.beruf + ') wurde tot aufgefunden. Wer war es?' }));
-    const sterne = $('krimiSterne');
-    sterne.replaceChildren();
-    for (let i = 1; i <= 3; i++) sterne.appendChild(krimiIcon(i <= fall.bewertung.sterne ? 'stern' : 'stern-leer', 'ks-stern'));
-    sterne.append(' ' + fall.bewertung.denkschritte + ' Denkschritte');
-    krimiTeil('spiel');
-    krimiZeichnen();
-    krimiUhr();
-  }, 30);
-}
-
-function krimiUhr() {
-  if (!kf) return;
-  $('krimiRunde').textContent = '⏱ ' + zeitText(Math.floor((Date.now() - kf.start) / 1000));
+// Startet einen Fall: aus Seed erzeugt oder (Ermittlungsakte) fertig übergeben
+function mordStart({ stufe, seed, tag, fall }) {
+  fall = fall || erzeugeFall(stufe, zufallsGenerator(seed));
+  if (!fall) return;
+  kf = { fall, platz: new Array(fall.personen.length).fill(-1), kreuz: new Set(), wahl: 0, modus: 'setzen', hilfen: 0, tag };
+  $('krimiTippText').hidden = true;
+  const opfer = fall.personen[fall.personen.length - 1];
+  $('krimiOpfer').replaceChildren(krimiFigur(opfer, 'ko-bild'), Object.assign(document.createElement('span'), { textContent: opfer.voll + ' (' + opfer.beruf + ') wurde tot aufgefunden. Wer war es?' }));
+  krimiSterne($('krimiSterne'), fall.bewertung);
+  krimiTeil('spiel');
+  krimiZeichnen();
+  krimiUhrStart();
 }
 
 function krimiZeichnen() {
@@ -636,52 +598,42 @@ function krimiTippZeigen(text) {
 
 function fallGeloest() {
   if (!kf) return;
-  clearInterval(kf.timer);
-  const { fall } = kf, sek = Math.floor((Date.now() - kf.start) / 1000);
-  const st = kStand();
-  st.geloest = st.geloest || {}; st.best = st.best || {}; st.tag = st.tag || {};
-  st.geloest[fall.stufe] = (st.geloest[fall.stufe] || 0) + 1;
-  const neu = !kf.hilfen && (!st.best[fall.stufe] || sek < st.best[fall.stufe]);
-  if (neu) st.best[fall.stufe] = sek;
-  if (kf.tag) st.tag[heute() + ':' + fall.stufe] = true;
-  saveJson(KRIMI_KEY, st);
-  const m = fall.personen[fall.moerder];
-  $('krimiTaeter').replaceChildren(krimiFigur(m, 'krimi-taeter-fig'));
-  // Grundriss der Lösung: nur der Tatort leuchtet
-  const eb = $('krimiEndBrett');
-  eb.innerHTML = $('krimiBrett').innerHTML;
-  eb.style.setProperty('--n', fall.n);
-  eb.dataset.tatort = fall.raum[fall.loesung[fall.personen.length - 1]];
-  eb.querySelectorAll('.kz').forEach((c) => c.classList.toggle('tatort', c.dataset.raum === eb.dataset.tatort));
-  $('krimiTaeterName').textContent = m.voll;
-  $('krimiTatort').textContent = m.beruf + ' · allein mit ' + fall.personen[fall.personen.length - 1].voll + ' ' + fall.raumListe[fall.raum[fall.loesung[fall.personen.length - 1]]].im;
-  $('krimiZeit').textContent = '⏱ ' + zeitText(sek) + (kf.hilfen ? ' · 💡 ' + kf.hilfen + (kf.hilfen === 1 ? ' Tipp' : ' Tipps') : '') + (neu ? ' · 🏆 Bestzeit!' : '');
-  krimiTeil('ende');
-  setTimeout(() => konfetti(30, ['✨', '⭐', '✨']), 500);
+  const { fall } = kf;
+  const m = fall.personen[fall.moerder], opfer = fall.personen[fall.personen.length - 1];
+  const tatort = fall.raum[fall.loesung[fall.personen.length - 1]];
+  krimiGeschafft({
+    modus: 'mord', stufe: fall.stufe, hilfen: kf.hilfen, tag: kf.tag,
+    figur: krimiFigur(m, 'krimi-taeter-fig'), war: 'Der Mörder war', name: m.voll,
+    text: m.beruf + ' · allein mit ' + opfer.voll + ' ' + fall.raumListe[tatort].im,
+    brett: { html: $('krimiBrett').innerHTML, n: fall.n, tatort },   // Grundriss der Lösung: nur der Tatort leuchtet
+    beweis: { moerder: m, text: m.name + ' war allein mit ' + opfer.name + ' ' + fall.raumListe[tatort].im + '.' },
+  });
+  kf = null;
 }
 
-document.querySelectorAll('#krimiStufen button').forEach((b) => b.addEventListener('click', () => {
-  krimiStufe = b.dataset.stufe;
-  const st = kStand(); st.stufe = krimiStufe; saveJson(KRIMI_KEY, st);
-  krimiIntro();
-}));
-$('krimiLos').addEventListener('click', () => krimiStart(false));
-$('krimiTagBtn').addEventListener('click', () => krimiStart(true));
 $('krimiSetzen').addEventListener('click', () => { kf.modus = 'setzen'; krimiZeichnen(); });
 $('krimiKreuz').addEventListener('click', () => { kf.modus = 'kreuz'; krimiZeichnen(); });
 $('krimiTippBtn').addEventListener('click', krimiTipp);
-$('krimiNochmal').addEventListener('click', () => krimiStart(false));
-$('krimiMenue').addEventListener('click', krimiIntro);
 $('krimiAufgeben').addEventListener('click', () => {
   if (!confirm('Fall aufgeben und die Lösung ansehen?')) return;
   kf.platz = kf.fall.loesung.slice();
   kf.vorbei = true;
   krimiZeichnen();
   $('krimiStatus').textContent = 'Das ist die Lösung. ' + kf.fall.personen[kf.fall.moerder].name + ' war es!';
-  clearInterval(kf.timer);
+  krimiUhrStopp();
 });
-$('krimiZurueck').addEventListener('click', () => { if (kf) clearInterval(kf.timer); kf = null; zeigeHub(); });
-$('hubKrimi').addEventListener('click', () => zoomZu($('hubKrimi'), () => { show('krimi', '🔎 Wer war\'s?'); krimiIntro(); }));
 
-// Icons einsetzen (aus krimi-grafik.js)
-document.querySelectorAll('[data-k-icon]').forEach((el) => el.replaceChildren(krimiIcon(el.dataset.kIcon)));
+// ---------- In der Krimi-Zentrale anmelden ----------
+krimiModus('mord', {
+  titel: 'Tatort', kurz: 'Das Mörder-Sudoku', icon: 'tatwaffe',
+  lead: 'Stell alle Verdächtigen in den Grundriss der Villa und finde heraus, wer es war.',
+  regeln: [
+    '<i class="mini" data-k-icon="alibi"></i> In <b>jeder Reihe</b> und <b>jeder Spalte</b> steht genau <b>eine Person</b>.',
+    '<i class="mini" data-k-icon="pflanze"></i><i class="mini" data-k-icon="uhr"></i><i class="mini" data-k-icon="schrank"></i><i class="mini" data-k-icon="lampe"></i> sind besetzt – auf <i class="mini" data-k-icon="raum-salon"></i><i class="mini" data-k-icon="sofa"></i><i class="mini" data-k-icon="raum-schlafzimmer"></i><i class="mini" data-k-icon="teppich"></i> darf man stehen.',
+    '<i class="mini" data-k-icon="notizen"></i> Alle <b>Hinweise</b> stimmen.',
+    '<i class="mini" data-k-icon="tatwaffe"></i> Wer <b>allein mit dem Opfer</b> in einem Raum war, ist der Mörder.',
+  ],
+  stufen: { leicht: '4 × 4', mittel: '5 × 5', schwer: '6 × 6' },
+  neuText: 'Neuer Fall', tagesName: 'Fall des Tages',
+  start: (o) => mordStart(o),
+});
