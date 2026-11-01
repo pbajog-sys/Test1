@@ -921,12 +921,12 @@ body.theme-hub {
 .kz-teppich { position: absolute; inset: 2%; width: 96%; height: 96%; object-fit: cover; opacity: .95; }
 .kz.besetzt .kz-moebel { opacity: .4; }
 /* Spielfiguren: runde Porträts mit Messingrand */
-.kz-person, .kp-fig, .krimi-taeter-fig, .ko-bild, .kv-bild {
+.kz-person, .kp-fig, .krimi-taeter-fig, .ko-bild, .kv-bild, .vh-fig {
   display: grid; place-items: center; border-radius: 50%; overflow: hidden; color: #f5e6c8; background: #1a120e;
   font-family: "Playfair Display", Georgia, serif; font-weight: 700; font-style: italic;
   box-shadow: 0 0 0 2px #d9a441, 0 0 0 3px #2b1d14, 0 6px 12px rgba(0,0,0,0.5);
 }
-.kz-person img, .kp-fig img, .krimi-taeter-fig img, .ko-bild img, .kv-bild img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.kz-person img, .kp-fig img, .krimi-taeter-fig img, .ko-bild img, .kv-bild img, .vh-fig img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .kz-person { position: absolute; inset: 9%; z-index: 2; font-size: clamp(1rem, 5.6vw, 1.7rem); animation: figurSetzen .35s var(--ease-spring); }
 @keyframes figurSetzen { from { transform: translateY(-14px) scale(1.3); opacity: 0; } to { transform: none; opacity: 1; } }
 .kz-person.opfer, .kp-fig.opfer, .krimi-taeter-fig.opfer, .ko-bild.opfer { box-shadow: 0 0 0 2px #ef4444, 0 0 0 3px #2b1d14, 0 0 14px rgba(239,68,68,0.6); }
@@ -1034,3 +1034,34 @@ body.theme-hub {
 .w-symbol { display: block; width: 100%; height: 100%; filter: drop-shadow(0 0 6px rgba(255,220,140,1)) drop-shadow(0 0 20px rgba(255,170,60,0.8)); }
 .w-gross { display: block; width: 130px; height: 130px; filter: drop-shadow(0 0 30px rgba(255,190,80,0.9)); }
 .krimi-endbrett.wachen-brett .wz { filter: brightness(1.2); }
+
+/* ---------- Das Verhör: Lampe über dem Tisch, Aussagen wie Protokoll-Karten ---------- */
+.vh-raum { position: relative; display: grid; gap: 10px; padding-top: 34px; }
+.vh-lampe { position: absolute; left: 50%; top: -60px; width: 2px; height: 70px; background: #3a2a20; transform: translateX(-50%); pointer-events: none; animation: lampeSchwingt 6s ease-in-out infinite; transform-origin: 50% 0; }
+.vh-lampe i { position: absolute; left: 50%; bottom: -14px; width: 46px; height: 22px; transform: translateX(-50%); border-radius: 46px 46px 6px 6px; background: linear-gradient(#5a4232, #2a1d15); box-shadow: 0 10px 40px 18px rgba(255,214,140,0.22); }
+.vh-lampe i::after { content: ""; position: absolute; left: 50%; top: 20px; width: 360px; height: 420px; transform: translateX(-50%); background: radial-gradient(ellipse 45% 80% at 50% 0%, rgba(255,220,150,0.16), transparent 70%); clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%); }
+@keyframes lampeSchwingt { 0%, 100% { transform: translateX(-50%) rotate(-2deg); } 50% { transform: translateX(-50%) rotate(2deg); } }
+.vh-regel { text-align: center; font-family: "Bebas Neue", Impact, sans-serif; font-size: 1.35rem; letter-spacing: 0.04em; color: #f5e6c8; background: rgba(185,28,28,0.18); border: 1px dashed rgba(239,68,68,0.6); border-radius: 10px; padding: 8px 12px; line-height: 1.15; }
+.vh-karten { display: grid; gap: 12px; }
+.vh-karte {
+  position: relative; display: grid; gap: 8px; padding: 12px 14px; border-radius: 6px; color: #2b1d14;
+  background: #f5e6c8; box-shadow: 0 10px 24px rgba(0,0,0,0.45); background-image: repeating-linear-gradient(transparent 0 27px, rgba(43,29,20,0.07) 27px 28px);
+  animation: kartenAuftritt .5s var(--ease-spring) backwards; transition: opacity .3s, filter .3s;
+}
+.vh-karte:nth-child(odd) { transform: rotate(-0.6deg); } .vh-karte:nth-child(even) { transform: rotate(0.5deg); }
+.vh-karte.raus { opacity: .45; filter: grayscale(1); }
+.vh-karte.raus::after { content: "ENTLASTET"; position: absolute; right: 12px; top: 10px; font-family: "Bebas Neue", Impact, sans-serif; font-size: 1.4rem; letter-spacing: 0.1em; color: #15803d; border: 3px solid #15803d; border-radius: 6px; padding: 0 8px; transform: rotate(8deg); }
+.vh-kopf { display: flex; align-items: center; gap: 10px; }
+.vh-fig { width: 58px; height: 58px; flex: none; }
+.vh-name b { display: block; font-size: 1rem; }
+.vh-name small { color: #6b5a47; font-size: 0.8rem; }
+.vh-aussage { margin: 0; font-family: "Playfair Display", Georgia, serif; font-style: italic; font-size: 1.12rem; line-height: 1.35; padding: 8px 12px; background: #fffaf0; border-radius: 4px 14px 14px 14px; box-shadow: inset 0 0 0 1px rgba(43,29,20,0.12); position: relative; }
+.vh-karte.ehrlich .vh-aussage { box-shadow: inset 0 0 0 2px #15803d; }
+.vh-karte.luegt .vh-aussage { box-shadow: inset 0 0 0 2px #b91c1c; }
+.vh-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.vh-knoepfe button { font: inherit; font-weight: 600; border-radius: 10px; padding: 8px; cursor: pointer; border: 1px solid rgba(43,29,20,0.3); background: rgba(43,29,20,0.06); color: #2b1d14; }
+.vh-karte.ehrlich .vh-notiz { background: rgba(21,128,61,0.15); color: #15803d; border-color: #15803d; }
+.vh-karte.luegt .vh-notiz { background: rgba(185,28,28,0.12); color: #b91c1c; border-color: #b91c1c; }
+.vh-anklage { background: #b91c1c !important; color: #fff !important; border-color: #7f1d1d !important; }
+.vh-anklage:disabled { opacity: .35; }
+.vh-modus { grid-template-columns: 1fr; }

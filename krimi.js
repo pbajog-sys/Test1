@@ -11,16 +11,16 @@ const KRIMI_STUFEN = {
 };
 // Die Verdächtigen – in jedem Fall wird einer von ihnen zufällig zum Opfer
 const VERDAECHTIGE = [
-  { id: 'elena', name: 'Elena', voll: 'Dr. Elena Weiss', beruf: 'Biologin' },
-  { id: 'markus', name: 'Markus', voll: 'Markus Steiner', beruf: 'Haustechniker' },
-  { id: 'sophie', name: 'Sophie', voll: 'Sophie Graf', beruf: 'Künstlerin' },
-  { id: 'jonas', name: 'Jonas', voll: 'Jonas Keller', beruf: 'IT-Spezialist' },
-  { id: 'victoria', name: 'Victoria', voll: 'Victoria Lang', beruf: 'Geschäftsführerin' },
-  { id: 'felix', name: 'Felix', voll: 'Dr. Felix Brandt', beruf: 'Chirurg' },
-  { id: 'lara', name: 'Lara', voll: 'Lara Neumann', beruf: 'Köchin' },
-  { id: 'thomas', name: 'Thomas', voll: 'Thomas Berger', beruf: 'Historiker' },
-  { id: 'mia', name: 'Mia', voll: 'Mia Vogt', beruf: 'Journalistin' },
-  { id: 'leon', name: 'Leon', voll: 'Leon Hartmann', beruf: 'Anwalt' },
+  { id: 'elena', alter: 42, frau: true, name: 'Elena', voll: 'Dr. Elena Weiss', beruf: 'Biologin' },
+  { id: 'markus', alter: 48, frau: false, name: 'Markus', voll: 'Markus Steiner', beruf: 'Haustechniker' },
+  { id: 'sophie', alter: 34, frau: true, name: 'Sophie', voll: 'Sophie Graf', beruf: 'Künstlerin' },
+  { id: 'jonas', alter: 29, frau: false, name: 'Jonas', voll: 'Jonas Keller', beruf: 'IT-Spezialist' },
+  { id: 'victoria', alter: 50, frau: true, name: 'Victoria', voll: 'Victoria Lang', beruf: 'Geschäftsführerin' },
+  { id: 'felix', alter: 46, frau: false, name: 'Felix', voll: 'Dr. Felix Brandt', beruf: 'Chirurg' },
+  { id: 'lara', alter: 27, frau: true, name: 'Lara', voll: 'Lara Neumann', beruf: 'Köchin' },
+  { id: 'thomas', alter: 55, frau: false, name: 'Thomas', voll: 'Thomas Berger', beruf: 'Historiker' },
+  { id: 'mia', alter: 31, frau: true, name: 'Mia', voll: 'Mia Vogt', beruf: 'Journalistin' },
+  { id: 'leon', alter: 37, frau: false, name: 'Leon', voll: 'Leon Hartmann', beruf: 'Anwalt' },
 ];
 // Dunkle Böden (Film noir) – die Möbel-Icons verschmelzen weich damit
 const RAEUME = [

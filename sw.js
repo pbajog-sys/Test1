@@ -21,6 +21,7 @@ const SHELL = [
   'krimi-grafik.js',
   'krimi.js',
   'krimi-wachen.js',
+  'krimi-verhoer.js',
   'krimi-zentrale.js',
   'profile.js',
   'datenschutz.html',

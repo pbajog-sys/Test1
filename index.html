@@ -845,6 +845,19 @@
         <p class="krimi-regel-kurz">Je Reihe, Spalte und Raum eine Wache · nie berühren · Tippen: ✕ → Wache → leer</p>
       </div>
 
+      <div class="krimi-teil" id="krimi-verhoer" hidden>
+        <div class="vh-raum">
+          <div class="vh-lampe" aria-hidden="true"><i></i></div>
+          <div class="krimi-opfer" id="verhoerOpfer"></div>
+          <div class="vh-regel" id="verhoerRegel"></div>
+        </div>
+        <div class="vh-karten" id="verhoerKarten"></div>
+        <div class="krimi-tipp" id="verhoerTipp" hidden></div>
+        <div class="krimi-modus vh-modus">
+          <button type="button" id="verhoerTippBtn"><i class="mini" data-k-icon="tipp"></i> Tipp: jemanden ausschließen</button>
+        </div>
+      </div>
+
       <div class="krimi-teil krimi-mitte" id="krimi-ende" hidden>
         <div class="krimi-orden"><i data-k-icon="geloest"></i><span class="krimi-stempel" id="krimiStempelText">Fall gelöst</span></div>
         <div class="krimi-taeter" id="krimiTaeter"></div>
@@ -978,6 +991,7 @@
 <script src="krimi-grafik.js?v=29"></script>
 <script src="krimi.js?v=29"></script>
 <script src="krimi-wachen.js?v=29"></script>
+<script src="krimi-verhoer.js?v=29"></script>
 <script src="krimi-zentrale.js?v=29"></script>
 <script src="profile.js?v=29"></script>
 </body>
