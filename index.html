@@ -7,7 +7,7 @@
 <meta name="description" content="Lerne alle Walarten kennen und mach das Seepferdchen der Walkunde.">
 <meta name="theme-color" content="#0b2a4a">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=23">
+<link rel="stylesheet" href="fonts/fonts.css?v=24">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -422,7 +422,7 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=23">
+<link rel="stylesheet" href="stil.css?v=24">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -443,26 +443,39 @@
       <h2 class="hub-h"><span>🏆</span> Bestenliste</h2>
       <ul class="familie-liste" id="familieListe"></ul>
     </div>
-    <h2 class="hub-h"><span>🧠</span> Quizzes</h2>
-    <div class="hub-quiz" id="hubQuiz"></div>
+    <button class="hub-quizzes" id="hubQuizzes" type="button">
+      <span class="hq-deko" aria-hidden="true"></span>
+      <span class="hq-stapel" id="hubQuizStapel" aria-hidden="true"></span>
+      <span class="hq-text"><span class="hq-titel">Quizzes</span><span class="hq-sub">Wale · Haie · Porsche · Dackel</span><span class="hq-stand" id="hubQuizStand"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
     <h2 class="hub-h"><span>🎮</span> Games</h2>
     <button class="hub-game" id="hubFarben" type="button">
-      <span class="farb-logo" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></span>
+      <span class="hg-av hg-av-farben" aria-hidden="true"><span class="hg-in"><span class="farb-logo"><span></span><span></span><span></span><span></span><span></span></span></span></span>
       <span class="hg-text"><span class="hg-titel">Farb-Gedächtnis</span><span class="hg-sub">Farbe merken. Nachmischen. Punkte holen.</span><span class="hg-best" id="hubFarbBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-cello" id="hubCello" type="button">
-      <span class="hc-cello-icon" aria-hidden="true">🎻</span>
+      <span class="hg-av hg-av-cello" aria-hidden="true"><span class="hg-in"><span class="hc-cello-icon">🎻</span></span></span>
       <span class="hg-text"><span class="hg-titel">Cello-Noten</span><span class="hg-sub">Lagen, Finger und Noten fürs Cello.</span><span class="hg-best" id="hubCelloBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-toene" id="hubToene" type="button">
-      <span class="hc-toene-icon" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+      <span class="hg-av hg-av-toene" aria-hidden="true"><span class="hg-in"><span class="hc-toene-icon"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
       <span class="hg-text"><span class="hg-titel">Ton-Gedächtnis</span><span class="hg-sub">Ton hören. Nachbauen. Wie gut ist dein Gehör?</span><span class="hg-best" id="hubToeneBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <div class="hub-mehr">Bald mehr Games ✨</div>
     <a class="hub-ds" href="datenschutz.html">Datenschutz</a>
+  </section>
+
+  <section class="screen" id="screen-quizze">
+    <div class="hub-kopf">
+      <div class="hub-zeile"><button class="qz-zurueck" id="quizzeZurueck" type="button">‹ Spiele</button></div>
+      <h1 class="hub-titel">Quizzes</h1>
+      <div class="hub-gruss">Welche Welt heute? 🌍</div>
+    </div>
+    <div class="hub-quiz" id="hubQuiz"></div>
   </section>
 
   <section class="screen" id="screen-start">
@@ -849,19 +862,19 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=23"></script>
-<script src="haie.js?v=23"></script>
-<script src="porsche.js?v=23"></script>
-<script src="dackel.js?v=23"></script>
-<script src="groesse.js?v=23"></script>
-<script src="gretchen.js?v=23"></script>
-<script src="effekte.js?v=23"></script>
-<script src="app.js?v=23"></script>
-<script src="melden.js?v=23"></script>
-<script src="hub.js?v=23"></script>
-<script src="farben.js?v=23"></script>
-<script src="cello.js?v=23"></script>
-<script src="toene.js?v=23"></script>
-<script src="profile.js?v=23"></script>
+<script src="wale.js?v=24"></script>
+<script src="haie.js?v=24"></script>
+<script src="porsche.js?v=24"></script>
+<script src="dackel.js?v=24"></script>
+<script src="groesse.js?v=24"></script>
+<script src="gretchen.js?v=24"></script>
+<script src="effekte.js?v=24"></script>
+<script src="app.js?v=24"></script>
+<script src="melden.js?v=24"></script>
+<script src="hub.js?v=24"></script>
+<script src="farben.js?v=24"></script>
+<script src="cello.js?v=24"></script>
+<script src="toene.js?v=24"></script>
+<script src="profile.js?v=24"></script>
 </body>
 </html>

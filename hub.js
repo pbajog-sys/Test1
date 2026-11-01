@@ -1,4 +1,25 @@
 // Dashboard „Spiele“: Einstieg mit allen Quizzes und dem Farb-Gedächtnis als eigenem Game.
+// Gesicht jeder Welt: ein echtes Foto aus dem Quiz (wie Gretchen beim Dackel-Quiz)
+const HUB_GESICHT = { wale: 'Buckelwal', haie: 'Weißer Hai', beide: 'Schwertwal', porsche: '911 (993)' };
+
+// Rundes Foto mit Story-Ring. Bis das Foto da ist (oder offline), steht das Emoji drin.
+function weltAvatar(w) {
+  const ring = document.createElement('span');
+  ring.className = 'w-ring w-ring-' + w;
+  const innen = document.createElement('span');
+  innen.className = 'w-av';
+  innen.textContent = WELTEN[w].emoji;
+  ring.appendChild(innen);
+  const img = document.createElement('img');
+  img.alt = '';
+  img.decoding = 'async';
+  img.onload = () => innen.replaceChildren(img);
+  if (w === 'dackel') { img.src = GRETCHEN.avatar; return ring; }
+  const art = ALLE.find((a) => a.name === HUB_GESICHT[w]);
+  if (art) loadPhotos(art).then((p) => { if (p && p[0]) img.src = p[0].src; }).catch(() => {});
+  return ring;
+}
+
 const HUB_KARTEN = [
   { welt: 'wale', titel: 'Wal-Quiz', text: 'Tiefsee-Riesen erkennen' },
   { welt: 'haie', titel: 'Hai-Quiz', text: 'Vom Weißen Hai bis zum Koboldhai' },
@@ -30,12 +51,7 @@ function renderHub() {
     b.style.animationDelay = (0.08 + i * 0.07) + 's';
     b.innerHTML = '<span class="hc-deko"></span><span class="hc-emoji"></span><span class="hc-titel"></span><span class="hc-text"></span>'
       + '<span class="hc-fort"><span class="hc-bar"><i></i></span><small></small></span><span class="hc-badges"></span>';
-    b.querySelector('.hc-emoji').textContent = WELTEN[k.welt].emoji;
-    if (k.welt === 'dackel') {
-      const img = document.createElement('img');
-      img.src = GRETCHEN.avatar; img.alt = 'Gretchen';
-      b.querySelector('.hc-emoji').replaceChildren(img);
-    }
+    b.querySelector('.hc-emoji').appendChild(weltAvatar(k.welt));
     b.querySelector('.hc-titel').textContent = k.titel;
     b.querySelector('.hc-text').textContent = k.text;
     b.querySelector('.hc-bar i').style.width = (n / arten.length * 100) + '%';
@@ -51,6 +67,16 @@ function renderHub() {
     }));
     box.appendChild(b);
   });
+  // Großer Quiz-Knopf im Dashboard: Foto-Stapel aller Welten und Gesamtstand
+  const stapel = $('hubQuizStapel');
+  if (!stapel.childElementCount) ['wale', 'haie', 'porsche', 'dackel'].forEach((w, i) => {
+    const a = weltAvatar(w);
+    a.style.setProperty('--i', i);
+    stapel.appendChild(a);
+  });
+  const abz = Object.values(badges).filter(Boolean).length;
+  const gelernt = countSicher(ALLE.filter((a) => !istFrage(a)));
+  $('hubQuizStand').textContent = abz || gelernt ? '🏅 ' + abz + ' Abzeichen · 📚 ' + gelernt + ' gelernt' : '5 Welten · Abzeichen 🐴 bis 🥇';
   $('hubFarbBest').textContent = farbBest ? 'Rekord ' + fmt(farbBest) + ' / 50' : 'Noch kein Rekord';
   const cello = loadJson('walquiz.cello.v1');
   // cello.js lädt erst nach dem Dashboard – darum die Abzeichen-Symbole hier direkt
@@ -60,6 +86,14 @@ function renderHub() {
   $('hubToeneBest').textContent = tonBest ? 'Rekord ' + fmt(tonBest) + ' / 50' : 'Noch kein Rekord';
   if (typeof profilHub === 'function') profilHub();   // profile.js lädt später
 }
+
+function zeigeQuizze() {
+  setHubTheme();
+  renderHub();
+  show('quizze');
+}
+$('hubQuizzes').addEventListener('click', () => zoomZu($('hubQuizzes'), zeigeQuizze));
+$('quizzeZurueck').addEventListener('click', zeigeHub);
 
 function zeigeHub() {
   setHubTheme();

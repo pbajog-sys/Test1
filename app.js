@@ -357,20 +357,20 @@ let pendingChallenge = (() => {
 })();
 
 // ---------- Navigation ----------
-const screens = ['hub', 'start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen', 'farben', 'cello', 'toene'];
+const screens = ['hub', 'quizze', 'start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen', 'farben', 'cello', 'toene'];
 let aktuellerScreen = 'hub';
 function show(name, title) {
   stopSound();
   screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
   aktuellerScreen = name;
   $('homeBtn').hidden = name === 'hub';
-  document.querySelector('header').hidden = ['hub', 'farben', 'cello', 'toene'].includes(name);   // die Spiele haben eine eigene Kopfzeile
+  document.querySelector('header').hidden = ['hub', 'quizze', 'farben', 'cello', 'toene'].includes(name);   // die Spiele haben eine eigene Kopfzeile
   $('headerTitle').textContent = title || WELTEN[welt].title;
   window.scrollTo(0, 0);
 }
-// ←: von der Quiz-Startseite zurück zum Dashboard, sonst zur Startseite der Welt
+// ←: von der Quiz-Startseite zurück zur Quiz-Auswahl, sonst zur Startseite der Welt
 $('homeBtn').addEventListener('click', () => {
-  if (aktuellerScreen === 'start') zeigeHub();
+  if (aktuellerScreen === 'start') zeigeQuizze();
   else { renderStart(); show('start'); }
 });
 document.querySelectorAll('[data-go]').forEach((b) => b.addEventListener('click', () => {

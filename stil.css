@@ -470,7 +470,25 @@ body.theme-hub {
 .hub-card.hc-beide { grid-column: span 2; min-height: 150px; }
 .hc-emoji { font-size: 2.6rem; line-height: 1; margin-bottom: auto; filter: drop-shadow(0 6px 14px rgba(0,0,0,0.35)); transition: transform .3s var(--ease-spring); }
 .hub-card:active .hc-emoji { transform: scale(1.2) rotate(-8deg); }
-.hc-emoji img { width: 58px; height: 58px; border-radius: 50%; object-fit: cover; border: 3px solid #fff; display: block; }
+/* Runde Foto-Avatare mit drehendem Story-Ring (wie Gretchen) */
+.w-ring, .hg-av { position: relative; display: inline-grid; border-radius: 50%; padding: 3px; flex: none; }
+.w-ring::before, .hg-av::before {
+  content: ""; position: absolute; inset: 0; border-radius: 50%; background: var(--ring);
+  animation: ringDrehen 5s linear infinite;
+}
+@keyframes ringDrehen { to { transform: rotate(1turn); } }
+.w-av {
+  position: relative; width: 62px; height: 62px; border-radius: 50%; overflow: hidden; display: grid; place-items: center;
+  font-size: 2rem; background: #12121c; border: 3px solid #0b0b14;
+}
+.w-av img { width: 100%; height: 100%; object-fit: cover; display: block; animation: einblenden .5s ease-out; }
+.w-ring-wale { --ring: conic-gradient(#38e1ff, #0a6aa8, #7df9ff, #38e1ff); }
+.w-ring-haie { --ring: conic-gradient(#ff3b3b, #ffffff, #8899aa, #ff3b3b); }
+.w-ring-beide { --ring: conic-gradient(#ffe28c, #ff9a76, #e0708f, #8a5cc4, #38e1ff, #ffe28c); }
+.w-ring-porsche { --ring: conic-gradient(#e10600, #ffcc00, #e10600, #222, #e10600); }
+.w-ring-dackel { --ring: conic-gradient(#feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5, #feda75); }
+.hc-dackel .w-av { border-color: #fff; }
+.hc-beide .w-av { border-color: #8a5cc4; }
 .hc-titel { font-size: 1.35rem; font-weight: 800; letter-spacing: -0.02em; line-height: 1.1; margin-top: 10px; }
 .hc-text { font-size: 0.82rem; opacity: 0.85; line-height: 1.3; }
 .hc-fort { display: grid; gap: 3px; margin-top: 8px; }
@@ -493,7 +511,6 @@ body.theme-hub {
 .hc-dackel { background: linear-gradient(160deg, #fbd3df, #f2a7bf); color: #5a3428; }
 .hc-dackel .hc-titel { font-family: "Caveat", cursive; font-weight: 600; font-size: 2rem; }
 .hc-dackel .hc-bar { background: rgba(90,52,40,0.18); } .hc-dackel .hc-bar i { background: #c2577a; }
-.hc-dackel .hc-emoji img { border-color: #fff; box-shadow: 0 0 0 3px #ee2a7b; }
 
 .hub-game {
   position: relative; width: 100%; display: flex; align-items: center; gap: 14px; border: 0; cursor: pointer; text-align: left;
@@ -517,6 +534,49 @@ body.theme-hub {
 .hg-best { font-size: 0.78rem; color: #8b8bab; }
 .hg-pfeil { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; background: #fff; color: #111; font-size: 0.9rem; flex: none; animation: pochen 1.8s ease-in-out infinite; }
 @keyframes pochen { 50% { transform: scale(1.12); box-shadow: 0 0 0 8px rgba(255,255,255,0.08); } }
+/* Großer Quiz-Knopf im Dashboard */
+.hub-quizzes {
+  position: relative; width: 100%; overflow: hidden; border: 0; cursor: pointer; text-align: left; font: inherit; color: #fff;
+  display: grid; grid-template-columns: 1fr auto; grid-template-areas: "stapel stapel" "text pfeil"; align-items: end; gap: 14px;
+  min-height: 210px; padding: 20px; border-radius: 30px; margin-top: 18px;
+  background: linear-gradient(125deg, #0a6aa8, #03305a 30%, #5a1830 60%, #e10600 85%, #ffb347);
+  background-size: 220% 220%; animation: kartenAuftritt .6s var(--ease-spring) .1s backwards, quizFluss 12s ease-in-out infinite alternate;
+  box-shadow: 0 20px 60px rgba(10,106,168,0.35), inset 0 0 0 1px rgba(255,255,255,0.12);
+  transition: transform .25s var(--ease-spring);
+}
+@keyframes quizFluss { from { background-position: 0% 50%; } to { background-position: 100% 50%; } }
+.hub-quizzes:active { transform: scale(.97); }
+.hq-deko { position: absolute; inset: 0; pointer-events: none; background: radial-gradient(circle at 85% 15%, rgba(255,255,255,0.28), transparent 35%), radial-gradient(circle at 10% 110%, rgba(56,225,255,0.35), transparent 45%); }
+.hq-stapel { grid-area: stapel; display: flex; padding-left: 4px; }
+.hq-stapel .w-ring { margin-left: -16px; animation: stapelSchweben 3.2s ease-in-out infinite; animation-delay: calc(var(--i) * -0.8s); }
+.hq-stapel .w-ring:first-child { margin-left: 0; }
+.hq-stapel .w-av { width: 70px; height: 70px; border-color: rgba(10,20,40,0.9); }
+@keyframes stapelSchweben { 50% { transform: translateY(-7px) rotate(-3deg); } }
+.hq-text { grid-area: text; position: relative; display: grid; gap: 3px; }
+.hq-titel { font-size: 2.6rem; font-weight: 800; line-height: 0.95; letter-spacing: -0.04em; text-shadow: 0 4px 20px rgba(0,0,0,0.35); }
+.hq-sub { font-size: 0.95rem; font-weight: 600; opacity: 0.92; }
+.hq-stand { font-size: 0.8rem; opacity: 0.8; }
+.hub-quizzes .hg-pfeil { grid-area: pfeil; position: relative; }
+
+/* Quiz-Auswahl */
+.qz-zurueck { border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--text); font: inherit; font-weight: 600; padding: 7px 14px; cursor: pointer; }
+#screen-quizze .hub-gruss { margin-bottom: 14px; }
+
+/* Games: Symbol im runden Avatar */
+.hg-av > .hg-in { position: relative; width: 66px; height: 66px; border-radius: 50%; background: #111119; border: 3px solid #111119; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+.hg-av-farben { --ring: conic-gradient(#ff5e62, #ffb347, #4ade80, #38bdf8, #a78bfa, #ff5e62); }
+.hg-av-cello { --ring: conic-gradient(#c8894f, #f3d9a4, #8a4b25, #c8894f); }
+.hg-av-cello > .hg-in { background: #2a170d; border-color: #1e120c; }
+.hg-av-toene { --ring: conic-gradient(#67e8f9, #bef264, #67e8f9); }
+.hub-game .hg-av .farb-logo { height: 40px; gap: 3px; align-items: flex-end; }
+.hub-game .hg-av .farb-logo span { width: 7px; border-radius: 4px; }
+.hub-game .hg-av .farb-logo span:nth-child(1) { height: 22px; } .hub-game .hg-av .farb-logo span:nth-child(2) { height: 34px; }
+.hub-game .hg-av .farb-logo span:nth-child(3) { height: 28px; } .hub-game .hg-av .farb-logo span:nth-child(4) { height: 38px; }
+.hub-game .hg-av .farb-logo span:nth-child(5) { height: 25px; }
+.hg-av .hc-cello-icon { width: auto; font-size: 2.2rem; }
+.hg-av .hc-toene-icon { width: auto; height: 40px; gap: 3px; }
+.hg-av .hc-toene-icon i { width: 4px; height: 30px; }
+
 .hub-mehr { text-align: center; color: var(--muted); font-size: 0.85rem; margin: 22px 0 8px; opacity: .7; }
 
 /* Zoom-Übergang von der Karte zur Welt */
