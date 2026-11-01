@@ -138,6 +138,102 @@ function karteStart(opts = {}) {
   ktRundeZeigen();
 }
 
+// Karte wie in einer Karten-App: zwei Finger zoomen, ein Finger verschiebt, kurzes Tippen setzt die Nadel.
+// Am Computer: Mausrad zoomt, Ziehen verschiebt. Dazu Knöpfe + / − / ganze Karte.
+const KT_MAX_ZOOM = { deutschland: 5, europa: 10, welt: 18 };
+function ktKarteBedienen(box, karte, onTipp) {
+  const k = KARTEN_DATEN[karte], svg = box.querySelector('svg');
+  svg.setAttribute('preserveAspectRatio', 'none');   // Seitenverhältnis halten wir selbst passend zum Kasten
+  const v = { x: 0, y: 0, w: Infinity, h: k.h };   // Start: ganze Karte einpassen
+  const masse = () => { const r = svg.getBoundingClientRect(); return [Math.max(1, r.width), Math.max(1, r.height), r]; };
+  let ganz = true;
+  const nadelGroesse = () => {
+    const m = v.w / masse()[0];
+    svg.querySelectorAll('.kt-marken g').forEach((g) => g.setAttribute('transform', g.getAttribute('transform').replace(/scale\([^)]*\)/, 'scale(' + m + ')')));
+  };
+  const zeichnen = () => {
+    const [cw, ch] = masse(), seiten = ch / cw;
+    const maxW = Math.max(k.b, k.h / seiten), minW = k.b / KT_MAX_ZOOM[karte];
+    v.w = Math.max(minW, Math.min(maxW, v.w));
+    v.h = v.w * seiten;
+    // nicht aus der Karte hinaus schieben; ist der Ausschnitt größer als die Karte, wird sie mittig gezeigt
+    v.x = v.w >= k.b ? (k.b - v.w) / 2 : Math.max(0, Math.min(k.b - v.w, v.x));
+    v.y = v.h >= k.h ? (k.h - v.h) / 2 : Math.max(0, Math.min(k.h - v.h, v.y));
+    ganz = v.w >= maxW - 0.5;
+    svg.setAttribute('viewBox', [v.x, v.y, v.w, v.h].map((z) => z.toFixed(2)).join(' '));
+    nadelGroesse();
+  };
+  const kartenPunkt = (px, py) => { const [cw, ch, r] = masse(); return [v.x + (px - r.left) / cw * v.w, v.y + (py - r.top) / ch * v.h]; };
+  const zoomUm = (px, py, f) => {
+    const [cw, ch, r] = masse(), rx = (px - r.left) / cw, ry = (py - r.top) / ch;
+    const [mx, my] = kartenPunkt(px, py);
+    v.w /= f; v.h = v.w * ch / cw;
+    v.x = mx - rx * v.w; v.y = my - ry * v.h;
+    zeichnen();
+  };
+  const zoomMitte = (f) => { const [, , r] = masse(); zoomUm(r.left + r.width / 2, r.top + r.height / 2, f); };
+  // Zeiger: 1 Finger = verschieben oder tippen, 2 Finger = zoomen
+  const zeiger = new Map();
+  let start = null, bewegt = false, letzt = null, letzterTipp = null;
+  const zwei = () => { const [a, b] = [...zeiger.values()]; return { d: Math.hypot(a[0] - b[0], a[1] - b[1]), m: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] }; };
+  svg.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    try { svg.setPointerCapture(e.pointerId); } catch (x) { /* egal */ }
+    zeiger.set(e.pointerId, [e.clientX, e.clientY]);
+    if (zeiger.size === 1) { start = { px: e.clientX, py: e.clientY, x: v.x, y: v.y }; bewegt = false; }
+    else if (zeiger.size === 2) { letzt = zwei(); bewegt = true; }
+  });
+  svg.addEventListener('pointermove', (e) => {
+    if (!zeiger.has(e.pointerId)) return;
+    zeiger.set(e.pointerId, [e.clientX, e.clientY]);
+    if (zeiger.size >= 2) {
+      const jetzt = zwei(), [cw, ch] = masse();
+      zoomUm(jetzt.m[0], jetzt.m[1], jetzt.d / (letzt.d || 1));
+      v.x -= (jetzt.m[0] - letzt.m[0]) / cw * v.w; v.y -= (jetzt.m[1] - letzt.m[1]) / ch * v.h;
+      zeichnen();
+      letzt = jetzt;
+    } else if (start) {
+      const dx = e.clientX - start.px, dy = e.clientY - start.py;
+      if (!bewegt && Math.hypot(dx, dy) > 8) bewegt = true;
+      if (bewegt) { const [cw, ch] = masse(); v.x = start.x - dx / cw * v.w; v.y = start.y - dy / ch * v.h; zeichnen(); }
+    }
+  });
+  const los = (e) => {
+    if (!zeiger.has(e.pointerId)) return;
+    zeiger.delete(e.pointerId);
+    if (zeiger.size === 0) {
+      if (!bewegt && start && e.type === 'pointerup') {
+        onTipp(kartenPunkt(e.clientX, e.clientY));
+        // Doppeltippen (wie in Karten-Apps) zoomt an dieser Stelle hinein
+        const jetzt = performance.now();
+        if (letzterTipp && jetzt - letzterTipp.t < 320 && Math.hypot(e.clientX - letzterTipp.x, e.clientY - letzterTipp.y) < 30) { zoomUm(e.clientX, e.clientY, 2.2); letzterTipp = null; }
+        else letzterTipp = { t: jetzt, x: e.clientX, y: e.clientY };
+      }
+      start = null;
+    } else if (zeiger.size === 1) {   // von zwei auf einen Finger: weiter verschieben, aber nicht als Tippen werten
+      const [p] = [...zeiger.values()];
+      start = { px: p[0], py: p[1], x: v.x, y: v.y };
+      bewegt = true;
+    }
+  };
+  svg.addEventListener('pointerup', los);
+  svg.addEventListener('pointercancel', los);
+  svg.addEventListener('wheel', (e) => { e.preventDefault(); zoomUm(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.0022)); }, { passive: false });
+  svg.addEventListener('contextmenu', (e) => e.preventDefault());
+  const steuer = document.createElement('div');
+  steuer.className = 'kt-steuer';
+  steuer.innerHTML = '<button type="button" aria-label="Hineinzoomen">+</button><button type="button" aria-label="Herauszoomen">−</button><button type="button" aria-label="Ganze Karte">⤢</button>';
+  const [plus, minus, alles] = steuer.querySelectorAll('button');
+  plus.onclick = () => zoomMitte(1.8);
+  minus.onclick = () => zoomMitte(1 / 1.8);
+  alles.onclick = () => { v.w = Infinity; zeichnen(); };
+  box.appendChild(steuer);
+  const neu = () => zeichnen();
+  window.addEventListener('resize', neu);
+  zeichnen();
+  return { zeichnen, nadelGroesse, ende: () => window.removeEventListener('resize', neu), ganz: () => ganz };
+}
+
 function ktRundeZeigen() {
   const rd = kt.runden[kt.i];
   $('ktRunde').textContent = KT_MODI[rd.karte].emoji + ' ' + KT_MODI[rd.karte].name + ' · ' + (kt.i + 1) + ' / ' + KT_RUNDEN;
@@ -145,24 +241,19 @@ function ktRundeZeigen() {
   $('ktFrage').querySelector('b').textContent = rd.name + '?';
   zeigeKtTeil('spiel');
   const box = $('ktKarte');
-  box.className = 'kt-karte kt-' + rd.karte;
+  box.className = 'kt-karte spiel kt-' + rd.karte;
   box.innerHTML = ktSvg(rd.karte, kt.stufe === 'profi');
-  box.scrollLeft = 0;
-  $('ktZoom').hidden = rd.karte === 'deutschland';
-  $('ktZoom').textContent = '🔍 Vergrößern';
-  box.classList.remove('zoom');
   const svg = box.querySelector('svg'), marken = svg.querySelector('.kt-marken');
   $('ktFertig').disabled = true;
   kt.tipp = null;
-  const setzen = (e) => {
-    const [x, y] = ktSvgPunkt(svg, e);
+  if (kt.bedienung) kt.bedienung.ende();
+  kt.bedienung = ktKarteBedienen(box, rd.karte, ([x, y]) => {
     kt.tipp = [x, y];
-    const m = ktMassstab(svg);
-    marken.innerHTML = '<g class="kt-nadel" transform="translate(' + x + ' ' + y + ') scale(' + m + ')"><circle r="7"/><circle class="kern" r="2.5"/></g>';
+    marken.innerHTML = '<g class="kt-nadel" transform="translate(' + x + ' ' + y + ') scale(1)"><circle r="7"/><circle class="kern" r="2.5"/></g>';
+    kt.bedienung.nadelGroesse();
     $('ktFertig').disabled = false;
-  };
-  // Tippen setzt die Nadel; beim Vergrößern bleibt Wischen zum Verschieben erhalten (click feuert nicht nach dem Scrollen)
-  svg.addEventListener('click', setzen);
+    if (navigator.vibrate) navigator.vibrate(8);
+  });
 }
 
 function ktAuswerten() {
@@ -272,15 +363,7 @@ $('ktLos').addEventListener('click', () => {
   else karteStart();
 });
 $('ktTagBtn').addEventListener('click', () => karteStart({ taeglich: true }));
-$('ktZoom').addEventListener('click', () => {
-  const box = $('ktKarte'), an = box.classList.toggle('zoom');
-  $('ktZoom').textContent = an ? '🔍 Ganze Karte' : '🔍 Vergrößern';
-  // Nadel nach dem Zoomen in passender Größe neu zeichnen
-  const svg = box.querySelector('svg'), g = svg.querySelector('.kt-nadel');
-  if (g) g.setAttribute('transform', g.getAttribute('transform').replace(/scale\([^)]*\)/, 'scale(' + ktMassstab(svg) + ')'));
-  if (an && kt.tipp) { const r = box.getBoundingClientRect(); box.scrollLeft = kt.tipp[0] / ktMassstab(svg) - r.width / 2; }
-});
-$('ktFertig').addEventListener('click', () => { if (kt.tipp) ktAuswerten(); });
+$('ktFertig').addEventListener('click', () => { if (kt.tipp) { if (kt.bedienung) kt.bedienung.ende(); ktAuswerten(); } });
 $('ktWeiter').addEventListener('click', () => { kt.i++; if (kt.i >= KT_RUNDEN) karteEnde(); else ktRundeZeigen(); });
 $('ktNochmalSpiel').addEventListener('click', () => karteStart({ modus: kt.modus === 'mix' ? ktModus : kt.modus, stufe: kt.stufe }));
 $('ktTeilen').addEventListener('click', karteTeilen);

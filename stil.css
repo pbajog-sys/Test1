@@ -1732,8 +1732,16 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .kt-karte.kt-deutschland { max-width: min(420px, calc((100dvh - 290px) * 0.78)); margin: 0 auto; width: 100%; }
 .kt-karte.kt-deutschland.ergebnis { max-width: min(340px, calc((100dvh - 330px) * 0.78)); }
 .kt-karte .kt-svg { display: block; width: 100%; height: auto; cursor: crosshair; }
-.kt-karte.zoom .kt-svg { width: 280%; }
-.kt-karte.kt-europa.zoom .kt-svg { width: 190%; }
+/* Spielkarte: fester Kasten, Inhalt per viewBox gezoomt und verschoben */
+.kt-karte.spiel { overflow: hidden; height: min(62dvh, 560px); background: #2b6f86; touch-action: none; -webkit-user-select: none; user-select: none; }
+.kt-karte.spiel.kt-deutschland { max-width: none; height: min(60dvh, 560px); }
+.kt-karte.spiel.kt-welt { height: min(58dvh, 92vw, 560px); }
+.kt-karte.spiel .kt-svg { width: 100%; height: 100%; touch-action: none; cursor: grab; }
+.kt-karte.spiel .kt-svg:active { cursor: grabbing; }
+.kt-steuer { position: absolute; right: 10px; top: 10px; display: grid; gap: 6px; }
+.kt-steuer button { width: 40px; height: 40px; opacity: .9; border: 0; border-radius: 12px; background: rgba(8,32,42,.82); color: #f3e9d2; font: inherit; font-size: 1.4rem; font-weight: 700; cursor: pointer; box-shadow: 0 2px 8px rgba(0,0,0,.35); }
+.kt-steuer button:active { transform: scale(.92); }
+.kt-tipp-klein { text-align: center; font-size: 0.8rem; color: #a9b8b0; }
 .kt-karte.ergebnis { overflow: hidden; }
 .kt-karte.ergebnis .kt-svg { cursor: default; }
 .kt-meer { fill: #2b6f86; }
@@ -1751,7 +1759,6 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 @keyframes ktWelle { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
 .kt-strecke { stroke: #fff; fill: none; stroke-linecap: round; }
 .kt-knoepfe { display: grid; grid-template-columns: 1fr; gap: 10px; }
-.kt-knoepfe:has(#ktZoom:not([hidden])) { grid-template-columns: 1fr 1.4fr; }
 .kt-text { text-align: center; font-size: 1.15rem; line-height: 1.4; padding: 12px; border-radius: 14px; background: rgba(243,233,210,.08); }
 .kt-text b { font-family: "Playfair Display", Georgia, serif; font-style: italic; }
 .kt-km { display: block; font-size: 2rem; font-weight: 800; color: #fff; }

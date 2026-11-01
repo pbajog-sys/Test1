@@ -81,9 +81,7 @@
   #ag-aufloesung .ag-flaeche.klein { max-width: min(100%, calc(100dvh - 260px)); }
   #kt-spiel { grid-template-columns: minmax(0, 1fr) 260px; grid-template-areas: "frage frage" "karte knoepfe"; align-items: center; max-width: 1100px; }
   #ktFrage { grid-area: frage; } #ktKarte { grid-area: karte; } .kt-knoepfe { grid-area: knoepfe; }
-  .kt-knoepfe:has(#ktZoom:not([hidden])) { grid-template-columns: 1fr; }
-  .kt-karte.kt-deutschland { max-width: min(100%, calc((100dvh - 120px) * 0.78)); }
-  .kt-karte.kt-europa:not(.ergebnis) .kt-svg { max-height: calc(100dvh - 120px); }
+  .kt-karte.spiel, .kt-karte.spiel.kt-deutschland { height: calc(100dvh - 120px); }
 
   /* Krimi */
   .krimi-teil > .spalten { gap: 14px 28px; }

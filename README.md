@@ -215,7 +215,8 @@ Zöllner-Striche). Danach Lösung in Mint über deiner Antwort in Orange, mit Er
 ## 🧭 Karten-Gefühl
 Wo liegt das? Tippe den Ort auf einer leeren Karte an, Punkte nach Kilometern daneben (Großkreis-Entfernung).
 - Karten: **Deutschland** (Städte, Berge, Inseln), **Europa** (Hauptstädte, Gipfel), **Welt** (Metropolen und Orte, an denen Wale und Haie leben).
-- Leicht: bekannte Orte · Mittel: mehr Orte · Profi: knifflige Orte, Ländergrenzen ausgeblendet. Europa und Welt lassen sich vergrößern.
+- Leicht: bekannte Orte · Mittel: mehr Orte · Profi: knifflige Orte, Ländergrenzen ausgeblendet.
+- Bedienung wie eine Karten-App: zwei Finger oder Doppeltippen zoomt, ein Finger verschiebt, Tippen setzt die Nadel; am Computer Mausrad. Dazu Knöpfe + / − / ganze Karte.
 - Danach zoomt die Karte auf Tipp und Ziel, mit Entfernung und kleinem Fakt. Tagesreise (2× Deutschland, 2× Europa, 1× Welt) und Challenge-Links.
 - Kartendaten: [Natural Earth](https://www.naturalearthdata.com/) (gemeinfrei) über das npm-Paket `world-atlas` (ISC, © Mike Bostock),
   fest eingebaut in `karten-daten.js` (läuft offline). Neu erzeugen mit `werkzeuge/karten.py` (siehe Kopf des Skripts).
