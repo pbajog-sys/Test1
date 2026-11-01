@@ -1,7 +1,7 @@
 # Wal-Quiz – Seepferdchen der Walkunde
 
-Die App startet mit dem **Dashboard „Spiele“**: oben Statistiken (Abzeichen, gelernte Arten, Farb-Rekord),
-darunter die **Quizzes** als Karten im Look ihrer Welt und die **Games** (Farb-Gedächtnis). Eine Karte zoomt beim
+Die App startet mit dem **Dashboard „Spiele“**: oben Story-Kreise, darunter die **Games** als Zeilen –
+**Quizzes**, Farb-Gedächtnis, Cello-Noten, Ton-Gedächtnis und „Wer war’s?“. Die Quizzes führen zu den Karten der Welten. Eine Karte zoomt beim
 Antippen auf den ganzen Bildschirm und wird zur Welt; ← führt zurück zum Dashboard. Es gibt fünf Welten: 🐋 Wale, 🦈 Haie, 🌊 Beide (Wale und Haie gemischt),
 🏎️ Porsche und 🐕 Dackel. Jede Welt hat eigene Abzeichen; Lernstand und Lexikon funktionieren überall.
 
@@ -182,15 +182,10 @@ nötigen Denkschritte bestimmen die Schwierigkeit und liefern die Erklärungen f
 - **Handy quer** (wenig Höhe): kompaktere Köpfe, Bretter passen in die Bildschirmhöhe.
 - **Vollbild**: Knopf ⛶ im Dashboard (Desktop und Android). Als installierte App darf Android jetzt auch quer drehen.
 
-## 🗄️ Dashboard „Spieleschrank“
-- Ruhiges, warmes Design: dunkler Hintergrund mit festem Papierkorn, Serifen-Titel, eine Akzentfarbe (Bernstein).
+## 🎮 Dashboard „Spiele“
+- Bunter Neon-Look: dunkler Hintergrund mit wandernden Farbflecken, Begrüßung „Hey {Name}! 👋 Was spielen wir?“.
 - **Story-Kreise** wie bei Instagram ganz oben: alle Quiz-Welten und Spiele als runde Bilder mit Farbring zum Wischen.
-  Heute schon gespielt = grauer Ring, zuletzt gespielt = Schild „Weiter“. Antippen: Flip-Animation und passender Emoji-Regen
-  (auch beim Antippen der Cover).
-- **Weiterspielen** darunter: das zuletzt gespielte Spiel bzw. die zuletzt gespielte Quiz-Welt (je Profil).
-- **Alle Spiele** als gleichförmige Cover-Karten mit echten Bildern (Fotomosaik, Villa, Farbfächer, Notenblatt, Wellenform),
-  darunter Fortschritt in klaren Worten; die Quiz-Welten im selben Muster mit Foto und Fortschrittsbalken.
-- Animierte Cover: Quiz-Diashow mit Kamera-Zoom, Villa mit glühenden Fenstern und Gestalt am Erker, atmender Farbfächer,
-  Spielkopf über dem Notenblatt, laufende Welle; Karten gleiten beim Öffnen herein, warmes Licht wandert durch den Hintergrund.
-- Akku: nur Bewegung/Transparenz (Grafikchip), kein Weichzeichner; Cover außerhalb des Bildschirms pausieren. „Bewegung reduzieren“ wird beachtet.
-
+  Heute schon gespielt = grauer Ring, zuletzt gespielt = Schild „Weiter“. Antippen: Flip-Animation und passender Emoji-Regen.
+- **Games** als Zeilen mit rundem Bild, Stand und ▶: **Quizzes** (im Kreis wechseln die Welten als Diashow), Farb-Gedächtnis,
+  Cello-Noten, Ton-Gedächtnis und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
+- Akku: Farbflecken als Verlauf statt Weichzeichner, die Diashow pausiert außerhalb des Bildschirms; „Bewegung reduzieren“ wird beachtet.

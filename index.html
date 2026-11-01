@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=38">
+<link rel="stylesheet" href="fonts/fonts.css?v=39">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=38">
-<link rel="stylesheet" href="ansichten.css?v=38">
+<link rel="stylesheet" href="stil.css?v=39">
+<link rel="stylesheet" href="ansichten.css?v=39">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -448,14 +448,11 @@
   <!-- Startseite -->
   <!-- Dashboard -->
   <section class="screen active" id="screen-hub">
-    <div class="hub-licht" aria-hidden="true"></div>
     <div class="hub-kopf">
-      <div class="hub-zeile"><div class="hub-gruss" id="hubGruss">Hallo</div><span class="hub-knoepfe"><button class="vollbild-btn" id="vollbildBtn" type="button" aria-label="Vollbild" title="Vollbild" hidden>⛶</button><button class="profil-btn" id="profilBtn" type="button" hidden></button></span></div>
+      <div class="hub-zeile"><div class="hub-gruss" id="hubGruss">Hey! 👋 Was spielen wir?</div><span class="hub-knoepfe"><button class="vollbild-btn" id="vollbildBtn" type="button" aria-label="Vollbild" title="Vollbild" hidden>⛶</button><button class="profil-btn" id="profilBtn" type="button" hidden></button></span></div>
       <h1 class="hub-titel">Spiele</h1>
     </div>
-
     <div class="story-leiste" id="hubStories" aria-label="Schnellstart"></div>
-
     <div class="install-karte" id="installKarte" hidden>
       <img src="icons/apple-touch-icon.png?v=2" alt="" class="install-icon">
       <div class="install-text"><b>Als App installieren</b><span id="installSchritte"></span></div>
@@ -463,54 +460,53 @@
       <button class="install-zu" id="installZu" type="button" aria-label="Hinweis schließen">×</button>
     </div>
 
-    <section class="hub-abschnitt" id="hubWeiter" hidden aria-labelledby="hubWeiterH">
-      <h2 class="hub-h" id="hubWeiterH">Weiterspielen</h2>
-      <button class="weiter-karte" id="hubWeiterBtn" type="button" data-zoom="#141210">
-        <span class="weiter-bild" id="hubWeiterBild" aria-hidden="true"></span>
-        <span class="weiter-text"><b id="hubWeiterTitel"></b><small id="hubWeiterMeta"></small></span>
-        <span class="weiter-pfeil" aria-hidden="true">›</span>
-      </button>
-    </section>
-
-    <section class="hub-abschnitt" aria-labelledby="hubAlleH">
-      <h2 class="hub-h" id="hubAlleH">Alle Spiele</h2>
-      <div class="regal">
-        <button class="cover" id="hubQuizzes" type="button" data-regen="🐋,🦈,🐾,🏎️,🌊" data-zoom="#141210">
-          <span class="cover-bild cb-quiz" id="hubQuizStapel" aria-hidden="true"></span>
-          <span class="cover-text"><b>Quizzes</b><small>Wale, Haie, Porsche, Dackel</small><small class="cover-stand" id="hubQuizStand"></small></span>
-        </button>
-        <button class="cover" id="hubKrimi" type="button" data-regen="🔎,🕵️,🗝️,🕯️" data-zoom="#120d0b">
-          <span class="cover-bild cb-krimi" aria-hidden="true"><i class="cb-sterne"></i><i class="cb-mond"></i><span class="vs-haus cb-villa"><img src="img/krimi/villa.webp" alt="" decoding="async"><i class="vs-glanz" style="left:35.2%;top:28.2%;--g:9%;--d:-1s"></i><i class="vs-glanz" style="left:56.8%;top:36.6%;--g:13%;--d:-3s"></i><i class="vs-glanz" style="left:23.2%;top:56.6%;--g:12%;--d:-2s"></i><i class="vs-glanz" style="left:84.5%;top:60%;--g:19%;--d:0s"></i><i class="vs-laterne" style="left:45.5%;top:62.5%;width:10%"></i><i class="vs-laterne" style="left:69.4%;top:62.5%;width:10%;--d:-.7s"></i><span class="vs-fenster-aus" style="left:33.1%;top:24.5%;width:4.3%;height:8.4%"></span><span class="vs-erker" style="left:79.3%;top:46.5%;width:10.9%;height:27%"><i class="vs-gestalt"></i></span></span></span>
-          <span class="cover-text"><b>Wer war’s?</b><small>Krimi-Rätsel und Ermittlungsakte</small><small class="cover-stand" id="hubKrimiBest"></small></span>
-        </button>
-        <button class="cover" id="hubFarben" type="button" data-regen="🎨,🖌️,🌈,💧" data-zoom="#16161f">
-          <span class="cover-bild cb-farben" aria-hidden="true"><i style="--f:#d9512c;--d:-24deg"></i><i style="--f:#eba937;--d:-12deg"></i><i style="--f:#3f7d58;--d:0deg"></i><i style="--f:#2f5d8a;--d:12deg"></i><i style="--f:#8b3f6e;--d:24deg"></i></span>
-          <span class="cover-text"><b>Farb-Gedächtnis</b><small>Merken, nachmischen, Mitte finden</small><small class="cover-stand" id="hubFarbBest"></small></span>
-        </button>
-        <button class="cover" id="hubCello" type="button" data-regen="🎵,🎶,🎻" data-zoom="#2a170d">
-          <span class="cover-bild cb-cello" aria-hidden="true"><svg viewBox="0 0 200 120"><g stroke="#3b2a1d" stroke-width="1.4" opacity=".75"><line x1="10" y1="40" x2="190" y2="40"/><line x1="10" y1="50" x2="190" y2="50"/><line x1="10" y1="60" x2="190" y2="60"/><line x1="10" y1="70" x2="190" y2="70"/><line x1="10" y1="80" x2="190" y2="80"/></g><text x="14" y="76" font-family="Noto Music" font-size="44" fill="#3b2a1d">𝄢</text><g fill="#3b2a1d" stroke="#3b2a1d"><g class="cb-note" style="--n:0"><ellipse cx="78" cy="75" rx="6.5" ry="4.8" transform="rotate(-20 78 75)"/><line x1="84" y1="74" x2="84" y2="44" stroke-width="1.6"/></g><g class="cb-note" style="--n:1"><ellipse cx="108" cy="65" rx="6.5" ry="4.8" transform="rotate(-20 108 65)"/><line x1="114" y1="64" x2="114" y2="34" stroke-width="1.6"/></g><g class="cb-note" style="--n:2"><ellipse cx="138" cy="55" rx="6.5" ry="4.8" transform="rotate(-20 138 55)"/><line x1="132" y1="57" x2="132" y2="88" stroke-width="1.6"/></g><g class="cb-note" style="--n:3"><ellipse cx="166" cy="45" rx="6.5" ry="4.8" transform="rotate(-20 166 45)"/><line x1="160" y1="47" x2="160" y2="78" stroke-width="1.6"/></g></g><rect class="cb-spielkopf" x="60" y="28" width="3" height="66" rx="1.5" fill="#d9822b"/></svg></span>
-          <span class="cover-text"><b>Cello-Noten</b><small>Lagen, Finger und Noten</small><small class="cover-stand" id="hubCelloBest"></small></span>
-        </button>
-        <button class="cover" id="hubToene" type="button" data-regen="🎧,🔊,🎵,〰️" data-zoom="#050b0a">
-          <span class="cover-bild cb-toene" aria-hidden="true"><svg viewBox="0 0 200 120" preserveAspectRatio="none" overflow="hidden"><line x1="0" y1="60" x2="200" y2="60" stroke="#5eead4" stroke-opacity=".25" stroke-width="1"/><g class="cb-welle"><path d="M0,60.0 L2,59.9 L4,59.6 L6,59.1 L8,58.6 L10,58.4 L12,58.7 L14,59.8 L16,61.6 L18,63.7 L20,65.8 L22,67.0 L24,66.9 L26,64.9 L28,61.3 L30,56.5 L32,51.4 L34,47.2 L36,45.1 L38,46.0 L40,49.9 L42,56.6 L44,64.8 L46,72.9 L48,79.1 L50,82.0 L52,80.6 L54,75.0 L56,66.0 L58,55.4 L60,45.2 L62,37.6 L64,34.2 L66,35.8 L68,42.1 L70,51.9 L72,63.3 L74,74.0 L76,81.8 L78,85.4 L80,84.1 L82,78.2 L84,69.1 L86,58.5 L88,48.6 L90,41.2 L92,37.7 L94,38.4 L96,43.2 L98,50.9 L100,60.0 L102,68.7 L104,75.4 L106,78.9 L108,78.9 L110,75.3 L112,69.0 L114,61.2 L116,53.3 L118,46.9 L120,43.1 L122,42.5 L124,45.2 L126,50.6 L128,57.8 L130,65.4 L132,71.9 L134,76.0 L136,77.2 L138,75.0 L140,70.0 L142,63.2 L144,55.8 L146,49.4 L148,45.2 L150,43.9 L152,45.8 L154,50.2 L156,56.3 L158,62.7 L160,68.2 L162,71.7 L164,72.7 L166,71.2 L168,67.7 L170,63.2 L172,58.8 L174,55.2 L176,53.2 L178,52.9 L180,54.0 L182,56.0 L184,58.3 L186,60.2 L188,61.5 L190,61.9 L192,61.7 L194,61.1 L196,60.5 L198,60.1 L200,60.0" fill="none" stroke="#5eead4" stroke-width="2.4" stroke-linejoin="round"/><path d="M200,60.0 L202,59.9 L204,59.6 L206,59.1 L208,58.6 L210,58.4 L212,58.7 L214,59.8 L216,61.6 L218,63.7 L220,65.8 L222,67.0 L224,66.9 L226,64.9 L228,61.3 L230,56.5 L232,51.4 L234,47.2 L236,45.1 L238,46.0 L240,49.9 L242,56.6 L244,64.8 L246,72.9 L248,79.1 L250,82.0 L252,80.6 L254,75.0 L256,66.0 L258,55.4 L260,45.2 L262,37.6 L264,34.2 L266,35.8 L268,42.1 L270,51.9 L272,63.3 L274,74.0 L276,81.8 L278,85.4 L280,84.1 L282,78.2 L284,69.1 L286,58.5 L288,48.6 L290,41.2 L292,37.7 L294,38.4 L296,43.2 L298,50.9 L300,60.0 L302,68.7 L304,75.4 L306,78.9 L308,78.9 L310,75.3 L312,69.0 L314,61.2 L316,53.3 L318,46.9 L320,43.1 L322,42.5 L324,45.2 L326,50.6 L328,57.8 L330,65.4 L332,71.9 L334,76.0 L336,77.2 L338,75.0 L340,70.0 L342,63.2 L344,55.8 L346,49.4 L348,45.2 L350,43.9 L352,45.8 L354,50.2 L356,56.3 L358,62.7 L360,68.2 L362,71.7 L364,72.7 L366,71.2 L368,67.7 L370,63.2 L372,58.8 L374,55.2 L376,53.2 L378,52.9 L380,54.0 L382,56.0 L384,58.3 L386,60.2 L388,61.5 L390,61.9 L392,61.7 L394,61.1 L396,60.5 L398,60.1 L400,60.0" fill="none" stroke="#5eead4" stroke-width="2.4" stroke-linejoin="round"/></g></svg></span>
-          <span class="cover-text"><b>Ton-Gedächtnis</b><small>Hören und nachbauen</small><small class="cover-stand" id="hubToeneBest"></small></span>
-        </button>
-      </div>
-    </section>
-
-    <section class="hub-abschnitt hub-familie" id="hubFamilie" hidden aria-labelledby="hubFamH">
-      <h2 class="hub-h" id="hubFamH">Bestenliste</h2>
+    <div class="spalten hub-spalten">
+    <div class="spalte spalte-a">
+    <h2 class="hub-h"><span>🎮</span> Games</h2>
+    <div class="hub-liste">
+    <button class="hub-game hub-quizzeile" id="hubQuizzes" type="button" data-regen="🐋,🦈,🐾,🏎️,🌊">
+      <span class="hg-av hg-av-quiz" aria-hidden="true"><span class="hg-in" id="hubQuizStapel"></span></span>
+      <span class="hg-text"><span class="hg-titel">Quizzes</span><span class="hg-sub">Wale, Haie, Porsche und Dackel erkennen.</span><span class="hg-best" id="hubQuizStand"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game" id="hubFarben" type="button" data-regen="🎨,🖌️,🌈,💧">
+      <span class="hg-av hg-av-farben" aria-hidden="true"><span class="hg-in"><span class="farb-logo"><span></span><span></span><span></span><span></span><span></span></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Farb-Gedächtnis</span><span class="hg-sub">Farbe merken. Nachmischen. Mitte finden.</span><span class="hg-best" id="hubFarbBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-cello" id="hubCello" type="button" data-regen="🎵,🎶,🎻">
+      <span class="hg-av hg-av-cello" aria-hidden="true"><span class="hg-in"><span class="hc-cello-icon">🎻</span></span></span>
+      <span class="hg-text"><span class="hg-titel">Cello-Noten</span><span class="hg-sub">Lagen, Finger und Noten fürs Cello.</span><span class="hg-best" id="hubCelloBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-toene" id="hubToene" type="button" data-regen="🎧,🔊,🎵,〰️">
+      <span class="hg-av hg-av-toene" aria-hidden="true"><span class="hg-in"><span class="hc-toene-icon"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Ton-Gedächtnis</span><span class="hg-sub">Ton hören. Nachbauen. Wie gut ist dein Gehör?</span><span class="hg-best" id="hubToeneBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-krimi" id="hubKrimi" type="button" data-regen="🔎,🕵️,🗝️,🕯️">
+      <span class="hg-av hg-av-krimi" aria-hidden="true"><span class="hg-in"><img class="hc-krimi-icon" src="img/krimi/lupe.webp" alt=""></span></span>
+      <span class="hg-text"><span class="hg-titel">Wer war’s?</span><span class="hg-sub">Ermittlungsakte, Murdoku, Queens &amp; mehr</span><span class="hg-best" id="hubKrimiBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    </div>
+    </div>
+    <div class="spalte spalte-b">
+    <div class="hub-familie" id="hubFamilie" hidden>
+      <h2 class="hub-h"><span>🏆</span> Bestenliste</h2>
       <ul class="familie-liste" id="familieListe"></ul>
-    </section>
-
-    <footer class="hub-fuss"><a class="hub-ds" href="datenschutz.html">Datenschutz</a></footer>
+    </div>
+    <div class="hub-mehr">Bald mehr Games ✨</div>
+    </div>
+    </div>
+    <a class="hub-ds" href="datenschutz.html">Datenschutz</a>
   </section>
 
   <section class="screen" id="screen-quizze">
     <div class="hub-kopf">
       <div class="hub-zeile"><button class="qz-zurueck" id="quizzeZurueck" type="button">‹ Spiele</button></div>
       <h1 class="hub-titel">Quizzes</h1>
-      <div class="hub-gruss">Wähle eine Welt</div>
+      <div class="hub-gruss">Welche Welt heute? 🌍</div>
     </div>
     <div class="hub-quiz" id="hubQuiz"></div>
   </section>
@@ -1160,26 +1156,26 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=38"></script>
-<script src="haie.js?v=38"></script>
-<script src="porsche.js?v=38"></script>
-<script src="dackel.js?v=38"></script>
-<script src="groesse.js?v=38"></script>
-<script src="gretchen.js?v=38"></script>
-<script src="effekte.js?v=38"></script>
-<script src="app.js?v=38"></script>
-<script src="melden.js?v=38"></script>
-<script src="hub.js?v=38"></script>
-<script src="farben.js?v=38"></script>
-<script src="cello.js?v=38"></script>
-<script src="toene.js?v=38"></script>
-<script src="krimi-grafik.js?v=38"></script>
-<script src="krimi.js?v=38"></script>
-<script src="krimi-wachen.js?v=38"></script>
-<script src="krimi-verhoer.js?v=38"></script>
-<script src="krimi-alibi.js?v=38"></script>
-<script src="krimi-akte.js?v=38"></script>
-<script src="krimi-zentrale.js?v=38"></script>
-<script src="profile.js?v=38"></script>
+<script src="wale.js?v=39"></script>
+<script src="haie.js?v=39"></script>
+<script src="porsche.js?v=39"></script>
+<script src="dackel.js?v=39"></script>
+<script src="groesse.js?v=39"></script>
+<script src="gretchen.js?v=39"></script>
+<script src="effekte.js?v=39"></script>
+<script src="app.js?v=39"></script>
+<script src="melden.js?v=39"></script>
+<script src="hub.js?v=39"></script>
+<script src="farben.js?v=39"></script>
+<script src="cello.js?v=39"></script>
+<script src="toene.js?v=39"></script>
+<script src="krimi-grafik.js?v=39"></script>
+<script src="krimi.js?v=39"></script>
+<script src="krimi-wachen.js?v=39"></script>
+<script src="krimi-verhoer.js?v=39"></script>
+<script src="krimi-alibi.js?v=39"></script>
+<script src="krimi-akte.js?v=39"></script>
+<script src="krimi-zentrale.js?v=39"></script>
+<script src="profile.js?v=39"></script>
 </body>
 </html>

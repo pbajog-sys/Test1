@@ -16,20 +16,16 @@
   .farb-buehne > *, .cello-buehne > *, .ton-buehne > *, .krimi-buehne > * { max-width: 1100px; }
   .farb-buehne, .cello-buehne, .ton-buehne, .krimi-buehne { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
 
-  /* Dashboard: links Quizzes (+ Bestenliste), rechts die Games */
+  /* Dashboard: links die Games, rechts die Bestenliste */
   .hub-spalten .spalte-b .hub-h:first-child { margin-top: 0; }
   .hub-spalten .hub-quizzes { margin-top: 0; }
   .hub-spalten .hub-game { margin-top: 0; }
   .hub-spalten .spalte-b { gap: 10px; }
   .hub-spalten .hub-mehr { margin: 6px 0 0; }
 
-  /* Dashboard: Regal breiter, Weiterspielen schmaler */
-  .regal { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 22px 16px; }
-  .hub-abschnitt#hubWeiter { max-width: 560px; }
-  .hub-familie { max-width: 560px; }
 
   /* Quiz-Auswahl: alle Welten in einer Reihe */
-  .hub-quiz.hub-quiz { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 22px 16px; }
+  .hub-quiz { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
   .hub-card.hc-beide { grid-column: auto; min-height: 190px; }
 
   /* Quiz-Startseite und Stufen */
@@ -120,9 +116,7 @@
 
 /* ---------- Großer Bildschirm (Desktop, Tablet quer) ---------- */
 @media (min-width: 1000px) and (min-height: 600px) {
-  .regal, .hub-quiz.hub-quiz { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px 18px; }
-  .cover-text b { font-size: 1.1rem; }
-  .cover-text small { font-size: 0.85rem; }
+  .hub-quiz { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
   .vh-karten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hub-titel { font-size: 5rem; }
   #pickList { grid-template-columns: repeat(3, minmax(0, 1fr)); }

@@ -442,7 +442,7 @@ body.theme-hub {
   --font-head: "Outfit", system-ui, sans-serif;
   background: #07070d; font-family: "Outfit", system-ui, sans-serif;
 }
-.blob { width: 70vw; height: 70vw; max-width: 520px; max-height: 520px; border-radius: 50%; filter: blur(70px); opacity: 0.38; margin: -35vw 0 0 -35vw; animation: blob 18s ease-in-out infinite alternate; }
+.blob { width: 70vw; height: 70vw; max-width: 520px; max-height: 520px; border-radius: 50%; background: radial-gradient(circle, var(--farbe, #7c3aed) 0%, transparent 68%) !important; opacity: 0.42; will-change: transform; margin: -35vw 0 0 -35vw; animation: blob 18s ease-in-out infinite alternate; }
 @keyframes blob { 0% { transform: translate(0, 0) scale(1); } 50% { transform: translate(18vw, 10vh) scale(1.2); } 100% { transform: translate(-12vw, 18vh) scale(.9); } }
 
 .hub-kopf { padding: 18px 2px 6px; }
@@ -1240,188 +1240,30 @@ body.theme-hub {
 .farb-mitte-erg small { font-size: 0.72rem; opacity: .8; }
 
 /* ===================================================================
-   Dashboard „Spieleschrank“ – ruhig, warm, ohne Dauer-Animationen.
-   Prinzipien: klare Hierarchie (Titel → Abschnitt → Karte), gleiche Kartenform für alle Spiele,
-   große Tippflächen (≥ 44 px), Bewegung nur als Rückmeldung, echte Bilder statt Effekte.
+   Dashboard: Quizzes als eigene Zeile wie die Games
+   Die Diashow nutzt nur transform/opacity und pausiert außerhalb des Bildes.
    =================================================================== */
-body.theme-hub {
-  --bg1: #141210; --bg2: #141210;
-  --flaeche: #1d1a17; --flaeche-hoch: #262220; --linie: rgba(242,237,230,0.09);
-  --text: #f2ede6; --muted: #a69f95; --accent: #e0a64a; --accent-ink: #1d1407;
-  --card: rgba(242,237,230,0.05); --card-strong: rgba(242,237,230,0.10); --glow: transparent;
-  --font-head: "Outfit", system-ui, sans-serif;
-  /* feines, festes Papierkorn (einmal gezeichnet, kein Neuzeichnen beim Scrollen) */
-  background: #141210 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='k'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23k)'/%3E%3C/svg%3E");
-  font-family: "Outfit", system-ui, sans-serif; color: var(--text);
-}
-body.theme-hub #ambient { display: none; }
+.hub-liste { display: grid; gap: 12px; }
+.hub-liste .hub-game:nth-child(2) { animation-delay: .52s, 0s; } .hub-liste .hub-game:nth-child(3) { animation-delay: .59s, 0s; }
+.hub-liste .hub-game:nth-child(4) { animation-delay: .66s, 0s; } .hub-liste .hub-game:nth-child(5) { animation-delay: .73s, 0s; }
+.hub-quizzeile { background: linear-gradient(#111119, #111119) padding-box, linear-gradient(90deg, #38e1ff, #0a6aa8, #e10600, #ffb347, #f2a7bf, #38e1ff) border-box; background-size: 100% 100%, 300% 100%; }
+.hub-quizzeile .hg-titel { background-image: linear-gradient(90deg, #7dd3fc, #c4b5fd, #fda4af, #ffd36e); }
+.hg-av-quiz { --ring: conic-gradient(#feda75, #fa7e1e, #d62976, #962fbf, #4f5bd5, #feda75); }
+.hg-av-quiz > .hg-in { background: #0b3a5c; }
 
-/* Kopf */
-#screen-hub .hub-kopf, #screen-quizze .hub-kopf { padding: 6px 2px 4px; }
-.theme-hub .hub-gruss { color: var(--muted); font-size: 0.95rem; animation: none; }
-.theme-hub .hub-titel {
-  font-family: "Playfair Display", Georgia, serif; font-weight: 700; font-size: clamp(2.6rem, 11vw, 3.4rem); letter-spacing: -0.01em; line-height: 1;
-  margin: 6px 0 4px; background: none; -webkit-background-clip: border-box; background-clip: border-box; color: var(--text); animation: none;
-}
-.theme-hub .hub-h {
-  margin: 0 0 10px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
-}
-.hub-abschnitt { margin-top: 24px; }
-.theme-hub .profil-btn, .theme-hub .vollbild-btn, .theme-hub .qz-zurueck {
-  background: var(--flaeche); border: 1px solid var(--linie); color: var(--text); box-shadow: none;
-}
-.theme-hub .profil-btn { min-height: 40px; }
-.theme-hub .vollbild-btn { width: 40px; height: 40px; }
-.theme-hub .qz-zurueck { min-height: 40px; padding: 0 14px 0 10px; }
-
-/* Weiterspielen */
-.weiter-karte {
-  width: 100%; display: flex; align-items: center; gap: 14px; padding: 10px 14px 10px 10px; min-height: 76px;
-  border: 1px solid var(--linie); border-radius: 14px; background: var(--flaeche); color: var(--text); font: inherit; text-align: left; cursor: pointer;
-  transition: background .15s, transform .15s;
-}
-.weiter-karte:active { transform: scale(.985); background: var(--flaeche-hoch); }
-.weiter-bild { width: 72px; height: 54px; flex: none; border-radius: 9px; overflow: hidden; position: relative; display: block; }
-.weiter-bild .cover-bild { position: absolute; inset: 0; aspect-ratio: auto; border-radius: 0; }
-.weiter-bild .cb-kachel { display: block; width: 100%; height: 100%; }
-.weiter-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
-.weiter-text b { font-size: 1.05rem; font-weight: 600; }
-.weiter-text small { color: var(--muted); font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.weiter-pfeil { font-size: 1.8rem; line-height: 1; color: var(--accent); padding-right: 2px; }
-
-/* Regal: alle Spiele als gleichförmige Cover-Karten */
-.regal { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
-.cover {
-  display: grid; gap: 8px; align-content: start; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
-  -webkit-tap-highlight-color: transparent;
-}
-.cover-bild {
-  position: relative; display: block; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 8px 20px rgba(0,0,0,0.35); transition: transform .15s ease-out;
-}
-.cover:active .cover-bild { transform: scale(.97); }
-.cover:focus-visible { outline: none; }
-.cover:focus-visible .cover-bild { box-shadow: 0 0 0 3px var(--accent); }
-.cover-text { display: grid; gap: 1px; padding: 0 2px; }
-.cover-text b { font-size: 1rem; font-weight: 600; line-height: 1.25; }
-.cover-text small { color: var(--muted); font-size: 0.8rem; line-height: 1.3; }
-.cover-text .cover-stand { color: var(--accent); font-weight: 600; margin-top: 2px; }
-
-/* Cover: Quizzes – Fotomosaik */
-.cb-quiz { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; background: #0d0c0b; }
 .cb-kachel { position: relative; overflow: hidden; }
 .cb-kachel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .3s; }
 .cb-kachel.geladen img { opacity: 1; }
-/* Cover: Krimi – Villa bei Nacht (statisch) */
-.cb-krimi { background: radial-gradient(70% 60% at 78% 18%, rgba(255,236,190,0.22), transparent 60%), linear-gradient(#0e0b14, #241a14); }
-.cb-mond { position: absolute; right: 12%; top: 10%; width: 16%; aspect-ratio: 1; border-radius: 50%; background: #f3e6c4; box-shadow: 0 0 24px 6px rgba(243,230,196,0.25); }
-.cb-krimi img { position: absolute; left: 4%; right: 4%; bottom: -2%; width: 92%; height: auto; }
-/* Cover: Farben – Farbfächer aus Musterkarten */
-.cb-farben { background: #ece5d8; }
-.cb-farben i {
-  position: absolute; left: 50%; bottom: -18%; width: 26%; height: 92%; margin-left: -13%; border-radius: 6px; transform-origin: 50% 100%;
-  transform: rotate(var(--d)); background: linear-gradient(var(--f) 0 74%, #fbf8f2 74%); box-shadow: 0 2px 6px rgba(0,0,0,0.18);
-}
-/* Cover: Cello – Notenpapier mit Holzkante */
-.cb-cello { background: linear-gradient(90deg, #6b3f22 0 7%, #8a5530 7% 9%, #f4ead6 9%); }
-.cb-cello svg { position: absolute; left: 9%; top: 0; width: 91%; height: 100%; }
-/* Cover: Töne – Wellenform */
-.cb-toene { background: radial-gradient(80% 70% at 50% 50%, #12302e, #0a1615); }
-.cb-toene svg { position: absolute; inset: 12% 0; width: 100%; height: 76%; }
-
-/* Bestenliste im neuen Stil */
-.theme-hub .familie-liste { background: var(--flaeche); border: 1px solid var(--linie); border-radius: 14px; }
-.theme-hub .familie-liste li.ich { color: var(--accent); }
-
-.hub-fuss { margin: 28px 0 8px; text-align: center; }
-.theme-hub .hub-ds { color: var(--muted); opacity: .8; font-size: 0.8rem; }
-
-/* Quiz-Auswahl im ruhigen Stil: keine drehenden Ringe, keine Dauer-Deko */
-.theme-hub .w-ring::before { animation: none; }
-.theme-hub .hc-deko { animation: none; }
-.theme-hub .hub-card { box-shadow: 0 8px 20px rgba(0,0,0,0.35); }
-@media (hover: hover) { .theme-hub .hub-card:hover { transform: translateY(-2px); } }
-
-/* Wer „Bewegung reduzieren“ eingestellt hat: gar keine Animationen im Dashboard */
-@media (prefers-reduced-motion: reduce) {
-  .theme-hub *, .theme-hub *::before, .theme-hub *::after { animation: none !important; transition: none !important; }
-}
-/* Quiz-Welten als Cover – gleiches Muster wie das Regal im Dashboard */
-.hub-quiz.hub-quiz { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
-.cover-welt .cover-bild { display: block; }
-.cover-welt .cb-kachel { position: absolute; inset: 0; }
-.cover-marke { position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(20,18,16,0.82); font-size: 0.85rem; letter-spacing: 2px; }
-.cover-fort { display: block; height: 4px; margin: 6px 0 2px; border-radius: 2px; background: var(--linie); overflow: hidden; }
-.cover-fort i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
-/* alte Welt-Karten-Stile auf den neuen Covern neutralisieren */
-.cover.cover-welt { background: none !important; color: var(--text) !important; clip-path: none !important; border-radius: 0 !important; min-height: 0; padding: 0; box-shadow: none !important; animation: none; }
-.cover.cover-welt::before, .cover.cover-welt::after { display: none !important; }
-
-/* ===================================================================
-   Dashboard mit Leben: animierte Cover.
-   Nur transform/opacity (läuft auf dem Grafikchip, ohne Weichzeichner). Cover außerhalb des Bildes pausieren.
-   =================================================================== */
-.cover-bild:not(.sichtbar), .cover-bild:not(.sichtbar) * { animation-play-state: paused !important; }
-
-/* Warmes Licht, das langsam durch den Hintergrund wandert (ein großer Verlauf, kein Blur) */
-.hub-licht {
-  position: fixed; left: -30vmax; top: -30vmax; width: 110vmax; height: 110vmax; pointer-events: none; z-index: -1;
-  background: radial-gradient(circle, rgba(224,166,74,0.10), rgba(224,166,74,0.04) 35%, transparent 60%);
-  animation: lichtWandert 38s ease-in-out infinite alternate; will-change: transform;
-}
-@keyframes lichtWandert { from { transform: translate(0, 0); } to { transform: translate(45vw, 55vh); } }
-#screen-hub { position: relative; }
-
-/* Karten gleiten nacheinander herein */
-#screen-hub.auftritt .regal .cover, #screen-hub.auftritt .weiter-karte { animation: coverAuftritt .55s cubic-bezier(.2,.8,.2,1) backwards; }
-#screen-hub.auftritt .regal .cover:nth-child(2) { animation-delay: .06s; }
-#screen-hub.auftritt .regal .cover:nth-child(3) { animation-delay: .12s; }
-#screen-hub.auftritt .regal .cover:nth-child(4) { animation-delay: .18s; }
-#screen-hub.auftritt .regal .cover:nth-child(5) { animation-delay: .24s; }
-@keyframes coverAuftritt { from { opacity: 0; transform: translateY(18px) scale(.98); } to { opacity: 1; transform: none; } }
-.theme-hub .hub-titel { animation: titelAuftritt .7s cubic-bezier(.2,.8,.2,1) both; }
-@keyframes titelAuftritt { from { opacity: 0; transform: translateY(10px); letter-spacing: 0.04em; } to { opacity: 1; transform: none; } }
-.cover:hover .cover-bild { transform: translateY(-3px); }
-
-/* Quizzes: Diashow mit langsamem Kamera-Zoom */
-.cb-quiz { display: block; background: #0d0c0b; }
 .cb-dia { position: absolute; inset: 0; opacity: 0; animation: diaWechsel 16s infinite; animation-delay: calc(var(--i) * 4s); }
 .cb-dia img { animation: kenBurns 16s ease-in-out infinite; animation-delay: calc(var(--i) * 4s); transform-origin: 60% 40%; }
+.cb-dia-name { display: none; }
 @keyframes diaWechsel { 0% { opacity: 0; } 4% { opacity: 1; } 25% { opacity: 1; } 30% { opacity: 0; } 100% { opacity: 0; } }
 @keyframes kenBurns { 0% { transform: scale(1.02) translate(0, 0); } 30% { transform: scale(1.14) translate(-3%, -2%); } 100% { transform: scale(1.14) translate(-3%, -2%); } }
-.cb-dia-name {
-  position: absolute; left: 10px; bottom: 10px; z-index: 1; padding: 3px 10px; border-radius: 999px;
-  background: rgba(20,18,16,0.72); color: #f2ede6; font-size: 0.78rem; font-weight: 600; letter-spacing: 0.02em;
-}
-
-/* Krimi: Villa mit den Animationen aus dem Krimi */
-.cb-krimi .cb-villa { position: absolute; left: 4%; right: 4%; bottom: -2%; }
-.cb-krimi .cb-villa img { position: static; display: block; width: 100%; height: auto; }
-.cb-sterne { position: absolute; inset: 0 0 45% 0; background: radial-gradient(1px 1px at 12% 20%, #fff8e0 60%, transparent), radial-gradient(1px 1px at 30% 8%, #fff8e0 60%, transparent), radial-gradient(1.2px 1.2px at 48% 26%, #fff8e0 60%, transparent), radial-gradient(1px 1px at 66% 12%, #fff8e0 60%, transparent), radial-gradient(1px 1px at 90% 38%, #fff8e0 60%, transparent); animation: sterneFunkeln 4s ease-in-out infinite alternate; }
-@keyframes sterneFunkeln { from { opacity: .45; } to { opacity: 1; } }
-
-/* Farben: der Fächer atmet – öffnet und schließt sich */
-.cb-farben i { animation: faecher 5s ease-in-out infinite alternate; }
-@keyframes faecher { from { transform: rotate(calc(var(--d) * 0.35)); } to { transform: rotate(calc(var(--d) * 1.15)); } }
-
-/* Cello: ein Spielkopf läuft übers Notenblatt, die Noten leuchten auf */
-.cb-spielkopf { animation: spielkopf 4s linear infinite; }
-@keyframes spielkopf { from { transform: translateX(0); opacity: 0; } 8% { opacity: 1; } 85% { opacity: 1; } to { transform: translateX(118px); opacity: 0; } }
-.cb-note { transform-box: fill-box; transform-origin: 50% 100%; animation: noteLeuchtet 4s ease-out infinite; animation-delay: calc(var(--n) * 0.85s + 0.4s); }
-@keyframes noteLeuchtet { 0%, 100% { fill: #3b2a1d; stroke: #3b2a1d; transform: none; } 6% { fill: #d9822b; stroke: #d9822b; transform: translateY(-4px); } 18% { fill: #3b2a1d; stroke: #3b2a1d; transform: none; } }
-
-/* Töne: die Welle läuft wie auf einem Oszilloskop */
-.cb-welle { animation: welleLaeuft 3.2s linear infinite; }
-@keyframes welleLaeuft { from { transform: translateX(0); } to { transform: translateX(-200px); } }
-.cb-toene svg { filter: drop-shadow(0 0 6px rgba(94,234,212,0.55)); }
-
-/* Quiz-Welten: sanfter Zoom auf dem Foto */
-.cover-welt .cb-kachel img { animation: kenBurns 18s ease-in-out infinite alternate; }
-
+.hg-in:not(.sichtbar) .cb-dia, .hg-in:not(.sichtbar) .cb-dia img, .cover-bild:not(.sichtbar) * { animation-play-state: paused !important; }
 @media (prefers-reduced-motion: reduce) {
-  .hub-licht, .cb-dia img, .cb-spielkopf, .cb-note, .cb-welle, .cb-farben i, .cover-welt .cb-kachel img, .cb-sterne { animation: none !important; }
-  .cb-dia { animation: none !important; opacity: 0; } .cb-dia:first-child { opacity: 1; }
+  .cb-dia, .cb-dia img { animation: none !important; } .cb-dia { opacity: 0; } .cb-dia:first-child { opacity: 1; }
 }
+.hub-ds { display: block; text-align: center; color: var(--muted); opacity: .7; font-size: 0.8rem; margin: 6px 0 10px; }
 
 /* ---------- Story-Kreise wie bei Instagram ---------- */
 .story-leiste {
@@ -1447,7 +1289,7 @@ body.theme-hub #ambient { display: none; }
 }
 .story-ring:not(.sichtbar)::before { animation-play-state: paused; }
 .story.gesehen .story-ring::before { background: rgba(242,237,230,0.22); animation: none; }
-.story-bild { position: relative; display: block; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; border: 3px solid #141210; background: #26221f; }
+.story-bild { position: relative; display: block; width: 100%; height: 100%; border-radius: 50%; overflow: hidden; border: 3px solid #07070d; background: #1a1a26; }
 .story-bild > .cover-bild { position: absolute; inset: 0; aspect-ratio: auto; border-radius: 0; box-shadow: none; }
 .story-bild > .cb-kachel { position: absolute; inset: 0; }
 .story-bild .cb-dia-name { display: none; }
@@ -1457,7 +1299,7 @@ body.theme-hub #ambient { display: none; }
 .story-schild {
   position: absolute; left: 50%; bottom: -5px; transform: translateX(-50%); z-index: 1; padding: 1px 6px; border-radius: 4px;
   background: linear-gradient(90deg, #d62976, #962fbf); color: #fff; font-size: 0.56rem; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase;
-  border: 2px solid #141210;
+  border: 2px solid #07070d;
 }
 
 /* ---------- Emoji-Regen ---------- */
@@ -1469,15 +1311,15 @@ body.theme-hub #ambient { display: none; }
 /* ---------- Installieren-Hinweis ---------- */
 .install-karte {
   position: relative; display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 12px 40px 12px 12px;
-  border-radius: 16px; background: linear-gradient(135deg, rgba(214,41,118,0.16), rgba(79,91,213,0.14)), var(--flaeche, #1d1a17);
-  border: 1px solid rgba(242,237,230,0.12); animation: coverAuftritt .5s cubic-bezier(.2,.8,.2,1) .3s backwards;
+  border-radius: 16px; background: linear-gradient(135deg, rgba(214,41,118,0.16), rgba(79,91,213,0.14)), #111119;
+  border: 1px solid rgba(242,237,230,0.12); animation: kartenAuftritt .5s var(--ease-spring) .3s backwards;
 }
 .install-icon { width: 48px; height: 48px; border-radius: 11px; flex: none; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
 .install-text { display: grid; gap: 2px; font-size: 0.85rem; color: var(--muted, #a69f95); line-height: 1.35; }
 .install-text b { color: var(--text, #f2ede6); font-size: 0.98rem; }
 .install-text b:not(:first-child) { font-size: inherit; }
 .teilen-symbol { display: inline-grid; place-items: center; vertical-align: -3px; color: #4f8dff; }
-.install-los { flex: none; border: 0; border-radius: 999px; padding: 9px 14px; font: inherit; font-weight: 700; background: var(--accent, #e0a64a); color: #1d1407; cursor: pointer; }
+.install-los { flex: none; border: 0; border-radius: 999px; padding: 9px 14px; font: inherit; font-weight: 700; background: #fff; color: #111; cursor: pointer; }
 .install-zu { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border: 0; background: none; color: var(--muted, #a69f95); font-size: 1.3rem; cursor: pointer; }
 
 /* ---------- Gefühl wie eine App ---------- */
@@ -1486,3 +1328,10 @@ button, .cover, .story { -webkit-user-select: none; user-select: none; }
 @media (display-mode: standalone) {
   html, body { overscroll-behavior-y: none; }   /* kein Gummiband-Ziehen über den Rand der App */
 }
+.story-bild > .hg-in { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; border-radius: 50%; display: flex; align-items: center; justify-content: center; overflow: hidden; background: #111119; }
+.story-bild > .hg-in .farb-logo { height: 34px; gap: 3px; align-items: flex-end; }
+.story-bild > .hg-in .farb-logo span { width: 6px; border-radius: 3px; }
+.story-bild > .hg-in .hc-cello-icon { font-size: 1.9rem; }
+.story-bild > .hg-in .hc-toene-icon { height: 32px; gap: 2px; }
+.story-bild > .hg-in .hc-krimi-icon { width: 70%; height: auto; }
+.hub-liste > .hub-game { margin: 0; }
