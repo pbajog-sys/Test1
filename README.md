@@ -157,14 +157,14 @@ Wie bei Netflix: Beim ersten Start fragt die App nach deinem Namen und einem Bil
 Krimi-Rätsel in einer Villa mit zehn Verdächtigen (Porträts und Icons in `img/krimi/`).
 
 **📁 Ermittlungsakte** (`krimi-akte.js`): ein Fall pro Woche, für alle gleich – gleiches Opfer, vier Verdächtige, ein Täter.
-Kapitel 1 Wachen aufstellen · 2 Verhöre · 3 Alibis · 4 Tatort · dann die Anklage. Jedes Kapitel liefert ein Beweisstück
+Kapitel 1 Queens · 2 Knights & Knaves · 3 Einstein-Rätsel · 4 Murdoku · dann die Anklage. Jedes Kapitel liefert ein Beweisstück
 in die Akte; alle Kapitel zeigen auf denselben Täter. Danach gibt es Bonus-Akten.
 
-**Einzeln üben** – jedes Spiel mit Leicht/Mittel/Schwer, Tagesrätsel, Bestzeiten und erklärendem 💡 Tipp:
-- **Tatort** (`krimi.js`) – Mörder-Sudoku: je Reihe/Spalte eine Person, wer allein mit dem Opfer war, ist der Täter.
-- **Wachen der Villa** (`krimi-wachen.js`) – eine Wache pro Reihe, Spalte und Raum, Wachen berühren sich nie.
-- **Das Verhör** (`krimi-verhoer.js`) – jede Person sagt einen Satz, eine (oder zwei) lügen: Wer war es?
-- **Alibi-Raster** (`krimi-alibi.js`) – wer war wann wo mit welchem Gegenstand? Raster mit ✓/✕.
+**Einzeln üben** – jedes Spiel mit Leicht/Mittel/Schwer, Tagesrätsel, Bestzeiten, erklärendem 💡 Tipp und Spielregeln (Knopf „?“, beim ersten Spielen automatisch):
+- **Murdoku** (`krimi.js`, „Der Tatort“) – Mörder-Sudoku: je Reihe/Spalte eine Person, wer allein mit dem Opfer war, ist der Täter.
+- **Queens** (`krimi-wachen.js`, „Die Wachen der Villa“) – eine Wache pro Reihe, Spalte und Raum, Wachen berühren sich nie.
+- **Knights & Knaves** (`krimi-verhoer.js`, „Das Verhör“) – jede Person sagt einen Satz, eine (oder zwei) lügen: Wer war es?
+- **Einstein-Rätsel** (`krimi-alibi.js`, „Das Alibi-Raster“) – wer war wann wo mit welchem Gegenstand? Raster mit ✓/✕.
 
 **So entstehen die Rätsel:** Zuerst wird eine vollständige Lösung gebaut, dann werden wahre Hinweise daraus abgeleitet,
 bis ein Zähl-Löser genau eine Lösung findet; überflüssige Hinweise werden gestrichen. Ein Logik-Löser, der wie ein Mensch

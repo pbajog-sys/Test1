@@ -1167,3 +1167,33 @@ body.theme-hub {
 .akte-fehler { color: #fca5a5 !important; min-height: 1.2em; }
 .akte-zu-stempel { justify-self: center; font-family: "Bebas Neue", Impact, sans-serif; font-size: 2rem; letter-spacing: 0.12em; color: #22c55e; border: 4px solid #22c55e; border-radius: 8px; padding: 0 14px; transform: rotate(-6deg); }
 .akte-schluss { font-size: 0.95rem; }
+
+/* ---------- Spielregeln: „?“-Knopf und Regelblatt ---------- */
+.k-kopf-rechts { display: flex; align-items: center; gap: 10px; }
+.k-hilfe-btn { font-weight: 800; font-size: 1.1rem; }
+.ks-unter { font-family: "Caveat", cursive; font-size: 1.3rem; font-weight: 600; color: #d9a441; line-height: 1.1; margin-top: 2px; }
+.ks-anleitung { text-align: left; background: rgba(245,230,200,0.06); border: 1px solid rgba(245,230,200,0.15); border-radius: 12px; padding: 10px 14px; }
+.ks-anleitung summary { cursor: pointer; font-weight: 700; }
+.ks-anleitung ol { margin: 8px 0 0; padding-left: 20px; line-height: 1.45; font-size: 0.92rem; color: #e5d5b5; }
+.ks-anleitung li + li { margin-top: 6px; }
+.krimi-hilfe {
+  position: fixed; inset: 0; z-index: 40; overflow-y: auto; padding: calc(env(safe-area-inset-top) + 20px) 16px calc(env(safe-area-inset-bottom) + 20px);
+  background: rgba(8,5,4,0.78); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); animation: einblenden .25s ease-out;
+}
+.kh-blatt {
+  max-width: 480px; margin: 0 auto; padding: 18px 18px 16px; border-radius: 6px; color: #2b1d14; display: grid; gap: 8px;
+  background: #f5e6c8; box-shadow: 0 20px 60px rgba(0,0,0,0.6); background-image: repeating-linear-gradient(transparent 0 27px, rgba(43,29,20,0.07) 27px 28px);
+  animation: aufploppen .35s var(--ease-spring);
+}
+.kh-kopf { display: flex; align-items: center; gap: 12px; }
+.kh-bild { width: 64px; height: 64px; flex: none; }
+.kh-bild img, .kh-bild svg, .kh-bild .w-symbol { width: 100%; height: 100%; display: block; object-fit: contain; }
+.kh-kopf h3 { margin: 0; font-family: "Bebas Neue", Impact, sans-serif; font-weight: 400; font-size: 2.2rem; letter-spacing: 0.04em; line-height: 1; }
+.kh-kopf .ks-unter { color: #a3241f; }
+.kh-blatt h4 { margin: 8px 0 0; font-size: 0.8rem; letter-spacing: 0.14em; text-transform: uppercase; color: #8a6d4f; }
+.kh-liste { margin: 0; padding-left: 22px; line-height: 1.45; font-size: 0.95rem; }
+.kh-liste li + li { margin-top: 6px; }
+.kh-liste .mini { display: inline-block; width: 1.5em; height: 1.5em; vertical-align: -0.4em; }
+.kh-liste .mini img { width: 100%; height: 100%; object-fit: contain; }
+.kh-schritte li::marker { color: #a3241f; font-weight: 800; }
+.kh-blatt .btn { width: 100%; margin-top: 8px; }

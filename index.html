@@ -7,7 +7,7 @@
 <meta name="description" content="Lerne alle Walarten kennen und mach das Seepferdchen der Walkunde.">
 <meta name="theme-color" content="#0b2a4a">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=30">
+<link rel="stylesheet" href="fonts/fonts.css?v=31">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -422,7 +422,7 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=30">
+<link rel="stylesheet" href="stil.css?v=31">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -467,7 +467,7 @@
     </button>
     <button class="hub-game hub-krimi" id="hubKrimi" type="button">
       <span class="hg-av hg-av-krimi" aria-hidden="true"><span class="hg-in"><img class="hc-krimi-icon" src="img/krimi/lupe.webp" alt=""></span></span>
-      <span class="hg-text"><span class="hg-titel">Wer war’s?</span><span class="hg-sub">Krimi-Rätsel: Ermittlungsakte, Tatort &amp; mehr</span><span class="hg-best" id="hubKrimiBest"></span></span>
+      <span class="hg-text"><span class="hg-titel">Wer war’s?</span><span class="hg-sub">Ermittlungsakte, Murdoku, Queens &amp; mehr</span><span class="hg-best" id="hubKrimiBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <div class="hub-mehr">Bald mehr Games ✨</div>
@@ -768,7 +768,7 @@
     <div class="krimi-buehne" id="krimiBuehne">
       <div class="farb-kopf">
         <button class="icon-btn" id="krimiZurueck" type="button" aria-label="Zurück">←</button>
-        <span id="krimiRunde"></span>
+        <span class="k-kopf-rechts"><span id="krimiRunde"></span><button class="icon-btn k-hilfe-btn" id="krimiHilfeBtn" type="button" aria-label="Spielregeln" hidden>?</button></span>
       </div>
 
       <div class="krimi-teil" id="krimi-intro">
@@ -807,8 +807,9 @@
       </div>
 
       <div class="krimi-teil" id="krimi-setup" hidden>
-        <div class="ks-kopf"><span class="ks-bild" id="ksBild"></span><div><h2 class="ks-titel" id="ksTitel"></h2><p class="krimi-lead" id="ksLead"></p></div></div>
+        <div class="ks-kopf"><span class="ks-bild" id="ksBild"></span><div><h2 class="ks-titel" id="ksTitel"></h2><div class="ks-unter" id="ksUnter"></div><p class="krimi-lead" id="ksLead"></p></div></div>
         <ol class="krimi-regeln" id="ksRegeln"></ol>
+        <details class="ks-anleitung"><summary>So gehst du vor</summary><ol id="ksAnleitung"></ol></details>
         <div class="farb-stufen" id="ksStufen"></div>
         <button class="btn krimi-gross" id="ksLos" type="button"></button>
         <button class="btn secondary" id="ksTag" type="button"></button>
@@ -871,6 +872,17 @@
       </div>
 
       <div class="krimi-teil akte" id="krimi-akte" hidden></div>
+
+      <div class="krimi-hilfe" id="krimiHilfe" hidden>
+        <div class="kh-blatt" role="dialog" aria-labelledby="khTitel">
+          <div class="kh-kopf"><span class="kh-bild" id="khBild"></span><div><h3 id="khTitel"></h3><div class="ks-unter" id="khUnter"></div></div></div>
+          <h4>Die Regeln</h4>
+          <ol class="kh-liste" id="khRegeln"></ol>
+          <h4>So gehst du vor</h4>
+          <ol class="kh-liste kh-schritte" id="khAnleitung"></ol>
+          <button class="btn krimi-gross" id="khOk" type="button">Verstanden – los geht’s!</button>
+        </div>
+      </div>
 
       <div class="krimi-teil krimi-mitte" id="krimi-ende" hidden>
         <div class="krimi-orden"><i data-k-icon="geloest"></i><span class="krimi-stempel" id="krimiStempelText">Fall gelöst</span></div>
@@ -989,26 +1001,26 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=30"></script>
-<script src="haie.js?v=30"></script>
-<script src="porsche.js?v=30"></script>
-<script src="dackel.js?v=30"></script>
-<script src="groesse.js?v=30"></script>
-<script src="gretchen.js?v=30"></script>
-<script src="effekte.js?v=30"></script>
-<script src="app.js?v=30"></script>
-<script src="melden.js?v=30"></script>
-<script src="hub.js?v=30"></script>
-<script src="farben.js?v=30"></script>
-<script src="cello.js?v=30"></script>
-<script src="toene.js?v=30"></script>
-<script src="krimi-grafik.js?v=30"></script>
-<script src="krimi.js?v=30"></script>
-<script src="krimi-wachen.js?v=30"></script>
-<script src="krimi-verhoer.js?v=30"></script>
-<script src="krimi-alibi.js?v=30"></script>
-<script src="krimi-akte.js?v=30"></script>
-<script src="krimi-zentrale.js?v=30"></script>
-<script src="profile.js?v=30"></script>
+<script src="wale.js?v=31"></script>
+<script src="haie.js?v=31"></script>
+<script src="porsche.js?v=31"></script>
+<script src="dackel.js?v=31"></script>
+<script src="groesse.js?v=31"></script>
+<script src="gretchen.js?v=31"></script>
+<script src="effekte.js?v=31"></script>
+<script src="app.js?v=31"></script>
+<script src="melden.js?v=31"></script>
+<script src="hub.js?v=31"></script>
+<script src="farben.js?v=31"></script>
+<script src="cello.js?v=31"></script>
+<script src="toene.js?v=31"></script>
+<script src="krimi-grafik.js?v=31"></script>
+<script src="krimi.js?v=31"></script>
+<script src="krimi-wachen.js?v=31"></script>
+<script src="krimi-verhoer.js?v=31"></script>
+<script src="krimi-alibi.js?v=31"></script>
+<script src="krimi-akte.js?v=31"></script>
+<script src="krimi-zentrale.js?v=31"></script>
+<script src="profile.js?v=31"></script>
 </body>
 </html>

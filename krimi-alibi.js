@@ -377,12 +377,19 @@ $('alibiLeeren').addEventListener('click', () => {
 });
 
 krimiModus('alibi', {
-  titel: 'Alibi-Raster', kurz: 'Wer war wann wo?', icon: 'uhr',
+  titel: 'Einstein-Rätsel', untertitel: 'Das Alibi-Raster', kurz: 'Wer war wann wo?', icon: 'uhr',
   lead: 'Jede Person war zu einer anderen Zeit in einem anderen Raum – mit einem anderen Gegenstand. Kläre alle Alibis!',
   regeln: [
     '<i class="mini" data-k-icon="richtig"></i> Jede Person hat in jeder Spalte-Gruppe <b>genau ein ✓</b> – und jeder Wert gehört <b>genau einer</b> Person.',
     '<i class="mini" data-k-icon="notizen"></i> Alle <b>Hinweise</b> stimmen. Tippe einen Hinweis an, um ihn abzuhaken.',
-    '<i class="mini" data-k-icon="falsch"></i> Feld antippen: einmal ✕, zweimal ✓, dreimal leer. Graue ✕ ergeben sich von selbst.',
+  ],
+  anleitung: [
+    'Jede <b>Zeile</b> ist eine Person. Die <b>Spalten</b> sind Räume, Ankunftszeiten und Gegenstände.',
+    'Feld <b>einmal</b> antippen = ✕ (stimmt nicht), <b>zweimal</b> = ✓ (stimmt), <b>dreimal</b> = leer.',
+    'Setzt du ein ✓, erscheinen in derselben Zeile und Spalte graue ✕ – dort kann es dann nicht mehr sein.',
+    'Beginne mit den direkten Hinweisen („Elena war nicht in der Küche“), dann kommen die Verknüpfungen („Wer den Schlüssel hatte, kam um 21 Uhr“).',
+    'Zeit-Hinweise: „kam früher als Leon“ heißt z. B., die Person kann nicht als Letztes gekommen sein – und Leon nicht als Erstes.',
+    'Tippe erledigte Hinweise an, um sie abzuhaken.',
   ],
   stufen: { leicht: '3 Personen', mittel: '4 Personen', schwer: '4 · knifflig' },
   neuText: 'Neue Alibis', tagesName: 'Alibis des Tages',

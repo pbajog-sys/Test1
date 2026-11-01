@@ -4,10 +4,10 @@
 //   4 Der Tatort (Täter war allein mit dem Opfer) · Finale: Anklage
 // Der Fall entsteht aus dem Seed der Woche – die ganze Familie ermittelt im selben Fall.
 const AKTE_KAPITEL = [
-  { id: 'wachen', titel: 'Die Villa abriegeln', text: 'Niemand darf das Haus verlassen. Stell die Wachen auf.', icon: 'lampe' },
-  { id: 'verhoer', titel: 'Die Verhöre', text: 'Die vier Verdächtigen werden befragt. Einer lügt.', icon: 'alibi' },
-  { id: 'alibi', titel: 'Die Alibis', text: 'Wer war wann wo – und wer hatte den Brieföffner?', icon: 'uhr' },
-  { id: 'mord', titel: 'Der Tatort', text: 'Rekonstruiere, wer wo stand, als es passierte.', icon: 'tatwaffe' },
+  { id: 'wachen', titel: 'Die Villa abriegeln', text: 'Queens: Niemand darf das Haus verlassen – stell die Wachen auf.', icon: 'lampe' },
+  { id: 'verhoer', titel: 'Die Verhöre', text: 'Knights & Knaves: Die vier Verdächtigen werden befragt. Einer lügt.', icon: 'alibi' },
+  { id: 'alibi', titel: 'Die Alibis', text: 'Einstein-Rätsel: Wer war wann wo – und wer hatte den Brieföffner?', icon: 'uhr' },
+  { id: 'mord', titel: 'Der Tatort', text: 'Murdoku: Rekonstruiere, wer wo stand, als es passierte.', icon: 'tatwaffe' },
 ];
 
 function isoWoche(d = new Date()) {
@@ -158,6 +158,7 @@ function akteZeigen() {
   }
   box.appendChild(fin);
   krimiTeil('akte');
+  krimiHilfeBeimErstenMal('akte');
 }
 
 function akteKapitelStarten(id) {
@@ -167,6 +168,7 @@ function akteKapitelStarten(id) {
   kAktiv = { teil: 'akte', modus: id, akte: { seed: a.seed, kapitel: id } };
   KRIMI_MODI[id].start({ stufe: 'mittel', fall: kf2, tag: false });
   kAktiv.akte = { seed: a.seed, kapitel: id };   // start() setzt den Teil, die Akte bleibt gemerkt
+  krimiHilfeBeimErstenMal(id);
 }
 
 // wird von krimiGeschafft aufgerufen

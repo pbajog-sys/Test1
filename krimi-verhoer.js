@@ -203,12 +203,19 @@ function verhoerTippZeigen(text) {
 $('verhoerTippBtn').addEventListener('click', verhoerTipp);
 
 krimiModus('verhoer', {
-  titel: 'Das Verhör', kurz: 'Wer lügt – und wer war es?', icon: 'alibi',
+  titel: 'Knights & Knaves', untertitel: 'Das Verhör', kurz: 'Wer lügt – und wer war es?', icon: 'alibi',
   lead: 'Alle Verdächtigen sitzen im Verhörraum. Jede Person sagt einen Satz. Finde heraus, wer lügt – und wer der Täter ist.',
   regeln: [
     '<i class="mini" data-k-icon="alibi"></i> Wer <b>ehrlich</b> ist, sagt die Wahrheit. Wer <b>lügt</b>, sagt etwas Falsches.',
     '<i class="mini" data-k-icon="notizen"></i> Wie viele lügen, steht oben im Verhörraum.',
     '<i class="mini" data-k-icon="tatwaffe"></i> Klag die Person an, die es <b>war</b>. Eine falsche Anklage zählt als Tipp.',
+  ],
+  anleitung: [
+    'Lies alle Aussagen. Im roten Kasten steht, <b>wie viele</b> lügen – und ob der Lügner der Täter ist.',
+    '<b>Probier aus:</b> Nimm an, eine Person war es. Welche Aussagen wären dann wahr, welche falsch?',
+    'Stimmt die Zahl der Lügner genau mit der Regel überein, hast du den Täter. Sonst war es jemand anderes.',
+    'Sätze wie „Lara lügt“ sind besonders verräterisch: Entweder Lara lügt – oder wer das sagt, lügt selbst.',
+    'Mit dem Notiz-Knopf merkst du dir, wen du für ehrlich (✓) oder für einen Lügner (✗) hältst.',
   ],
   stufen: { leicht: '3 Verdächtige', mittel: '4 Verdächtige', schwer: '5 · zwei lügen' },
   neuText: 'Neues Verhör', tagesName: 'Verhör des Tages',

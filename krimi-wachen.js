@@ -346,14 +346,20 @@ $('wachenLeeren').addEventListener('click', () => {
 });
 
 krimiModus('wachen', {
-  titel: 'Wachen der Villa', kurz: 'Jeder Raum braucht eine Wache', icon: 'lampe',
+  titel: 'Queens', untertitel: 'Die Wachen der Villa', kurz: 'Jeder Raum braucht eine Wache', icon: 'lampe',
   bild: () => Object.assign(document.createElement('span'), { className: 'w-symbol', innerHTML: WACHE_SVG }),
   lead: 'Heute Nacht darf niemand unbemerkt durch die Villa schleichen. Stell die Wachen so auf, dass jeder Raum bewacht ist.',
   regeln: [
     '<i class="mini" data-k-icon="raum-salon"></i> In <b>jedem Raum</b> steht genau <b>eine Wache</b>.',
     '<i class="mini" data-k-icon="alibi"></i> In <b>jeder Reihe</b> und <b>jeder Spalte</b> steht genau eine Wache.',
     '<i class="mini" data-k-icon="lampe"></i> Zwei Wachen dürfen sich <b>nie berühren</b> – auch nicht schräg.',
-    '<i class="mini" data-k-icon="falsch"></i> Einmal tippen = ✕ (hier keine Wache), zweimal = Wache, dreimal = leer.',
+  ],
+  anleitung: [
+    'Feld <b>einmal</b> antippen = ✕ (hier steht keine Wache), <b>zweimal</b> = Wache, <b>dreimal</b> = wieder leer.',
+    'Fang beim <b>kleinsten Raum</b> an – er hat die wenigsten Möglichkeiten.',
+    'Liegt ein Raum ganz in einer Reihe (oder Spalte), steht die Wache dieser Reihe sicher in diesem Raum – der Rest der Reihe bekommt ✕.',
+    'Rund um jede Wache (auch schräg) und in ihrer Reihe, Spalte und ihrem Raum darf keine weitere stehen – das <b>Laternenlicht</b> zeigt dir diese Felder.',
+    'Mit ↶ machst du den letzten Zug rückgängig. Stehen alle Wachen richtig, leuchtet die ganze Villa.',
   ],
   stufen: { leicht: '5 × 5', mittel: '6 × 6', schwer: '7 × 7' },
   neuText: 'Neue Nacht', tagesName: 'Nacht des Tages',

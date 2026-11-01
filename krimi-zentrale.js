@@ -7,6 +7,8 @@ let kAktiv = { teil: 'intro', modus: null, akte: null };
 function krimiTeil(id) {
   KRIMI_TEILE.forEach((t) => { const el = $('krimi-' + t); if (el) el.hidden = t !== id; });
   kAktiv.teil = id;
+  $('krimiHilfe').hidden = true;
+  $('krimiHilfeBtn').hidden = id === 'intro' || id === 'ende';
   if (id === 'intro' || id === 'setup' || id === 'akte') krimiUhrStopp();
   window.scrollTo(0, 0);
   $('krimiBuehne').scrollTop = 0;
@@ -99,7 +101,7 @@ function krimiIntro() {
     b.innerHTML = '<span class="km-bild"></span><span class="km-titel"></span><span class="km-sub"></span><span class="km-stand"></span>';
     b.querySelector('.km-bild').appendChild(m.bild ? m.bild() : krimiIcon(m.icon));
     b.querySelector('.km-titel').textContent = m.titel;
-    b.querySelector('.km-sub').textContent = m.kurz;
+    b.querySelector('.km-sub').textContent = (m.untertitel ? m.untertitel + ' · ' : '') + m.kurz;
     b.querySelector('.km-stand').textContent = zahl ? '✓ ' + zahl + ' gelöst' : 'Neu';
     b.addEventListener('click', () => krimiSetup(m.id));
     box.appendChild(b);
@@ -115,8 +117,10 @@ function krimiSetup(id) {
   const stufe = ((st.stufen || {})[id] in m.stufen) ? st.stufen[id] : (id === 'mord' && st.stufe in m.stufen ? st.stufe : 'leicht');
   $('ksBild').replaceChildren(m.bild ? m.bild() : krimiIcon(m.icon));
   $('ksTitel').textContent = m.titel;
+  $('ksUnter').textContent = m.untertitel || '';
   $('ksLead').textContent = m.lead;
   $('ksRegeln').innerHTML = m.regeln.map((r) => '<li>' + r + '</li>').join('');
+  $('ksAnleitung').innerHTML = (m.anleitung || []).map((r) => '<li>' + r + '</li>').join('');
   krimiIconsEinsetzen($('ksRegeln'));
   const hut = { leicht: 'hut-leicht', mittel: 'hut-mittel', schwer: 'hut-schwer' };
   const box = $('ksStufen');
@@ -157,8 +161,51 @@ function krimiLos(id, stufe, tag) {
     $('ksLos').disabled = false;
     $('ksLos').textContent = m.neuText;
     m.start({ stufe, seed, tag });
+    krimiHilfeBeimErstenMal(id);
   }, 30);
 }
+
+// ---------- Spielregeln (Knopf „?“ und beim ersten Spielen automatisch) ----------
+const AKTE_HILFE = {
+  titel: 'Ermittlungsakte', untertitel: 'Ein Fall in vier Kapiteln', icon: 'notizen',
+  regeln: [
+    'Jede Woche gibt es einen <b>neuen Mordfall</b> – für die ganze Familie derselbe.',
+    'Der Fall hat <b>vier Kapitel</b>. Jedes Kapitel ist eines der Krimi-Spiele – immer mit denselben Verdächtigen und demselben Täter.',
+    'Jedes gelöste Kapitel legt ein <b>Beweisstück</b> in die Akte. Die Kapitel werden der Reihe nach freigeschaltet.',
+    'Zum Schluss kommt die <b>Anklage</b>: Wähle den Täter. Falsche Anklagen werden gezählt.',
+  ],
+  anleitung: [
+    '<b>Kapitel 1 – Queens:</b> Stell die Wachen auf, damit niemand entkommt.',
+    '<b>Kapitel 2 – Knights &amp; Knaves:</b> Finde im Verhör heraus, wer lügt.',
+    '<b>Kapitel 3 – Einstein-Rätsel:</b> Kläre die Alibis – wer hatte den Brieföffner?',
+    '<b>Kapitel 4 – Murdoku:</b> Stell alle in den Grundriss – wer war allein mit dem Opfer?',
+    'In jedem Kapitel erklärt dir der <b>?</b>-Knopf oben rechts die Regeln. Nach Montag gibt es eine neue Akte, dazwischen Bonus-Akten.',
+  ],
+};
+function krimiHilfe(id) {
+  const m = id === 'akte' ? AKTE_HILFE : KRIMI_MODI[id];
+  if (!m) return;
+  $('khBild').replaceChildren(m.bild ? m.bild() : krimiIcon(m.icon));
+  $('khTitel').textContent = m.titel;
+  $('khUnter').textContent = m.untertitel || '';
+  $('khRegeln').innerHTML = m.regeln.map((r) => '<li>' + r + '</li>').join('');
+  $('khAnleitung').innerHTML = (m.anleitung || []).map((r) => '<li>' + r + '</li>').join('');
+  krimiIconsEinsetzen($('khRegeln'));
+  $('krimiHilfe').hidden = false;
+  $('krimiHilfe').scrollTop = 0;
+}
+// Beim allerersten Mal (je Profil) die Regeln von selbst zeigen
+function krimiHilfeBeimErstenMal(id) {
+  const st = kStand();
+  st.erklaert = st.erklaert || {};
+  if (st.erklaert[id]) return;
+  st.erklaert[id] = true;
+  saveJson(KRIMI_KEY, st);
+  krimiHilfe(id);
+}
+$('krimiHilfeBtn').addEventListener('click', () => krimiHilfe(kAktiv.teil === 'akte' && !kAktiv.modus ? 'akte' : kAktiv.modus || 'akte'));
+$('khOk').addEventListener('click', () => { $('krimiHilfe').hidden = true; });
+$('krimiHilfe').addEventListener('click', (e) => { if (e.target.id === 'krimiHilfe') $('krimiHilfe').hidden = true; });
 
 // ---------- Navigation ----------
 function krimiZurueck() {

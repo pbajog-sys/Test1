@@ -625,13 +625,20 @@ $('krimiAufgeben').addEventListener('click', () => {
 
 // ---------- In der Krimi-Zentrale anmelden ----------
 krimiModus('mord', {
-  titel: 'Tatort', kurz: 'Das Mörder-Sudoku', icon: 'tatwaffe',
+  titel: 'Murdoku', untertitel: 'Der Tatort', kurz: 'Das Mörder-Sudoku', icon: 'tatwaffe',
   lead: 'Stell alle Verdächtigen in den Grundriss der Villa und finde heraus, wer es war.',
   regeln: [
     '<i class="mini" data-k-icon="alibi"></i> In <b>jeder Reihe</b> und <b>jeder Spalte</b> steht genau <b>eine Person</b>.',
     '<i class="mini" data-k-icon="pflanze"></i><i class="mini" data-k-icon="uhr"></i><i class="mini" data-k-icon="schrank"></i><i class="mini" data-k-icon="lampe"></i> sind besetzt – auf <i class="mini" data-k-icon="raum-salon"></i><i class="mini" data-k-icon="sofa"></i><i class="mini" data-k-icon="raum-schlafzimmer"></i><i class="mini" data-k-icon="teppich"></i> darf man stehen.',
     '<i class="mini" data-k-icon="notizen"></i> Alle <b>Hinweise</b> stimmen.',
     '<i class="mini" data-k-icon="tatwaffe"></i> Wer <b>allein mit dem Opfer</b> in einem Raum war, ist der Mörder.',
+  ],
+  anleitung: [
+    'Tippe unten eine Person an und dann das Feld, auf dem sie stand. Nochmal aufs Feld tippen nimmt sie wieder weg.',
+    'Auch das <b>Opfer</b> kommt in den Grundriss – es ist die Figur mit dem roten Ring.',
+    'Fang mit Hinweisen an, die nur wenige Felder erlauben – z. B. „in der obersten Reihe“ und „saß in einem Sessel“.',
+    'Mit <b>✕ Ausschließen</b> markierst du Felder, auf denen sicher niemand stand.',
+    'Erfüllte Hinweise werden abgehakt, Widersprüche rot markiert. Sobald alle richtig stehen, ist der Fall gelöst.',
   ],
   stufen: { leicht: '4 × 4', mittel: '5 × 5', schwer: '6 × 6' },
   neuText: 'Neuer Fall', tagesName: 'Fall des Tages',
