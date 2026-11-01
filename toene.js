@@ -283,7 +283,7 @@ $('tonWeiter').addEventListener('click', () => { ts.runde++; if (ts.runde >= TON
 $('tonNochmalSpiel').addEventListener('click', () => toeneStart({ stufe: ts.stufe }));
 $('tonTeilen').addEventListener('click', toeneTeilen);
 $('tonZurueck').addEventListener('click', () => { clearInterval(tonTimer); liveStopp(); cancelAnimationFrame(welleAnim); ts = null; zeigeHub(); });
-$('hubToene').addEventListener('click', () => zoomZu($('hubToene'), () => { show('toene', '🎧 Ton-Gedächtnis'); toeneIntro(); }));
+$('hubToene').addEventListener('click', () => { merkeZuletzt('toene'); zoomZu($('hubToene'), () => { show('toene', '🎧 Ton-Gedächtnis'); toeneIntro(); }); });
 
 // Challenge-Link: ?toene=<seed>&stufe=…&n=…&p=…
 (() => {

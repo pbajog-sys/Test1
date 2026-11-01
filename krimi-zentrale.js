@@ -223,7 +223,7 @@ $('krimiNochmal').addEventListener('click', () => {
   krimiLos(kAktiv.modus, kAktiv.stufe, false);
 });
 $('krimiMenue').addEventListener('click', krimiIntro);
-$('hubKrimi').addEventListener('click', () => zoomZu($('hubKrimi'), () => { show('krimi', '🔎 Wer war\'s?'); krimiIntro(); }));
+$('hubKrimi').addEventListener('click', () => { merkeZuletzt('krimi'); zoomZu($('hubKrimi'), () => { show('krimi', '🔎 Wer war\'s?'); krimiIntro(); }); });
 
 // Icons in der festen Seite (Regeln, Knöpfe) einsetzen
 krimiIconsEinsetzen();

@@ -178,3 +178,10 @@ nötigen Denkschritte bestimmen die Schwierigkeit und liefern die Erklärungen f
 - **Handy quer** (wenig Höhe): kompaktere Köpfe, Bretter passen in die Bildschirmhöhe.
 - **Vollbild**: Knopf ⛶ im Dashboard (Desktop und Android). Als installierte App darf Android jetzt auch quer drehen.
 
+## 🗄️ Dashboard „Spieleschrank“
+- Ruhiges, warmes Design: dunkler Hintergrund mit festem Papierkorn, Serifen-Titel, eine Akzentfarbe (Bernstein).
+- **Weiterspielen** ganz oben: das zuletzt gespielte Spiel bzw. die zuletzt gespielte Quiz-Welt (je Profil).
+- **Alle Spiele** als gleichförmige Cover-Karten mit echten Bildern (Fotomosaik, Villa, Farbfächer, Notenblatt, Wellenform),
+  darunter Fortschritt in klaren Worten; die Quiz-Welten im selben Muster mit Foto und Fortschrittsbalken.
+- Keine Dauer-Animationen und kein Weichzeichner im Dashboard (Akku); Bewegung nur beim Antippen. „Bewegung reduzieren“ wird beachtet.
+

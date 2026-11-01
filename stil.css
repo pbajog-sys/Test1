@@ -1238,3 +1238,121 @@ body.theme-hub {
 .farb-mitte-erg i { display: block; height: 46px; border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2); }
 .farb-mitte-erg span:nth-child(2) i, .farb-mitte-erg span:nth-child(3) i { box-shadow: 0 0 0 2px #fff; }
 .farb-mitte-erg small { font-size: 0.72rem; opacity: .8; }
+
+/* ===================================================================
+   Dashboard „Spieleschrank“ – ruhig, warm, ohne Dauer-Animationen.
+   Prinzipien: klare Hierarchie (Titel → Abschnitt → Karte), gleiche Kartenform für alle Spiele,
+   große Tippflächen (≥ 44 px), Bewegung nur als Rückmeldung, echte Bilder statt Effekte.
+   =================================================================== */
+body.theme-hub {
+  --bg1: #141210; --bg2: #141210;
+  --flaeche: #1d1a17; --flaeche-hoch: #262220; --linie: rgba(242,237,230,0.09);
+  --text: #f2ede6; --muted: #a69f95; --accent: #e0a64a; --accent-ink: #1d1407;
+  --card: rgba(242,237,230,0.05); --card-strong: rgba(242,237,230,0.10); --glow: transparent;
+  --font-head: "Outfit", system-ui, sans-serif;
+  /* feines, festes Papierkorn (einmal gezeichnet, kein Neuzeichnen beim Scrollen) */
+  background: #141210 url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='k'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 .05 0'/%3E%3C/filter%3E%3Crect width='160' height='160' filter='url(%23k)'/%3E%3C/svg%3E");
+  font-family: "Outfit", system-ui, sans-serif; color: var(--text);
+}
+body.theme-hub #ambient { display: none; }
+
+/* Kopf */
+#screen-hub .hub-kopf, #screen-quizze .hub-kopf { padding: 6px 2px 4px; }
+.theme-hub .hub-gruss { color: var(--muted); font-size: 0.95rem; animation: none; }
+.theme-hub .hub-titel {
+  font-family: "Playfair Display", Georgia, serif; font-weight: 700; font-size: clamp(2.6rem, 11vw, 3.4rem); letter-spacing: -0.01em; line-height: 1;
+  margin: 6px 0 4px; background: none; -webkit-background-clip: border-box; background-clip: border-box; color: var(--text); animation: none;
+}
+.theme-hub .hub-h {
+  margin: 0 0 10px; font-size: 0.75rem; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted);
+}
+.hub-abschnitt { margin-top: 24px; }
+.theme-hub .profil-btn, .theme-hub .vollbild-btn, .theme-hub .qz-zurueck {
+  background: var(--flaeche); border: 1px solid var(--linie); color: var(--text); box-shadow: none;
+}
+.theme-hub .profil-btn { min-height: 40px; }
+.theme-hub .vollbild-btn { width: 40px; height: 40px; }
+.theme-hub .qz-zurueck { min-height: 40px; padding: 0 14px 0 10px; }
+
+/* Weiterspielen */
+.weiter-karte {
+  width: 100%; display: flex; align-items: center; gap: 14px; padding: 10px 14px 10px 10px; min-height: 76px;
+  border: 1px solid var(--linie); border-radius: 14px; background: var(--flaeche); color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  transition: background .15s, transform .15s;
+}
+.weiter-karte:active { transform: scale(.985); background: var(--flaeche-hoch); }
+.weiter-bild { width: 72px; height: 54px; flex: none; border-radius: 9px; overflow: hidden; position: relative; display: block; }
+.weiter-bild .cover-bild { position: absolute; inset: 0; aspect-ratio: auto; border-radius: 0; }
+.weiter-bild .cb-kachel { display: block; width: 100%; height: 100%; }
+.weiter-text { flex: 1; min-width: 0; display: grid; gap: 2px; }
+.weiter-text b { font-size: 1.05rem; font-weight: 600; }
+.weiter-text small { color: var(--muted); font-size: 0.85rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.weiter-pfeil { font-size: 1.8rem; line-height: 1; color: var(--accent); padding-right: 2px; }
+
+/* Regal: alle Spiele als gleichförmige Cover-Karten */
+.regal { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+.cover {
+  display: grid; gap: 8px; align-content: start; padding: 0; border: 0; background: none; color: var(--text); font: inherit; text-align: left; cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+.cover-bild {
+  position: relative; display: block; aspect-ratio: 4 / 3; border-radius: 12px; overflow: hidden;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.06) inset, 0 8px 20px rgba(0,0,0,0.35); transition: transform .15s ease-out;
+}
+.cover:active .cover-bild { transform: scale(.97); }
+.cover:focus-visible { outline: none; }
+.cover:focus-visible .cover-bild { box-shadow: 0 0 0 3px var(--accent); }
+.cover-text { display: grid; gap: 1px; padding: 0 2px; }
+.cover-text b { font-size: 1rem; font-weight: 600; line-height: 1.25; }
+.cover-text small { color: var(--muted); font-size: 0.8rem; line-height: 1.3; }
+.cover-text .cover-stand { color: var(--accent); font-weight: 600; margin-top: 2px; }
+
+/* Cover: Quizzes – Fotomosaik */
+.cb-quiz { display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1fr; gap: 2px; background: #0d0c0b; }
+.cb-kachel { position: relative; overflow: hidden; }
+.cb-kachel img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; opacity: 0; transition: opacity .3s; }
+.cb-kachel.geladen img { opacity: 1; }
+/* Cover: Krimi – Villa bei Nacht (statisch) */
+.cb-krimi { background: radial-gradient(70% 60% at 78% 18%, rgba(255,236,190,0.22), transparent 60%), linear-gradient(#0e0b14, #241a14); }
+.cb-mond { position: absolute; right: 12%; top: 10%; width: 16%; aspect-ratio: 1; border-radius: 50%; background: #f3e6c4; box-shadow: 0 0 24px 6px rgba(243,230,196,0.25); }
+.cb-krimi img { position: absolute; left: 4%; right: 4%; bottom: -2%; width: 92%; height: auto; }
+/* Cover: Farben – Farbfächer aus Musterkarten */
+.cb-farben { background: #ece5d8; }
+.cb-farben i {
+  position: absolute; left: 50%; bottom: -18%; width: 26%; height: 92%; margin-left: -13%; border-radius: 6px; transform-origin: 50% 100%;
+  transform: rotate(var(--d)); background: linear-gradient(var(--f) 0 74%, #fbf8f2 74%); box-shadow: 0 2px 6px rgba(0,0,0,0.18);
+}
+/* Cover: Cello – Notenpapier mit Holzkante */
+.cb-cello { background: linear-gradient(90deg, #6b3f22 0 7%, #8a5530 7% 9%, #f4ead6 9%); }
+.cb-cello svg { position: absolute; left: 9%; top: 0; width: 91%; height: 100%; }
+/* Cover: Töne – Wellenform */
+.cb-toene { background: radial-gradient(80% 70% at 50% 50%, #12302e, #0a1615); }
+.cb-toene svg { position: absolute; inset: 12% 0; width: 100%; height: 76%; }
+
+/* Bestenliste im neuen Stil */
+.theme-hub .familie-liste { background: var(--flaeche); border: 1px solid var(--linie); border-radius: 14px; }
+.theme-hub .familie-liste li.ich { color: var(--accent); }
+
+.hub-fuss { margin: 28px 0 8px; text-align: center; }
+.theme-hub .hub-ds { color: var(--muted); opacity: .8; font-size: 0.8rem; }
+
+/* Quiz-Auswahl im ruhigen Stil: keine drehenden Ringe, keine Dauer-Deko */
+.theme-hub .w-ring::before { animation: none; }
+.theme-hub .hc-deko { animation: none; }
+.theme-hub .hub-card { box-shadow: 0 8px 20px rgba(0,0,0,0.35); }
+@media (hover: hover) { .theme-hub .hub-card:hover { transform: translateY(-2px); } }
+
+/* Wer „Bewegung reduzieren“ eingestellt hat: gar keine Animationen im Dashboard */
+@media (prefers-reduced-motion: reduce) {
+  .theme-hub *, .theme-hub *::before, .theme-hub *::after { animation: none !important; transition: none !important; }
+}
+/* Quiz-Welten als Cover – gleiches Muster wie das Regal im Dashboard */
+.hub-quiz.hub-quiz { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px 12px; }
+.cover-welt .cover-bild { display: block; }
+.cover-welt .cb-kachel { position: absolute; inset: 0; }
+.cover-marke { position: absolute; left: 8px; bottom: 8px; padding: 2px 8px; border-radius: 999px; background: rgba(20,18,16,0.82); font-size: 0.85rem; letter-spacing: 2px; }
+.cover-fort { display: block; height: 4px; margin: 6px 0 2px; border-radius: 2px; background: var(--linie); overflow: hidden; }
+.cover-fort i { display: block; height: 100%; background: var(--accent); border-radius: 2px; }
+/* alte Welt-Karten-Stile auf den neuen Covern neutralisieren */
+.cover.cover-welt { background: none !important; color: var(--text) !important; clip-path: none !important; border-radius: 0 !important; min-height: 0; padding: 0; box-shadow: none !important; animation: none; }
+.cover.cover-welt::before, .cover.cover-welt::after { display: none !important; }

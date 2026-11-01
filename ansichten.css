@@ -23,8 +23,13 @@
   .hub-spalten .spalte-b { gap: 10px; }
   .hub-spalten .hub-mehr { margin: 6px 0 0; }
 
+  /* Dashboard: Regal breiter, Weiterspielen schmaler */
+  .regal { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 22px 16px; }
+  .hub-abschnitt#hubWeiter { max-width: 560px; }
+  .hub-familie { max-width: 560px; }
+
   /* Quiz-Auswahl: alle Welten in einer Reihe */
-  .hub-quiz { grid-template-columns: repeat(5, minmax(0, 1fr)); }
+  .hub-quiz.hub-quiz { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 22px 16px; }
   .hub-card.hc-beide { grid-column: auto; min-height: 190px; }
 
   /* Quiz-Startseite und Stufen */
@@ -115,6 +120,9 @@
 
 /* ---------- Großer Bildschirm (Desktop, Tablet quer) ---------- */
 @media (min-width: 1000px) and (min-height: 600px) {
+  .regal, .hub-quiz.hub-quiz { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 28px 18px; }
+  .cover-text b { font-size: 1.1rem; }
+  .cover-text small { font-size: 0.85rem; }
   .vh-karten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .hub-titel { font-size: 5rem; }
   #pickList { grid-template-columns: repeat(3, minmax(0, 1fr)); }

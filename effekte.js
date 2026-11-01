@@ -23,6 +23,7 @@ function elem(cls, html = '') {
 
 // Baut die Kulisse der Welt in #ambient neu auf.
 let ambientWelt = null;
+// Für das Dashboard ('hub') gibt es bewusst keine Kulisse – ruhiger Hintergrund, kein Akkuverbrauch.
 function setAmbient(w) {
   if (ambientWelt === w) return;
   ambientWelt = w;
@@ -66,13 +67,6 @@ function setAmbient(w) {
       s.style.cssText = `top:${zufallZahl(5, 95)}vh;width:${zufallZahl(12, 40)}vw;opacity:${zufallZahl(0.15, 0.5)};animation-duration:${zufallZahl(0.9, 2.2)}s;animation-delay:-${zufallZahl(0, 2)}s`;
       box.appendChild(s);
     }
-  } else if (w === 'hub') {
-    // langsam wandernde, leuchtende Farbflecken
-    [['#7c3aed', 10, 8, 0], ['#06b6d4', 70, 20, 4], ['#f43f5e', 20, 65, 8], ['#f59e0b', 75, 75, 2]].forEach(([farbe, x, y, verz]) => {
-      const f = elem('blob');
-      f.style.cssText = `left:${x}vw;top:${y}vh;background:${farbe};animation-delay:-${verz}s`;
-      box.appendChild(f);
-    });
   } else if (w === 'dackel') {
     for (let i = 0; i < 9; i++) {
       const p = elem('pfote', zufall(['🐾', '🐾', '🦴', '💕']));
