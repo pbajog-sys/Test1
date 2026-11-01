@@ -89,7 +89,7 @@ header h1 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes einblenden { from { opacity: 0; } to { opacity: 1; } }
 /* Die Spiele haben eine eigene Vollbild-Bühne (position: fixed). Eine Animation mit transform auf dem
    Bildschirm würde Safari dazu bringen, die Bühne nur innerhalb des Bildschirms zu zeichnen („Fenster im Fenster“). */
-#screen-farben.active, #screen-cello.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-krimi.active { animation: none; }
+#screen-farben.active, #screen-cello.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-augen.active, #screen-karte.active, #screen-krimi.active { animation: none; }
 @keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
@@ -1617,3 +1617,145 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .pw-liste li { background: #fff; color: #1d2340; cursor: default; box-shadow: 0 3px 0 rgba(29,35,64,.08); }
 #pw-aufloesung #pwWeiter { position: sticky; bottom: 0; z-index: 2; }
 @media (prefers-reduced-motion: reduce) { .pw-mini circle, .pw-mini .pm-linie { animation: none; } }
+
+/* ===================================================================
+   📐 Augenmaß – Blaupause: tiefes Blau, Kreide-Weiß, Orange für deine Linie, Mint für die Lösung
+   =================================================================== */
+.ag-mini, .kt-mini { display: block; width: 100%; height: 100%; overflow: visible; }
+.ag-mini path, .ag-mini line { fill: none; stroke: #e8f1ff; stroke-width: 3; stroke-linecap: round; }
+.ag-mini .am-arm path { stroke: #ffb547; }
+.ag-mini .am-arm circle { fill: #ffb547; }
+.ag-mini .am-bogen { stroke: #5eead4; stroke-width: 2.5; }
+.ag-mini .am-ecke { fill: #e8f1ff; }
+.ag-mini .am-arm { transform-box: view-box; transform-origin: 10px 48px; animation: amArm 3.2s ease-in-out infinite; }
+@keyframes amArm { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-22deg); } }
+.hub-augen { background: linear-gradient(#0a1c36, #0a1c36) padding-box, linear-gradient(90deg, #5eead4, #3b82f6, #ffb547, #5eead4) border-box; background-size: 100% 100%, 300% 100%; box-shadow: 0 16px 50px rgba(59,130,246,0.22); }
+.hub-augen .hg-titel { background: linear-gradient(90deg, #93c5fd, #5eead4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hg-av-augen { --ring: conic-gradient(#5eead4, #3b82f6, #ffb547, #5eead4); }
+.hg-av-augen > .hg-in { background: #0d3a6e linear-gradient(rgba(255,255,255,.08) 1px, transparent 1px) 0 0 / 10px 10px, linear-gradient(90deg, rgba(255,255,255,.08) 1px, transparent 1px) 0 0 / 10px 10px; border-color: #0a1c36; padding: 12px; }
+.bu-augen { left: 6%; bottom: 204px; width: 40px; height: 40px; animation-delay: .22s; }
+
+.ag-buehne {
+  position: fixed; inset: 0; z-index: 20; overflow-y: auto; color: #e8f1ff;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  background:
+    linear-gradient(rgba(255,255,255,0.09) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(90deg, rgba(255,255,255,0.09) 1px, transparent 1px) 0 0 / 40px 40px,
+    linear-gradient(rgba(255,255,255,0.035) 1px, transparent 1px) 0 0 / 8px 8px,
+    linear-gradient(90deg, rgba(255,255,255,0.035) 1px, transparent 1px) 0 0 / 8px 8px,
+    radial-gradient(120% 80% at 50% 0%, #11508f, #0b3566 60%, #082a52);
+  font-family: "Outfit", system-ui, sans-serif;
+}
+.ag-buehne > * { max-width: 560px; margin-left: auto; margin-right: auto; }
+.ag-buehne .farb-kopf .icon-btn { background: rgba(255,255,255,0.12); color: inherit; }
+.ag-teil { display: grid; gap: 14px; animation: aufploppen .4s var(--ease-spring); }
+#ag-intro { text-align: center; padding-top: 2vh; }
+.ag-logo { width: 96px; height: 96px; margin: 0 auto; padding: 16px; border: 2px dashed rgba(232,241,255,.45); border-radius: 50%; }
+.ag-titel { margin: 0; font-size: 2.7rem; font-weight: 800; letter-spacing: 0.02em; font-family: "Bebas Neue", "Outfit", sans-serif; font-weight: 400; font-size: 3.3rem; color: #e8f1ff; text-shadow: 0 0 18px rgba(147,197,253,.5); }
+.ag-lead { margin: 0 auto; max-width: 38ch; line-height: 1.5; color: #c4d8f5; }
+.ag-typen { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.ag-typen span { padding: 5px 10px; border-radius: 999px; border: 1px solid rgba(232,241,255,.3); font-size: 0.8rem; background: rgba(255,255,255,.06); }
+.ag-buehne .farb-stufen button small { font-size: 0.68rem; }
+.ag-challenge { background: rgba(94,234,212,.12); border-color: #5eead4; }
+.ag-buehne .btn { width: 100%; }
+.ag-buehne .btn.ag-gross-btn { font-size: 1.15rem; padding: 16px; background: #ffb547; color: #2a1700; box-shadow: 0 5px 0 #b97a1e, 0 12px 26px rgba(255,181,71,.3); }
+.ag-buehne .btn.ag-gross-btn:disabled { opacity: .45; }
+.ag-buehne .btn.secondary { background: rgba(255,255,255,0.12); color: inherit; box-shadow: none; }
+.ag-best { font-size: 0.85rem; color: #a9c3e8; }
+.ag-frage { text-align: center; font-size: 1.2rem; font-weight: 700; }
+.ag-hinweis { text-align: center; font-size: 0.85rem; color: #a9c3e8; }
+.ag-flaeche { display: block; width: 100%; max-width: 440px; margin: 0 auto; aspect-ratio: 1; touch-action: none; border: 2px solid rgba(232,241,255,.4); border-radius: 14px; background: rgba(4,26,56,.35); cursor: crosshair; }
+.ag-flaeche.klein { max-width: 300px; cursor: default; }
+.ag-flaeche line, .ag-flaeche path, .ag-flaeche polygon, .ag-flaeche circle { stroke-linecap: round; stroke-linejoin: round; }
+.ag-vorlage line { stroke: #f4f8ff; stroke-width: 4; }
+.ag-vorlage .ag-tausch { stroke-width: 2.5; opacity: .9; }
+.ag-ende { fill: #f4f8ff; }
+.ag-form { fill: rgba(255,255,255,.07); stroke: #f4f8ff; stroke-width: 4; }
+.ag-du { fill: #ffb547; stroke: #2a1700; stroke-width: 2; }
+.ag-du-linie { stroke: #ffb547; stroke-width: 4.5; }
+.ag-du-ebene .ag-tausch, .ag-du-flossen line { stroke: #ffb547; stroke-width: 2.5; }
+.ag-du-flossen line { stroke-width: 4; }
+.ag-griff { fill: #ffb547; stroke: #fff; stroke-width: 3; }
+.ag-bogen { fill: none; stroke: #ffb547; stroke-width: 2.5; stroke-dasharray: 4 5; }
+.ag-ok { fill: #5eead4; stroke: #04332d; stroke-width: 2; animation: aufploppen .5s var(--ease-spring) .2s backwards; }
+.ag-ok-linie { stroke: #5eead4; stroke-width: 3.5; stroke-dasharray: 10 7; animation: aufploppen .5s var(--ease-spring) .2s backwards; }
+.ag-hilfe { stroke: #5eead4; stroke-width: 1.8; stroke-dasharray: 5 5; opacity: .8; }
+.ag-legende { display: flex; justify-content: center; gap: 18px; font-size: 0.85rem; color: #c4d8f5; }
+.ag-legende i { display: inline-block; width: 12px; height: 12px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+.ag-legende i.du { background: #ffb547; } .ag-legende i.ok { background: #5eead4; }
+.ag-text { text-align: center; font-size: 1.15rem; font-weight: 700; padding: 12px; border-radius: 14px; background: rgba(255,255,255,.08); }
+.ag-erkl { font-size: 0.92rem; line-height: 1.5; color: #d6e5fa; padding: 12px 14px; border-left: 3px solid #5eead4; background: rgba(94,234,212,.08); border-radius: 0 12px 12px 0; }
+.ag-liste li { cursor: default; background: rgba(255,255,255,.08); }
+.ag-buehne .ton-liste .tl-c { opacity: .8; }
+
+/* ===================================================================
+   🧭 Karten-Gefühl – Seekarte: dunkles Meer, sandfarbenes Land, rote Nadel, grünes Ziel
+   =================================================================== */
+.kt-mini .km-rand { fill: #f3e9d2; stroke: #c9a227; stroke-width: 3; }
+.kt-mini .km-striche { stroke: #8a6d1d; stroke-width: 2.5; stroke-linecap: round; }
+.kt-mini .km-nord { fill: #e11d48; } .kt-mini .km-sued { fill: #334155; }
+.kt-mini .km-mitte { fill: #f3e9d2; stroke: #334155; stroke-width: 1.5; }
+.kt-mini .km-nadel { transform-box: view-box; transform-origin: 30px 30px; animation: kmNadel 4s ease-in-out infinite; }
+@keyframes kmNadel { 0%, 100% { transform: rotate(-18deg); } 30% { transform: rotate(14deg); } 55% { transform: rotate(-6deg); } 75% { transform: rotate(4deg); } }
+.hub-karte { background: linear-gradient(#0b1d24, #0b1d24) padding-box, linear-gradient(90deg, #f3e9d2, #0ea5a4, #e11d48, #f3e9d2) border-box; background-size: 100% 100%, 300% 100%; box-shadow: 0 16px 50px rgba(14,165,164,0.2); }
+.hub-karte .hg-titel { background: linear-gradient(90deg, #f3e9d2, #5eead4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hg-av-karte { --ring: conic-gradient(#f3e9d2, #0ea5a4, #e11d48, #f3e9d2); }
+.hg-av-karte > .hg-in { background: #10394a; border-color: #0b1d24; padding: 6px; }
+.bu-karte { right: 28%; bottom: 194px; width: 38px; height: 38px; animation-delay: .26s; }
+
+.kt-buehne {
+  position: fixed; inset: 0; z-index: 20; overflow-y: auto; color: #f3e9d2;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  background: radial-gradient(120% 70% at 50% 0%, #15495a, #0c2b36 60%, #08202a);
+  font-family: "Outfit", system-ui, sans-serif;
+}
+.kt-buehne > * { max-width: 620px; margin-left: auto; margin-right: auto; }
+.kt-buehne .farb-kopf .icon-btn { background: rgba(243,233,210,0.12); color: inherit; }
+.kt-teil { display: grid; gap: 12px; animation: aufploppen .4s var(--ease-spring); }
+#kt-intro { text-align: center; padding-top: 2vh; }
+.kt-logo { width: 100px; height: 100px; margin: 0 auto; filter: drop-shadow(0 8px 20px rgba(0,0,0,.4)); }
+.kt-titel { margin: 0; font-family: "Playfair Display", Georgia, serif; font-size: 2.6rem; font-weight: 700; font-style: italic; color: #f3e9d2; }
+.kt-lead { margin: 0 auto; max-width: 38ch; line-height: 1.5; color: #d9cfb6; min-height: 4.5em; }
+.kt-hinweis { margin: 0; font-size: 0.85rem; color: #a9b8b0; }
+.kt-buehne .takt-modi button { border-color: rgba(243,233,210,.25); background: rgba(243,233,210,.06); color: inherit; }
+.kt-buehne .takt-modi button.on { border-color: #5eead4; background: rgba(94,234,212,.16); }
+.kt-buehne .farb-stufen button small { font-size: 0.68rem; }
+.kt-challenge { background: rgba(94,234,212,.12); border-color: #5eead4; }
+.kt-buehne .btn { width: 100%; }
+.kt-buehne .btn.kt-gross-btn { font-size: 1.15rem; padding: 16px; background: #e11d48; color: #fff; box-shadow: 0 5px 0 #8c1230, 0 12px 26px rgba(225,29,72,.3); }
+.kt-buehne .btn.kt-gross-btn:disabled { opacity: .45; }
+.kt-buehne .btn.secondary { background: rgba(243,233,210,0.12); color: inherit; box-shadow: none; }
+.kt-best { font-size: 0.85rem; color: #a9b8b0; }
+.kt-frage { text-align: center; font-size: 1.3rem; }
+.kt-frage b { display: block; font-family: "Playfair Display", Georgia, serif; font-size: 1.9rem; font-style: italic; color: #fff; }
+.kt-karte { position: relative; border-radius: 14px; overflow: auto; border: 2px solid rgba(243,233,210,.25); box-shadow: 0 14px 40px rgba(0,0,0,.4); -webkit-overflow-scrolling: touch; overscroll-behavior: contain; }
+.kt-karte.kt-deutschland { max-width: min(420px, calc((100dvh - 290px) * 0.78)); margin: 0 auto; width: 100%; }
+.kt-karte.kt-deutschland.ergebnis { max-width: min(340px, calc((100dvh - 330px) * 0.78)); }
+.kt-karte .kt-svg { display: block; width: 100%; height: auto; cursor: crosshair; }
+.kt-karte.zoom .kt-svg { width: 280%; }
+.kt-karte.kt-europa.zoom .kt-svg { width: 190%; }
+.kt-karte.ergebnis { overflow: hidden; }
+.kt-karte.ergebnis .kt-svg { cursor: default; }
+.kt-meer { fill: #2b6f86; }
+.kt-land { fill: #eadfc4; stroke: #a08f6a; stroke-width: 0.8; stroke-linejoin: round; vector-effect: non-scaling-stroke; }
+.kt-heim { fill: #f6efdc; stroke: #6d5c38; stroke-width: 1.6; }
+.kt-svg.ohne-grenzen .kt-land { stroke: #eadfc4; stroke-width: 0.6; }
+.kt-svg.ohne-grenzen .kt-heim { fill: #eadfc4; stroke: #eadfc4; }
+.kt-nadel circle { fill: #e11d48; stroke: #fff; stroke-width: 2.5; }
+.kt-nadel .kern { fill: #fff; stroke: none; }
+.kt-nadel { animation: ktNadel .35s var(--ease-spring); }
+@keyframes ktNadel { from { opacity: 0; } }
+.kt-ziel circle { fill: #10b981; stroke: #fff; stroke-width: 2.5; }
+.kt-ziel path { fill: none; stroke: #fff; stroke-width: 2; stroke-linecap: round; stroke-linejoin: round; }
+.kt-ziel .welle { fill: none; stroke: #10b981; stroke-width: 2; animation: ktWelle 1.6s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+@keyframes ktWelle { from { transform: scale(.4); opacity: 1; } to { transform: scale(1.4); opacity: 0; } }
+.kt-strecke { stroke: #fff; fill: none; stroke-linecap: round; }
+.kt-knoepfe { display: grid; grid-template-columns: 1fr; gap: 10px; }
+.kt-knoepfe:has(#ktZoom:not([hidden])) { grid-template-columns: 1fr 1.4fr; }
+.kt-text { text-align: center; font-size: 1.15rem; line-height: 1.4; padding: 12px; border-radius: 14px; background: rgba(243,233,210,.08); }
+.kt-text b { font-family: "Playfair Display", Georgia, serif; font-style: italic; }
+.kt-km { display: block; font-size: 2rem; font-weight: 800; color: #fff; }
+.kt-info { font-size: 0.95rem; line-height: 1.5; padding: 12px 14px; border-left: 3px solid #10b981; background: rgba(16,185,129,.1); border-radius: 0 12px 12px 0; }
+.kt-gesamt { color: #a9b8b0; font-weight: 500; }
+.kt-liste li { cursor: default; background: rgba(243,233,210,.08); }
+@media (prefers-reduced-motion: reduce) { .ag-mini .am-arm, .kt-mini .km-nadel, .kt-ziel .welle { animation: none; } }

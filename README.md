@@ -73,6 +73,8 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `toene.js` – Ton-Gedächtnis
 - `takt.js` – Takt-Gefühl (Zeitgefühl, Tempo, Taktart)
 - `punkte.js` – Punktwolke (Korrelation schätzen und sortieren)
+- `augen.js` – Augenmaß
+- `karte.js`, `karten-daten.js` – Karten-Gefühl (Kartendaten aus `werkzeuge/karten.py`)
 - `krimi.js` – Wer war’s? (Krimi-Logikrätsel)
 - `groesse.js` – Größenvergleich
 - `profile.js` – Profile „Wer spielt?“
@@ -204,11 +206,25 @@ Wie stark hängt das zusammen? Ein Spiel zum Korrelationskoeffizienten r, fünf 
 - Die Wolken haben exakt das gewünschte r (Zufallswerte, die senkrecht zu x gemacht werden); angezeigt wird immer das echte r.
 - **Tages-Wolken** (für alle gleich), Bestwerte je Profil und Challenge-Links mit denselben Wolken.
 
+## 📐 Augenmaß
+Fünf Aufgaben, jede einmal pro Runde (bis zu 50 Punkte): **Halbieren** (Mitte einer Linie antippen), **Mittelpunkt** (Kreis, Quadrat,
+bei Profi der Schwerpunkt eines Dreiecks), **Winkel** (vorgegebene Gradzahl einstellen), **Länge** (zweite Linie gleich lang ziehen)
+und **Parallel** (Linie drehen). Mittel: schräg und waagrecht ↔ senkrecht. Profi: echte Sinnestäuschungen (Müller-Lyer-Pfeile,
+Zöllner-Striche). Danach Lösung in Mint über deiner Antwort in Orange, mit Erklärung der Täuschung. Tagesprüfung und Challenge-Links.
+
+## 🧭 Karten-Gefühl
+Wo liegt das? Tippe den Ort auf einer leeren Karte an, Punkte nach Kilometern daneben (Großkreis-Entfernung).
+- Karten: **Deutschland** (Städte, Berge, Inseln), **Europa** (Hauptstädte, Gipfel), **Welt** (Metropolen und Orte, an denen Wale und Haie leben).
+- Leicht: bekannte Orte · Mittel: mehr Orte · Profi: knifflige Orte, Ländergrenzen ausgeblendet. Europa und Welt lassen sich vergrößern.
+- Danach zoomt die Karte auf Tipp und Ziel, mit Entfernung und kleinem Fakt. Tagesreise (2× Deutschland, 2× Europa, 1× Welt) und Challenge-Links.
+- Kartendaten: [Natural Earth](https://www.naturalearthdata.com/) (gemeinfrei) über das npm-Paket `world-atlas` (ISC, © Mike Bostock),
+  fest eingebaut in `karten-daten.js` (läuft offline). Neu erzeugen mit `werkzeuge/karten.py` (siehe Kopf des Skripts).
+
 ## 🎮 Dashboard „Spiele“
 - Bunter Neon-Look: dunkler Hintergrund mit wandernden Farbflecken.
 - Oben eine **animierte Bühne**, die das ganze Dashboard als Bild zeigt: tanzende Farbbalken, aufsteigende Cello-Noten,
-  laufende Tonwelle, schwingendes Metronom, Mini-Punktwolke, suchende Lupe, Porsche und Gretchen auf der Küstenstraße, Wal mit Fontäne und Haiflosse im Meer.
+  laufende Tonwelle, schwingendes Metronom, Mini-Punktwolke, Winkel, Kompass, suchende Lupe, Porsche und Gretchen auf der Küstenstraße, Wal mit Fontäne und Haiflosse im Meer.
   Jede Figur ist ein Schnellstart in ihr Spiel (mit Flip und Emoji-Regen). Rechts oben: Profilbild zum Wechseln.
 - **Games** als Zeilen mit rundem Bild, Stand und ▶: **Quizzes** (im Kreis wechseln die Welten als Diashow), Farb-Gedächtnis,
-  Cello-Noten, Ton-Gedächtnis, Takt-Gefühl, Punktwolke und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
+  Cello-Noten, Ton-Gedächtnis, Takt-Gefühl, Punktwolke, Augenmaß, Karten-Gefühl und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
 - Akku: Farbflecken als Verlauf statt Weichzeichner, Bühne und Diashow pausieren außerhalb des Bildschirms; „Bewegung reduzieren“ wird beachtet.

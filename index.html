@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=42">
+<link rel="stylesheet" href="fonts/fonts.css?v=43">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=42">
-<link rel="stylesheet" href="ansichten.css?v=42">
+<link rel="stylesheet" href="stil.css?v=43">
+<link rel="stylesheet" href="ansichten.css?v=43">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -458,6 +458,8 @@
       <button class="bu-ding bu-krimi" type="button" data-ziel="hubKrimi" aria-label="Wer war’s?"><span class="bu-licht"></span><img src="img/krimi/lupe.webp" alt=""></button>
       <button class="bu-ding bu-takt" type="button" data-ziel="hubTakt" aria-label="Takt-Gefühl"><svg class="metronom" viewBox="0 0 60 80" aria-hidden="true"><path class="mt-korpus" d="M17 76h26l-7-66q-6-6-12 0z"/><path class="mt-skala" d="M24 22h12M23 30h14M22 38h16M21 46h18"/><g class="mt-arm"><path d="M30 66V12"/><rect x="25" y="24" width="10" height="7" rx="2"/></g><path class="mt-fuss" d="M14 76h32"/></svg></button>
       <button class="bu-ding bu-punkte" type="button" data-ziel="hubPunkte" aria-label="Punktwolke"><svg class="pw-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="pm-linie" d="M8 50L52 10"/><circle cx="10" cy="46" r="3.2" style="--k:0"/><circle cx="16" cy="40" r="3.2" style="--k:1"/><circle cx="19" cy="47" r="3.2" style="--k:2"/><circle cx="24" cy="34" r="3.2" style="--k:3"/><circle cx="28" cy="38" r="3.2" style="--k:4"/><circle cx="33" cy="27" r="3.2" style="--k:5"/><circle cx="36" cy="32" r="3.2" style="--k:6"/><circle cx="41" cy="22" r="3.2" style="--k:7"/><circle cx="45" cy="25" r="3.2" style="--k:8"/><circle cx="50" cy="13" r="3.2" style="--k:9"/></svg></button>
+      <button class="bu-ding bu-augen" type="button" data-ziel="hubAugen" aria-label="Augenmaß"><svg class="ag-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="am-basis" d="M10 48H52"/><g class="am-arm"><path d="M10 48L46 14"/><circle cx="46" cy="14" r="4"/></g><path class="am-bogen" d="M26 48A16 16 0 0 0 21.7 37.1"/><circle class="am-ecke" cx="10" cy="48" r="3"/></svg></button>
+      <button class="bu-ding bu-karte" type="button" data-ziel="hubKarte" aria-label="Karten-Gefühl"><svg class="kt-mini" viewBox="0 0 60 60" aria-hidden="true"><circle class="km-rand" cx="30" cy="30" r="25"/><path class="km-striche" d="M30 7v6M30 47v6M7 30h6M47 30h6"/><g class="km-nadel"><path class="km-nord" d="M30 10l6 20h-12z"/><path class="km-sued" d="M30 50l-6-20h12z"/></g><circle cx="30" cy="30" r="3" class="km-mitte"/></svg></button>
       <span class="bu-strasse" aria-hidden="true"><i></i></span>
       <button class="bu-ding bu-porsche" type="button" data-welt="porsche" aria-label="Porsche-Quiz"><svg viewBox="0 0 120 44"><path class="bu-karosse" d="M6 33c0-6 3-9 12-10l16-2C44 12 58 8 72 9c14 1 26 7 36 13 6 2 8 6 8 10v2H6z"/><path class="bu-fenster" d="M40 21c8-7 18-9 30-9 9 0 17 3 24 9z"/><g transform="translate(28 34)"><g class="bu-rad"><circle r="9"/><path d="M0-5.5V5.5M-5.5 0H5.5"/><circle r="2.2" fill="#c9c9d6" stroke="none"/></g></g><g transform="translate(94 34)"><g class="bu-rad"><circle r="9"/><path d="M0-5.5V5.5M-5.5 0H5.5"/><circle r="2.2" fill="#c9c9d6" stroke="none"/></g></g></svg></button>
       <button class="bu-ding bu-dackel" type="button" data-welt="dackel" aria-label="Dackel-Quiz"><img src="img/gretchen/avatar.jpg" alt=""></button>
@@ -504,6 +506,16 @@
     <button class="hub-game hub-punkte" id="hubPunkte" type="button" data-regen="📈,📊,🔵,🎯">
       <span class="hg-av hg-av-punkte" aria-hidden="true"><span class="hg-in"><svg class="pw-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="pm-linie" d="M8 50L52 10"/><circle cx="10" cy="46" r="3.2" style="--k:0"/><circle cx="16" cy="40" r="3.2" style="--k:1"/><circle cx="19" cy="47" r="3.2" style="--k:2"/><circle cx="24" cy="34" r="3.2" style="--k:3"/><circle cx="28" cy="38" r="3.2" style="--k:4"/><circle cx="33" cy="27" r="3.2" style="--k:5"/><circle cx="36" cy="32" r="3.2" style="--k:6"/><circle cx="41" cy="22" r="3.2" style="--k:7"/><circle cx="45" cy="25" r="3.2" style="--k:8"/><circle cx="50" cy="13" r="3.2" style="--k:9"/></svg></span></span>
       <span class="hg-text"><span class="hg-titel">Punktwolke</span><span class="hg-sub">Wie stark hängt das zusammen? Schätzen und sortieren.</span><span class="hg-best" id="hubPunkteBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-augen" id="hubAugen" type="button" data-regen="📐,📏,🦅,👁️">
+      <span class="hg-av hg-av-augen" aria-hidden="true"><span class="hg-in"><svg class="ag-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="am-basis" d="M10 48H52"/><g class="am-arm"><path d="M10 48L46 14"/><circle cx="46" cy="14" r="4"/></g><path class="am-bogen" d="M26 48A16 16 0 0 0 21.7 37.1"/><circle class="am-ecke" cx="10" cy="48" r="3"/></svg></span></span>
+      <span class="hg-text"><span class="hg-titel">Augenmaß</span><span class="hg-sub">Halbieren, Winkel, Längen – und echte Sinnestäuschungen.</span><span class="hg-best" id="hubAugenBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-karte" id="hubKarte" type="button" data-regen="🧭,🌍,📍,✈️">
+      <span class="hg-av hg-av-karte" aria-hidden="true"><span class="hg-in"><svg class="kt-mini" viewBox="0 0 60 60" aria-hidden="true"><circle class="km-rand" cx="30" cy="30" r="25"/><path class="km-striche" d="M30 7v6M30 47v6M7 30h6M47 30h6"/><g class="km-nadel"><path class="km-nord" d="M30 10l6 20h-12z"/><path class="km-sued" d="M30 50l-6-20h12z"/></g><circle cx="30" cy="30" r="3" class="km-mitte"/></svg></span></span>
+      <span class="hg-text"><span class="hg-titel">Karten-Gefühl</span><span class="hg-sub">Wo liegt das? Deutschland, Europa und die Welt.</span><span class="hg-best" id="hubKarteBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-krimi" id="hubKrimi" type="button" data-regen="🔎,🕵️,🗝️,🕯️">
@@ -1278,6 +1290,143 @@
       </div>
     </div>
   </section>
+
+  <section class="screen" id="screen-augen">
+    <div class="ag-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="agZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="agRunde"></span>
+      </div>
+
+      <div class="ag-teil" id="ag-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ag-logo"><svg class="ag-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="am-basis" d="M10 48H52"/><g class="am-arm"><path d="M10 48L46 14"/><circle cx="46" cy="14" r="4"/></g><path class="am-bogen" d="M26 48A16 16 0 0 0 21.7 37.1"/><circle class="am-ecke" cx="10" cy="48" r="3"/></svg></div>
+        <h2 class="ag-titel">Augenmaß</h2>
+        <p class="ag-lead">Fünf Aufgaben für dein Auge – jede einmal: eine Linie halbieren, den Mittelpunkt finden, einen Winkel einstellen, eine Länge nachziehen und eine Linie parallel drehen. Ganz ohne Lineal.</p>
+        <div class="ag-typen"><span>✂️ Halbieren</span><span>🎯 Mittelpunkt</span><span>📐 Winkel</span><span>📏 Länge</span><span>🛤️ Parallel</span></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge ag-challenge" id="agChallenge" hidden></div>
+        <div class="farb-stufen" id="agStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn ag-gross-btn" id="agLos" type="button">Los geht’s</button>
+        <button class="btn secondary" id="agTagBtn" type="button"></button>
+        <div class="ag-best" id="agBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="ag-teil" id="ag-spiel" hidden>
+        <div class="ag-frage" id="agFrage"></div>
+        <div class="spalten ag-spalten">
+        <div class="spalte spalte-a"><svg class="ag-flaeche" id="agFlaeche" viewBox="0 0 400 400"></svg></div>
+        <div class="spalte spalte-b">
+        <div class="ag-hinweis" id="agHinweis"></div>
+        <button class="btn ag-gross-btn" id="agFertig" type="button">Fertig ✓</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="ag-teil" id="ag-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-punkte" id="agPunkte"></div>
+        <div class="ton-kommentar" id="agKommentar"></div>
+        <svg class="ag-flaeche klein" id="agErgebnis" viewBox="0 0 400 400"></svg>
+        <div class="ag-legende"><span><i class="du"></i>Deins</span><span><i class="ok"></i>Richtig</span></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ag-text" id="agText"></div>
+        <div class="ag-erkl" id="agErkl" hidden></div>
+        <button class="btn ag-gross-btn" id="agWeiter" type="button">Nächste Aufgabe</button>
+        </div>
+        </div>
+      </div>
+      <div class="ag-teil" id="ag-ende" hidden>
+        <div class="farb-summe" id="agSumme"></div>
+        <div class="farb-rekord" id="agRekord"></div>
+        <div class="farb-rekord" id="agVergleich" hidden></div>
+        <ul class="ton-liste ag-liste" id="agListe"></ul>
+        <button class="btn ag-gross-btn" id="agTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="agTeilenMsg"></div>
+        <button class="btn secondary" id="agNochmalSpiel" type="button">Nochmal spielen</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-karte">
+    <div class="kt-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="ktZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="ktRunde"></span>
+      </div>
+
+      <div class="kt-teil" id="kt-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="kt-logo"><svg class="kt-mini" viewBox="0 0 60 60" aria-hidden="true"><circle class="km-rand" cx="30" cy="30" r="25"/><path class="km-striche" d="M30 7v6M30 47v6M7 30h6M47 30h6"/><g class="km-nadel"><path class="km-nord" d="M30 10l6 20h-12z"/><path class="km-sued" d="M30 50l-6-20h12z"/></g><circle cx="30" cy="30" r="3" class="km-mitte"/></svg></div>
+        <h2 class="kt-titel">Karten-Gefühl</h2>
+        <div class="takt-modi kt-modi" id="ktModi">
+          <button type="button" data-modus="deutschland"><span>🇩🇪</span>Deutschland</button>
+          <button type="button" data-modus="europa"><span>🇪🇺</span>Europa</button>
+          <button type="button" data-modus="welt"><span>🌍</span>Welt</button>
+        </div>
+        <p class="kt-lead" id="ktLead"></p>
+        <p class="kt-hinweis">Punkte nach Kilometern daneben. Fünf Orte, bis zu 50 Punkte.</p>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge kt-challenge" id="ktChallenge" hidden></div>
+        <div class="farb-stufen" id="ktStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn kt-gross-btn" id="ktLos" type="button">Los geht’s</button>
+        <button class="btn secondary" id="ktTagBtn" type="button"></button>
+        <div class="kt-best" id="ktBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="kt-teil" id="kt-spiel" hidden>
+        <div class="kt-frage" id="ktFrage"></div>
+        <div class="kt-karte" id="ktKarte"></div>
+        <div class="kt-knoepfe">
+          <button class="btn secondary" id="ktZoom" type="button" hidden>🔍 Vergrößern</button>
+          <button class="btn kt-gross-btn" id="ktFertig" type="button" disabled>Hier! 📍</button>
+        </div>
+      </div>
+
+      <div class="kt-teil" id="kt-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-punkte" id="ktPunkte"></div>
+        <div class="ton-kommentar" id="ktKommentar"></div>
+        <div class="kt-karte ergebnis" id="ktErgebnisKarte"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="kt-text" id="ktText"></div>
+        <div class="kt-info" id="ktInfo" hidden></div>
+        <button class="btn kt-gross-btn" id="ktWeiter" type="button">Nächster Ort</button>
+        </div>
+        </div>
+      </div>
+      <div class="kt-teil" id="kt-ende" hidden>
+        <div class="farb-summe" id="ktSumme"></div>
+        <div class="farb-rekord" id="ktRekord"></div>
+        <div class="farb-rekord" id="ktVergleich" hidden></div>
+        <div class="farb-rekord kt-gesamt" id="ktGesamtKm"></div>
+        <ul class="ton-liste kt-liste" id="ktListe"></ul>
+        <button class="btn kt-gross-btn" id="ktTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="ktTeilenMsg"></div>
+        <button class="btn secondary" id="ktNochmalSpiel" type="button">Nochmal spielen</button>
+      </div>
+    </div>
+  </section>
 </div>
 
 <dialog class="melde" id="meldeDialog" aria-labelledby="meldeTitel">
@@ -1309,28 +1458,31 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=42"></script>
-<script src="haie.js?v=42"></script>
-<script src="porsche.js?v=42"></script>
-<script src="dackel.js?v=42"></script>
-<script src="groesse.js?v=42"></script>
-<script src="gretchen.js?v=42"></script>
-<script src="effekte.js?v=42"></script>
-<script src="app.js?v=42"></script>
-<script src="melden.js?v=42"></script>
-<script src="hub.js?v=42"></script>
-<script src="farben.js?v=42"></script>
-<script src="cello.js?v=42"></script>
-<script src="toene.js?v=42"></script>
-<script src="takt.js?v=42"></script>
-<script src="punkte.js?v=42"></script>
-<script src="krimi-grafik.js?v=42"></script>
-<script src="krimi.js?v=42"></script>
-<script src="krimi-wachen.js?v=42"></script>
-<script src="krimi-verhoer.js?v=42"></script>
-<script src="krimi-alibi.js?v=42"></script>
-<script src="krimi-akte.js?v=42"></script>
-<script src="krimi-zentrale.js?v=42"></script>
-<script src="profile.js?v=42"></script>
+<script src="wale.js?v=43"></script>
+<script src="haie.js?v=43"></script>
+<script src="porsche.js?v=43"></script>
+<script src="dackel.js?v=43"></script>
+<script src="groesse.js?v=43"></script>
+<script src="gretchen.js?v=43"></script>
+<script src="effekte.js?v=43"></script>
+<script src="app.js?v=43"></script>
+<script src="melden.js?v=43"></script>
+<script src="hub.js?v=43"></script>
+<script src="farben.js?v=43"></script>
+<script src="cello.js?v=43"></script>
+<script src="toene.js?v=43"></script>
+<script src="takt.js?v=43"></script>
+<script src="punkte.js?v=43"></script>
+<script src="augen.js?v=43"></script>
+<script src="karten-daten.js?v=43"></script>
+<script src="karte.js?v=43"></script>
+<script src="krimi-grafik.js?v=43"></script>
+<script src="krimi.js?v=43"></script>
+<script src="krimi-wachen.js?v=43"></script>
+<script src="krimi-verhoer.js?v=43"></script>
+<script src="krimi-alibi.js?v=43"></script>
+<script src="krimi-akte.js?v=43"></script>
+<script src="krimi-zentrale.js?v=43"></script>
+<script src="profile.js?v=43"></script>
 </body>
 </html>

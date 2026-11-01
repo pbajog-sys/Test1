@@ -177,6 +177,14 @@ function renderHub() {
   const pwSt = loadJson('walquiz.punkte.v1');
   const pwBest = Math.max(0, ...Object.values(pwSt.best || {}).flatMap((m) => Object.values(m)), ...Object.values(pwSt.tag || {}));
   $('hubPunkteBest').textContent = pwBest ? 'Rekord ' + fmt(pwBest) + ' / 50' : 'Noch kein Rekord';
+  const rekordVon = (key, verschachtelt) => {
+    const st = loadJson(key), b = Object.values(st.best || {});
+    return Math.max(0, ...(verschachtelt ? b.flatMap((m) => Object.values(m)) : b), ...Object.values(st.tag || {}));
+  };
+  [['hubAugenBest', 'walquiz.augen.v1', false], ['hubKarteBest', 'walquiz.karte.v1', true]].forEach(([id, key, v]) => {
+    const r = rekordVon(key, v);
+    $(id).textContent = r ? 'Rekord ' + fmt(r) + ' / 50' : 'Noch kein Rekord';
+  });
   const krimi = loadJson('walquiz.krimi.v1');
   const summe = (o) => Object.values((o && o.geloest) || {}).reduce((x, y) => x + y, 0);
   const faelle = summe(krimi) + Object.values(krimi.modi || {}).reduce((x, m) => x + summe(m), 0);
