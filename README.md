@@ -180,7 +180,10 @@ nötigen Denkschritte bestimmen die Schwierigkeit und liefern die Erklärungen f
 
 ## 🗄️ Dashboard „Spieleschrank“
 - Ruhiges, warmes Design: dunkler Hintergrund mit festem Papierkorn, Serifen-Titel, eine Akzentfarbe (Bernstein).
-- **Weiterspielen** ganz oben: das zuletzt gespielte Spiel bzw. die zuletzt gespielte Quiz-Welt (je Profil).
+- **Story-Kreise** wie bei Instagram ganz oben: alle Quiz-Welten und Spiele als runde Bilder mit Farbring zum Wischen.
+  Heute schon gespielt = grauer Ring, zuletzt gespielt = Schild „Weiter“. Antippen: Flip-Animation und passender Emoji-Regen
+  (auch beim Antippen der Cover).
+- **Weiterspielen** darunter: das zuletzt gespielte Spiel bzw. die zuletzt gespielte Quiz-Welt (je Profil).
 - **Alle Spiele** als gleichförmige Cover-Karten mit echten Bildern (Fotomosaik, Villa, Farbfächer, Notenblatt, Wellenform),
   darunter Fortschritt in klaren Worten; die Quiz-Welten im selben Muster mit Foto und Fortschrittsbalken.
 - Animierte Cover: Quiz-Diashow mit Kamera-Zoom, Villa mit glühenden Fenstern und Gestalt am Erker, atmender Farbfächer,

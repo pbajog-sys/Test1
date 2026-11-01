@@ -4,9 +4,98 @@ const coverIO = 'IntersectionObserver' in window
   ? new IntersectionObserver((eintraege) => eintraege.forEach((e) => e.target.classList.toggle('sichtbar', e.isIntersecting)), { rootMargin: '40px' })
   : null;
 function coverBeobachten() {
-  document.querySelectorAll('.cover-bild:not([data-beobachtet])').forEach((el) => {
+  document.querySelectorAll('.cover-bild:not([data-beobachtet]), .story-ring:not([data-beobachtet])').forEach((el) => {
     el.dataset.beobachtet = '1';
     if (coverIO) coverIO.observe(el); else el.classList.add('sichtbar');
+  });
+}
+
+// ---------- Emoji-Regen und Flip (wie der Emoji-Regen im Instagram-Chat) ----------
+function emojiRegen(emojis, anzahl = 18) {
+  if (wenigBewegung() || !emojis || !emojis.length) return;
+  const box = document.createElement('div');
+  box.className = 'emoji-regen';
+  document.body.appendChild(box);
+  for (let i = 0; i < anzahl; i++) {
+    const e = document.createElement('span');
+    e.textContent = emojis[i % emojis.length];
+    const groesse = 20 + Math.random() * 22;
+    e.style.cssText = `left:${Math.random() * 96}vw;font-size:${groesse}px`;
+    box.appendChild(e);
+    const dreh = (Math.random() - 0.5) * 120;
+    e.animate([
+      { transform: `translate(0, -12vh) rotate(0deg)`, opacity: 0 },
+      { opacity: 1, offset: 0.1 },
+      { transform: `translate(${(Math.random() - 0.5) * 60}px, 108vh) rotate(${dreh}deg)`, opacity: 1 },
+    ], { duration: 1100 + Math.random() * 700, delay: Math.random() * 450, easing: 'cubic-bezier(.4,.1,.7,1)', fill: 'both' });
+  }
+  setTimeout(() => box.remove(), 2400);
+}
+function flip(el) {
+  if (wenigBewegung() || !el.animate) return;
+  el.animate([{ transform: 'perspective(500px) rotateY(0deg) scale(1)' }, { transform: 'perspective(500px) rotateY(180deg) scale(1.08)' }, { transform: 'perspective(500px) rotateY(360deg) scale(1)' }],
+    { duration: 620, easing: 'cubic-bezier(.3,.7,.3,1)' });
+}
+// Jede Karte mit data-regen lässt beim Antippen passende Emojis regnen
+document.addEventListener('click', (e) => {
+  const k = e.target.closest('[data-regen]');
+  if (!k) return;
+  emojiRegen(k.dataset.regen.split(','));
+  const id = k.dataset.story || { hubKrimi: 'krimi', hubFarben: 'farben', hubCello: 'cello', hubToene: 'toene' }[k.id];
+  if (id) storyGesehen(id);
+}, true);
+
+// ---------- Story-Kreise (Schnellstart wie Instagram-Stories) ----------
+const GESEHEN_KEY = 'walquiz.gesehen.v1';
+const STORIES = [
+  { id: 'wale', name: 'Wale', welt: 'wale', regen: '🐋,🐳,🌊,💧' },
+  { id: 'haie', name: 'Haie', welt: 'haie', regen: '🦈,🌊,💧' },
+  { id: 'beide', name: 'Meer', welt: 'beide', regen: '🐋,🦈,🌊' },
+  { id: 'porsche', name: 'Porsche', welt: 'porsche', regen: '🏎️,🏁,💨' },
+  { id: 'dackel', name: 'Gretchen', welt: 'dackel', regen: '🐾,🦴,💕' },
+  { id: 'krimi', name: 'Krimi', knopf: 'hubKrimi', regen: '🔎,🕵️,🗝️,🕯️' },
+  { id: 'farben', name: 'Farben', knopf: 'hubFarben', regen: '🎨,🖌️,🌈,💧' },
+  { id: 'cello', name: 'Cello', knopf: 'hubCello', regen: '🎵,🎶,🎻' },
+  { id: 'toene', name: 'Töne', knopf: 'hubToene', regen: '🎧,🔊,🎵' },
+];
+const hubHeute = () => new Date().toISOString().slice(0, 10);   // eigene Version: farben.js lädt erst später
+function storyGesehen(id) { const g = loadJson(GESEHEN_KEY); g[id] = hubHeute(); saveJson(GESEHEN_KEY, g); }
+function hubStories() {
+  const box = $('hubStories');
+  const g = loadJson(GESEHEN_KEY), z = loadJson(ZULETZT_KEY);
+  const zuletzt = z.typ === 'quiz' ? z.welt : z.typ;
+  // zuletzt gespielt zuerst, dann die übrigen in fester Reihenfolge
+  const liste = STORIES.slice().sort((a, b) => (b.id === zuletzt) - (a.id === zuletzt));
+  box.innerHTML = '';
+  liste.forEach((st) => {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'story' + (g[st.id] === hubHeute() ? ' gesehen' : '');
+    b.innerHTML = '<span class="story-ring"><span class="story-bild"></span></span><span class="story-name"></span>';
+    const bild = b.querySelector('.story-bild');
+    if (st.welt) bild.appendChild(weltKachel(st.welt));
+    else {
+      const kopie = $(st.knopf).querySelector('.cover-bild').cloneNode(true);
+      delete kopie.dataset.beobachtet;
+      kopie.classList.add('sichtbar');
+      bild.appendChild(kopie);
+    }
+    if (st.id === zuletzt) {
+      const schild = document.createElement('span');
+      schild.className = 'story-schild';
+      schild.textContent = 'Weiter';
+      b.querySelector('.story-ring').appendChild(schild);
+    }
+    b.querySelector('.story-name').textContent = st.name;
+    b.addEventListener('click', () => {
+      flip(b.querySelector('.story-ring'));
+      if (st.welt) emojiRegen(st.regen.split(','));   // bei Spielen regnet es über deren Karte
+      storyGesehen(st.id);
+      setTimeout(() => {
+        if (st.welt) { setHubTheme(); weltOeffnen(st.welt); } else $(st.knopf).click();
+      }, wenigBewegung() ? 0 : 420);
+    });
+    box.appendChild(b);
   });
 }
 
@@ -137,6 +226,8 @@ function renderHub() {
     b.type = 'button';
     b.className = 'cover cover-welt hc-' + k.welt;
     b.dataset.zoom = WELT_KACHEL_FARBE[k.welt];
+    b.dataset.regen = STORIES.find((x) => x.welt === k.welt).regen;
+    b.dataset.story = k.welt;
     b.innerHTML = '<span class="cover-bild"></span><span class="cover-text"><b></b><small></small>'
       + '<span class="cover-fort"><i></i></span><small class="cover-stand"></small></span>';
     const bild = b.querySelector('.cover-bild');
@@ -180,6 +271,7 @@ function renderHub() {
   $('hubKrimiBest').textContent = (faelle ? faelle + ' Rätsel gelöst' : 'Noch nichts gelöst') + (krimi.aktenGeloest ? ' · ' + krimi.aktenGeloest + (krimi.aktenGeloest === 1 ? ' Akte' : ' Akten') : '');
   hubGruss();
   hubWeiterspielen();
+  hubStories();
   if (typeof coverBeobachten === 'function') coverBeobachten();
   if (typeof profilHub === 'function') profilHub();   // profile.js lädt später
 }
