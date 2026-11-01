@@ -164,4 +164,5 @@ Die Hinweise auf dem Notizzettel stimmen alle. Wer allein mit dem Opfer in einem
   Jeder Fall muss so ohne Raten lösbar sein. Die **Schwierigkeit** ergibt sich aus den nötigen Denkschritten
   (Leicht ohne Annahme, Mittel mit echten Schlussfolgerungen, Schwer mit mindestens einer Annahme).
 - 💡 **Tipp** erklärt den nächsten Denkschritt. ✕-Modus zum Ausschließen, erfüllte Hinweise werden abgehakt.
-- Porträts und Icons: `img/krimi/` (aus generierten Bildern zugeschnitten), Prompts in `img/krimi/BILDER.md`.
+- Porträts, Icons und Villa: `img/krimi/` (aus generierten Bildern zugeschnitten und freigestellt), Prompts in `img/krimi/BILDER.md`.
+- Titelbild animiert: glühende Fenster, flackernde Laternen, eine Gestalt am Erker, Licht geht im Dachfenster aus, Nebel, Glühwürmchen, Wetterleuchten.

@@ -683,18 +683,5 @@ $('krimiAufgeben').addEventListener('click', () => {
 $('krimiZurueck').addEventListener('click', () => { if (kf) clearInterval(kf.timer); kf = null; zeigeHub(); });
 $('hubKrimi').addEventListener('click', () => zoomZu($('hubKrimi'), () => { show('krimi', '🔎 Wer war\'s?'); krimiIntro(); }));
 
-// Grafiken einsetzen (aus krimi-grafik.js)
-$('krimiLogo').innerHTML = KRIMI_VILLA;
+// Icons einsetzen (aus krimi-grafik.js)
 document.querySelectorAll('[data-k-icon]').forEach((el) => el.replaceChildren(krimiIcon(el.dataset.kIcon)));
-// Galerie der Verdächtigen im Menü
-VERDAECHTIGE.forEach((pe) => {
-  const k = document.createElement('div');
-  k.className = 'kv-karte';
-  k.appendChild(krimiFigur(pe, 'kv-bild'));
-  const t = document.createElement('div');
-  t.innerHTML = '<b></b><small></small>';
-  t.querySelector('b').textContent = pe.voll;
-  t.querySelector('small').textContent = pe.beruf;
-  k.appendChild(t);
-  $('krimiGalerie').appendChild(k);
-});

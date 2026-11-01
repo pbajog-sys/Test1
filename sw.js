@@ -1,5 +1,5 @@
 // Service Worker: App offline verfügbar machen. Walfotos werden beim ersten Anzeigen zwischengespeichert.
-const VERSION = 'walquiz-v27';
+const VERSION = 'walquiz-v28';
 const SHELL = [
   './',
   'index.html',
@@ -43,7 +43,6 @@ const SHELL = [
   'img/gretchen/g11.jpg',
   'img/gretchen/g12.jpg',
   'img/krimi/alibi.webp',
-  'img/krimi/beweis.webp',
   'img/krimi/elena.webp',
   'img/krimi/erfolg.webp',
   'img/krimi/falsch.webp',
@@ -59,7 +58,6 @@ const SHELL = [
   'img/krimi/lupe.webp',
   'img/krimi/markus.webp',
   'img/krimi/mia.webp',
-  'img/krimi/neu.webp',
   'img/krimi/notizen.webp',
   'img/krimi/pflanze.webp',
   'img/krimi/raum-arbeitszimmer.webp',
@@ -75,14 +73,13 @@ const SHELL = [
   'img/krimi/sophie.webp',
   'img/krimi/stern-leer.webp',
   'img/krimi/stern.webp',
-  'img/krimi/tatort.webp',
   'img/krimi/tatwaffe.webp',
   'img/krimi/teppich.webp',
   'img/krimi/thomas.webp',
   'img/krimi/tipp.webp',
   'img/krimi/uhr.webp',
   'img/krimi/victoria.webp',
-  'img/krimi/zurueck.webp',
+  'img/krimi/villa.webp',
 ];
 
 self.addEventListener('install', (event) => {
