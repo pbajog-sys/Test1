@@ -800,7 +800,7 @@ body.theme-hub {
 @keyframes lupe { 0%, 100% { transform: translate(-6px, 2px) rotate(-10deg); } 50% { transform: translate(6px, -3px) rotate(8deg); } }
 
 .krimi-buehne {
-  position: fixed; inset: 0; z-index: 20; overflow-y: auto; color: #f5e6c8;
+  position: fixed; inset: 0; z-index: 20; overflow-y: auto; overflow-x: hidden; color: #f5e6c8;
   padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 28px);
   background: radial-gradient(70% 45% at 50% 0%, rgba(255,214,140,0.16), transparent 70%), radial-gradient(90% 60% at 50% 110%, rgba(185,28,28,0.18), transparent 60%), #120d0b;
   font-family: "Outfit", system-ui, sans-serif;
@@ -808,7 +808,7 @@ body.theme-hub {
 .krimi-buehne > * { max-width: 520px; margin-left: auto; margin-right: auto; }
 .krimi-buehne .farb-kopf .icon-btn { background: rgba(255,255,255,0.1); color: inherit; }
 #krimiRunde { font-variant-numeric: tabular-nums; opacity: .8; }
-.krimi-teil { display: grid; gap: 12px; animation: aufploppen .4s var(--ease-spring); }
+.krimi-teil { display: grid; grid-template-columns: minmax(0, 1fr); gap: 12px; min-width: 0; animation: aufploppen .4s var(--ease-spring); }
 #krimi-intro { text-align: center; padding-top: 2vh; }
 /* Titelbild: Villa bei Nacht – Fenster glühen, Laternen flackern, jemand geht am Erker vorbei */
 .villa-szene { position: relative; margin: -12px -16px -6px; padding-top: 12%; overflow: hidden; isolation: isolate; }
@@ -892,11 +892,11 @@ body.theme-hub {
 
 /* Grundriss */
 .krimi-brett {
-  display: grid; grid-template-columns: repeat(var(--n), 1fr); width: 100%; max-width: min(100%, 440px); margin: 0 auto;
+  display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); width: 100%; max-width: min(100%, 440px); margin: 0 auto; box-sizing: border-box;
   background: #cdb68c; border-radius: 6px; overflow: hidden; box-shadow: 0 16px 40px rgba(0,0,0,0.6), 0 0 0 3px #cdb68c, 0 0 0 6px #1a120e;
 }
 .kz {
-  position: relative; aspect-ratio: 1; padding: 0; margin: 0; font: inherit; cursor: pointer; box-sizing: border-box;
+  position: relative; aspect-ratio: 1; min-width: 0; padding: 0; margin: 0; font: inherit; cursor: pointer; box-sizing: border-box;
   display: grid; place-items: center; color: #2b1d14; -webkit-tap-highlight-color: transparent;
 }
 .kz.fest { cursor: not-allowed; }
@@ -1008,7 +1008,7 @@ body.theme-hub {
 /* ---------- Wachen der Villa: Laternen in edlen Räumen ---------- */
 .wachen-brett { max-width: min(100%, 460px); }
 .wz {
-  position: relative; aspect-ratio: 1; padding: 0; margin: 0; cursor: pointer; box-sizing: border-box; display: grid; place-items: center;
+  position: relative; aspect-ratio: 1; min-width: 0; padding: 0; margin: 0; cursor: pointer; box-sizing: border-box; display: grid; place-items: center;
   background-color: var(--boden); -webkit-tap-highlight-color: transparent;
   background-image: linear-gradient(90deg, rgba(0,0,0,0.22) 1px, transparent 1px), linear-gradient(rgba(0,0,0,0.16) 1px, transparent 1px), radial-gradient(circle at 30% 25%, rgba(255,255,255,0.10), transparent 60%);
   background-size: 50% 100%, 100% 25%, 100% 100%; transition: filter .3s, box-shadow .3s;
@@ -1016,12 +1016,16 @@ body.theme-hub {
 .wz:nth-child(2n) { background-position: 25% 0, 0 0, 0 0; }
 /* Nacht: alles dunkel – die Laternen machen Licht */
 .wz::after { content: ""; position: absolute; inset: 0; z-index: 1; pointer-events: none; background: rgba(6,3,12,0.58); transition: background .45s; }
-.wz.schein::after { background: rgba(30,15,5,0.30); }
-.wz.licht::after { background: radial-gradient(circle, rgba(255,200,110,0.30), rgba(255,170,70,0.10) 75%); }
-.wz.hat-wache::after { background: radial-gradient(circle, rgba(255,226,150,0.65), rgba(255,180,80,0.25) 55%, rgba(255,160,60,0.05)); }
+.wz.schein::after { background: rgba(20,10,4,0.42); }
+.wz.hat-wache::after { background: transparent; }
+/* Ein weicher, runder Lichtkegel je Laterne – über die Nachbarfelder hinweg */
+.wz-licht { position: absolute; left: -100%; top: -100%; width: 300%; height: 300%; z-index: 2; pointer-events: none; border-radius: 50%;
+  background: radial-gradient(circle, rgba(255,170,70,0.42) 0%, rgba(255,150,50,0.20) 30%, rgba(255,140,40,0.07) 50%, transparent 68%);
+  mix-blend-mode: screen; animation: lichtAn .5s ease-out; }
+@keyframes lichtAn { from { opacity: 0; transform: scale(.6); } to { opacity: 1; transform: none; } }
 .wachen-brett.alle-an .wz::after { background: radial-gradient(circle, rgba(255,210,130,0.25), transparent 80%) !important; }
-.wz-kreuz { position: relative; z-index: 2; font-size: clamp(1rem, 6vw, 1.5rem); font-weight: 800; color: rgba(245,230,200,0.6); text-shadow: 0 1px 4px rgba(0,0,0,0.8); animation: aufploppen .25s var(--ease-spring); }
-.wz-wache { position: absolute; inset: 1%; z-index: 2; filter: drop-shadow(0 0 6px rgba(255,220,140,1)) drop-shadow(0 0 18px rgba(255,170,60,0.85)) drop-shadow(0 3px 3px rgba(0,0,0,0.6)); animation: laterneAn .45s var(--ease-spring); }
+.wz-kreuz { position: relative; z-index: 3; font-size: clamp(1rem, 6vw, 1.5rem); font-weight: 800; color: rgba(245,230,200,0.6); text-shadow: 0 1px 4px rgba(0,0,0,0.8); animation: aufploppen .25s var(--ease-spring); }
+.wz-wache { position: absolute; inset: 1%; z-index: 3; filter: drop-shadow(0 0 6px rgba(255,220,140,1)) drop-shadow(0 0 18px rgba(255,170,60,0.85)) drop-shadow(0 3px 3px rgba(0,0,0,0.6)); animation: laterneAn .45s var(--ease-spring); }
 .wz-wache svg, .w-symbol svg, .w-gross svg { width: 100%; height: 100%; display: block; }
 .wz-wache .w-flamme, .w-symbol .w-flamme, .w-gross .w-flamme { transform-origin: 50% 70%; animation: flamme 1.4s ease-in-out infinite; }
 @keyframes flamme { 0%, 100% { transform: scale(1); opacity: .9; } 40% { transform: scale(.88, 1.08); opacity: 1; } 70% { transform: scale(1.06, .95); opacity: .8; } }
@@ -1039,7 +1043,7 @@ body.theme-hub {
 .vh-raum { position: relative; display: grid; gap: 10px; padding-top: 34px; }
 .vh-lampe { position: absolute; left: 50%; top: -60px; width: 2px; height: 70px; background: #3a2a20; transform: translateX(-50%); pointer-events: none; animation: lampeSchwingt 6s ease-in-out infinite; transform-origin: 50% 0; }
 .vh-lampe i { position: absolute; left: 50%; bottom: -14px; width: 46px; height: 22px; transform: translateX(-50%); border-radius: 46px 46px 6px 6px; background: linear-gradient(#5a4232, #2a1d15); box-shadow: 0 10px 40px 18px rgba(255,214,140,0.22); }
-.vh-lampe i::after { content: ""; position: absolute; left: 50%; top: 20px; width: 360px; height: 420px; transform: translateX(-50%); background: radial-gradient(ellipse 45% 80% at 50% 0%, rgba(255,220,150,0.16), transparent 70%); clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%); }
+.vh-lampe i::after { content: ""; position: absolute; left: 50%; top: 20px; width: min(300px, 80vw); height: 420px; transform: translateX(-50%); background: radial-gradient(ellipse 45% 80% at 50% 0%, rgba(255,220,150,0.16), transparent 70%); clip-path: polygon(44% 0, 56% 0, 100% 100%, 0 100%); }
 @keyframes lampeSchwingt { 0%, 100% { transform: translateX(-50%) rotate(-2deg); } 50% { transform: translateX(-50%) rotate(2deg); } }
 .vh-regel { text-align: center; font-family: "Bebas Neue", Impact, sans-serif; font-size: 1.35rem; letter-spacing: 0.04em; color: #f5e6c8; background: rgba(185,28,28,0.18); border: 1px dashed rgba(239,68,68,0.6); border-radius: 10px; padding: 8px 12px; line-height: 1.15; }
 .vh-karten { display: grid; gap: 12px; }

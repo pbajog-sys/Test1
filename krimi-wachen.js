@@ -231,9 +231,9 @@ function wachenZeichnen() {
   brett.innerHTML = '';
   const { w, k } = wachenKonflikte();
   // Licht der Laternen: Nachbarfelder hell, Reihe/Spalte/Raum leicht beleuchtet
-  const licht = new Set(), schein = new Set();
+  const schein = new Set();
   w.forEach((z) => {
-    wNachbarn8(n, z).forEach((y) => licht.add(y));
+    wNachbarn8(n, z).forEach((y) => schein.add(y));
     for (let y = 0; y < n * n; y++) if (y !== z && (Math.floor(y / n) === Math.floor(z / n) || y % n === z % n || raum[y] === raum[z])) schein.add(y);
   });
   for (let z = 0; z < n * n; z++) {
@@ -247,12 +247,11 @@ function wachenZeichnen() {
     d.style.borderBottom = wand(z + n, r === n - 1);
     d.style.borderLeft = wand(z - 1, c === 0);
     d.style.borderRight = wand(z + 1, c === n - 1);
-    if (licht.has(z)) d.classList.add('licht');
-    else if (schein.has(z)) d.classList.add('schein');
+    if (schein.has(z)) d.classList.add('schein');
     if (wf.zustand[z] === 1) d.innerHTML = '<span class="wz-kreuz">✕</span>';
     if (wf.zustand[z] === 2) {
       d.classList.add('hat-wache');
-      d.innerHTML = '<span class="wz-wache' + (k.has(z) ? ' konflikt' : '') + '">' + WACHE_SVG + '</span>';
+      d.innerHTML = '<span class="wz-licht"></span><span class="wz-wache' + (k.has(z) ? ' konflikt' : '') + '">' + WACHE_SVG + '</span>';
       d.setAttribute('aria-label', 'Wache');
     }
     d.addEventListener('click', () => wachenTippen(z));
@@ -359,7 +358,7 @@ krimiModus('wachen', {
     'Fang beim <b>kleinsten Raum</b> an – er hat die wenigsten Möglichkeiten.',
     'Liegt ein Raum ganz in einer Reihe (oder Spalte), steht die Wache dieser Reihe sicher in diesem Raum – der Rest der Reihe bekommt ✕.',
     'Rund um jede Wache (auch schräg) und in ihrer Reihe, Spalte und ihrem Raum darf keine weitere stehen – das <b>Laternenlicht</b> zeigt dir diese Felder.',
-    'Mit ↶ machst du den letzten Zug rückgängig. Stehen alle Wachen richtig, leuchtet die ganze Villa.',
+    'Mit <b>Rückgängig</b> nimmst du den letzten Zug zurück. Stehen alle Wachen richtig, leuchtet die ganze Villa.',
   ],
   stufen: { leicht: '5 × 5', mittel: '6 × 6', schwer: '7 × 7' },
   neuText: 'Neue Nacht', tagesName: 'Nacht des Tages',
