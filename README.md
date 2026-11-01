@@ -72,8 +72,8 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `cello.js` – Cello-Noten
 - `toene.js` – Ton-Gedächtnis
 - `groesse.js` – Größenvergleich
-- `konto.js`, `konto-config.js`, `supabase/schema.sql` – Konten (optional, siehe unten)
-- `fonts/` – selbst gehostete Schriften (SIL Open Font License), `vendor/supabase/` – supabase-js (MIT)
+- `profile.js` – Profile „Wer spielt?“
+- `fonts/` – selbst gehostete Schriften (SIL Open Font License)
 - `datenschutz.html` – Datenschutzhinweise
 - `sw.js`, `manifest.webmanifest`, `icons/` – Installation und Offline-Nutzung
 
@@ -146,12 +146,8 @@ Abstand in Cent (100 Cent = ein Halbton; 10 − Cent/50, ab einer Quarte 0). Aus
 (z. B. „A4 +20 ct“) für Original und eigenen Ton, Differenz in Hz und Cent, Tipp („1,2 Halbtöne zu hoch“),
 Position auf der Skala, beide Töne zum Vergleichen. Tagestöne, Bestwerte, Challenge-Links. Code in `toene.js`.
 
-## 👤 Konten und Familie (optional)
-Ohne Konto bleibt alles auf dem Gerät. Mit Konto (Anmeldung per 6-stelligem Code aus der E-Mail, kein Passwort):
-- Fortschritt, Abzeichen und Rekorde sind auf allen Geräten da – beim Zusammenführen gewinnt immer der bessere Stand.
-- **Familie:** Einer gründet eine Familie, die anderen treten mit dem 6-stelligen Code bei. Im Dashboard erscheint dann die Familien-Bestenliste (Abzeichen, gelernte Arten, Farb- und Ton-Rekord).
-- Teilen sich mehrere ein Gerät, wird der Stand des einen nicht ins Konto des anderen gemischt.
-- „Konto löschen“ entfernt Anmeldung, Profil und Fortschritt sofort aus der Cloud.
-
-Daten liegen bei Supabase in Frankfurt; jeder sieht nur seine eigenen Daten und von der Familie nur Name und Kurzübersicht (Row Level Security). Einrichtung: siehe [SUPABASE.md](SUPABASE.md).
-
+## 👤 Profile („Wer spielt?“)
+Wie bei Netflix: Beim ersten Start fragt die App nach deinem Namen und einem Bild. Jedes Profil hat eigene Abzeichen, Lernstand und Rekorde. Die App merkt sich, wer zuletzt gespielt hat. Mit dem Knopf oben rechts im Dashboard wechselst du das Profil oder legst ein neues an (bis zu 8).
+- Ab zwei Profilen zeigt das Dashboard eine **Bestenliste** (🏅 Abzeichen, 📚 gelernt, 🎨 Farb- und 🎧 Ton-Rekord).
+- „Profile verwalten“: Name, Bild und Farbe ändern oder ein Profil löschen.
+- Alles bleibt auf dem Gerät, ohne Anmeldung und ohne Server.

@@ -1,5 +1,5 @@
 // Service Worker: App offline verfügbar machen. Walfotos werden beim ersten Anzeigen zwischengespeichert.
-const VERSION = 'walquiz-v22';
+const VERSION = 'walquiz-v23';
 const SHELL = [
   './',
   'index.html',
@@ -18,10 +18,8 @@ const SHELL = [
   'farben.js',
   'cello.js',
   'toene.js',
-  'konto-config.js',
-  'konto.js',
+  'profile.js',
   'datenschutz.html',
-  'vendor/supabase/supabase.js',
   'fotos.json',
   'manifest.webmanifest',
   'icons/icon.svg',
@@ -76,7 +74,7 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Fotos von Wikimedia: erst Cache, sonst Netz und merken. (Supabase geht immer direkt ans Netz.)
+  // Fotos von Wikimedia: erst Cache, sonst Netz und merken.
   if (url.hostname.endsWith('wikimedia.org')) {
     event.respondWith(
       caches.match(req).then((cached) => cached || fetch(req).then((res) => {

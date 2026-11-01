@@ -58,14 +58,13 @@ function renderHub() {
   $('hubCelloBest').textContent = 'Lagen-Abzeichen: ' + celloAbz;
   const tonBest = Math.max(0, ...Object.values(loadJson('walquiz.toene.v1').best || {}));
   $('hubToeneBest').textContent = tonBest ? 'Rekord ' + fmt(tonBest) + ' / 50' : 'Noch kein Rekord';
+  if (typeof profilHub === 'function') profilHub();   // profile.js lädt später
 }
 
 function zeigeHub() {
   setHubTheme();
   renderHub();
   show('hub');
-  // Konto (konto.js lädt später): Fortschritt sichern und Familien-Bestenliste auffrischen
-  if (typeof syncBald === 'function') { syncBald(); zeigeFamilie(); }
 }
 
 // Übergang: Die angetippte Karte wächst auf den ganzen Bildschirm, dann erscheint das Ziel.
