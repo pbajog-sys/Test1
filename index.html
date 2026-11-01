@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=40">
+<link rel="stylesheet" href="fonts/fonts.css?v=41">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=40">
-<link rel="stylesheet" href="ansichten.css?v=40">
+<link rel="stylesheet" href="stil.css?v=41">
+<link rel="stylesheet" href="ansichten.css?v=41">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -456,6 +456,7 @@
       <button class="bu-ding bu-cello" type="button" data-ziel="hubCello" aria-label="Cello-Noten"><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span></button>
       <button class="bu-ding bu-toene" type="button" data-ziel="hubToene" aria-label="Ton-Gedächtnis"><span class="bu-ton"><svg viewBox="0 0 400 40" preserveAspectRatio="none"><path d="M0 20 Q 12.5 2 25 20 Q 37.5 38 50 20 Q 62.5 2 75 20 Q 87.5 38 100 20 Q 112.5 2 125 20 Q 137.5 38 150 20 Q 162.5 2 175 20 Q 187.5 38 200 20 Q 212.5 2 225 20 Q 237.5 38 250 20 Q 262.5 2 275 20 Q 287.5 38 300 20 Q 312.5 2 325 20 Q 337.5 38 350 20 Q 362.5 2 375 20 Q 387.5 38 400 20"/></svg></span></button>
       <button class="bu-ding bu-krimi" type="button" data-ziel="hubKrimi" aria-label="Wer war’s?"><span class="bu-licht"></span><img src="img/krimi/lupe.webp" alt=""></button>
+      <button class="bu-ding bu-takt" type="button" data-ziel="hubTakt" aria-label="Takt-Gefühl"><svg class="metronom" viewBox="0 0 60 80" aria-hidden="true"><path class="mt-korpus" d="M17 76h26l-7-66q-6-6-12 0z"/><path class="mt-skala" d="M24 22h12M23 30h14M22 38h16M21 46h18"/><g class="mt-arm"><path d="M30 66V12"/><rect x="25" y="24" width="10" height="7" rx="2"/></g><path class="mt-fuss" d="M14 76h32"/></svg></button>
       <span class="bu-strasse" aria-hidden="true"><i></i></span>
       <button class="bu-ding bu-porsche" type="button" data-welt="porsche" aria-label="Porsche-Quiz"><svg viewBox="0 0 120 44"><path class="bu-karosse" d="M6 33c0-6 3-9 12-10l16-2C44 12 58 8 72 9c14 1 26 7 36 13 6 2 8 6 8 10v2H6z"/><path class="bu-fenster" d="M40 21c8-7 18-9 30-9 9 0 17 3 24 9z"/><g transform="translate(28 34)"><g class="bu-rad"><circle r="9"/><path d="M0-5.5V5.5M-5.5 0H5.5"/><circle r="2.2" fill="#c9c9d6" stroke="none"/></g></g><g transform="translate(94 34)"><g class="bu-rad"><circle r="9"/><path d="M0-5.5V5.5M-5.5 0H5.5"/><circle r="2.2" fill="#c9c9d6" stroke="none"/></g></g></svg></button>
       <button class="bu-ding bu-dackel" type="button" data-welt="dackel" aria-label="Dackel-Quiz"><img src="img/gretchen/avatar.jpg" alt=""></button>
@@ -492,6 +493,11 @@
     <button class="hub-game hub-toene" id="hubToene" type="button" data-regen="🎧,🔊,🎵,〰️">
       <span class="hg-av hg-av-toene" aria-hidden="true"><span class="hg-in"><span class="hc-toene-icon"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
       <span class="hg-text"><span class="hg-titel">Ton-Gedächtnis</span><span class="hg-sub">Ton hören. Nachbauen. Wie gut ist dein Gehör?</span><span class="hg-best" id="hubToeneBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-takt" id="hubTakt" type="button" data-regen="⏱️,🥁,🎼,⏳">
+      <span class="hg-av hg-av-takt" aria-hidden="true"><span class="hg-in"><svg class="metronom" viewBox="0 0 60 80" aria-hidden="true"><path class="mt-korpus" d="M17 76h26l-7-66q-6-6-12 0z"/><path class="mt-skala" d="M24 22h12M23 30h14M22 38h16M21 46h18"/><g class="mt-arm"><path d="M30 66V12"/><rect x="25" y="24" width="10" height="7" rx="2"/></g><path class="mt-fuss" d="M14 76h32"/></svg></span></span>
+      <span class="hg-text"><span class="hg-titel">Takt-Gefühl</span><span class="hg-sub">Zeit, Tempo &amp; Taktart – wie gut ist deine innere Uhr?</span><span class="hg-best" id="hubTaktBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-krimi" id="hubKrimi" type="button" data-regen="🔎,🕵️,🗝️,🕯️">
@@ -1135,6 +1141,71 @@
       </div>
     </div>
   </section>
+
+  <section class="screen" id="screen-takt">
+    <div class="takt-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="taktZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="taktRunde"></span>
+      </div>
+
+      <div class="takt-teil" id="takt-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="takt-logo"><svg class="metronom" viewBox="0 0 60 80" aria-hidden="true"><path class="mt-korpus" d="M17 76h26l-7-66q-6-6-12 0z"/><path class="mt-skala" d="M24 22h12M23 30h14M22 38h16M21 46h18"/><g class="mt-arm"><path d="M30 66V12"/><rect x="25" y="24" width="10" height="7" rx="2"/></g><path class="mt-fuss" d="M14 76h32"/></svg></div>
+        <h2 class="takt-titel">Takt-Gefühl</h2>
+        <div class="takt-modi" id="taktModi">
+          <button type="button" data-modus="dauer"><span>⏱️</span>Zeitgefühl</button>
+          <button type="button" data-modus="tempo"><span>🥁</span>Tempo</button>
+          <button type="button" data-modus="takt"><span>🎼</span>Taktart</button>
+        </div>
+        <p class="takt-lead" id="taktLead"></p>
+        <p class="ton-hinweis">🔔 iPhone: Stumm-Schalter ausschalten und Lautstärke hoch. Fünf Runden, bis zu 50 Punkte.</p>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge" id="taktChallenge" hidden></div>
+        <div class="farb-stufen takt-stufen" id="taktStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn takt-gross" id="taktLos" type="button">Los geht’s ⏱️</button>
+        <button class="btn secondary" id="taktTagBtn" type="button">📅 Tages-Mix</button>
+        <div class="ton-best" id="taktBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="takt-teil takt-mitte" id="takt-spiel" hidden>
+        <div class="ton-merk" id="taktMerk"></div>
+        <div class="takt-bild" id="taktBild"></div>
+        <div class="takt-aktion" id="taktAktion"></div>
+      </div>
+
+      <div class="takt-teil" id="takt-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-punkte" id="taktPunkte"></div>
+        <div class="ton-kommentar" id="taktKommentar"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-analyse takt-analyse" id="taktAnalyse"></div>
+        <button class="btn takt-gross" id="taktWeiter" type="button">Nächste Runde</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="takt-teil" id="takt-ende" hidden>
+        <div class="farb-summe" id="taktSumme"></div>
+        <div class="farb-rekord" id="taktRekord"></div>
+        <div class="farb-rekord" id="taktVergleich" hidden></div>
+        <ul class="ton-liste takt-liste" id="taktListe"></ul>
+        <button class="btn takt-gross" id="taktTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="taktTeilenMsg"></div>
+        <button class="btn secondary" id="taktNochmalSpiel" type="button">Nochmal spielen</button>
+      </div>
+    </div>
+  </section>
 </div>
 
 <dialog class="melde" id="meldeDialog" aria-labelledby="meldeTitel">
@@ -1166,26 +1237,27 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=40"></script>
-<script src="haie.js?v=40"></script>
-<script src="porsche.js?v=40"></script>
-<script src="dackel.js?v=40"></script>
-<script src="groesse.js?v=40"></script>
-<script src="gretchen.js?v=40"></script>
-<script src="effekte.js?v=40"></script>
-<script src="app.js?v=40"></script>
-<script src="melden.js?v=40"></script>
-<script src="hub.js?v=40"></script>
-<script src="farben.js?v=40"></script>
-<script src="cello.js?v=40"></script>
-<script src="toene.js?v=40"></script>
-<script src="krimi-grafik.js?v=40"></script>
-<script src="krimi.js?v=40"></script>
-<script src="krimi-wachen.js?v=40"></script>
-<script src="krimi-verhoer.js?v=40"></script>
-<script src="krimi-alibi.js?v=40"></script>
-<script src="krimi-akte.js?v=40"></script>
-<script src="krimi-zentrale.js?v=40"></script>
-<script src="profile.js?v=40"></script>
+<script src="wale.js?v=41"></script>
+<script src="haie.js?v=41"></script>
+<script src="porsche.js?v=41"></script>
+<script src="dackel.js?v=41"></script>
+<script src="groesse.js?v=41"></script>
+<script src="gretchen.js?v=41"></script>
+<script src="effekte.js?v=41"></script>
+<script src="app.js?v=41"></script>
+<script src="melden.js?v=41"></script>
+<script src="hub.js?v=41"></script>
+<script src="farben.js?v=41"></script>
+<script src="cello.js?v=41"></script>
+<script src="toene.js?v=41"></script>
+<script src="takt.js?v=41"></script>
+<script src="krimi-grafik.js?v=41"></script>
+<script src="krimi.js?v=41"></script>
+<script src="krimi-wachen.js?v=41"></script>
+<script src="krimi-verhoer.js?v=41"></script>
+<script src="krimi-alibi.js?v=41"></script>
+<script src="krimi-akte.js?v=41"></script>
+<script src="krimi-zentrale.js?v=41"></script>
+<script src="profile.js?v=41"></script>
 </body>
 </html>

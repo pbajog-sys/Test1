@@ -89,7 +89,7 @@ header h1 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes einblenden { from { opacity: 0; } to { opacity: 1; } }
 /* Die Spiele haben eine eigene Vollbild-Bühne (position: fixed). Eine Animation mit transform auf dem
    Bildschirm würde Safari dazu bringen, die Bühne nur innerhalb des Bildschirms zu zeichnen („Fenster im Fenster“). */
-#screen-farben.active, #screen-cello.active, #screen-toene.active, #screen-krimi.active { animation: none; }
+#screen-farben.active, #screen-cello.active, #screen-toene.active, #screen-takt.active, #screen-krimi.active { animation: none; }
 @keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
@@ -1388,3 +1388,128 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 
 @media (min-width: 700px) { .buehne { margin-left: 0; margin-right: 0; border-radius: 0 0 24px 24px; } }
 @media (prefers-reduced-motion: reduce) { .buehne *, .buehne *::before { animation: none !important; } }
+
+/* ===================================================================
+   ⏱️ Takt-Gefühl – Mitternachtsblau mit Neon-Orange, schwingendes Metronom
+   =================================================================== */
+.metronom { display: block; height: 100%; overflow: visible; }
+.mt-korpus { fill: #2a1d4f; stroke: #ff8a3d; stroke-width: 2.5; stroke-linejoin: round; }
+.mt-skala { stroke: rgba(255,200,150,.45); stroke-width: 1.5; }
+.mt-fuss { stroke: #ff8a3d; stroke-width: 3; stroke-linecap: round; }
+.mt-arm path { stroke: #ffd7a8; stroke-width: 2.5; stroke-linecap: round; }
+.mt-arm rect { fill: #ff3d7f; }
+.mt-arm { transform-box: view-box; transform-origin: 30px 66px; animation: pendel 1.2s ease-in-out infinite alternate; }
+@keyframes pendel { from { transform: rotate(-24deg); } to { transform: rotate(24deg); } }
+
+.hub-takt { background: linear-gradient(#0f0b22, #0f0b22) padding-box, linear-gradient(90deg, #ff8a3d, #ff3d7f, #7c5cff, #ff8a3d) border-box; background-size: 100% 100%, 300% 100%; box-shadow: 0 16px 50px rgba(255,61,127,0.2); }
+.hub-takt .hg-titel { background: linear-gradient(90deg, #ffb070, #ff3d7f); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hg-av-takt { --ring: conic-gradient(#ff8a3d, #ff3d7f, #7c5cff, #ff8a3d); }
+.hg-av-takt > .hg-in { background: #160f30; border-color: #0f0b22; }
+.hg-av-takt .metronom { height: 46px; }
+
+.bu-takt { left: 21%; bottom: 196px; height: 40px; animation-delay: .08s; }
+.bu-takt .metronom { height: 40px; filter: drop-shadow(0 0 6px rgba(255,138,61,.45)); }
+
+.takt-buehne {
+  position: fixed; inset: 0; z-index: 20; overflow-y: auto; color: #fff1e6;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  background: radial-gradient(100% 60% at 50% 0%, rgba(255,138,61,0.16), transparent 60%), radial-gradient(80% 50% at 50% 100%, rgba(124,92,255,0.18), transparent 60%), #0b0819;
+  font-family: "Outfit", system-ui, sans-serif;
+}
+.takt-buehne > * { max-width: 520px; margin-left: auto; margin-right: auto; }
+.takt-buehne .farb-kopf .icon-btn { background: rgba(255,255,255,0.1); color: inherit; }
+.takt-buehne .btn { width: 100%; }
+.takt-buehne .btn.takt-gross { font-size: 1.15rem; padding: 16px; background: linear-gradient(90deg, #ff8a3d, #ff3d7f); color: #1d0610; box-shadow: 0 10px 30px rgba(255,61,127,0.3); }
+.takt-buehne .btn.secondary { background: rgba(255,255,255,0.1); color: inherit; box-shadow: none; }
+.takt-teil { display: grid; gap: 14px; animation: aufploppen .4s var(--ease-spring); }
+#takt-intro { text-align: center; padding-top: 2vh; }
+.takt-logo { height: 92px; display: flex; justify-content: center; }
+.takt-logo .metronom { filter: drop-shadow(0 0 14px rgba(255,138,61,.5)); }
+.takt-titel { font-size: 2.6rem; font-weight: 800; margin: 0; letter-spacing: -0.02em; background: linear-gradient(90deg, #ffb070, #ff3d7f, #a78bfa, #ffb070); background-size: 200% auto; -webkit-background-clip: text; background-clip: text; color: transparent; animation: farbfluss 6s linear infinite; }
+.takt-lead { margin: 0 auto; max-width: 36ch; line-height: 1.5; color: #e2c9bd; min-height: 4.5em; }
+.takt-modi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.takt-modi button {
+  display: grid; gap: 2px; justify-items: center; padding: 10px 4px; border-radius: 16px; border: 1.5px solid rgba(255,176,112,0.25);
+  background: rgba(255,255,255,0.05); color: inherit; font: inherit; font-weight: 700; cursor: pointer; transition: transform .2s var(--ease-spring), background .2s;
+}
+.takt-modi button span { font-size: 1.6rem; }
+.takt-modi button.on { border-color: #ff8a3d; background: linear-gradient(160deg, rgba(255,138,61,0.25), rgba(255,61,127,0.18)); transform: scale(1.04); }
+.takt-stufen button small { font-size: 0.68rem; }
+.takt-mitte { min-height: 76dvh; align-content: center; justify-items: center; text-align: center; }
+.takt-bild { display: grid; justify-items: center; gap: 16px; }
+.takt-aktion { display: grid; gap: 10px; width: 100%; max-width: 420px; }
+
+/* Uhr (Zeitgefühl) und Tipp-Fläche (Tempo) */
+.tk-uhr, .tk-pad {
+  position: relative; width: min(68vw, 260px); aspect-ratio: 1; border-radius: 50%; border: 0; padding: 0; background: none; color: inherit;
+  font: inherit; display: grid; place-items: center; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none;
+}
+.tk-uhr svg { position: absolute; inset: 0; width: 100%; height: 100%; transform: rotate(-90deg); }
+.tk-ring-bg { fill: none; stroke: rgba(255,255,255,0.08); stroke-width: 10; }
+.tk-ring { fill: none; stroke: #ff8a3d; stroke-width: 10; stroke-linecap: round; filter: drop-shadow(0 0 8px rgba(255,138,61,.7)); }
+.tk-kern {
+  position: absolute; inset: 12%; border-radius: 50%; pointer-events: none;
+  background: radial-gradient(circle at 40% 35%, #ffd2a8, #ff8a3d 45%, #ff3d7f 80%);
+  box-shadow: 0 0 60px rgba(255,138,61,0.6), 0 0 120px rgba(255,61,127,0.35); opacity: .14; transition: opacity .12s, transform .12s;
+}
+.tk-uhr.an .tk-kern { opacity: 1; transform: scale(1.04); }
+.tk-uhr.dunkel .tk-kern { opacity: .06; }
+.tk-uhr-text, .tk-pad-text { position: relative; font-size: 1.5rem; font-weight: 800; letter-spacing: .02em; pointer-events: none; font-variant-numeric: tabular-nums; }
+.tk-pad-text { font-size: 2.6rem; }
+.tk-uhr.tippbar, .tk-pad.tippbar { cursor: pointer; }
+.tk-uhr.tippbar::after, .tk-pad.tippbar::after {
+  content: ""; position: absolute; inset: 10%; border-radius: 50%; border: 2px dashed rgba(255,176,112,0.55); animation: ringDrehen 14s linear infinite; pointer-events: none;
+}
+.tk-uhr.tippbar.an::after { border-style: solid; border-color: #fff; }
+.tk-pad { background: radial-gradient(circle, rgba(255,255,255,0.05), transparent 70%); }
+.tk-pad .tk-kern { opacity: .55; }
+.tk-pad:active .tk-kern { transform: scale(.96); }
+.tk-lautsprecher { width: min(52vw, 200px); }
+.tk-zaehler { display: flex; justify-content: center; gap: 10px; }
+.tk-zaehler i { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.12); transition: background .15s, transform .2s var(--ease-spring); }
+.tk-zaehler i.an { background: #ff8a3d; transform: scale(1.25); box-shadow: 0 0 10px rgba(255,138,61,.8); }
+
+/* Taktart: Schlag-Punkte und Auswahl */
+.tk-schlaege { display: flex; gap: 8px; align-items: center; justify-content: center; flex-wrap: wrap; }
+.tk-schlaege i { width: 14px; height: 14px; border-radius: 50%; background: rgba(255,255,255,0.14); transition: background .06s, transform .06s; }
+.tk-schlaege i.betont { width: 20px; height: 20px; }
+.tk-schlaege i.eins { width: 26px; height: 26px; box-shadow: inset 0 0 0 2px rgba(255,176,112,.6); }
+.tk-schlaege i.an { background: #ff8a3d; transform: scale(1.2); box-shadow: 0 0 12px rgba(255,138,61,.9); }
+.tk-wahl { display: grid; grid-template-columns: repeat(2, 1fr); gap: 10px; }
+.tk-wahl.viele { grid-template-columns: repeat(3, 1fr); }
+.tk-wahl button {
+  display: grid; gap: 2px; justify-items: center; padding: 14px 6px; border-radius: 18px; border: 1.5px solid rgba(255,176,112,0.35);
+  background: rgba(255,255,255,0.06); color: inherit; font: inherit; cursor: pointer; animation: aufploppen .4s var(--ease-spring) backwards;
+}
+.tk-wahl button:nth-child(2) { animation-delay: .05s; } .tk-wahl button:nth-child(3) { animation-delay: .1s; } .tk-wahl button:nth-child(4) { animation-delay: .15s; }
+.tk-wahl button:nth-child(5) { animation-delay: .2s; } .tk-wahl button:nth-child(6) { animation-delay: .25s; }
+.tk-wahl b { font-size: 2rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+.tk-wahl small { font-size: 0.75rem; opacity: .7; }
+.tk-wahl button:active { transform: scale(.95); background: rgba(255,138,61,0.25); }
+
+/* Auswertung */
+.takt-analyse { border-color: rgba(255,138,61,0.25); }
+.tk-balken { display: grid; gap: 10px; }
+.tk-balken > div { display: grid; grid-template-columns: 64px 1fr auto; align-items: center; gap: 10px; font-size: 0.9rem; }
+.tk-balken i { display: block; height: 16px; width: var(--w); border-radius: 8px; background: rgba(255,255,255,0.5); transform-origin: left; animation: balkenWachsen .8s cubic-bezier(.2,.8,.2,1) backwards; }
+.tk-balken .du i { background: linear-gradient(90deg, #ff8a3d, #ff3d7f); animation-delay: .15s; }
+.tk-balken b { font-variant-numeric: tabular-nums; }
+@keyframes balkenWachsen { from { transform: scaleX(0); } }
+.tk-strahlen { display: grid; gap: 10px; padding: 6px 8px; }
+.tk-strahl { position: relative; height: 16px; border-bottom: 1px solid rgba(255,255,255,0.12); }
+.tk-strahl i { position: absolute; top: 2px; width: 12px; height: 12px; margin-left: -6px; animation: aufploppen .3s var(--ease-spring) backwards; }
+.tk-strahl.ziel i { transform: rotate(45deg); border: 2px solid #fff; border-radius: 2px; }
+.tk-strahl.du i { border-radius: 50%; background: #ff8a3d; box-shadow: 0 0 8px rgba(255,138,61,.7); }
+.ton-hoer.zwei { grid-template-columns: repeat(2, 1fr); }
+.takt-analyse .ton-hoer button { border-color: rgba(255,138,61,0.45); background: rgba(255,138,61,0.1); }
+.tk-sig { display: flex; align-items: baseline; justify-content: center; gap: 14px; }
+.tk-sig b { font-size: 3.4rem; font-weight: 800; line-height: 1; background: linear-gradient(90deg, #ffb070, #ff3d7f); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.tk-sig span { font-size: 1.1rem; opacity: .75; }
+.tk-raster { display: flex; flex-wrap: wrap; justify-content: center; gap: 6px; }
+.tk-raster span { min-width: 34px; padding: 8px 0; border-radius: 10px; text-align: center; font-weight: 700; background: rgba(255,255,255,0.06); transition: background .06s, transform .06s; }
+.tk-raster span.betont { background: rgba(255,138,61,0.22); }
+.tk-raster span.eins { background: rgba(255,61,127,0.35); }
+.tk-raster span.an { background: #ff8a3d; color: #1d0610; transform: scale(1.12); }
+#takt-aufloesung #taktWeiter { position: sticky; bottom: 0; z-index: 2; }
+.takt-liste li { cursor: default; }
+@media (prefers-reduced-motion: reduce) { .mt-arm { animation: none; } }

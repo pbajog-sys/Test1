@@ -71,6 +71,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `hub.js` – Dashboard „Spiele“ mit Zoom-Übergang
 - `cello.js` – Cello-Noten
 - `toene.js` – Ton-Gedächtnis
+- `takt.js` – Takt-Gefühl (Zeitgefühl, Tempo, Taktart)
 - `krimi.js` – Wer war’s? (Krimi-Logikrätsel)
 - `groesse.js` – Größenvergleich
 - `profile.js` – Profile „Wer spielt?“
@@ -182,11 +183,22 @@ nötigen Denkschritte bestimmen die Schwierigkeit und liefern die Erklärungen f
 - **Handy quer** (wenig Höhe): kompaktere Köpfe, Bretter passen in die Bildschirmhöhe.
 - **Vollbild**: Knopf ⛶ im Dashboard (Desktop und Android). Als installierte App darf Android jetzt auch quer drehen.
 
+## ⏱️ Takt-Gefühl
+Wie gut ist deine innere Uhr? Drei Spielarten mit je fünf Runden, bis zu 50 Punkte:
+- **Zeitgefühl:** Ein Licht leuchtet (bzw. ein Ton klingt) eine Weile – danach den Kreis genauso lange gedrückt halten.
+  Leicht 1–4 s mit laufender Uhr, Mittel 1,5–7 s nur Licht, Profi 2–10 s nur Ton. Punkte nach der prozentualen Abweichung.
+- **Tempo:** Ein Metronom tickt (Leicht 8, Mittel 6, Profi 4 Schläge), danach 8× im selben Tempo tippen.
+  Auswertung in BPM, Gleichmäßigkeit und Zeitstrahl Metronom gegen deine Tipper.
+- **Taktart erkennen:** Ein Schlagzeug (Bassdrum, Snare, Hi-Hat, Glocke auf der „1“ – alles per Web Audio erzeugt) spielt in Schleife.
+  Leicht 2/4, 3/4, 4/4 mit Licht · Mittel + 6/8 nur Ton · Profi + 5/4 und 7/8 ohne Glocke. Verwandte Taktarten
+  (3/4 ↔ 6/8, 2/4 ↔ 4/4) geben halbe Punkte; danach Zählraster („1 & 2 & 3 &“ oder „1 2 3 4 5 6“) zum Mitlesen beim Anhören.
+- **Tages-Mix** (2× Zeit, 2× Tempo, 1× Taktart), für alle gleich. Ergebnis teilen als Challenge-Link mit denselben Runden.
+
 ## 🎮 Dashboard „Spiele“
 - Bunter Neon-Look: dunkler Hintergrund mit wandernden Farbflecken.
 - Oben eine **animierte Bühne**, die das ganze Dashboard als Bild zeigt: tanzende Farbbalken, aufsteigende Cello-Noten,
-  laufende Tonwelle, suchende Lupe, Porsche und Gretchen auf der Küstenstraße, Wal mit Fontäne und Haiflosse im Meer.
+  laufende Tonwelle, schwingendes Metronom, suchende Lupe, Porsche und Gretchen auf der Küstenstraße, Wal mit Fontäne und Haiflosse im Meer.
   Jede Figur ist ein Schnellstart in ihr Spiel (mit Flip und Emoji-Regen). Rechts oben: Profilbild zum Wechseln.
 - **Games** als Zeilen mit rundem Bild, Stand und ▶: **Quizzes** (im Kreis wechseln die Welten als Diashow), Farb-Gedächtnis,
-  Cello-Noten, Ton-Gedächtnis und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
+  Cello-Noten, Ton-Gedächtnis, Takt-Gefühl und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
 - Akku: Farbflecken als Verlauf statt Weichzeichner, Bühne und Diashow pausieren außerhalb des Bildschirms; „Bewegung reduzieren“ wird beachtet.
