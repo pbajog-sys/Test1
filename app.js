@@ -357,14 +357,14 @@ let pendingChallenge = (() => {
 })();
 
 // ---------- Navigation ----------
-const screens = ['hub', 'quizze', 'start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen', 'farben', 'cello', 'toene', 'takt', 'krimi'];
+const screens = ['hub', 'quizze', 'start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen', 'farben', 'cello', 'toene', 'takt', 'punkte', 'krimi'];
 let aktuellerScreen = 'hub';
 function show(name, title) {
   stopSound();
   screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
   aktuellerScreen = name;
   $('homeBtn').hidden = name === 'hub';
-  document.querySelector('header').hidden = ['hub', 'quizze', 'farben', 'cello', 'toene', 'takt', 'krimi'].includes(name);   // die Spiele haben eine eigene Kopfzeile
+  document.querySelector('header').hidden = ['hub', 'quizze', 'farben', 'cello', 'toene', 'takt', 'punkte', 'krimi'].includes(name);   // die Spiele haben eine eigene Kopfzeile
   $('headerTitle').textContent = title || WELTEN[welt].title;
   window.scrollTo(0, 0);
 }

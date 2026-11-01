@@ -174,6 +174,9 @@ function renderHub() {
   const taktSt = loadJson('walquiz.takt.v1');
   const taktBest = Math.max(0, ...Object.values(taktSt.best || {}).flatMap((m) => Object.values(m)), ...Object.values(taktSt.tag || {}));
   $('hubTaktBest').textContent = taktBest ? 'Rekord ' + fmt(taktBest) + ' / 50' : 'Noch kein Rekord';
+  const pwSt = loadJson('walquiz.punkte.v1');
+  const pwBest = Math.max(0, ...Object.values(pwSt.best || {}).flatMap((m) => Object.values(m)), ...Object.values(pwSt.tag || {}));
+  $('hubPunkteBest').textContent = pwBest ? 'Rekord ' + fmt(pwBest) + ' / 50' : 'Noch kein Rekord';
   const krimi = loadJson('walquiz.krimi.v1');
   const summe = (o) => Object.values((o && o.geloest) || {}).reduce((x, y) => x + y, 0);
   const faelle = summe(krimi) + Object.values(krimi.modi || {}).reduce((x, m) => x + summe(m), 0);

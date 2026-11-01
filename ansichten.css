@@ -13,8 +13,8 @@
   .app { max-width: 1180px; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
   .spalten { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 32px; align-items: start; }
   .spalte { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-  .farb-buehne > *, .cello-buehne > *, .ton-buehne > *, .takt-buehne > *, .krimi-buehne > * { max-width: 1100px; }
-  .farb-buehne, .cello-buehne, .ton-buehne, .takt-buehne, .krimi-buehne { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .farb-buehne > *, .cello-buehne > *, .ton-buehne > *, .takt-buehne > *, .pw-buehne > *, .krimi-buehne > * { max-width: 1100px; }
+  .farb-buehne, .cello-buehne, .ton-buehne, .takt-buehne, .pw-buehne, .krimi-buehne { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
 
   /* Dashboard: links die Games, rechts die Bestenliste */
   .hub-spalten .spalte-b .hub-h:first-child { margin-top: 0; }
@@ -64,6 +64,16 @@
   #takt-spiel.takt-mitte { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; min-height: calc(100dvh - 90px); max-width: 1000px; }
   #taktMerk { grid-column: 1 / -1; }
 
+  /* Punktwolke */
+  #pw-intro .spalte-a { justify-content: center; min-height: 55dvh; }
+  .pw-spiel-spalten { align-items: center; }
+  .pw-gross { max-width: min(100%, calc(100dvh - 130px)); }
+  .pw-spiel-spalten:has(.pw-raster) { grid-template-columns: minmax(0, 1fr); }
+  .pw-raster, .pw-raster.drei { grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: min(100%, calc((100dvh - 200px) * 4)); }
+  .pw-raster.drei { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: min(100%, calc((100dvh - 200px) * 3)); }
+  .pw-spiel-spalten:has(.pw-raster) .pw-aktion { grid-template-columns: 1fr 1fr; max-width: 700px; margin: 0 auto; width: 100%; }
+  .pw-spiel-spalten:has(.pw-raster) .pw-pfeil { grid-column: 1 / -1; }
+
   /* Krimi */
   .krimi-teil > .spalten { gap: 14px 28px; }
   #krimi-intro .villa-szene { margin: 0; border-radius: 18px; }
@@ -99,7 +109,7 @@
   .quiz-spalten .gallery { height: calc(100dvh - 110px); }
   .choices { gap: 8px; }
   .choice { padding-top: 10px; padding-bottom: 10px; }
-  .farb-buehne, .cello-buehne, .ton-buehne, .takt-buehne, .krimi-buehne { padding-top: calc(env(safe-area-inset-top) + 6px); }
+  .farb-buehne, .cello-buehne, .ton-buehne, .takt-buehne, .pw-buehne, .krimi-buehne { padding-top: calc(env(safe-area-inset-top) + 6px); }
   .farb-kopf { margin-bottom: 4px; }
   .farb-logo { height: 46px; }
   #farb-mischen .farb-vorschau { height: calc(100dvh - 80px); }

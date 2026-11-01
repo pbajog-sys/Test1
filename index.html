@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=41">
+<link rel="stylesheet" href="fonts/fonts.css?v=42">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=41">
-<link rel="stylesheet" href="ansichten.css?v=41">
+<link rel="stylesheet" href="stil.css?v=42">
+<link rel="stylesheet" href="ansichten.css?v=42">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -457,6 +457,7 @@
       <button class="bu-ding bu-toene" type="button" data-ziel="hubToene" aria-label="Ton-Gedächtnis"><span class="bu-ton"><svg viewBox="0 0 400 40" preserveAspectRatio="none"><path d="M0 20 Q 12.5 2 25 20 Q 37.5 38 50 20 Q 62.5 2 75 20 Q 87.5 38 100 20 Q 112.5 2 125 20 Q 137.5 38 150 20 Q 162.5 2 175 20 Q 187.5 38 200 20 Q 212.5 2 225 20 Q 237.5 38 250 20 Q 262.5 2 275 20 Q 287.5 38 300 20 Q 312.5 2 325 20 Q 337.5 38 350 20 Q 362.5 2 375 20 Q 387.5 38 400 20"/></svg></span></button>
       <button class="bu-ding bu-krimi" type="button" data-ziel="hubKrimi" aria-label="Wer war’s?"><span class="bu-licht"></span><img src="img/krimi/lupe.webp" alt=""></button>
       <button class="bu-ding bu-takt" type="button" data-ziel="hubTakt" aria-label="Takt-Gefühl"><svg class="metronom" viewBox="0 0 60 80" aria-hidden="true"><path class="mt-korpus" d="M17 76h26l-7-66q-6-6-12 0z"/><path class="mt-skala" d="M24 22h12M23 30h14M22 38h16M21 46h18"/><g class="mt-arm"><path d="M30 66V12"/><rect x="25" y="24" width="10" height="7" rx="2"/></g><path class="mt-fuss" d="M14 76h32"/></svg></button>
+      <button class="bu-ding bu-punkte" type="button" data-ziel="hubPunkte" aria-label="Punktwolke"><svg class="pw-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="pm-linie" d="M8 50L52 10"/><circle cx="10" cy="46" r="3.2" style="--k:0"/><circle cx="16" cy="40" r="3.2" style="--k:1"/><circle cx="19" cy="47" r="3.2" style="--k:2"/><circle cx="24" cy="34" r="3.2" style="--k:3"/><circle cx="28" cy="38" r="3.2" style="--k:4"/><circle cx="33" cy="27" r="3.2" style="--k:5"/><circle cx="36" cy="32" r="3.2" style="--k:6"/><circle cx="41" cy="22" r="3.2" style="--k:7"/><circle cx="45" cy="25" r="3.2" style="--k:8"/><circle cx="50" cy="13" r="3.2" style="--k:9"/></svg></button>
       <span class="bu-strasse" aria-hidden="true"><i></i></span>
       <button class="bu-ding bu-porsche" type="button" data-welt="porsche" aria-label="Porsche-Quiz"><svg viewBox="0 0 120 44"><path class="bu-karosse" d="M6 33c0-6 3-9 12-10l16-2C44 12 58 8 72 9c14 1 26 7 36 13 6 2 8 6 8 10v2H6z"/><path class="bu-fenster" d="M40 21c8-7 18-9 30-9 9 0 17 3 24 9z"/><g transform="translate(28 34)"><g class="bu-rad"><circle r="9"/><path d="M0-5.5V5.5M-5.5 0H5.5"/><circle r="2.2" fill="#c9c9d6" stroke="none"/></g></g><g transform="translate(94 34)"><g class="bu-rad"><circle r="9"/><path d="M0-5.5V5.5M-5.5 0H5.5"/><circle r="2.2" fill="#c9c9d6" stroke="none"/></g></g></svg></button>
       <button class="bu-ding bu-dackel" type="button" data-welt="dackel" aria-label="Dackel-Quiz"><img src="img/gretchen/avatar.jpg" alt=""></button>
@@ -498,6 +499,11 @@
     <button class="hub-game hub-takt" id="hubTakt" type="button" data-regen="⏱️,🥁,🎼,⏳">
       <span class="hg-av hg-av-takt" aria-hidden="true"><span class="hg-in"><svg class="metronom" viewBox="0 0 60 80" aria-hidden="true"><path class="mt-korpus" d="M17 76h26l-7-66q-6-6-12 0z"/><path class="mt-skala" d="M24 22h12M23 30h14M22 38h16M21 46h18"/><g class="mt-arm"><path d="M30 66V12"/><rect x="25" y="24" width="10" height="7" rx="2"/></g><path class="mt-fuss" d="M14 76h32"/></svg></span></span>
       <span class="hg-text"><span class="hg-titel">Takt-Gefühl</span><span class="hg-sub">Zeit, Tempo &amp; Taktart – wie gut ist deine innere Uhr?</span><span class="hg-best" id="hubTaktBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-punkte" id="hubPunkte" type="button" data-regen="📈,📊,🔵,🎯">
+      <span class="hg-av hg-av-punkte" aria-hidden="true"><span class="hg-in"><svg class="pw-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="pm-linie" d="M8 50L52 10"/><circle cx="10" cy="46" r="3.2" style="--k:0"/><circle cx="16" cy="40" r="3.2" style="--k:1"/><circle cx="19" cy="47" r="3.2" style="--k:2"/><circle cx="24" cy="34" r="3.2" style="--k:3"/><circle cx="28" cy="38" r="3.2" style="--k:4"/><circle cx="33" cy="27" r="3.2" style="--k:5"/><circle cx="36" cy="32" r="3.2" style="--k:6"/><circle cx="41" cy="22" r="3.2" style="--k:7"/><circle cx="45" cy="25" r="3.2" style="--k:8"/><circle cx="50" cy="13" r="3.2" style="--k:9"/></svg></span></span>
+      <span class="hg-text"><span class="hg-titel">Punktwolke</span><span class="hg-sub">Wie stark hängt das zusammen? Schätzen und sortieren.</span><span class="hg-best" id="hubPunkteBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-krimi" id="hubKrimi" type="button" data-regen="🔎,🕵️,🗝️,🕯️">
@@ -1206,6 +1212,72 @@
       </div>
     </div>
   </section>
+
+  <section class="screen" id="screen-punkte">
+    <div class="pw-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="pwZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="pwRunde"></span>
+      </div>
+
+      <div class="pw-teil" id="pw-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="pw-logo"><svg class="pw-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="pm-linie" d="M8 50L52 10"/><circle cx="10" cy="46" r="3.2" style="--k:0"/><circle cx="16" cy="40" r="3.2" style="--k:1"/><circle cx="19" cy="47" r="3.2" style="--k:2"/><circle cx="24" cy="34" r="3.2" style="--k:3"/><circle cx="28" cy="38" r="3.2" style="--k:4"/><circle cx="33" cy="27" r="3.2" style="--k:5"/><circle cx="36" cy="32" r="3.2" style="--k:6"/><circle cx="41" cy="22" r="3.2" style="--k:7"/><circle cx="45" cy="25" r="3.2" style="--k:8"/><circle cx="50" cy="13" r="3.2" style="--k:9"/></svg></div>
+        <h2 class="pw-titel">Punktwolke</h2>
+        <div class="takt-modi pw-modi" id="pwModi">
+          <button type="button" data-modus="schaetzen"><span>🎯</span>Schätzen</button>
+          <button type="button" data-modus="sortieren"><span>📊</span>Sortieren</button>
+        </div>
+        <p class="pw-lead" id="pwLead"></p>
+        <p class="pw-hinweis">Der Korrelationskoeffizient <b>r</b> misst, wie eng die Punkte an einer Geraden liegen. Fünf Runden, bis zu 50 Punkte.</p>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge pw-challenge" id="pwChallenge" hidden></div>
+        <div class="farb-stufen pw-stufen" id="pwStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn pw-gross-btn" id="pwLos" type="button">Los geht’s 📈</button>
+        <button class="btn secondary" id="pwTagBtn" type="button">📅 Tages-Wolken</button>
+        <div class="pw-best" id="pwBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="pw-teil" id="pw-spiel" hidden>
+        <div class="pw-frage" id="pwFrage"></div>
+        <div class="spalten pw-spiel-spalten">
+        <div class="spalte spalte-a"><div id="pwBild"></div></div>
+        <div class="spalte spalte-b"><div class="pw-aktion" id="pwAktion"></div></div>
+        </div>
+      </div>
+
+      <div class="pw-teil" id="pw-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-punkte" id="pwPunkte"></div>
+        <div class="ton-kommentar" id="pwKommentar"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="pw-analyse" id="pwAnalyse"></div>
+        <button class="btn pw-gross-btn" id="pwWeiter" type="button">Nächste Runde</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="pw-teil" id="pw-ende" hidden>
+        <div class="farb-summe" id="pwSumme"></div>
+        <div class="farb-rekord" id="pwRekord"></div>
+        <div class="farb-rekord" id="pwVergleich" hidden></div>
+        <ul class="ton-liste pw-liste" id="pwListe"></ul>
+        <button class="btn pw-gross-btn" id="pwTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="pwTeilenMsg"></div>
+        <button class="btn secondary" id="pwNochmalSpiel" type="button">Nochmal spielen</button>
+      </div>
+    </div>
+  </section>
 </div>
 
 <dialog class="melde" id="meldeDialog" aria-labelledby="meldeTitel">
@@ -1237,27 +1309,28 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=41"></script>
-<script src="haie.js?v=41"></script>
-<script src="porsche.js?v=41"></script>
-<script src="dackel.js?v=41"></script>
-<script src="groesse.js?v=41"></script>
-<script src="gretchen.js?v=41"></script>
-<script src="effekte.js?v=41"></script>
-<script src="app.js?v=41"></script>
-<script src="melden.js?v=41"></script>
-<script src="hub.js?v=41"></script>
-<script src="farben.js?v=41"></script>
-<script src="cello.js?v=41"></script>
-<script src="toene.js?v=41"></script>
-<script src="takt.js?v=41"></script>
-<script src="krimi-grafik.js?v=41"></script>
-<script src="krimi.js?v=41"></script>
-<script src="krimi-wachen.js?v=41"></script>
-<script src="krimi-verhoer.js?v=41"></script>
-<script src="krimi-alibi.js?v=41"></script>
-<script src="krimi-akte.js?v=41"></script>
-<script src="krimi-zentrale.js?v=41"></script>
-<script src="profile.js?v=41"></script>
+<script src="wale.js?v=42"></script>
+<script src="haie.js?v=42"></script>
+<script src="porsche.js?v=42"></script>
+<script src="dackel.js?v=42"></script>
+<script src="groesse.js?v=42"></script>
+<script src="gretchen.js?v=42"></script>
+<script src="effekte.js?v=42"></script>
+<script src="app.js?v=42"></script>
+<script src="melden.js?v=42"></script>
+<script src="hub.js?v=42"></script>
+<script src="farben.js?v=42"></script>
+<script src="cello.js?v=42"></script>
+<script src="toene.js?v=42"></script>
+<script src="takt.js?v=42"></script>
+<script src="punkte.js?v=42"></script>
+<script src="krimi-grafik.js?v=42"></script>
+<script src="krimi.js?v=42"></script>
+<script src="krimi-wachen.js?v=42"></script>
+<script src="krimi-verhoer.js?v=42"></script>
+<script src="krimi-alibi.js?v=42"></script>
+<script src="krimi-akte.js?v=42"></script>
+<script src="krimi-zentrale.js?v=42"></script>
+<script src="profile.js?v=42"></script>
 </body>
 </html>

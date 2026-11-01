@@ -72,6 +72,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `cello.js` – Cello-Noten
 - `toene.js` – Ton-Gedächtnis
 - `takt.js` – Takt-Gefühl (Zeitgefühl, Tempo, Taktart)
+- `punkte.js` – Punktwolke (Korrelation schätzen und sortieren)
 - `krimi.js` – Wer war’s? (Krimi-Logikrätsel)
 - `groesse.js` – Größenvergleich
 - `profile.js` – Profile „Wer spielt?“
@@ -189,16 +190,25 @@ Wie gut ist deine innere Uhr? Drei Spielarten mit je fünf Runden, bis zu 50 Pun
   Leicht 1–4 s mit laufender Uhr, Mittel 1,5–7 s nur Licht, Profi 2–10 s nur Ton. Punkte nach der prozentualen Abweichung.
 - **Tempo:** Ein Metronom tickt (Leicht 8, Mittel 6, Profi 4 Schläge), danach 8× im selben Tempo tippen.
   Auswertung in BPM, Gleichmäßigkeit und Zeitstrahl Metronom gegen deine Tipper.
-- **Taktart erkennen:** Ein Schlagzeug (Bassdrum, Snare, Hi-Hat, Glocke auf der „1“ – alles per Web Audio erzeugt) spielt in Schleife.
-  Leicht 2/4, 3/4, 4/4 mit Licht · Mittel + 6/8 nur Ton · Profi + 5/4 und 7/8 ohne Glocke. Verwandte Taktarten
+- **Taktart erkennen:** Ein Rhythmus spielt in Schleife – jede Runde mit anderem Klang: Schlagzeug, Klavier (Akkordwechsel je Takt),
+  Elektro, Percussion oder Klatschen (alles per Web Audio erzeugt). Leicht 2/4, 3/4, 4/4 mit Licht und 3 Klängen ·
+  Mittel + 6/8, alle 5 Klänge, Synkopen · Profi + 5/4 und 7/8, ohne Glocke, Einsatz mitten im Takt. Verwandte Taktarten
   (3/4 ↔ 6/8, 2/4 ↔ 4/4) geben halbe Punkte; danach Zählraster („1 & 2 & 3 &“ oder „1 2 3 4 5 6“) zum Mitlesen beim Anhören.
 - **Tages-Mix** (2× Zeit, 2× Tempo, 1× Taktart), für alle gleich. Ergebnis teilen als Challenge-Link mit denselben Runden.
+
+## 📈 Punktwolke
+Wie stark hängt das zusammen? Ein Spiel zum Korrelationskoeffizienten r, fünf Runden, bis zu 50 Punkte:
+- **Schätzen:** Eine Punktwolke erscheint, r per Schieber schätzen (Leicht 0 bis 1 mit vielen Punkten, Mittel −1 bis 1,
+  Profi nur 30 Punkte und Ausreißer). Danach Regressionsgerade, echtes r, Abweichung und Einordnung in Worten.
+- **Sortieren:** 3–4 Wolken in die richtige Reihenfolge tippen; Punkte nach richtig geordneten Paaren.
+- Die Wolken haben exakt das gewünschte r (Zufallswerte, die senkrecht zu x gemacht werden); angezeigt wird immer das echte r.
+- **Tages-Wolken** (für alle gleich), Bestwerte je Profil und Challenge-Links mit denselben Wolken.
 
 ## 🎮 Dashboard „Spiele“
 - Bunter Neon-Look: dunkler Hintergrund mit wandernden Farbflecken.
 - Oben eine **animierte Bühne**, die das ganze Dashboard als Bild zeigt: tanzende Farbbalken, aufsteigende Cello-Noten,
-  laufende Tonwelle, schwingendes Metronom, suchende Lupe, Porsche und Gretchen auf der Küstenstraße, Wal mit Fontäne und Haiflosse im Meer.
+  laufende Tonwelle, schwingendes Metronom, Mini-Punktwolke, suchende Lupe, Porsche und Gretchen auf der Küstenstraße, Wal mit Fontäne und Haiflosse im Meer.
   Jede Figur ist ein Schnellstart in ihr Spiel (mit Flip und Emoji-Regen). Rechts oben: Profilbild zum Wechseln.
 - **Games** als Zeilen mit rundem Bild, Stand und ▶: **Quizzes** (im Kreis wechseln die Welten als Diashow), Farb-Gedächtnis,
-  Cello-Noten, Ton-Gedächtnis, Takt-Gefühl und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
+  Cello-Noten, Ton-Gedächtnis, Takt-Gefühl, Punktwolke und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
 - Akku: Farbflecken als Verlauf statt Weichzeichner, Bühne und Diashow pausieren außerhalb des Bildschirms; „Bewegung reduzieren“ wird beachtet.

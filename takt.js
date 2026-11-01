@@ -11,26 +11,26 @@ const TAKT_TON = 523.25;        // C5 – Ton beim Zeitgefühl
 const TAKT_MODI = {
   dauer: { name: 'Zeitgefühl', emoji: '⏱️', lead: 'Ein Licht leuchtet eine Weile. Danach hältst du den Kreis genauso lange gedrückt – ohne Uhr, nur mit Gefühl.' },
   tempo: { name: 'Tempo', emoji: '🥁', lead: 'Ein Metronom tickt ein paar Schläge. Danach tippst du im selben Tempo weiter. Wie genau triffst du die BPM?' },
-  takt: { name: 'Taktart', emoji: '🎼', lead: 'Ein Schlagzeug spielt einen Rhythmus. Zählst du mit? Erkenne die Taktart – vom Marsch über den Walzer bis zum schrägen 7/8.' },
+  takt: { name: 'Taktart', emoji: '🎼', lead: 'Ein Schlagzeug spielt einen Rhythmus. Zählst du mit? Erkenne die Taktart – gespielt von Schlagzeug, Klavier, Elektro, Percussion oder Klatschen.' },
 };
 const TAKT_STUFEN = {
   leicht: {
     name: 'Leicht', nochmal: 1,
     dauer: { min: 1000, max: 4000, zeige: 'ring', klein: '1–4 Sek. · mit Uhr' },
     tempo: { min: 70, max: 130, schlaege: 8, licht: true, klein: '8 Schläge · mit Licht' },
-    takt: { arten: ['2/4', '3/4', '4/4'], glocke: true, licht: true, bpm: [88, 112], klein: '3 Taktarten · mit Licht' },
+    takt: { arten: ['2/4', '3/4', '4/4'], glocke: true, licht: true, bpm: [88, 112], klein: '3 Taktarten · 3 Sounds · mit Licht', kits: ['schlagzeug', 'klavier', 'perkussion'] },
   },
   mittel: {
     name: 'Mittel', nochmal: 0,
     dauer: { min: 1500, max: 7000, zeige: 'licht', klein: '1,5–7 Sek. · nur Licht' },
     tempo: { min: 55, max: 160, schlaege: 6, licht: false, klein: '6 Schläge · nur Ton' },
-    takt: { arten: ['2/4', '3/4', '4/4', '6/8'], glocke: true, licht: false, bpm: [80, 130], klein: '+ 6/8 · nur Ton' },
+    takt: { arten: ['2/4', '3/4', '4/4', '6/8'], glocke: true, licht: false, bpm: [80, 130], klein: '+ 6/8 · 5 Sounds · Synkopen', kits: 'alle', variation: true },
   },
   profi: {
     name: 'Profi', nochmal: 0,
     dauer: { min: 2000, max: 10000, zeige: 'ton', klein: '2–10 Sek. · nur Ton' },
     tempo: { min: 45, max: 190, schlaege: 4, licht: false, klein: '4 Schläge · nur Ton' },
-    takt: { arten: ['2/4', '3/4', '4/4', '6/8', '5/4', '7/8'], glocke: false, licht: false, bpm: [70, 150], klein: '+ 5/4, 7/8 · ohne Glocke' },
+    takt: { arten: ['2/4', '3/4', '4/4', '6/8', '5/4', '7/8'], glocke: false, licht: false, bpm: [70, 150], klein: '+ 5/4, 7/8 · Einsatz mittendrin', kits: 'alle', variation: true, mittendrin: true },
   },
 };
 // Taktarten im Achtel-Raster: Gruppen = betonte Zählzeiten, kick = Bassdrum-Schläge
@@ -77,7 +77,8 @@ function taktRunden(seed, modus, stufe) {
       vorrat = S.takt.arten.slice();
       for (let i = vorrat.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [vorrat[i], vorrat[j]] = [vorrat[j], vorrat[i]]; }
     }
-    return { art, sig: vorrat.pop(), bpm: Math.round(S.takt.bpm[0] + r() * (S.takt.bpm[1] - S.takt.bpm[0])) };
+    const kits = S.takt.kits === 'alle' ? Object.keys(TAKT_KITS) : S.takt.kits;
+    return { art, sig: vorrat.pop(), bpm: Math.round(S.takt.bpm[0] + r() * (S.takt.bpm[1] - S.takt.bpm[0])), kit: kits[Math.floor(r() * kits.length)] };
   });
 }
 
@@ -130,6 +131,64 @@ function schlag(art, t) {
     }
   } catch (e) { /* ohne Ton weiter */ }
 }
+
+// ---------- Klang-Sets für die Taktart ----------
+// Jedes Set spielt drei Rollen: 'eins' (Taktanfang/Bass), 'betont' (Gruppenanfang) und 'leise' (Achtel dazwischen).
+function oszi(t, f0, f1, dauer, vol, typ = 'sine') {
+  try {
+    const c = audio(), g = c.createGain(), o = c.createOscillator();
+    o.type = typ;
+    o.frequency.setValueAtTime(f0, t);
+    if (f1 !== f0) o.frequency.exponentialRampToValueAtTime(f1, t + dauer * 0.7);
+    g.gain.setValueAtTime(0.0001, t);
+    g.gain.exponentialRampToValueAtTime(Math.max(0.0002, vol), t + 0.006);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
+    o.connect(g).connect(taktBus || taktBusNeu());
+    o.start(t); o.stop(t + dauer + 0.02);
+  } catch (e) { /* ohne Ton weiter */ }
+}
+function rausch(t, filter, f, dauer, vol, q = 1) {
+  try {
+    const c = audio(), g = c.createGain(), n = c.createBufferSource(), fi = c.createBiquadFilter();
+    n.buffer = rauschPuffer(c);
+    fi.type = filter; fi.frequency.value = f; fi.Q.value = q;
+    g.gain.setValueAtTime(Math.max(0.0002, vol), t);
+    g.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
+    n.connect(fi).connect(g).connect(taktBus || taktBusNeu());
+    n.start(t); n.stop(t + dauer + 0.01);
+  } catch (e) { /* ohne Ton weiter */ }
+}
+const midiHz = (m) => 440 * Math.pow(2, (m - 69) / 12);
+const TAKT_AKKORDE = [[36, 60, 64, 67], [33, 60, 64, 69], [29, 60, 65, 69], [31, 59, 62, 67]];   // C – a – F – G, je Takt ein Akkord
+const klatscher = (t, v) => [0, 0.011, 0.022].forEach((d, k) => rausch(t + d, 'bandpass', 1300, k === 2 ? 0.12 : 0.03, 0.5 * v, 1.4));
+const TAKT_KITS = {
+  schlagzeug: { name: 'Schlagzeug', emoji: '🥁', spiel(r, t, v) {
+    if (r === 'eins') { oszi(t, 150, 45, 0.22, 0.9 * v); rausch(t, 'highpass', 7000, 0.05, 0.18 * v); }
+    else if (r === 'betont') { rausch(t, 'bandpass', 1800, 0.14, 0.6 * v); oszi(t, 230, 180, 0.08, 0.2 * v, 'triangle'); }
+    else rausch(t, 'highpass', 7000, 0.05, 0.22 * v);
+  } },
+  elektro: { name: 'Elektro', emoji: '🎛️', spiel(r, t, v) {
+    if (r === 'eins') oszi(t, 120, 46, 0.55, 0.95 * v);
+    else if (r === 'betont') klatscher(t, v);
+    else rausch(t, 'highpass', 9000, 0.03, 0.2 * v);
+  } },
+  perkussion: { name: 'Percussion', emoji: '🪘', spiel(r, t, v) {
+    if (r === 'eins') oszi(t, 190, 140, 0.32, 0.8 * v);
+    else if (r === 'betont') oszi(t, 410, 340, 0.16, 0.6 * v);
+    else rausch(t, 'bandpass', 5500, 0.07, 0.22 * v, 2);
+  } },
+  klavier: { name: 'Klavier', emoji: '🎹', spiel(r, t, v, takt) {
+    const a = TAKT_AKKORDE[takt % 4];
+    if (r === 'eins') { oszi(t, midiHz(a[0]), midiHz(a[0]), 0.7, 0.55 * v, 'triangle'); a.slice(1).forEach((m) => oszi(t, midiHz(m), midiHz(m), 0.35, 0.1 * v, 'triangle')); }
+    else if (r === 'betont') a.slice(1).forEach((m) => oszi(t, midiHz(m), midiHz(m), 0.28, 0.14 * v, 'triangle'));
+    else oszi(t, midiHz(a[3] + 12), midiHz(a[3] + 12), 0.12, 0.06 * v, 'triangle');
+  } },
+  klatschen: { name: 'Klatschen', emoji: '👏', spiel(r, t, v) {
+    if (r === 'eins') { oszi(t, 110, 50, 0.2, 0.9 * v); rausch(t, 'lowpass', 500, 0.12, 0.35 * v); }
+    else if (r === 'betont') klatscher(t, v);
+    else { rausch(t, 'highpass', 3500, 0.03, 0.3 * v); oszi(t, 2100, 1900, 0.02, 0.08 * v); }
+  } },
+};
 
 // ---------- Spielablauf ----------
 let tk = null;                    // Zustand der laufenden Runde
@@ -307,22 +366,31 @@ function tempoEingabe() {
 
 // ----- Taktart -----
 // Spielt Takte ab tStart und gibt zurück, wann der nächste beginnt. onSchlag(i) für die Anzeige.
-function takteSpielen(sig, bpm, glocke, tStart, takte, onSchlag) {
+// o.kit = Klang-Set, o.variation = Synkopen in jedem zweiten Takt, o.ab = Einsatz erst ab diesem Achtel, o.takt0 = Taktzähler (Akkorde)
+function takteSpielen(sig, bpm, glocke, tStart, takte, onSchlag, o = {}) {
   const c = audio(), achtel = 60 / bpm / 2, n = achtelVon(sig), starts = gruppenStarts(sig), A = TAKTARTEN[sig];
+  const kit = TAKT_KITS[o.kit] || TAKT_KITS.schlagzeug;
+  let t = tStart;
   for (let b = 0; b < takte; b++) {
-    for (let i = 0; i < n; i++) {
-      const t = tStart + (b * n + i) * achtel;
+    const takt = (o.takt0 || 0) + b;
+    for (let i = b === 0 ? (o.ab || 0) : 0; i < n; i++) {
+      let rolle = A.kick.includes(i) ? 'eins' : starts.includes(i) ? 'betont' : 'leise', v = 1;
+      // Synkope: ein Zwischen-Achtel bekommt einen leisen Akzent – macht das Zählen schwerer, ändert aber nicht den Takt
+      if (o.variation && takt % 2 === 1 && rolle === 'leise' && Math.random() < 0.3) { rolle = 'betont'; v = 0.4; }
       if (i === 0 && glocke) schlag('glocke', t);
-      schlag(A.kick.includes(i) ? 'kick' : starts.includes(i) ? 'snare' : 'hat', t);
-      if (onSchlag) nachher((t - c.currentTime) * 1000, () => onSchlag(i));
+      kit.spiel(rolle, t, v, takt);
+      const tt = t;
+      if (onSchlag) nachher((tt - c.currentTime) * 1000, () => onSchlag(i));
+      t += achtel;
     }
   }
-  return tStart + takte * n * achtel;
+  return t;
 }
 function taktartSpielen() {
   taktStopp();
   const rd = tk.runden[tk.i], S = TAKT_STUFEN[tk.stufe].takt, starts = gruppenStarts(rd.sig), n = achtelVon(rd.sig);
-  $('taktBild').innerHTML = '<div class="tk-pad tk-lautsprecher"><span class="tk-kern"></span><span class="tk-pad-text">🎼</span></div>'
+  const kit = TAKT_KITS[rd.kit] || TAKT_KITS.schlagzeug;
+  $('taktBild').innerHTML = '<div class="tk-pad tk-lautsprecher"><span class="tk-kern"></span><span class="tk-pad-text">' + kit.emoji + '</span></div><div class="tk-kit">' + kit.name + '</div>'
     + (S.licht ? '<div class="tk-schlaege">' + Array.from({ length: n }, (_, i) => '<i class="' + (i === 0 ? 'eins' : starts.includes(i) ? 'betont' : '') + '"></i>').join('') + '</div>' : '');
   taktMerk('Welche Taktart hörst du? Zähl mit!');
   const kern = $('taktBild').querySelector('.tk-kern'), schlaege = $('taktBild').querySelectorAll('.tk-schlaege i');
@@ -344,9 +412,12 @@ function taktartSpielen() {
   $('taktAktion').replaceChildren(box);
   // Endlosschleife: immer zwei Takte im Voraus planen, bis geantwortet wird
   taktBusNeu();
-  let tNext = audio().currentTime + 0.4;
+  let tNext = audio().currentTime + 0.4, takt0 = 0;
+  // Profi: Der Rhythmus setzt irgendwo mitten im Takt ein – die „1“ muss man selbst finden
+  let ab = S.mittendrin ? 1 + Math.floor(Math.random() * (n - 1)) : 0;
   const weiter = () => {
-    tNext = takteSpielen(rd.sig, rd.bpm, S.glocke, tNext, 2, anzeige);
+    tNext = takteSpielen(rd.sig, rd.bpm, S.glocke, tNext, 2, anzeige, { kit: rd.kit, variation: S.variation, ab, takt0 });
+    ab = 0; takt0 += 2;
     nachher((tNext - audio().currentTime - 0.35) * 1000, weiter);
   };
   weiter();
@@ -403,7 +474,7 @@ function taktAuswerten(wert) {
       taktStopp();
       tk.timer = [];
       taktBusNeu();
-      takteSpielen(sig, rd.bpm, true, audio().currentTime + 0.25, 2, sig === rd.sig ? (i) => { zellen.forEach((z) => z.classList.remove('an')); zellen[i].classList.add('an'); } : null);
+      takteSpielen(sig, rd.bpm, true, audio().currentTime + 0.25, 2, sig === rd.sig ? (i) => { zellen.forEach((z) => z.classList.remove('an')); zellen[i].classList.add('an'); } : null, { kit: rd.kit });
     };
     $('taktHoerTakt').onclick = () => vorspielen(rd.sig);
     if ($('taktHoerWahl')) $('taktHoerWahl').onclick = () => vorspielen(wert);
@@ -450,7 +521,7 @@ function taktEnde() {
       li.querySelector('.tl-n').textContent = '🥁 ' + rd.bpm + ' → ' + Math.round(w.bpm) + ' BPM';
       li.querySelector('.tl-c').textContent = prozentText((w.bpm - rd.bpm) / rd.bpm);
     } else {
-      li.querySelector('.tl-n').textContent = '🎼 ' + rd.sig + (w === rd.sig ? '' : ' → ' + w);
+      li.querySelector('.tl-n').textContent = (TAKT_KITS[rd.kit] || TAKT_KITS.schlagzeug).emoji + ' ' + rd.sig + (w === rd.sig ? '' : ' → ' + w);
       li.querySelector('.tl-c').textContent = w === rd.sig ? '✓' : '✗';
     }
     li.querySelector('b').textContent = fmt(tk.punkte[i]);
