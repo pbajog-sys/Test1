@@ -1201,3 +1201,40 @@ body.theme-hub {
 .kh-liste .mini img { width: 100%; height: 100%; object-fit: contain; }
 .kh-schritte li::marker { color: #a3241f; font-weight: 800; }
 .kh-blatt .btn { width: 100%; margin-top: 8px; }
+
+/* ---------- Farb-Gedächtnis: Farbtopf und „Mitte finden“ ---------- */
+.farb-vorschau { position: relative; }
+.farb-vorschau.topf-leer {
+  background: repeating-conic-gradient(rgba(255,255,255,0.06) 0 25%, transparent 0 50%) 0 0 / 22px 22px, rgba(255,255,255,0.04) !important;
+  box-shadow: inset 0 0 0 2px rgba(255,255,255,0.18), inset 0 -30px 60px rgba(0,0,0,0.35); color: rgba(255,255,255,0.7);
+}
+.topf-tropfen { position: absolute; top: 0; width: 18px; height: 22px; border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%; pointer-events: none; box-shadow: inset -3px -4px 0 rgba(0,0,0,0.15), inset 3px 3px 0 rgba(255,255,255,0.3); }
+.farb-topf { display: grid; gap: 10px; }
+.topf-hinweis { text-align: center; font-size: 0.9rem; font-weight: 600; opacity: .85; min-height: 1.3em; }
+.topf-tuben { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 8px; }
+.tube {
+  position: relative; display: grid; justify-items: center; gap: 4px; padding: 10px 2px 8px; border-radius: 16px; cursor: pointer; font: inherit; color: inherit;
+  border: 1.5px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); transition: transform .12s var(--ease-spring);
+}
+.tube:active { transform: scale(.9); }
+.tube-klecks {
+  width: 44px; height: 44px; border-radius: 46% 54% 50% 50% / 55% 50% 50% 45%;
+  box-shadow: inset -5px -6px 0 rgba(0,0,0,0.18), inset 5px 5px 0 rgba(255,255,255,0.35), 0 6px 14px rgba(0,0,0,0.35);
+}
+.tube-name { font-size: 0.75rem; font-weight: 700; }
+.tube-zahl { position: absolute; top: -8px; right: -4px; min-width: 24px; height: 24px; padding: 0 6px; border-radius: 12px; background: #fff; color: #111; font-weight: 800; font-size: 0.8rem; display: grid; place-items: center; box-shadow: 0 2px 6px rgba(0,0,0,0.4); }
+.tube-zahl:empty { display: none; }
+.tube.drin { border-color: rgba(255,255,255,0.55); }
+.topf-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.topf-knoepfe button { font: inherit; font-weight: 600; padding: 9px; border-radius: 12px; border: 1.5px solid rgba(255,255,255,0.18); background: rgba(255,255,255,0.06); color: inherit; cursor: pointer; }
+.topf-knoepfe button:disabled { opacity: .35; }
+.farb-rezept { display: grid; gap: 4px; font-size: 0.92rem; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,0.06); }
+.farb-rezept small { opacity: .7; }
+.rezept-tipp { margin-top: 4px; font-weight: 700; }
+.farb-mitte-leiste { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 10px; }
+.farb-mitte-leiste span { height: 44px; border-radius: 14px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2), 0 6px 16px rgba(0,0,0,0.3); }
+.farb-mitte-leiste b { font-size: 0.85rem; opacity: .8; }
+.farb-mitte-erg { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; text-align: center; }
+.farb-mitte-erg i { display: block; height: 46px; border-radius: 12px; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2); }
+.farb-mitte-erg span:nth-child(2) i, .farb-mitte-erg span:nth-child(3) i { box-shadow: 0 0 0 2px #fff; }
+.farb-mitte-erg small { font-size: 0.72rem; opacity: .8; }

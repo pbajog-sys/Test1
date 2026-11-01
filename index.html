@@ -7,7 +7,7 @@
 <meta name="description" content="Lerne alle Walarten kennen und mach das Seepferdchen der Walkunde.">
 <meta name="theme-color" content="#0b2a4a">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=33">
+<link rel="stylesheet" href="fonts/fonts.css?v=34">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -422,8 +422,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=33">
-<link rel="stylesheet" href="ansichten.css?v=33">
+<link rel="stylesheet" href="stil.css?v=34">
+<link rel="stylesheet" href="ansichten.css?v=34">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -678,12 +678,15 @@
         <div class="spalte spalte-a">
         <div class="farb-logo" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
         <h2>Farb-Gedächtnis</h2>
-        <p>Eine Farbe blitzt kurz auf. Dann mischst du sie aus dem Kopf nach – mit Farbton, Sättigung und Helligkeit. Fünf Farben, bis zu 50 Punkte.</p>
+        <p id="farbIntroText">Eine Farbe blitzt kurz auf. Dann mischst du sie aus dem Kopf nach. Fünf Farben, bis zu 50 Punkte.</p>
         </div>
         <div class="spalte spalte-b">
         <div class="farb-challenge" id="farbChallenge" hidden></div>
+        <div class="farb-wahl" id="farbArtWahl">
+          <span>Spiel:</span><button type="button" data-art="merken">🧠 Merken</button><button type="button" data-art="mitte">🎯 Mitte finden</button>
+        </div>
         <div class="farb-wahl" id="farbReglerWahl">
-          <span>Regler:</span><button type="button" data-regler="rgb">Rot · Grün · Blau</button><button type="button" data-regler="hsb">Farbton · Sättigung · Helligkeit</button>
+          <span>Mischen:</span><button type="button" data-regler="rgb">Rot · Grün · Blau</button><button type="button" data-regler="hsb">Farbton · Sättigung · Helligkeit</button><button type="button" data-regler="topf">🪣 Farbtopf</button>
         </div>
         <div class="farb-stufen" id="farbStufen">
           <button type="button" data-stufe="leicht">Leicht<small>5 Sek.</small></button>
@@ -698,13 +701,14 @@
       </div>
 
       <div class="farb-teil farb-mitte" id="farb-zeigen" hidden>
-        <div class="farb-merk">Merk dir diese Farbe</div>
+        <div class="farb-merk" id="farbMerkText">Merk dir diese Farbe</div>
         <div class="farb-countdown" id="farbCountdown"></div>
       </div>
 
       <div class="farb-teil" id="farb-mischen" hidden>
         <div class="spalten">
         <div class="spalte spalte-a">
+        <div class="farb-mitte-leiste" id="farbMitteLeiste" hidden><span id="farbMitteA"></span><b>← Mitte →</b><span id="farbMitteB"></span></div>
         <div class="farb-vorschau" id="farbVorschau"><span>Deine Farbe</span></div>
         </div>
         <div class="spalte spalte-b">
@@ -717,6 +721,11 @@
           <label class="farb-regler">Farbton<input type="range" id="farbRegler-h" min="0" max="360" step="1"></label>
           <label class="farb-regler">Sättigung<input type="range" id="farbRegler-s" min="0" max="100" step="1"></label>
           <label class="farb-regler">Helligkeit<input type="range" id="farbRegler-v" min="0" max="100" step="1"></label>
+        </div>
+        <div class="farb-topf" id="farbTopf" hidden>
+          <div class="topf-hinweis" id="farbTopfHinweis"></div>
+          <div class="topf-tuben" id="farbTuben"></div>
+          <div class="topf-knoepfe"><button type="button" id="topfRueck">Rückgängig</button><button type="button" id="topfLeer">Ausleeren</button></div>
         </div>
         <button class="btn farb-gross" id="farbFertig" type="button">Fertig ✓</button>
         </div>
@@ -734,7 +743,11 @@
         <div class="farb-kommentar" id="farbKommentar"></div>
         </div>
         <div class="spalte spalte-b">
+        <div class="farb-mitte-erg" id="farbMitteErg" hidden>
+          <span><i id="farbMEa"></i><small>Farbe 1</small></span><span><i id="farbMEz"></i><small>Mitte</small></span><span><i id="farbMEd"></i><small>Deine</small></span><span><i id="farbMEb"></i><small>Farbe 2</small></span>
+        </div>
         <div class="farb-analyse">
+          <div class="farb-rezept" id="farbRezept" hidden></div>
           <div class="farb-tipp" id="farbTipp"></div>
           <table class="farb-tabelle" id="farbRgb"></table>
           <div id="farbHsbBlock"><div class="farb-abschnitt">So weit lagen deine Regler daneben</div>
@@ -1122,26 +1135,26 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=33"></script>
-<script src="haie.js?v=33"></script>
-<script src="porsche.js?v=33"></script>
-<script src="dackel.js?v=33"></script>
-<script src="groesse.js?v=33"></script>
-<script src="gretchen.js?v=33"></script>
-<script src="effekte.js?v=33"></script>
-<script src="app.js?v=33"></script>
-<script src="melden.js?v=33"></script>
-<script src="hub.js?v=33"></script>
-<script src="farben.js?v=33"></script>
-<script src="cello.js?v=33"></script>
-<script src="toene.js?v=33"></script>
-<script src="krimi-grafik.js?v=33"></script>
-<script src="krimi.js?v=33"></script>
-<script src="krimi-wachen.js?v=33"></script>
-<script src="krimi-verhoer.js?v=33"></script>
-<script src="krimi-alibi.js?v=33"></script>
-<script src="krimi-akte.js?v=33"></script>
-<script src="krimi-zentrale.js?v=33"></script>
-<script src="profile.js?v=33"></script>
+<script src="wale.js?v=34"></script>
+<script src="haie.js?v=34"></script>
+<script src="porsche.js?v=34"></script>
+<script src="dackel.js?v=34"></script>
+<script src="groesse.js?v=34"></script>
+<script src="gretchen.js?v=34"></script>
+<script src="effekte.js?v=34"></script>
+<script src="app.js?v=34"></script>
+<script src="melden.js?v=34"></script>
+<script src="hub.js?v=34"></script>
+<script src="farben.js?v=34"></script>
+<script src="cello.js?v=34"></script>
+<script src="toene.js?v=34"></script>
+<script src="krimi-grafik.js?v=34"></script>
+<script src="krimi.js?v=34"></script>
+<script src="krimi-wachen.js?v=34"></script>
+<script src="krimi-verhoer.js?v=34"></script>
+<script src="krimi-alibi.js?v=34"></script>
+<script src="krimi-akte.js?v=34"></script>
+<script src="krimi-zentrale.js?v=34"></script>
+<script src="profile.js?v=34"></script>
 </body>
 </html>

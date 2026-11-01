@@ -116,16 +116,14 @@ Jede Welt hat ihren eigenen Look (`stil.css`) und eine animierte Kulisse (`effek
 Dazu: gleitender Welt-Umschalter, aufploppende Antworten, „+1“ bei richtigen Antworten, hochzählende Punkte und
 Konfetti je Welt. Mit „Bewegung reduzieren“ (iPhone/Android-Einstellung) bleibt alles ruhig.
 
-## 🎨 Farb-Gedächtnis (Bonus-Spiel)
-Eigenes Spiel, angelehnt an das Prinzip „Farbe merken und nachmischen“: Eine Farbe füllt kurz den Bildschirm
-(Leicht 5 s, Mittel 3 s, Profi 1,5 s), dann wird sie mit Farbton, Sättigung und Helligkeit nachgemischt.
-Punkte 0–10 pro Farbe nach dem Farbabstand CIEDE2000 (ab Abstand 50 gibt es 0), fünf Farben = bis zu 50 Punkte.
-Bestwerte je Stufe, Tagesfarben (aus dem Datum berechnet, für alle gleich) und Challenge-Links mit denselben Farben.
-Gemischt wird standardmäßig mit **Rot-, Grün- und Blau-Schiebern (0–255)**, wahlweise mit Farbton/Sättigung/Helligkeit.
-Auswertung je Farbe: Tabelle mit R, G, B und Hex für Original und deine Farbe plus Differenz je Kanal (farbig nach
-Größe), im Farbton-Modus zusätzlich die Abweichung in Farbton/Sättigung/Helligkeit, Klartext-Tipp (z. B. „etwas zu dunkel · zu blass ·
-Farbton zu sehr Gelb statt Orange“) und der Farbabstand ΔE mit Einordnung.
-Code in `farben.js`, Design in `stil.css`.
+## 🎨 Farb-Gedächtnis (Game)
+Farbe sehen, merken, nachmischen – bis zu 50 Punkte in fünf Runden, bewertet mit dem Farbabstand CIEDE2000.
+- **Spiel:** 🧠 *Merken* (Farbe blitzt auf, dann nachmischen) oder 🎯 *Mitte finden* (zwei Farben – gesucht ist die Farbe genau dazwischen;
+  Leicht: beide bleiben sichtbar, Mittel/Profi: nur kurz).
+- **Mischen:** Regler Rot·Grün·Blau, Regler Farbton·Sättigung·Helligkeit oder 🪣 **Farbtopf**: Tropfen von Rot, Gelb, Blau, Weiß
+  und Schwarz wie echte Malfarbe (Rot + Gelb = Orange, Gelb + Blau = Grün). Zielfarben im Farbtopf bestehen selbst aus Tropfen –
+  jede ist genau erreichbar. Danach: Rezept-Vergleich und Tipp, welcher Tropfen gefehlt hat.
+- Auswertung mit RGB-/Hex-Tabelle und Differenz, Tagesfarben, Bestwerte je Spiel, Challenge-Links.
 
 ## 🎻 Cello-Noten (Game)
 Lernspiel für die **Lagen auf dem Cello** mit deutschen Notennamen (H, B, Fis, Es …).

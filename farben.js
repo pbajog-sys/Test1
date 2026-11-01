@@ -98,9 +98,92 @@ function zufallsGenerator(seed) {
     return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
   };
 }
-function farbenAus(seed) {
+// ---------- Farbtopf: mischen wie mit echter Farbe ----------
+// Malfarben schlucken Licht: Gemischt wird über das gewichtete geometrische Mittel der Kanäle.
+// So wird Rot + Gelb Orange, Gelb + Blau Grün, Weiß hellt auf, Schwarz dunkelt ab.
+const PIGMENTE = [
+  { id: 'rot', name: 'Rot', rgb: [200, 20, 35] },
+  { id: 'gelb', name: 'Gelb', rgb: [250, 210, 20] },
+  { id: 'blau', name: 'Blau', rgb: [20, 80, 180] },
+  { id: 'weiss', name: 'Weiß', rgb: [250, 250, 250] },
+  { id: 'schwarz', name: 'Schwarz', rgb: [25, 25, 30] },
+];
+function topfMischen(rezept) {
+  const n = PIGMENTE.reduce((a, pg) => a + (rezept[pg.id] || 0), 0);
+  if (!n) return null;
+  return [0, 1, 2].map((k) => Math.round(Math.exp(PIGMENTE.reduce((a, pg) => a + (rezept[pg.id] || 0) * Math.log(Math.max(pg.rgb[k], 4)), 0) / n)));
+}
+const rezeptText = (rezept) => PIGMENTE.filter((pg) => rezept[pg.id]).map((pg) => rezept[pg.id] + '× ' + pg.name).join(' + ') || 'leer';
+// Zufälliges Rezept: wenige Farben, wenige Tropfen (je Stufe etwas mehr)
+function zufallsRezept(r, stufe, tropfen) {
+  // nie mehr Farben als Tropfen – sonst gäbe es keine passende Mischung
+  const anzahl = Math.min(tropfen || 9, { leicht: 2, mittel: 2 + Math.floor(r() * 2), profi: 3 }[stufe]);
+  const max = { leicht: 3, mittel: 4, profi: 4 }[stufe];
+  for (;;) {
+    const ids = PIGMENTE.map((pg) => pg.id).sort(() => r() - 0.5).slice(0, anzahl);
+    if (ids.every((id) => id === 'weiss' || id === 'schwarz')) continue;   // reines Grau ist langweilig
+    const rezept = {};
+    ids.forEach((id) => { rezept[id] = 1 + Math.floor(r() * max); });
+    if (tropfen) {   // genau so viele Tropfen insgesamt (für „Mitte finden“)
+      let summe = ids.reduce((a, id) => a + rezept[id], 0);
+      while (summe > tropfen) { const id = ids.find((x) => rezept[x] > 1); if (!id) break; rezept[id]--; summe--; }
+      while (summe < tropfen) { rezept[ids[Math.floor(r() * ids.length)]]++; summe++; }
+      if (summe !== tropfen) continue;
+    }
+    return rezept;
+  }
+}
+
+// Lab → RGB (für die Mitte zwischen zwei Farben, so wie das Auge sie sieht)
+function labZuRgb([L, a, b]) {
+  const fy = (L + 16) / 116, fx = fy + a / 500, fz = fy - b / 200;
+  const inv = (t) => (t ** 3 > 0.008856 ? t ** 3 : (t - 16 / 116) / 7.787);
+  const x = inv(fx) * 0.95047, y = inv(fy), z = inv(fz) * 1.08883;
+  const R = x * 3.2406 - y * 1.5372 - z * 0.4986, G = -x * 0.9689 + y * 1.8758 + z * 0.0415, B = x * 0.0557 - y * 0.204 + z * 1.057;
+  const gamma = (c) => (c > 0.0031308 ? 1.055 * Math.pow(c, 1 / 2.4) - 0.055 : 12.92 * c);
+  return [R, G, B].map((c) => Math.max(0, Math.min(255, Math.round(gamma(c) * 255))));
+}
+const mitteLab = (a, b) => { const la = rgbZuLab(hsvZuRgb(a.h, a.s, a.v)), lb = rgbZuLab(hsvZuRgb(b.h, b.s, b.v)); return rgbZuHsv(labZuRgb(la.map((x, i) => (x + lb[i]) / 2))); };
+
+// Spielarten: 'merken' (Farbe merken) oder 'mitte' (Farbe genau zwischen zwei Farben)
+const FARB_ARTEN = {
+  merken: { name: 'Merken', text: 'Eine Farbe blitzt kurz auf. Dann mischst du sie aus dem Kopf nach. Fünf Farben, bis zu 50 Punkte.',
+    stufen: { leicht: '5 Sek.', mittel: '3 Sek.', profi: '1,5 Sek.' } },
+  mitte: { name: 'Mitte finden', text: 'Zwei Farben erscheinen. Misch die Farbe genau dazwischen – so, als würdest du beide zu gleichen Teilen zusammenkippen.',
+    stufen: { leicht: 'Farben bleiben', mittel: '5 Sek. merken', profi: '2 Sek. merken' }, sek: { leicht: 3, mittel: 5, profi: 2 } },
+};
+const farbArt = () => (FARB_ARTEN[farbStore().art] ? farbStore().art : 'merken');
+
+function farbenAus(seed, art = 'merken', werkzeug = 'rgb', stufe = 'leicht') {
   const r = zufallsGenerator(seed);
-  return Array.from({ length: FARB_RUNDEN }, () => ({ h: Math.round(r() * 360), s: Math.round(25 + r() * 75), v: Math.round(30 + r() * 70) }));
+  const zufall = () => ({ h: Math.round(r() * 360), s: Math.round(25 + r() * 75), v: Math.round(30 + r() * 70) });
+  const abstand = (a, b) => deltaE2000(rgbZuLab(hsvZuRgb(a.h, a.s, a.v)), rgbZuLab(hsvZuRgb(b.h, b.s, b.v)));
+  return Array.from({ length: FARB_RUNDEN }, () => {
+    if (werkzeug === 'topf') {
+      if (art === 'mitte') {
+        // beide Farben mit gleich vielen Tropfen – dann ist die Mitte genau beide Rezepte zusammen
+        const t = 2 + Math.floor(r() * 2);
+        for (;;) {
+          const ra = zufallsRezept(r, stufe === 'profi' ? 'mittel' : 'leicht', t), rb = zufallsRezept(r, stufe === 'profi' ? 'mittel' : 'leicht', t);
+          const a = rgbZuHsv(topfMischen(ra)), b = rgbZuHsv(topfMischen(rb));
+          if (abstand(a, b) < 25) continue;
+          const rezept = {};
+          PIGMENTE.forEach((pg) => { if (ra[pg.id] || rb[pg.id]) rezept[pg.id] = (ra[pg.id] || 0) + (rb[pg.id] || 0); });
+          return { ...rgbZuHsv(topfMischen(rezept)), rezept, a, b, ra, rb };
+        }
+      }
+      const rezept = zufallsRezept(r, stufe);
+      return { ...rgbZuHsv(topfMischen(rezept)), rezept };
+    }
+    if (art === 'mitte') {
+      for (;;) {
+        const a = zufall(), b = zufall();
+        if (abstand(a, b) < 30) continue;
+        return { ...mitteLab(a, b), a, b };
+      }
+    }
+    return zufall();
+  });
 }
 const heute = () => new Date().toISOString().slice(0, 10);
 
@@ -111,7 +194,10 @@ const farbStore = () => loadJson(FARB_KEY);
 function farbenStart(opts = {}) {
   const stufe = opts.stufe || fs?.stufe || 'leicht';
   const seed = opts.seed || (opts.taeglich ? 'tag-' + heute() : String(Math.random()).slice(2));
-  fs = { stufe, seed, taeglich: !!opts.taeglich, farben: farbenAus(seed + '|' + stufe), runde: 0, punkte: [], mixe: [], gegner: opts.gegner || null };
+  const art = opts.art || farbArt(), werkzeug = opts.werkzeug || farbRegler();
+  // Klassisch (Merken + Regler) bleiben die Farben wie bisher – so passen alte Challenge-Links
+  const zusatz = art === 'merken' && werkzeug !== 'topf' ? '' : '|' + art + '|' + (werkzeug === 'topf' ? 'topf' : 'regler');
+  fs = { stufe, seed, art, werkzeug, taeglich: !!opts.taeglich, farben: farbenAus(seed + '|' + stufe + zusatz, art, werkzeug, stufe), runde: 0, punkte: [], mixe: [], gegner: opts.gegner || null };
   farbPhase('zeigen');
 }
 
@@ -119,9 +205,14 @@ function farbenIntro() {
   const st = farbStore();
   $('farbStufen').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.stufe === (fs?.stufe || 'leicht')));
   $('farbReglerWahl').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.regler === farbRegler()));
+  const art = farbArt();
+  $('farbArtWahl').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.art === art));
+  $('farbIntroText').textContent = FARB_ARTEN[art].text;
+  $('farbStufen').querySelectorAll('button').forEach((b) => { b.querySelector('small').textContent = FARB_ARTEN[art].stufen[b.dataset.stufe]; });
   const best = st.best || {};
-  $('farbBest').textContent = 'Bestwerte: ' + Object.entries(FARB_STUFEN).map(([k, v]) => v.name + ' ' + (best[k] != null ? fmt(best[k]) : '–')).join(' · ');
-  const t = st.tag && st.tag[heute()];
+  const bk = (k) => (art === 'mitte' ? 'mitte-' + k : k);
+  $('farbBest').textContent = 'Bestwerte' + (art === 'mitte' ? ' (Mitte finden)' : '') + ': ' + Object.entries(FARB_STUFEN).map(([k, v]) => v.name + ' ' + (best[bk(k)] != null ? fmt(best[bk(k)]) : '–')).join(' · ');
+  const t = st.tag && st.tag[(art === 'mitte' ? 'mitte:' : '') + heute()];
   $('farbTagBtn').textContent = t != null ? '📅 Tagesfarben – heute: ' + fmt(t) + ' / 50' : '📅 Tagesfarben (heute für alle gleich)';
   farbBuehne(null);
   zeigeFarbTeil('intro');
@@ -141,10 +232,16 @@ function farbPhase(phase) {
   clearInterval(farbTimer);
   const ziel = fs.farben[fs.runde];
   $('farbRunde').textContent = 'Farbe ' + (fs.runde + 1) + ' / ' + FARB_RUNDEN;
+  const mitte = fs.art === 'mitte';
   if (phase === 'zeigen') {
     zeigeFarbTeil('zeigen');
-    farbBuehne(ziel);
-    let rest = FARB_STUFEN[fs.stufe].sek;
+    $('farbMerkText').textContent = mitte ? 'Gesucht: die Farbe genau dazwischen' : 'Merk dir diese Farbe';
+    if (mitte) {
+      const st = $('farbBuehne');
+      st.style.background = 'linear-gradient(90deg, ' + hsvText(ziel.a) + ' 0 50%, ' + hsvText(ziel.b) + ' 50% 100%)';
+      st.classList.toggle('hell', !helleSchrift(ziel.a) && !helleSchrift(ziel.b));
+    } else farbBuehne(ziel);
+    let rest = mitte ? FARB_ARTEN.mitte.sek[fs.stufe] : FARB_STUFEN[fs.stufe].sek;
     const zeig = () => { $('farbCountdown').textContent = rest >= 1 ? Math.ceil(rest) : fmt(Math.max(0, Math.round(rest * 10) / 10)); };
     zeig();
     $('farbCountdown').classList.remove('tick'); void $('farbCountdown').offsetWidth; $('farbCountdown').classList.add('tick');
@@ -156,22 +253,33 @@ function farbPhase(phase) {
   } else if (phase === 'mischen') {
     zeigeFarbTeil('mischen');
     farbBuehne(null);   // neutraler Hintergrund – sonst könnte man die Zielfarbe einfach abgleichen
-    // Startwert der Regler: zufällig, damit man nicht einfach in der Mitte bleibt
-    const rgbModus = farbRegler() === 'rgb';
-    $('farbReglerRgb').hidden = !rgbModus;
-    $('farbReglerHsb').hidden = rgbModus;
-    if (rgbModus) {
+    // Mitte finden (Leicht): beide Farben bleiben neben dem Topf sichtbar
+    $('farbMitteLeiste').hidden = !(mitte && fs.stufe === 'leicht');
+    if (mitte) { $('farbMitteA').style.background = hsvText(ziel.a); $('farbMitteB').style.background = hsvText(ziel.b); }
+    const topf = fs.werkzeug === 'topf';
+    const rgbModus = fs.werkzeug === 'rgb';
+    $('farbReglerRgb').hidden = topf || !rgbModus;
+    $('farbReglerHsb').hidden = topf || rgbModus;
+    $('farbTopf').hidden = !topf;
+    if (topf) {
+      // Der Topf startet leer – jeder Tropfen zählt
+      fs.rezept = {}; fs.verlauf = [];
+      fs.mix = null;
+      topfZeichnen();
+    } else if (rgbModus) {
+      $('farbVorschau').classList.remove('topf-leer'); $('farbVorschau').querySelector('span').textContent = 'Deine Farbe';
       fs.rgb = [0, 0, 0].map(() => Math.round(40 + Math.random() * 175));
       fs.mix = rgbZuHsv(fs.rgb);
       ['r', 'g', 'b'].forEach((k, i) => { $('farbRegler-' + k).value = fs.rgb[i]; });
     } else {
+      $('farbVorschau').classList.remove('topf-leer'); $('farbVorschau').querySelector('span').textContent = 'Deine Farbe';
       fs.mix = { h: Math.round(Math.random() * 360), s: 50, v: 50 };
       ['h', 's', 'v'].forEach((k) => { $('farbRegler-' + k).value = fs.mix[k]; });
     }
-    farbMischAktualisieren();
+    if (!topf) farbMischAktualisieren();
   } else if (phase === 'aufloesung') {
     const p = farbPunkte(ziel, fs.mix);
-    fs.punkte.push(p); fs.mixe.push({ ...fs.mix });
+    fs.punkte.push(p); fs.mixe.push({ ...fs.mix, rezept: fs.rezept ? { ...fs.rezept } : null });
     zeigeFarbTeil('aufloesung');
     farbBuehne(null);
     $('farbZiel').style.background = hsvText(ziel);
@@ -179,6 +287,15 @@ function farbPhase(phase) {
     $('farbZiel').classList.toggle('hell', !helleSchrift(ziel));
     $('farbDein').classList.toggle('hell', !helleSchrift(fs.mix));
     zeigeAnalyse(farbAnalyse(ziel, fs.mix));
+    // Mitte finden: beide Ausgangsfarben, die Mitte und deine Farbe
+    $('farbMitteErg').hidden = !mitte;
+    if (mitte) {
+      $('farbMEa').style.background = hsvText(ziel.a); $('farbMEz').style.background = hsvText(ziel);
+      $('farbMEd').style.background = hsvText(fs.mix); $('farbMEb').style.background = hsvText(ziel.b);
+    }
+    // Farbtopf: Rezept und ein konkreter Tipp, welcher Tropfen gefehlt hat
+    $('farbRezept').hidden = fs.werkzeug !== 'topf';
+    if (fs.werkzeug === 'topf') $('farbRezept').innerHTML = topfAuswertung(ziel);
     hochzaehlen($('farbPunkte'), p, ' / 10');
     $('farbKommentar').textContent = p >= 9.5 ? 'Volltreffer! 🎯' : p >= 8.5 ? 'Richtig nah dran 🔥' : p >= 7 ? 'Gut gemerkt 👍' : p >= 5 ? 'Na ja … 🤔' : 'Ganz woanders 🙈';
     if (navigator.vibrate) navigator.vibrate(p >= 8.5 ? [30, 40, 30] : 20);
@@ -215,7 +332,7 @@ function zeigeAnalyse(a) {
     return { text: vz(d), klasse: Math.abs(d) <= 10 ? 'gut' : Math.abs(d) <= 35 ? 'mittel' : 'weit' };
   }), '', 'diff');
   // Abweichung in den drei Reglern, die man benutzt hat
-  $('farbHsbBlock').hidden = farbRegler() === 'rgb';
+  $('farbHsbBlock').hidden = fs.werkzeug !== 'hsb';
   const regler = [['Farbton', vz(a.dh, '°'), Math.abs(a.dh) <= 6], ['Sättigung', vz(a.ds, ' %'), Math.abs(a.ds) <= 6], ['Helligkeit', vz(a.dv, ' %'), Math.abs(a.dv) <= 6]];
   $('farbRegler').innerHTML = '';
   regler.forEach(([name, wert, gut]) => {
@@ -237,7 +354,7 @@ function farbMischAktualisieren() {
   const m = fs.mix;
   $('farbVorschau').style.background = hsvText(m);
   $('farbVorschau').classList.toggle('hell', !helleSchrift(m));
-  if (farbRegler() === 'rgb') {
+  if (fs.werkzeug === 'rgb') {
     const [r, g, b] = fs.rgb;
     $('farbRegler-r').style.background = `linear-gradient(90deg, rgb(0,${g},${b}), rgb(255,${g},${b}))`;
     $('farbRegler-g').style.background = `linear-gradient(90deg, rgb(${r},0,${b}), rgb(${r},255,${b}))`;
@@ -269,14 +386,15 @@ function farbEnde() {
   const st = farbStore();
   st.best = st.best || {};
   st.tag = st.tag || {};
-  const neuerRekord = !fs.taeglich && (st.best[fs.stufe] == null || summe > st.best[fs.stufe]);
-  if (!fs.taeglich) st.best[fs.stufe] = Math.max(st.best[fs.stufe] || 0, summe);
-  if (fs.taeglich && st.tag[heute()] == null) st.tag[heute()] = summe;
+  const bk = fs.art === 'mitte' ? 'mitte-' + fs.stufe : fs.stufe, tk = (fs.art === 'mitte' ? 'mitte:' : '') + heute();
+  const neuerRekord = !fs.taeglich && (st.best[bk] == null || summe > st.best[bk]);
+  if (!fs.taeglich) st.best[bk] = Math.max(st.best[bk] || 0, summe);
+  if (fs.taeglich && st.tag[tk] == null) st.tag[tk] = summe;
   saveJson(FARB_KEY, st);
 
   zeigeFarbTeil('ende');
   hochzaehlen($('farbSumme'), summe, ' / 50');
-  $('farbRekord').textContent = neuerRekord ? '🏆 Neuer Bestwert (' + FARB_STUFEN[fs.stufe].name + ')!' : fs.taeglich ? '📅 Tagesfarben vom ' + new Date().toLocaleDateString('de-DE') : '';
+  $('farbRekord').textContent = neuerRekord ? '🏆 Neuer Bestwert (' + (fs.art === 'mitte' ? 'Mitte finden, ' : '') + FARB_STUFEN[fs.stufe].name + ')!' : fs.taeglich ? '📅 Tagesfarben vom ' + new Date().toLocaleDateString('de-DE') : '';
   $('farbVergleich').hidden = !fs.gegner;
   if (fs.gegner) {
     const g = fs.gegner;
@@ -305,8 +423,8 @@ async function farbTeilen() {
   const store = loadJson(STORE_KEY);
   const name = store.name || 'Jemand';
   const url = location.origin + location.pathname + '?farben=' + encodeURIComponent(fs.seed) + '&stufe=' + fs.stufe
-    + '&n=' + encodeURIComponent(name) + '&p=' + summe;
-  const text = '🎨 Farb-Gedächtnis' + (fs.taeglich ? ' – Tagesfarben ' + new Date().toLocaleDateString('de-DE') : ' (' + FARB_STUFEN[fs.stufe].name + ')')
+    + '&n=' + encodeURIComponent(name) + '&p=' + summe + (fs.art === 'mitte' ? '&art=mitte' : '') + (fs.werkzeug === 'topf' ? '&w=topf' : '');
+  const text = '🎨 Farb-Gedächtnis' + (fs.art === 'mitte' ? ' – Mitte finden' : '') + (fs.werkzeug === 'topf' ? ' 🪣 Farbtopf' : '') + (fs.taeglich ? ' – Tagesfarben ' + new Date().toLocaleDateString('de-DE') : ' (' + FARB_STUFEN[fs.stufe].name + ')')
     + '\n' + fmt(summe) + ' / 50 ' + fs.punkte.map(kaestchen).join('') + '\nSchaffst du mehr mit denselben Farben?';
   if (navigator.share) {
     try { await navigator.share({ title: 'Farb-Gedächtnis', text, url }); return; }
@@ -316,6 +434,78 @@ async function farbTeilen() {
   catch { $('farbTeilenMsg').textContent = url; }
 }
 
+// ---------- Farbtopf: Bedienung ----------
+function topfZeichnen() {
+  const rgb = topfMischen(fs.rezept);
+  fs.mix = rgb ? rgbZuHsv(rgb) : null;
+  const v = $('farbVorschau');
+  v.classList.toggle('topf-leer', !rgb);
+  v.style.background = rgb ? rgbText(rgb) : '';
+  v.classList.toggle('hell', !!rgb && !helleSchrift(fs.mix));
+  v.querySelector('span').textContent = rgb ? 'Dein Farbtopf' : 'Dein Farbtopf ist noch leer';
+  $('farbTopfHinweis').textContent = rgb ? rezeptText(fs.rezept) : 'Tippe auf eine Farbe, um einen Tropfen dazuzugeben.';
+  $('farbTuben').querySelectorAll('.tube').forEach((t) => {
+    const n = fs.rezept[t.dataset.id] || 0;
+    t.querySelector('.tube-zahl').textContent = n || '';
+    t.classList.toggle('drin', n > 0);
+  });
+  $('topfRueck').disabled = !fs.verlauf.length;
+  $('topfLeer').disabled = !rgb;
+}
+function topfTropfen(id, knopf) {
+  const summe = Object.values(fs.rezept).reduce((a, b) => a + b, 0);
+  if (summe >= 30) return;
+  fs.verlauf.push({ ...fs.rezept });
+  fs.rezept[id] = (fs.rezept[id] || 0) + 1;
+  topfZeichnen();
+  // ein Tropfen fällt in den Topf
+  const pg = PIGMENTE.find((x) => x.id === id);
+  const t = document.createElement('i');
+  t.className = 'topf-tropfen';
+  t.style.background = rgbText(pg.rgb);
+  const v = $('farbVorschau').getBoundingClientRect(), k = knopf.getBoundingClientRect();
+  t.style.left = (k.left + k.width / 2 - v.left - 9) + 'px';
+  $('farbVorschau').appendChild(t);
+  t.animate([{ transform: 'translate(0, ' + (k.top - v.top) + 'px) scale(.6)', opacity: 1 }, { transform: 'translate(' + (v.width / 2 - (k.left + k.width / 2 - v.left)) + 'px, ' + (v.height * 0.55) + 'px) scale(1.1)', opacity: 0 }],
+    { duration: 420, easing: 'cubic-bezier(.5,0,.8,.4)' }).onfinish = () => t.remove();
+  if (navigator.vibrate) navigator.vibrate(8);
+}
+PIGMENTE.forEach((pg) => {
+  const b = document.createElement('button');
+  b.type = 'button';
+  b.className = 'tube';
+  b.dataset.id = pg.id;
+  b.innerHTML = '<span class="tube-klecks"></span><span class="tube-name"></span><span class="tube-zahl"></span>';
+  b.querySelector('.tube-klecks').style.background = rgbText(pg.rgb);
+  b.querySelector('.tube-name').textContent = pg.name;
+  b.addEventListener('click', () => topfTropfen(pg.id, b));
+  $('farbTuben').appendChild(b);
+});
+$('topfRueck').addEventListener('click', () => { if (fs.verlauf.length) { fs.rezept = fs.verlauf.pop(); topfZeichnen(); } });
+$('topfLeer').addEventListener('click', () => { fs.verlauf.push({ ...fs.rezept }); fs.rezept = {}; topfZeichnen(); });
+
+// Auswertung im Farbtopf: Rezepte vergleichen und den einen Tropfen finden, der am meisten geholfen hätte
+function topfAuswertung(ziel) {
+  const zLab = rgbZuLab(hsvZuRgb(ziel.h, ziel.s, ziel.v));
+  const abst = (rez) => { const rgb = topfMischen(rez); return rgb ? deltaE2000(zLab, rgbZuLab(rgb)) : 999; };
+  const jetzt = abst(fs.rezept);
+  let bester = null;
+  PIGMENTE.forEach((pg) => {
+    const mehr = { ...fs.rezept, [pg.id]: (fs.rezept[pg.id] || 0) + 1 };
+    const d1 = abst(mehr);
+    if (d1 < jetzt - 1 && (!bester || d1 < bester.d)) bester = { d: d1, text: 'Ein Tropfen ' + pg.name + ' mehr hätte geholfen.' };
+    if (fs.rezept[pg.id]) {
+      const weniger = { ...fs.rezept, [pg.id]: fs.rezept[pg.id] - 1 };
+      const d2 = abst(weniger);
+      if (d2 < jetzt - 1 && (!bester || d2 < bester.d)) bester = { d: d2, text: 'Ein Tropfen ' + pg.name + ' weniger hätte geholfen.' };
+    }
+  });
+  const esc = (t) => t.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+  return '<div><b>Original:</b> ' + esc(rezeptText(ziel.rezept)) + (fs.art === 'mitte' ? ' <small>(' + esc(rezeptText(ziel.ra)) + ' und ' + esc(rezeptText(ziel.rb)) + ')</small>' : '') + '</div>'
+    + '<div><b>Deine:</b> ' + esc(rezeptText(fs.rezept)) + '</div>'
+    + '<div class="rezept-tipp">' + (jetzt < 2 ? '🎯 Genau getroffen!' : bester ? '💡 ' + bester.text : '💡 Probier ein anderes Verhältnis der Farben.') + '</div>';
+}
+
 // ---------- Knöpfe ----------
 $('farbStufen').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
   fs = { ...(fs || {}), stufe: b.dataset.stufe };
@@ -323,11 +513,18 @@ $('farbStufen').querySelectorAll('button').forEach((b) => b.addEventListener('cl
 }));
 let farbGegner = null;   // aus einem Challenge-Link
 $('farbLos').addEventListener('click', () => {
-  if (farbGegner) { const g = farbGegner; farbGegner = null; $('farbChallenge').hidden = true; farbenStart({ stufe: g.stufe, seed: g.seed, gegner: g }); }
+  if (farbGegner) { const g = farbGegner; farbGegner = null; $('farbChallenge').hidden = true; farbenStart({ stufe: g.stufe, seed: g.seed, gegner: g, art: g.art, werkzeug: g.werkzeug }); }
   else farbenStart({ stufe: fs?.stufe || 'leicht' });
 });
-$('farbTagBtn').addEventListener('click', () => farbenStart({ stufe: 'mittel', taeglich: true }));
-$('farbFertig').addEventListener('click', () => farbPhase('aufloesung'));
+$('farbTagBtn').addEventListener('click', () => farbenStart({ stufe: 'mittel', taeglich: true, seed: 'tag-' + heute() + (farbArt() === 'mitte' ? '-mitte' : '') }));
+$('farbFertig').addEventListener('click', () => {
+  if (!fs.mix) { $('farbTopfHinweis').classList.remove('shake'); void $('farbTopfHinweis').offsetWidth; $('farbTopfHinweis').classList.add('shake'); return; }
+  farbPhase('aufloesung');
+});
+$('farbArtWahl').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => {
+  const st = farbStore(); st.art = b.dataset.art; saveJson(FARB_KEY, st);
+  farbenIntro();
+}));
 $('farbWeiter').addEventListener('click', () => {
   fs.runde++;
   if (fs.runde >= FARB_RUNDEN) farbEnde(); else farbPhase('zeigen');
@@ -341,7 +538,8 @@ $('farbZurueck').addEventListener('click', () => { clearInterval(farbTimer); far
   const q = new URLSearchParams(location.search);
   if (!q.get('farben')) return;
   const stufe = FARB_STUFEN[q.get('stufe')] ? q.get('stufe') : 'leicht';
-  const gegner = { name: (q.get('n') || 'Jemand').slice(0, 30), punkte: Number(q.get('p')) || 0, seed: q.get('farben'), stufe };
+  const gegner = { name: (q.get('n') || 'Jemand').slice(0, 30), punkte: Number(q.get('p')) || 0, seed: q.get('farben'), stufe,
+    art: q.get('art') === 'mitte' ? 'mitte' : 'merken', werkzeug: q.get('w') === 'topf' ? 'topf' : undefined };
   history.replaceState(null, '', location.pathname);
   show('farben', '🎨 Farb-Gedächtnis');
   fs = { stufe };
