@@ -921,12 +921,12 @@ body.theme-hub {
 .kz-teppich { position: absolute; inset: 2%; width: 96%; height: 96%; object-fit: cover; opacity: .95; }
 .kz.besetzt .kz-moebel { opacity: .4; }
 /* Spielfiguren: runde Porträts mit Messingrand */
-.kz-person, .kp-fig, .krimi-taeter-fig, .ko-bild, .kv-bild, .vh-fig, .ar-fig {
+.kz-person, .kp-fig, .krimi-taeter-fig, .ko-bild, .kv-bild, .vh-fig, .ar-fig, .ak-opfer, .akte-opferbild, .akte-pbild, .akte-wbild {
   display: grid; place-items: center; border-radius: 50%; overflow: hidden; color: #f5e6c8; background: #1a120e;
   font-family: "Playfair Display", Georgia, serif; font-weight: 700; font-style: italic;
   box-shadow: 0 0 0 2px #d9a441, 0 0 0 3px #2b1d14, 0 6px 12px rgba(0,0,0,0.5);
 }
-.kz-person img, .kp-fig img, .krimi-taeter-fig img, .ko-bild img, .kv-bild img, .vh-fig img, .ar-fig img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.kz-person img, .kp-fig img, .krimi-taeter-fig img, .ko-bild img, .kv-bild img, .vh-fig img, .ar-fig img, .ak-opfer img, .akte-opferbild img, .akte-pbild img, .akte-wbild img { width: 100%; height: 100%; object-fit: cover; display: block; }
 .kz-person { position: absolute; inset: 9%; z-index: 2; font-size: clamp(1rem, 5.6vw, 1.7rem); animation: figurSetzen .35s var(--ease-spring); }
 @keyframes figurSetzen { from { transform: translateY(-14px) scale(1.3); opacity: 0; } to { transform: none; opacity: 1; } }
 .kz-person.opfer, .kp-fig.opfer, .krimi-taeter-fig.opfer, .ko-bild.opfer { box-shadow: 0 0 0 2px #ef4444, 0 0 0 3px #2b1d14, 0 0 14px rgba(239,68,68,0.6); }
@@ -1097,3 +1097,73 @@ body.theme-hub {
 .ar-nein.auto { color: rgba(43,29,20,0.22); animation: none; }
 .ar-modus { grid-template-columns: 1fr 1fr; }
 .ar-hinweise li { cursor: pointer; }
+
+/* ---------- Ermittlungsakte: Aktendeckel, Polaroid, Stempel, Handschrift ---------- */
+.ak-karte {
+  position: relative; width: 100%; display: flex; align-items: center; gap: 14px; text-align: left; cursor: pointer; font: inherit;
+  color: #3a2716; padding: 30px 16px 18px; margin-top: 10px; border-radius: 4px 14px 14px 14px;
+  background: linear-gradient(170deg, #e2c48d, #c9a46a 70%, #b8925a); box-shadow: 0 16px 40px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.25), inset 0 -30px 60px rgba(120,80,30,0.25);
+  animation: kartenAuftritt .6s var(--ease-spring) backwards; transition: transform .2s var(--ease-spring);
+}
+.ak-karte:active { transform: scale(.97); }
+.ak-reiter { position: absolute; left: 0; top: -14px; padding: 4px 14px 6px; border-radius: 8px 8px 0 0; background: #d9bb80; font-family: "Bebas Neue", Impact, sans-serif; letter-spacing: 0.1em; font-size: 0.95rem; }
+.ak-foto { flex: none; padding: 5px 5px 16px; background: #fff; box-shadow: 0 6px 14px rgba(0,0,0,0.35); transform: rotate(-5deg); position: relative; }
+.ak-foto::before { content: ""; position: absolute; top: -10px; left: 50%; width: 12px; height: 30px; border: 3px solid #9aa3ad; border-radius: 8px; transform: translateX(-50%) rotate(8deg); }
+.ak-opfer { width: 70px; height: 70px; border-radius: 2px !important; box-shadow: none !important; }
+.ak-text { display: grid; gap: 2px; min-width: 0; }
+.ak-klein { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.12em; opacity: .75; }
+.ak-titel { font-family: "Bebas Neue", Impact, sans-serif; font-size: 1.7rem; line-height: 1; letter-spacing: 0.03em; }
+.ak-sub { font-size: 0.85rem; line-height: 1.3; }
+.ak-punkte { display: flex; gap: 5px; margin-top: 6px; }
+.ak-punkte i { width: 12px; height: 12px; border-radius: 50%; border: 2px solid #7a5428; }
+.ak-punkte i.an { background: #7a1f1f; border-color: #7a1f1f; }
+.ak-punkte i:last-child { border-radius: 3px; }
+.ak-stempel { position: absolute; right: 10px; top: 8px; font-family: "Bebas Neue", Impact, sans-serif; letter-spacing: 0.12em; font-size: 1rem; color: #a3241f; border: 2px solid #a3241f; padding: 0 6px; border-radius: 4px; transform: rotate(6deg); opacity: .85; }
+.ak-karte.zu .ak-stempel { color: #1d6b3a; border-color: #1d6b3a; }
+
+.krimi-teil.akte { gap: 12px; }
+.akte-deckblatt {
+  position: relative; color: #3a2716; border-radius: 4px 14px 14px 14px; padding: 16px; margin-top: 18px;
+  background: linear-gradient(170deg, #e8cf9c, #cfac72); box-shadow: 0 16px 40px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(255,255,255,0.25);
+}
+.akte-kopf { display: flex; justify-content: space-between; align-items: center; font-family: "Bebas Neue", Impact, sans-serif; letter-spacing: 0.1em; font-size: 1.1rem; margin-bottom: 10px; }
+.akte-geheim { color: #a3241f; border: 2px solid #a3241f; padding: 0 8px; border-radius: 4px; transform: rotate(-4deg); }
+.akte-opfer { display: flex; gap: 14px; align-items: flex-start; }
+.akte-polaroid { flex: none; padding: 6px 6px 22px; background: #fff; box-shadow: 0 8px 18px rgba(0,0,0,0.35); transform: rotate(-4deg); position: relative; }
+.akte-polaroid::before { content: ""; position: absolute; top: -12px; left: 18px; width: 12px; height: 34px; border: 3px solid #9aa3ad; border-radius: 8px; transform: rotate(10deg); }
+.akte-opferbild { width: 92px; height: 92px; border-radius: 2px !important; box-shadow: none !important; }
+.akte-opfer h2 { margin: 0 0 4px; font-family: "Bebas Neue", Impact, sans-serif; font-weight: 400; font-size: 1.8rem; line-height: 1; letter-spacing: 0.03em; }
+.akte-story { margin: 0; font-size: 0.9rem; line-height: 1.4; }
+.akte-verdacht { margin-top: 12px; font-size: 0.85rem; }
+.akte-leute { display: flex; gap: 10px; margin-top: 6px; flex-wrap: wrap; }
+.akte-person { display: grid; justify-items: center; gap: 3px; font-family: "Caveat", cursive; font-size: 1.15rem; font-weight: 600; }
+.akte-pbild { width: 52px; height: 52px; }
+.akte-kapitel {
+  display: grid; grid-template-columns: auto auto 1fr auto; align-items: center; gap: 10px; padding: 12px 14px; cursor: pointer;
+  background: #f5e6c8; color: #2b1d14; border-radius: 4px; box-shadow: 0 8px 20px rgba(0,0,0,0.4); position: relative;
+  background-image: repeating-linear-gradient(transparent 0 25px, rgba(43,29,20,0.07) 25px 26px);
+  animation: kartenAuftritt .5s var(--ease-spring) backwards;
+}
+.akte-kapitel:nth-of-type(odd) { transform: rotate(-0.4deg); } .akte-kapitel:nth-of-type(even) { transform: rotate(0.4deg); }
+.akte-kapitel.zu { opacity: .5; cursor: default; filter: grayscale(.6); }
+.akte-kapitel.dran { box-shadow: 0 0 0 3px #d9a441, 0 8px 24px rgba(217,164,65,0.35); }
+.akk-nr { font-family: "Bebas Neue", Impact, sans-serif; font-size: 2rem; color: #a3241f; width: 22px; text-align: center; }
+.akk-icon { width: 40px; height: 40px; }
+.akk-icon img { width: 100%; height: 100%; object-fit: contain; }
+.akk-text b { display: block; font-size: 0.98rem; }
+.akk-text small { color: #6b5a47; font-size: 0.8rem; }
+.akk-beweis { margin: 6px 0 0; font-family: "Caveat", cursive; font-size: 1.25rem; font-weight: 600; color: #1e3a8a; line-height: 1.15; }
+.akk-status { font-size: 1.3rem; font-weight: 800; }
+.akte-kapitel.fertig .akk-status { color: #15803d; }
+.akte-kapitel.dran .akk-status { color: #a3241f; animation: pochen 1.6s ease-in-out infinite; }
+.akte-finale { text-align: center; padding: 16px; border-radius: 14px; border: 2px dashed rgba(217,164,65,0.6); background: rgba(217,164,65,0.08); display: grid; gap: 10px; }
+.akte-finale.zu { opacity: .55; }
+.akte-finale h3 { margin: 0; font-family: "Bebas Neue", Impact, sans-serif; font-weight: 400; font-size: 1.8rem; letter-spacing: 0.05em; }
+.akte-finale p { margin: 0; color: #d9c7a5; }
+.akte-anklage { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.akte-wahl { display: grid; justify-items: center; gap: 4px; padding: 8px 2px; border-radius: 12px; border: 1px solid rgba(245,230,200,0.25); background: rgba(255,255,255,0.05); color: #f5e6c8; font: inherit; font-weight: 600; font-size: 0.85rem; cursor: pointer; }
+.akte-wahl:disabled { opacity: .3; filter: grayscale(1); }
+.akte-wbild { width: 58px; height: 58px; }
+.akte-fehler { color: #fca5a5 !important; min-height: 1.2em; }
+.akte-zu-stempel { justify-self: center; font-family: "Bebas Neue", Impact, sans-serif; font-size: 2rem; letter-spacing: 0.12em; color: #22c55e; border: 4px solid #22c55e; border-radius: 8px; padding: 0 14px; transform: rotate(-6deg); }
+.akte-schluss { font-size: 0.95rem; }

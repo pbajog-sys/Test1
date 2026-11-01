@@ -85,8 +85,9 @@ function renderHub() {
   const tonBest = Math.max(0, ...Object.values(loadJson('walquiz.toene.v1').best || {}));
   $('hubToeneBest').textContent = tonBest ? 'Rekord ' + fmt(tonBest) + ' / 50' : 'Noch kein Rekord';
   const krimi = loadJson('walquiz.krimi.v1');
-  const faelle = Object.values(krimi.geloest || {}).reduce((x, y) => x + y, 0);
-  $('hubKrimiBest').textContent = faelle ? '🔎 ' + faelle + (faelle === 1 ? ' Fall' : ' Fälle') + ' gelöst' : 'Noch kein Fall gelöst';
+  const summe = (o) => Object.values((o && o.geloest) || {}).reduce((x, y) => x + y, 0);
+  const faelle = summe(krimi) + Object.values(krimi.modi || {}).reduce((x, m) => x + summe(m), 0);
+  $('hubKrimiBest').textContent = (faelle ? '🔎 ' + faelle + (faelle === 1 ? ' Rätsel' : ' Rätsel') + ' gelöst' : 'Noch nichts gelöst') + (krimi.aktenGeloest ? ' · 📁 ' + krimi.aktenGeloest + (krimi.aktenGeloest === 1 ? ' Akte' : ' Akten') : '');
   if (typeof profilHub === 'function') profilHub();   // profile.js lädt später
 }
 

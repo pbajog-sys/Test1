@@ -153,16 +153,21 @@ Wie bei Netflix: Beim ersten Start fragt die App nach deinem Namen und einem Bil
 - „Profile verwalten“: Name, Bild und Farbe ändern oder ein Profil löschen.
 - Alles bleibt auf dem Gerät, ohne Anmeldung und ohne Server.
 
-## 🔎 Wer war’s? (Game)
-Krimi-Logikrätsel im Stil eines „Mörder-Sudokus“: Mord in der Villa! Zehn Verdächtige, in jedem Fall wird einer zum Opfer.
-Alle Personen kommen in den Grundriss – in jeder Reihe und Spalte genau eine, nie auf Pflanzen, Standuhren, Schränken oder Stehlampen.
-Die Hinweise auf dem Notizzettel stimmen alle. Wer allein mit dem Opfer in einem Raum war, ist der Mörder.
-- **Leicht** 4 × 4, **Mittel** 5 × 5, **Schwer** 6 × 6 · **Fall des Tages** (für alle gleich)
-- **Generator:** baut erst einen kompletten Fall (Grundriss, Lösung), leitet daraus wahre Hinweise ab, ergänzt Hinweise,
-  bis ein Zähl-Löser genau eine Lösung findet, und streicht dann überflüssige.
-- **Logik-Löser wie ein Mensch:** Einzelfeld → versteckter Einzelner in Reihe/Spalte → Paar-Hinweise → Raum-Logik → Annahme.
-  Jeder Fall muss so ohne Raten lösbar sein. Die **Schwierigkeit** ergibt sich aus den nötigen Denkschritten
-  (Leicht ohne Annahme, Mittel mit echten Schlussfolgerungen, Schwer mit mindestens einer Annahme).
-- 💡 **Tipp** erklärt den nächsten Denkschritt. ✕-Modus zum Ausschließen, erfüllte Hinweise werden abgehakt.
-- Porträts, Icons und Villa: `img/krimi/` (aus generierten Bildern zugeschnitten und freigestellt), Prompts in `img/krimi/BILDER.md`.
-- Titelbild animiert: glühende Fenster, flackernde Laternen, eine Gestalt am Erker, Licht geht im Dachfenster aus, Nebel, Glühwürmchen, Wetterleuchten.
+## 🔎 Wer war’s? (Krimi-Zentrale)
+Krimi-Rätsel in einer Villa mit zehn Verdächtigen (Porträts und Icons in `img/krimi/`).
+
+**📁 Ermittlungsakte** (`krimi-akte.js`): ein Fall pro Woche, für alle gleich – gleiches Opfer, vier Verdächtige, ein Täter.
+Kapitel 1 Wachen aufstellen · 2 Verhöre · 3 Alibis · 4 Tatort · dann die Anklage. Jedes Kapitel liefert ein Beweisstück
+in die Akte; alle Kapitel zeigen auf denselben Täter. Danach gibt es Bonus-Akten.
+
+**Einzeln üben** – jedes Spiel mit Leicht/Mittel/Schwer, Tagesrätsel, Bestzeiten und erklärendem 💡 Tipp:
+- **Tatort** (`krimi.js`) – Mörder-Sudoku: je Reihe/Spalte eine Person, wer allein mit dem Opfer war, ist der Täter.
+- **Wachen der Villa** (`krimi-wachen.js`) – eine Wache pro Reihe, Spalte und Raum, Wachen berühren sich nie.
+- **Das Verhör** (`krimi-verhoer.js`) – jede Person sagt einen Satz, eine (oder zwei) lügen: Wer war es?
+- **Alibi-Raster** (`krimi-alibi.js`) – wer war wann wo mit welchem Gegenstand? Raster mit ✓/✕.
+
+**So entstehen die Rätsel:** Zuerst wird eine vollständige Lösung gebaut, dann werden wahre Hinweise daraus abgeleitet,
+bis ein Zähl-Löser genau eine Lösung findet; überflüssige Hinweise werden gestrichen. Ein Logik-Löser, der wie ein Mensch
+in Stufen denkt (Einzelfeld → Schlussfolgerung aus einem Hinweis → Annahme), prüft, dass man nie raten muss – die
+nötigen Denkschritte bestimmen die Schwierigkeit und liefern die Erklärungen für den Tipp.
+`krimi-zentrale.js` enthält Menü, Einstellungen, Uhr, Rekorde und den Auflösungs-Bildschirm.

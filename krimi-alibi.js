@@ -321,7 +321,7 @@ function alibiPruefen() {
     war: mitWaffe >= 0 ? 'Den Brieföffner hatte' : 'Als Letztes kam',
     name: fall.personen[p].voll,
     text: fall.personen[p].name + ' war um ' + zeit + ' Uhr ' + raum.im + '. Alle Alibis sind geklärt.',
-    beweis: { moerder: mitWaffe >= 0 ? fall.personen[p] : null, text: fall.personen[p].name + ' hatte den Brieföffner – um ' + zeit + ' Uhr ' + raum.im + '.' },
+    beweis: { moerder: mitWaffe >= 0 ? fall.personen[p] : null, text: fall.personen[p].name + ' hatte den Brieföffner und kam um ' + zeit + ' Uhr an – zuerst ' + raum.im + '.' },
   }), 400);
 }
 

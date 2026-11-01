@@ -67,7 +67,7 @@ function krimiGeschafft(e) {
   $('krimiTaeterWar').textContent = e.war || '';
   $('krimiTaeterName').textContent = e.name || '';
   $('krimiTatort').textContent = e.text || '';
-  $('krimiZeit').textContent = '⏱ ' + zeitText(sek) + (e.hilfen ? ' · 💡 ' + e.hilfen + (e.hilfen === 1 ? ' Tipp' : ' Tipps') : '') + (neu ? ' · 🏆 Bestzeit!' : '');
+  $('krimiZeit').textContent = e.zeitText || '⏱ ' + zeitText(sek) + (e.hilfen ? ' · 💡 ' + e.hilfen + (e.hilfen === 1 ? ' Tipp' : ' Tipps') : '') + (neu ? ' · 🏆 Bestzeit!' : '');
   const eb = $('krimiEndBrett');
   eb.hidden = !e.brett;
   if (e.brett) {
@@ -165,14 +165,14 @@ function krimiZurueck() {
   const t = kAktiv.teil;
   if (t === 'intro') { krimiUhrStopp(); zeigeHub(); return; }
   if (t === 'setup' || t === 'akte') { krimiIntro(); return; }
-  if (kAktiv.akte) { akteZeigen(); return; }
+  if (kAktiv.akte || (t === 'ende' && kAktiv.modus === 'akte')) { akteZeigen(); return; }
   if (t === 'ende') { krimiIntro(); return; }
   if (!confirm('Rätsel abbrechen?')) return;
   krimiSetup(kAktiv.modus);
 }
 $('krimiZurueck').addEventListener('click', krimiZurueck);
 $('krimiNochmal').addEventListener('click', () => {
-  if (kAktiv.akte) { akteZeigen(); return; }
+  if (kAktiv.akte || kAktiv.modus === 'akte') { akteZeigen(); return; }
   krimiLos(kAktiv.modus, kAktiv.stufe, false);
 });
 $('krimiMenue').addEventListener('click', krimiIntro);
