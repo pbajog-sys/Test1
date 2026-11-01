@@ -154,10 +154,14 @@ Wie bei Netflix: Beim ersten Start fragt die App nach deinem Namen und einem Bil
 - Alles bleibt auf dem Gerät, ohne Anmeldung und ohne Server.
 
 ## 🔎 Wer war’s? (Game)
-Krimi-Logikrätsel im Stil eines „Mörder-Sudokus“: Lord Lennart wurde ermordet. Alle Personen kommen in den Grundriss –
-in jeder Reihe und Spalte genau eine, nie auf Pflanzen, Regalen, Standuhren oder dem Klavier. Die Hinweise auf dem Notizzettel stimmen alle.
-Wer allein mit dem Opfer in einem Raum war, ist der Mörder.
-- **Leicht** 4 × 4, **Mittel** 5 × 5, **Schwer** 6 × 6 · 📅 **Fall des Tages** (für alle gleich)
-- Jeder Fall wird neu erzeugt und hat garantiert genau eine Lösung; überflüssige Hinweise werden weggelassen.
-- ✕-Modus zum Ausschließen von Feldern, erfüllte Hinweise werden abgehakt, Konflikte rot markiert, 💡 Tipp setzt eine Person richtig.
-
+Krimi-Logikrätsel im Stil eines „Mörder-Sudokus“: Mord in der Villa! Zehn Verdächtige, in jedem Fall wird einer zum Opfer.
+Alle Personen kommen in den Grundriss – in jeder Reihe und Spalte genau eine, nie auf Pflanzen, Standuhren, Schränken oder Stehlampen.
+Die Hinweise auf dem Notizzettel stimmen alle. Wer allein mit dem Opfer in einem Raum war, ist der Mörder.
+- **Leicht** 4 × 4, **Mittel** 5 × 5, **Schwer** 6 × 6 · **Fall des Tages** (für alle gleich)
+- **Generator:** baut erst einen kompletten Fall (Grundriss, Lösung), leitet daraus wahre Hinweise ab, ergänzt Hinweise,
+  bis ein Zähl-Löser genau eine Lösung findet, und streicht dann überflüssige.
+- **Logik-Löser wie ein Mensch:** Einzelfeld → versteckter Einzelner in Reihe/Spalte → Paar-Hinweise → Raum-Logik → Annahme.
+  Jeder Fall muss so ohne Raten lösbar sein. Die **Schwierigkeit** ergibt sich aus den nötigen Denkschritten
+  (Leicht ohne Annahme, Mittel mit echten Schlussfolgerungen, Schwer mit mindestens einer Annahme).
+- 💡 **Tipp** erklärt den nächsten Denkschritt. ✕-Modus zum Ausschließen, erfüllte Hinweise werden abgehakt.
+- Porträts und Icons: `img/krimi/` (aus generierten Bildern zugeschnitten), Prompts in `img/krimi/BILDER.md`.

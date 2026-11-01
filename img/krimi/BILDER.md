@@ -1,5 +1,8 @@
 # Bilder für „Wer war's?“
 
+**Stand:** Die 10 Porträts und das Icon-Set sind eingebaut (aus den beiden generierten Sheets zugeschnitten).
+Die Prompts unten sind nur noch für neue Figuren oder ein Titelbild.
+
 Generieren (z. B. mit ChatGPT), dann hier in diesen Ordner hochladen (Branch `wal-quiz`).
 Claude schneidet sie zu, verkleinert sie auf .webp und schaltet sie in `krimi-grafik.js` frei (`KRIMI_PORTRAETS`).
 Bis dahin zeigt das Spiel Spielsteine mit Monogramm.

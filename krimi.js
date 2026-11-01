@@ -1,6 +1,6 @@
 // 🔎 Wer war's? – Krimi-Logikrätsel („Mörder-Sudoku“).
 // Ein Grundriss mit Räumen und Möbeln. In jeder Reihe und jeder Spalte steht genau eine Person.
-// Möbel wie Pflanzen oder Regale sind besetzt, auf Stühlen, Sofas, Betten und Teppichen darf man stehen.
+// Pflanzen, Standuhren, Schränke und Stehlampen sind besetzt, auf Sesseln, Sofas, Betten und Teppichen darf man stehen.
 // Wer allein mit dem Opfer in einem Raum war, ist der Mörder.
 // Die Fälle erzeugt die App selbst: Grundriss, Lösung und so viele Hinweise, dass genau eine Lösung bleibt.
 const KRIMI_KEY = 'walquiz.krimi.v1';
@@ -9,37 +9,38 @@ const KRIMI_STUFEN = {
   mittel: { name: 'Mittel', n: 5, raeume: 4 },
   schwer: { name: 'Schwer', n: 6, raeume: 5 },
 };
+// Die Verdächtigen – in jedem Fall wird einer von ihnen zufällig zum Opfer
 const VERDAECHTIGE = [
-  { name: 'Butler Bruno', emoji: '🤵' },
-  { name: 'Köchin Klara', emoji: '👩‍🍳' },
-  { name: 'Gärtner Gustav', emoji: '🧑‍🌾' },
-  { name: 'Malerin Mia', emoji: '👩‍🎨' },
-  { name: 'Doktor Dietrich', emoji: '👨‍⚕️' },
-  { name: 'Tante Trude', emoji: '👵' },
-  { name: 'Kapitän Hannes', emoji: '👨‍✈️' },
-  { name: 'Sängerin Sophie', emoji: '👩‍🎤' },
+  { id: 'elena', name: 'Elena', voll: 'Dr. Elena Weiss', beruf: 'Biologin' },
+  { id: 'markus', name: 'Markus', voll: 'Markus Steiner', beruf: 'Haustechniker' },
+  { id: 'sophie', name: 'Sophie', voll: 'Sophie Graf', beruf: 'Künstlerin' },
+  { id: 'jonas', name: 'Jonas', voll: 'Jonas Keller', beruf: 'IT-Spezialist' },
+  { id: 'victoria', name: 'Victoria', voll: 'Victoria Lang', beruf: 'Geschäftsführerin' },
+  { id: 'felix', name: 'Felix', voll: 'Dr. Felix Brandt', beruf: 'Chirurg' },
+  { id: 'lara', name: 'Lara', voll: 'Lara Neumann', beruf: 'Köchin' },
+  { id: 'thomas', name: 'Thomas', voll: 'Thomas Berger', beruf: 'Historiker' },
+  { id: 'mia', name: 'Mia', voll: 'Mia Vogt', beruf: 'Journalistin' },
+  { id: 'leon', name: 'Leon', voll: 'Leon Hartmann', beruf: 'Anwalt' },
 ];
-const OPFER = { name: 'Lord Lennart', emoji: '🧐', opfer: true };
+// Dunkle Böden (Film noir) – die Möbel-Icons verschmelzen weich damit
 const RAEUME = [
-  { name: 'Küche', im: 'in der Küche', farbe: '#efe4cf' },
-  { name: 'Salon', im: 'im Salon', farbe: '#d7a774' },
-  { name: 'Bibliothek', im: 'in der Bibliothek', farbe: '#b8865a' },
-  { name: 'Wintergarten', im: 'im Wintergarten', farbe: '#b7cfae' },
-  { name: 'Speisezimmer', im: 'im Speisezimmer', farbe: '#e0b688' },
-  { name: 'Schlafzimmer', im: 'im Schlafzimmer', farbe: '#c7b3d6' },
-  { name: 'Bad', im: 'im Bad', farbe: '#d3e5ea' },
-  { name: 'Arbeitszimmer', im: 'im Arbeitszimmer', farbe: '#c4976a' },
+  { name: 'Salon', im: 'im Salon', farbe: '#4a2e22', icon: 'raum-salon' },
+  { name: 'Küche', im: 'in der Küche', farbe: '#3a3d40', icon: 'raum-kueche' },
+  { name: 'Schlafzimmer', im: 'im Schlafzimmer', farbe: '#3b2f45', icon: 'raum-schlafzimmer' },
+  { name: 'Bibliothek', im: 'in der Bibliothek', farbe: '#3d2a1c', icon: 'raum-bibliothek' },
+  { name: 'Arbeitszimmer', im: 'im Arbeitszimmer', farbe: '#46331f', icon: 'raum-arbeitszimmer' },
+  { name: 'Wintergarten', im: 'im Wintergarten', farbe: '#26382a', icon: 'raum-wintergarten' },
 ];
 // frei: darf man draufstellen · auf/neben: Text für Hinweise
 const MOEBEL = {
-  stuhl:    { emoji: '🪑', frei: true, auf: 'saß auf einem Stuhl', neben: 'stand neben einem Stuhl' },
-  sofa:     { emoji: '🛋️', frei: true, auf: 'saß auf einem Sofa', neben: 'stand neben einem Sofa' },
-  bett:     { emoji: '🛏️', frei: true, auf: 'lag auf einem Bett', neben: 'stand neben einem Bett' },
-  teppich:  { emoji: '', frei: true, auf: 'stand auf einem Teppich' },
-  pflanze:  { emoji: '🪴', frei: false, neben: 'stand neben einer Pflanze' },
-  regal:    { emoji: '📚', frei: false, neben: 'stand neben einem Bücherregal' },
-  uhr:      { emoji: '🕰️', frei: false, neben: 'stand neben einer Standuhr' },
-  klavier:  { emoji: '🎹', frei: false, neben: 'stand neben dem Klavier' },
+  sessel:   { frei: true, auf: 'saß in einem Sessel', neben: 'stand neben einem Sessel' },
+  sofa:     { frei: true, auf: 'saß auf einem Sofa', neben: 'stand neben einem Sofa' },
+  bett:     { frei: true, auf: 'lag auf einem Bett', neben: 'stand neben einem Bett' },
+  teppich:  { frei: true, auf: 'stand auf einem Teppich' },
+  pflanze:  { frei: false, neben: 'stand neben einer Pflanze' },
+  uhr:      { frei: false, neben: 'stand neben einer Standuhr' },
+  schrank:  { frei: false, neben: 'stand neben einem Schrank' },
+  lampe:    { frei: false, neben: 'stand neben einer Stehlampe' },
 };
 
 function mischen(liste, rnd) {
@@ -76,8 +77,8 @@ function moebelVerteilen(n, rnd) {
   const moebel = new Array(n * n).fill(null);
   const zellen = mischen([...Array(n * n).keys()], rnd);
   const fest = Math.round(n * n * 0.14), frei = Math.round(n * n * 0.22);
-  const festArten = mischen(['pflanze', 'regal', 'uhr', 'klavier', 'pflanze', 'regal', 'uhr'], rnd);
-  const freiArten = ['stuhl', 'stuhl', 'sofa', 'bett', 'teppich', 'teppich'];
+  const festArten = mischen(['pflanze', 'uhr', 'schrank', 'lampe', 'pflanze', 'schrank', 'lampe'], rnd);
+  const freiArten = ['sessel', 'sessel', 'sofa', 'bett', 'teppich', 'teppich'];
   zellen.slice(0, fest).forEach((z, i) => { moebel[z] = festArten[i % festArten.length]; });
   zellen.slice(fest, fest + frei).forEach((z) => { moebel[z] = freiArten[Math.floor(rnd() * freiArten.length)]; });
   return moebel;
@@ -107,7 +108,7 @@ function alleHinweise(fall, rnd) {
   const out = [];
   const rc = (z) => [Math.floor(z / n), z % n];
   personen.forEach((pe, p) => {
-    const z = loesung[p], [r, c] = rc(z), wer = pe.name;
+    const z = loesung[p], [r, c] = rc(z), wer = pe.opfer ? 'Das Opfer ' + pe.name : pe.name;
     out.push({ p, art: 'raum', text: wer + ' war ' + raumListe[raum[z]].im + '.', f: (a) => raum[a] === raum[z] });
     mischen(raumListe.map((_, i) => i).filter((i) => i !== raum[z]), rnd).slice(0, 2).forEach((R) => {
       out.push({ p, art: 'nicht', text: wer + ' war nicht ' + raumListe[R].im + '.', f: (a) => raum[a] !== R });
@@ -133,7 +134,8 @@ function alleHinweise(fall, rnd) {
   for (let p = 0; p < personen.length; p++) {
     for (let q = p + 1; q < personen.length; q++) {
       const [zp, zq] = [loesung[p], loesung[q]], [rp, cp] = rc(zp), [rq, cq] = rc(zq);
-      const P = personen[p].name, Q = personen[q].name;
+      const P = personen[p].opfer ? 'Das Opfer ' + personen[p].name : personen[p].name;
+      const Q = personen[q].opfer ? 'das Opfer ' + personen[q].name : personen[q].name;
       if (raum[zp] === raum[zq]) {
         if (q !== opfer) out.push({ p, q, art: 'zusammen', text: P + ' war im selben Raum wie ' + Q + '.', f: (a, b) => raum[a] === raum[b] });
       } else out.push({ p, q, art: 'getrennt', text: P + ' war nicht im selben Raum wie ' + Q + '.', f: (a, b) => raum[a] !== raum[b] });
@@ -386,7 +388,8 @@ function erzeugeFall(stufe, rnd) {
     const raum = raeumeAufteilen(n, raeume, rnd);
     if (!raum) continue;
     const fall = { stufe, n, raum, moebel: moebelVerteilen(n, rnd), raumListe: mischen(RAEUME, rnd).slice(0, raeume) };
-    fall.personen = mischen(VERDAECHTIGE, rnd).slice(0, n - 1).concat([OPFER]);
+    // n Personen aus dem Kreis der Verdächtigen – die letzte ist das Opfer
+    fall.personen = mischen(VERDAECHTIGE, rnd).slice(0, n).map((pe, i) => ({ ...pe, opfer: i === n - 1 }));
     fall.loesung = platzieren(fall, rnd);
     if (!fall.loesung) continue;
     const opferRaum = raum[fall.loesung[n - 1]];
@@ -442,7 +445,7 @@ function krimiIntro() {
   $('krimiBest').textContent = geloest
     ? '🔎 ' + geloest + (geloest === 1 ? ' Fall' : ' Fälle') + ' gelöst' + (best ? ' · Bestzeit ' + KRIMI_STUFEN[krimiStufe].name + ': ' + zeitText(best) : '')
     : 'Noch kein Fall gelöst';
-  $('krimiTagBtn').textContent = (st.tag || {})[heute() + ':' + krimiStufe] ? '📅 Fall des Tages ✓' : '📅 Fall des Tages';
+  $('krimiTagBtn').replaceChildren(krimiIcon('schluessel', 'mini'), (st.tag || {})[heute() + ':' + krimiStufe] ? ' Fall des Tages ✓' : ' Fall des Tages');
 }
 const zeitText = (s) => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 
@@ -454,12 +457,17 @@ function krimiStart(tag) {
   setTimeout(() => {
     const fall = erzeugeFall(krimiStufe, zufallsGenerator(seed));
     $('krimiLos').disabled = false;
-    $('krimiLos').textContent = 'Neuer Fall 🔎';
+    $('krimiLos').textContent = 'Neuer Fall';
     if (!fall) return;
     kf = { fall, platz: new Array(fall.personen.length).fill(-1), kreuz: new Set(), wahl: 0, modus: 'setzen', start: Date.now(), hilfen: 0, tag };
     kf.timer = setInterval(krimiUhr, 1000);
     $('krimiTippText').hidden = true;
-    $('krimiSterne').textContent = 'Schwierigkeit ' + '★'.repeat(fall.bewertung.sterne) + '☆'.repeat(3 - fall.bewertung.sterne) + ' · ' + fall.bewertung.denkschritte + ' Denkschritte';
+    const opfer = fall.personen[fall.personen.length - 1];
+    $('krimiOpfer').replaceChildren(krimiFigur(opfer, 'ko-bild'), Object.assign(document.createElement('span'), { textContent: opfer.voll + ' (' + opfer.beruf + ') wurde tot aufgefunden. Wer war es?' }));
+    const sterne = $('krimiSterne');
+    sterne.replaceChildren();
+    for (let i = 1; i <= 3; i++) sterne.appendChild(krimiIcon(i <= fall.bewertung.sterne ? 'stern' : 'stern-leer', 'ks-stern'));
+    sterne.append(' ' + fall.bewertung.denkschritte + ' Denkschritte');
     krimiTeil('spiel');
     krimiZeichnen();
     krimiUhr();
@@ -490,21 +498,26 @@ function krimiZeichnen() {
     d.style.setProperty('--boden', raumListe[R].farbe);
     d.classList.add('boden-' + (KRIMI_BODEN[raumListe[R].name] || 'parkett'));
     d.dataset.raum = R;
-    const wand = (j, rand) => (rand || raum[j] !== R ? '3px solid #2b1d14' : '1px solid rgba(43,29,20,0.15)');
+    const wand = (j, rand) => (rand || raum[j] !== R ? '3px solid #cdb68c' : '1px solid rgba(255,240,210,0.07)');
     d.style.borderTop = wand(z - n, r === 0);
     d.style.borderBottom = wand(z + n, r === n - 1);
     d.style.borderLeft = wand(z - 1, c === 0);
     d.style.borderRight = wand(z + 1, c === n - 1);
-    if (moebel[z] === 'teppich') { const t = document.createElement('span'); t.className = 'kz-teppich'; t.innerHTML = KRIMI_MOEBEL_SVG.teppich; d.appendChild(t); }
+    if (moebel[z] === 'teppich') d.appendChild(krimiIcon('teppich', 'kz-teppich'));
     if (moebel[z] && !MOEBEL[moebel[z]].frei) d.classList.add('fest');
-    if (ersteZelle[R] === z) { const l = document.createElement('span'); l.className = 'kz-raum'; l.textContent = raumListe[R].name; d.appendChild(l); }
-    if (moebel[z] && moebel[z] !== 'teppich') { const m = document.createElement('span'); m.className = 'kz-moebel m-' + moebel[z]; m.innerHTML = KRIMI_MOEBEL_SVG[moebel[z]]; d.appendChild(m); }
+    if (ersteZelle[R] === z) {
+      const l = document.createElement('span');
+      l.className = 'kz-raum' + (c >= n - 2 ? ' rechts' : '');   // am rechten Rand nach links ausrichten
+      l.append(krimiIcon(raumListe[R].icon, 'kz-raum-icon'), Object.assign(document.createElement('span'), { className: 'kz-raum-text', textContent: raumListe[R].name }));
+      d.appendChild(l);
+    }
+    if (moebel[z] && moebel[z] !== 'teppich') d.appendChild(krimiIcon(KRIMI_MOEBEL_BILD[moebel[z]], 'kz-moebel m-' + moebel[z]));
     const p = platz.indexOf(z);
     if (p >= 0) {
       const t = krimiFigur(personen[p], 'kz-person' + (konflikt.has(z) ? ' konflikt' : ''));
       d.appendChild(t);
       d.classList.add('besetzt');
-      d.setAttribute('aria-label', personen[p].name);
+      d.setAttribute('aria-label', personen[p].voll);
     } else if (kreuz.has(z)) {
       const x = document.createElement('span'); x.className = 'kz-kreuz'; x.textContent = '✕'; d.appendChild(x);
     }
@@ -520,8 +533,8 @@ function krimiZeichnen() {
     b.className = 'kp' + (kf.wahl === p && kf.modus === 'setzen' ? ' an' : '') + (platz[p] >= 0 ? ' gesetzt' : '') + (pe.opfer ? ' opfer' : '');
     b.innerHTML = '<span class="kp-n"></span>';
     b.prepend(krimiFigur(pe, 'kp-fig'));
-    b.querySelector('.kp-n').textContent = pe.opfer ? 'Opfer' : pe.name.split(' ').pop();
-    b.title = pe.name;
+    b.querySelector('.kp-n').textContent = pe.name;
+    b.title = pe.voll + ' · ' + pe.beruf + (pe.opfer ? ' · Opfer' : '');
     b.addEventListener('click', () => { kf.wahl = p; kf.modus = 'setzen'; krimiZeichnen(); });
     leiste.appendChild(b);
   });
@@ -640,11 +653,11 @@ function fallGeloest() {
   eb.style.setProperty('--n', fall.n);
   eb.dataset.tatort = fall.raum[fall.loesung[fall.personen.length - 1]];
   eb.querySelectorAll('.kz').forEach((c) => c.classList.toggle('tatort', c.dataset.raum === eb.dataset.tatort));
-  $('krimiTaeterName').textContent = m.name;
-  $('krimiTatort').textContent = 'allein mit ' + OPFER.name + ' ' + fall.raumListe[fall.raum[fall.loesung[fall.personen.length - 1]]].im;
+  $('krimiTaeterName').textContent = m.voll;
+  $('krimiTatort').textContent = m.beruf + ' · allein mit ' + fall.personen[fall.personen.length - 1].voll + ' ' + fall.raumListe[fall.raum[fall.loesung[fall.personen.length - 1]]].im;
   $('krimiZeit').textContent = '⏱ ' + zeitText(sek) + (kf.hilfen ? ' · 💡 ' + kf.hilfen + (kf.hilfen === 1 ? ' Tipp' : ' Tipps') : '') + (neu ? ' · 🏆 Bestzeit!' : '');
   krimiTeil('ende');
-  setTimeout(() => konfetti(26, ['✨', '🗝️', '🔎']), 500);
+  setTimeout(() => konfetti(30, ['✨', '⭐', '✨']), 500);
 }
 
 document.querySelectorAll('#krimiStufen button').forEach((b) => b.addEventListener('click', () => {
@@ -672,5 +685,16 @@ $('hubKrimi').addEventListener('click', () => zoomZu($('hubKrimi'), () => { show
 
 // Grafiken einsetzen (aus krimi-grafik.js)
 $('krimiLogo').innerHTML = KRIMI_VILLA;
-document.querySelector('#hubKrimi .hc-krimi-icon').innerHTML = KRIMI_LUPE;
-document.querySelectorAll('[data-moebel]').forEach((el) => { el.innerHTML = KRIMI_MOEBEL_SVG[el.dataset.moebel]; });
+document.querySelectorAll('[data-k-icon]').forEach((el) => el.replaceChildren(krimiIcon(el.dataset.kIcon)));
+// Galerie der Verdächtigen im Menü
+VERDAECHTIGE.forEach((pe) => {
+  const k = document.createElement('div');
+  k.className = 'kv-karte';
+  k.appendChild(krimiFigur(pe, 'kv-bild'));
+  const t = document.createElement('div');
+  t.innerHTML = '<b></b><small></small>';
+  t.querySelector('b').textContent = pe.voll;
+  t.querySelector('small').textContent = pe.beruf;
+  k.appendChild(t);
+  $('krimiGalerie').appendChild(k);
+});
