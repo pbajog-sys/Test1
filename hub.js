@@ -1,10 +1,10 @@
-// Dashboard „Spiele“: Weiterspielen, alle Spiele als Cover-Karten, Bestenliste.
-// Die Cover sind animiert (nur Bewegung und Transparenz) und pausieren, sobald sie nicht zu sehen sind.
+// Dashboard „Spiele“: animierte Bühne mit allen Spielen, Games als Zeilen, Bestenliste.
+// Animationen nutzen nur Bewegung und Transparenz und pausieren, sobald sie nicht zu sehen sind.
 const coverIO = 'IntersectionObserver' in window
   ? new IntersectionObserver((eintraege) => eintraege.forEach((e) => e.target.classList.toggle('sichtbar', e.isIntersecting)), { rootMargin: '40px' })
   : null;
 function coverBeobachten() {
-  document.querySelectorAll('.cover-bild:not([data-beobachtet]), .hg-av-quiz .hg-in:not([data-beobachtet]), .story-ring:not([data-beobachtet])').forEach((el) => {
+  document.querySelectorAll('.cover-bild:not([data-beobachtet]), .hg-av-quiz .hg-in:not([data-beobachtet]), .buehne:not([data-beobachtet])').forEach((el) => {
     el.dataset.beobachtet = '1';
     if (coverIO) coverIO.observe(el); else el.classList.add('sichtbar');
   });
@@ -41,63 +41,18 @@ document.addEventListener('click', (e) => {
   const k = e.target.closest('[data-regen]');
   if (!k) return;
   emojiRegen(k.dataset.regen.split(','));
-  const id = k.dataset.story || { hubKrimi: 'krimi', hubFarben: 'farben', hubCello: 'cello', hubToene: 'toene' }[k.id];
-  if (id) storyGesehen(id);
 }, true);
 
-// ---------- Story-Kreise (Schnellstart wie Instagram-Stories) ----------
-const GESEHEN_KEY = 'walquiz.gesehen.v1';
-const STORIES = [
-  { id: 'wale', name: 'Wale', welt: 'wale', regen: '🐋,🐳,🌊,💧' },
-  { id: 'haie', name: 'Haie', welt: 'haie', regen: '🦈,🌊,💧' },
-  { id: 'beide', name: 'Meer', welt: 'beide', regen: '🐋,🦈,🌊' },
-  { id: 'porsche', name: 'Porsche', welt: 'porsche', regen: '🏎️,🏁,💨' },
-  { id: 'dackel', name: 'Gretchen', welt: 'dackel', regen: '🐾,🦴,💕' },
-  { id: 'krimi', name: 'Krimi', knopf: 'hubKrimi', regen: '🔎,🕵️,🗝️,🕯️' },
-  { id: 'farben', name: 'Farben', knopf: 'hubFarben', regen: '🎨,🖌️,🌈,💧' },
-  { id: 'cello', name: 'Cello', knopf: 'hubCello', regen: '🎵,🎶,🎻' },
-  { id: 'toene', name: 'Töne', knopf: 'hubToene', regen: '🎧,🔊,🎵' },
-];
-const hubHeute = () => new Date().toISOString().slice(0, 10);   // eigene Version: farben.js lädt erst später
-function storyGesehen(id) { const g = loadJson(GESEHEN_KEY); g[id] = hubHeute(); saveJson(GESEHEN_KEY, g); }
-function hubStories() {
-  const box = $('hubStories');
-  const g = loadJson(GESEHEN_KEY), z = loadJson(ZULETZT_KEY);
-  const zuletzt = z.typ === 'quiz' ? z.welt : z.typ;
-  // zuletzt gespielt zuerst, dann die übrigen in fester Reihenfolge
-  const liste = STORIES.slice().sort((a, b) => (b.id === zuletzt) - (a.id === zuletzt));
-  box.innerHTML = '';
-  liste.forEach((st) => {
-    const b = document.createElement('button');
-    b.type = 'button';
-    b.className = 'story' + (g[st.id] === hubHeute() ? ' gesehen' : '');
-    b.innerHTML = '<span class="story-ring"><span class="story-bild"></span></span><span class="story-name"></span>';
-    const bild = b.querySelector('.story-bild');
-    if (st.welt) bild.appendChild(weltKachel(st.welt));
-    else {
-      const kopie = $(st.knopf).querySelector('.hg-in').cloneNode(true);
-      delete kopie.dataset.beobachtet;
-      kopie.classList.add('sichtbar');
-      bild.appendChild(kopie);
-    }
-    if (st.id === zuletzt) {
-      const schild = document.createElement('span');
-      schild.className = 'story-schild';
-      schild.textContent = 'Weiter';
-      b.querySelector('.story-ring').appendChild(schild);
-    }
-    b.querySelector('.story-name').textContent = st.name;
-    b.addEventListener('click', () => {
-      flip(b.querySelector('.story-ring'));
-      if (st.welt) emojiRegen(st.regen.split(','));   // bei Spielen regnet es über deren Karte
-      storyGesehen(st.id);
-      setTimeout(() => {
-        if (st.welt) { setHubTheme(); weltOeffnen(st.welt); } else $(st.knopf).click();
-      }, wenigBewegung() ? 0 : 420);
-    });
-    box.appendChild(b);
-  });
-}
+// ---------- Bühne: alle Spiele als kleine animierte Szene, jede Figur ist ein Schnellstart ----------
+const WELT_REGEN = { wale: '🐋,🐳,🌊,💧', haie: '🦈,🌊,💧', beide: '🐋,🦈,🌊', porsche: '🏎️,🏁,💨', dackel: '🐾,🦴,💕' };
+$('hubBuehne').addEventListener('click', (e) => {
+  const d = e.target.closest('.bu-ding');
+  if (!d) return;
+  flip(d);
+  if (d.dataset.ziel) { setTimeout(() => $(d.dataset.ziel).click(), wenigBewegung() ? 0 : 380); return; }   // regnet über die Zeile des Spiels
+  emojiRegen(WELT_REGEN[d.dataset.welt].split(','));
+  setTimeout(() => weltOeffnen(d.dataset.welt), wenigBewegung() ? 0 : 380);
+});
 
 // Gesicht jeder Welt: ein echtes Foto aus dem Quiz (wie Gretchen beim Dackel-Quiz)
 const HUB_GESICHT = { wale: 'Buckelwal', haie: 'Weißer Hai', beide: 'Schwertwal', porsche: '911 (993)' };
@@ -139,13 +94,7 @@ function weltKachel(w) {
   return k;
 }
 
-// Begrüßung nach Tageszeit, mit Namen des Profils
-function hubGruss() {
-  const name = (typeof aktivesProfil === 'function' && aktivesProfil() && aktivesProfil().name) || loadJson(STORE_KEY).name || '';
-  $('hubGruss').textContent = 'Hey' + (name ? ' ' + name : '') + '! 👋 Was spielen wir?';
-}
-
-// Zuletzt gespielt: bekommt in den Story-Kreisen das Schild „Weiter“
+// Zuletzt gespielt (je Profil)
 const ZULETZT_KEY = 'walquiz.zuletzt.v1';
 function merkeZuletzt(typ, welt) { saveJson(ZULETZT_KEY, { typ, welt: welt || null, zeit: Date.now() }); }
 function weltOeffnen(w) {
@@ -188,8 +137,7 @@ function renderHub() {
     b.type = 'button';
     b.className = 'hub-card hc-' + k.welt;
     b.style.animationDelay = (0.08 + i * 0.07) + 's';
-    b.dataset.regen = STORIES.find((x) => x.welt === k.welt).regen;
-    b.dataset.story = k.welt;
+    b.dataset.regen = WELT_REGEN[k.welt];
     b.innerHTML = '<span class="hc-deko"></span><span class="hc-emoji"></span><span class="hc-titel"></span><span class="hc-text"></span>'
       + '<span class="hc-fort"><span class="hc-bar"><i></i></span><small></small></span><span class="hc-badges"></span>';
     b.querySelector('.hc-emoji').appendChild(weltAvatar(k.welt));
@@ -227,8 +175,6 @@ function renderHub() {
   const summe = (o) => Object.values((o && o.geloest) || {}).reduce((x, y) => x + y, 0);
   const faelle = summe(krimi) + Object.values(krimi.modi || {}).reduce((x, m) => x + summe(m), 0);
   $('hubKrimiBest').textContent = (faelle ? '🔎 ' + faelle + ' Rätsel gelöst' : 'Noch nichts gelöst') + (krimi.aktenGeloest ? ' · 📁 ' + krimi.aktenGeloest + (krimi.aktenGeloest === 1 ? ' Akte' : ' Akten') : '');
-  hubGruss();
-  hubStories();
   if (typeof coverBeobachten === 'function') coverBeobachten();
   if (typeof profilHub === 'function') profilHub();   // profile.js lädt später
 }

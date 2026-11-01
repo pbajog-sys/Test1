@@ -1,6 +1,6 @@
 # Wal-Quiz – Seepferdchen der Walkunde
 
-Die App startet mit dem **Dashboard „Spiele“**: oben Story-Kreise, darunter die **Games** als Zeilen –
+Die App startet mit dem **Dashboard „Spiele“**: oben eine animierte Bühne, darunter die **Games** als Zeilen –
 **Quizzes**, Farb-Gedächtnis, Cello-Noten, Ton-Gedächtnis und „Wer war’s?“. Die Quizzes führen zu den Karten der Welten. Eine Karte zoomt beim
 Antippen auf den ganzen Bildschirm und wird zur Welt; ← führt zurück zum Dashboard. Es gibt fünf Welten: 🐋 Wale, 🦈 Haie, 🌊 Beide (Wale und Haie gemischt),
 🏎️ Porsche und 🐕 Dackel. Jede Welt hat eigene Abzeichen; Lernstand und Lexikon funktionieren überall.
@@ -183,9 +183,10 @@ nötigen Denkschritte bestimmen die Schwierigkeit und liefern die Erklärungen f
 - **Vollbild**: Knopf ⛶ im Dashboard (Desktop und Android). Als installierte App darf Android jetzt auch quer drehen.
 
 ## 🎮 Dashboard „Spiele“
-- Bunter Neon-Look: dunkler Hintergrund mit wandernden Farbflecken, Begrüßung „Hey {Name}! 👋 Was spielen wir?“.
-- **Story-Kreise** wie bei Instagram ganz oben: alle Quiz-Welten und Spiele als runde Bilder mit Farbring zum Wischen.
-  Heute schon gespielt = grauer Ring, zuletzt gespielt = Schild „Weiter“. Antippen: Flip-Animation und passender Emoji-Regen.
+- Bunter Neon-Look: dunkler Hintergrund mit wandernden Farbflecken.
+- Oben eine **animierte Bühne**, die das ganze Dashboard als Bild zeigt: tanzende Farbbalken, aufsteigende Cello-Noten,
+  laufende Tonwelle, suchende Lupe, Porsche und Gretchen auf der Küstenstraße, Wal mit Fontäne und Haiflosse im Meer.
+  Jede Figur ist ein Schnellstart in ihr Spiel (mit Flip und Emoji-Regen). Rechts oben: Profilbild zum Wechseln.
 - **Games** als Zeilen mit rundem Bild, Stand und ▶: **Quizzes** (im Kreis wechseln die Welten als Diashow), Farb-Gedächtnis,
   Cello-Noten, Ton-Gedächtnis und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
-- Akku: Farbflecken als Verlauf statt Weichzeichner, die Diashow pausiert außerhalb des Bildschirms; „Bewegung reduzieren“ wird beachtet.
+- Akku: Farbflecken als Verlauf statt Weichzeichner, Bühne und Diashow pausieren außerhalb des Bildschirms; „Bewegung reduzieren“ wird beachtet.

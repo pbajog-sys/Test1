@@ -236,6 +236,5 @@ $('pwAbbrechen').addEventListener('click', zeigeWahl);
 $('pwLoeschen').addEventListener('click', profilLoeschen);
 
 profilHub();
-if (typeof hubGruss === 'function') hubGruss();   // Begrüßung mit Namen, sobald das Profil bekannt ist
 // Noch kein Profil? Gleich beim Start fragen, wer spielt.
 if (!profile().aktiv) { zeigeWahl(); zeigeForm(null); }

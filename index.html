@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=39">
+<link rel="stylesheet" href="fonts/fonts.css?v=40">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=39">
-<link rel="stylesheet" href="ansichten.css?v=39">
+<link rel="stylesheet" href="stil.css?v=40">
+<link rel="stylesheet" href="ansichten.css?v=40">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -448,11 +448,22 @@
   <!-- Startseite -->
   <!-- Dashboard -->
   <section class="screen active" id="screen-hub">
-    <div class="hub-kopf">
-      <div class="hub-zeile"><div class="hub-gruss" id="hubGruss">Hey! 👋 Was spielen wir?</div><span class="hub-knoepfe"><button class="vollbild-btn" id="vollbildBtn" type="button" aria-label="Vollbild" title="Vollbild" hidden>⛶</button><button class="profil-btn" id="profilBtn" type="button" hidden></button></span></div>
-      <h1 class="hub-titel">Spiele</h1>
+    <h1 class="nur-sr">Spiele</h1>
+    <div class="buehne" id="hubBuehne">
+      <span class="hub-knoepfe"><button class="vollbild-btn" id="vollbildBtn" type="button" aria-label="Vollbild" title="Vollbild" hidden>⛶</button><button class="profil-btn" id="profilBtn" type="button" hidden></button></span>
+      <span class="bu-sterne" aria-hidden="true"></span>
+      <button class="bu-ding bu-farben" type="button" data-ziel="hubFarben" aria-label="Farb-Gedächtnis"><i></i><i></i><i></i><i></i><i></i></button>
+      <button class="bu-ding bu-cello" type="button" data-ziel="hubCello" aria-label="Cello-Noten"><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span></button>
+      <button class="bu-ding bu-toene" type="button" data-ziel="hubToene" aria-label="Ton-Gedächtnis"><span class="bu-ton"><svg viewBox="0 0 400 40" preserveAspectRatio="none"><path d="M0 20 Q 12.5 2 25 20 Q 37.5 38 50 20 Q 62.5 2 75 20 Q 87.5 38 100 20 Q 112.5 2 125 20 Q 137.5 38 150 20 Q 162.5 2 175 20 Q 187.5 38 200 20 Q 212.5 2 225 20 Q 237.5 38 250 20 Q 262.5 2 275 20 Q 287.5 38 300 20 Q 312.5 2 325 20 Q 337.5 38 350 20 Q 362.5 2 375 20 Q 387.5 38 400 20"/></svg></span></button>
+      <button class="bu-ding bu-krimi" type="button" data-ziel="hubKrimi" aria-label="Wer war’s?"><span class="bu-licht"></span><img src="img/krimi/lupe.webp" alt=""></button>
+      <span class="bu-strasse" aria-hidden="true"><i></i></span>
+      <button class="bu-ding bu-porsche" type="button" data-welt="porsche" aria-label="Porsche-Quiz"><svg viewBox="0 0 120 44"><path class="bu-karosse" d="M6 33c0-6 3-9 12-10l16-2C44 12 58 8 72 9c14 1 26 7 36 13 6 2 8 6 8 10v2H6z"/><path class="bu-fenster" d="M40 21c8-7 18-9 30-9 9 0 17 3 24 9z"/><g transform="translate(28 34)"><g class="bu-rad"><circle r="9"/><path d="M0-5.5V5.5M-5.5 0H5.5"/><circle r="2.2" fill="#c9c9d6" stroke="none"/></g></g><g transform="translate(94 34)"><g class="bu-rad"><circle r="9"/><path d="M0-5.5V5.5M-5.5 0H5.5"/><circle r="2.2" fill="#c9c9d6" stroke="none"/></g></g></svg></button>
+      <button class="bu-ding bu-dackel" type="button" data-welt="dackel" aria-label="Dackel-Quiz"><img src="img/gretchen/avatar.jpg" alt=""></button>
+      <span class="bu-meer bu-meer-hinten" aria-hidden="true"><svg viewBox="0 0 800 40" preserveAspectRatio="none"><path d="M0 12 Q 25 2 50 12 Q 75 22 100 12 Q 125 2 150 12 Q 175 22 200 12 Q 225 2 250 12 Q 275 22 300 12 Q 325 2 350 12 Q 375 22 400 12 Q 425 2 450 12 Q 475 22 500 12 Q 525 2 550 12 Q 575 22 600 12 Q 625 2 650 12 Q 675 22 700 12 Q 725 2 750 12 Q 775 22 800 12 L800 40 L0 40 Z"/></svg></span>
+      <button class="bu-ding bu-wal" type="button" data-welt="wale" aria-label="Wal-Quiz"><span class="bu-fontaene"><i></i><i></i><i></i></span><svg viewBox="0 0 120 60"><path d="M8 34C14 18 40 12 66 16c20 3 32 12 38 18 4-8 10-14 14-16-2 10-4 18-8 24 4 4 6 10 8 16-6-4-12-8-16-12-12 8-38 12-62 10C22 55 10 46 8 34z"/><path class="bu-bauch" d="M14 42c14 8 40 9 62 5-16 6-46 6-62-5z"/><circle cx="24" cy="32" r="2.2" fill="#fff"/></svg></button>
+      <button class="bu-ding bu-hai" type="button" data-welt="haie" aria-label="Hai-Quiz"><svg viewBox="0 0 90 60"><path d="M10 58C30 50 44 22 52 2c6 24 18 44 36 56z"/></svg></button>
+      <span class="bu-meer bu-meer-vorne" aria-hidden="true"><svg viewBox="0 0 800 40" preserveAspectRatio="none"><path d="M0 12 Q 25 2 50 12 Q 75 22 100 12 Q 125 2 150 12 Q 175 22 200 12 Q 225 2 250 12 Q 275 22 300 12 Q 325 2 350 12 Q 375 22 400 12 Q 425 2 450 12 Q 475 22 500 12 Q 525 2 550 12 Q 575 22 600 12 Q 625 2 650 12 Q 675 22 700 12 Q 725 2 750 12 Q 775 22 800 12 L800 40 L0 40 Z"/></svg></span>
     </div>
-    <div class="story-leiste" id="hubStories" aria-label="Schnellstart"></div>
     <div class="install-karte" id="installKarte" hidden>
       <img src="icons/apple-touch-icon.png?v=2" alt="" class="install-icon">
       <div class="install-text"><b>Als App installieren</b><span id="installSchritte"></span></div>
@@ -462,7 +473,6 @@
 
     <div class="spalten hub-spalten">
     <div class="spalte spalte-a">
-    <h2 class="hub-h"><span>🎮</span> Games</h2>
     <div class="hub-liste">
     <button class="hub-game hub-quizzeile" id="hubQuizzes" type="button" data-regen="🐋,🦈,🐾,🏎️,🌊">
       <span class="hg-av hg-av-quiz" aria-hidden="true"><span class="hg-in" id="hubQuizStapel"></span></span>
@@ -1156,26 +1166,26 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=39"></script>
-<script src="haie.js?v=39"></script>
-<script src="porsche.js?v=39"></script>
-<script src="dackel.js?v=39"></script>
-<script src="groesse.js?v=39"></script>
-<script src="gretchen.js?v=39"></script>
-<script src="effekte.js?v=39"></script>
-<script src="app.js?v=39"></script>
-<script src="melden.js?v=39"></script>
-<script src="hub.js?v=39"></script>
-<script src="farben.js?v=39"></script>
-<script src="cello.js?v=39"></script>
-<script src="toene.js?v=39"></script>
-<script src="krimi-grafik.js?v=39"></script>
-<script src="krimi.js?v=39"></script>
-<script src="krimi-wachen.js?v=39"></script>
-<script src="krimi-verhoer.js?v=39"></script>
-<script src="krimi-alibi.js?v=39"></script>
-<script src="krimi-akte.js?v=39"></script>
-<script src="krimi-zentrale.js?v=39"></script>
-<script src="profile.js?v=39"></script>
+<script src="wale.js?v=40"></script>
+<script src="haie.js?v=40"></script>
+<script src="porsche.js?v=40"></script>
+<script src="dackel.js?v=40"></script>
+<script src="groesse.js?v=40"></script>
+<script src="gretchen.js?v=40"></script>
+<script src="effekte.js?v=40"></script>
+<script src="app.js?v=40"></script>
+<script src="melden.js?v=40"></script>
+<script src="hub.js?v=40"></script>
+<script src="farben.js?v=40"></script>
+<script src="cello.js?v=40"></script>
+<script src="toene.js?v=40"></script>
+<script src="krimi-grafik.js?v=40"></script>
+<script src="krimi.js?v=40"></script>
+<script src="krimi-wachen.js?v=40"></script>
+<script src="krimi-verhoer.js?v=40"></script>
+<script src="krimi-alibi.js?v=40"></script>
+<script src="krimi-akte.js?v=40"></script>
+<script src="krimi-zentrale.js?v=40"></script>
+<script src="profile.js?v=40"></script>
 </body>
 </html>
