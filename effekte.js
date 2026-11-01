@@ -85,7 +85,7 @@ function setAmbient(w) {
 // Gleitende Markierung im Welt-Umschalter
 function positionPill() {
   const on = document.querySelector('.welt-switch button.on');
-  const pill = $('weltPill');
+  const pill = document.getElementById('weltPill');   // nicht $(): kann beim Laden vor app.js laufen
   if (!on || !pill || !on.offsetWidth) return;
   pill.style.left = on.offsetLeft + 'px';
   pill.style.width = on.offsetWidth + 'px';

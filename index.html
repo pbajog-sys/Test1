@@ -7,7 +7,7 @@
 <meta name="description" content="Lerne alle Walarten kennen und mach das Seepferdchen der Walkunde.">
 <meta name="theme-color" content="#0b2a4a">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=24">
+<link rel="stylesheet" href="fonts/fonts.css?v=25">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -422,7 +422,7 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=24">
+<link rel="stylesheet" href="stil.css?v=25">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -463,6 +463,11 @@
     <button class="hub-game hub-toene" id="hubToene" type="button">
       <span class="hg-av hg-av-toene" aria-hidden="true"><span class="hg-in"><span class="hc-toene-icon"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
       <span class="hg-text"><span class="hg-titel">Ton-Gedächtnis</span><span class="hg-sub">Ton hören. Nachbauen. Wie gut ist dein Gehör?</span><span class="hg-best" id="hubToeneBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-krimi" id="hubKrimi" type="button">
+      <span class="hg-av hg-av-krimi" aria-hidden="true"><span class="hg-in"><span class="hc-krimi-icon">🔎</span></span></span>
+      <span class="hg-text"><span class="hg-titel">Wer war’s?</span><span class="hg-sub">Das Mörder-Sudoku. Finde den Täter!</span><span class="hg-best" id="hubKrimiBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <div class="hub-mehr">Bald mehr Games ✨</div>
@@ -759,6 +764,60 @@
   </section>
 
   <!-- Ton-Gedächtnis -->
+  <section class="screen" id="screen-krimi">
+    <div class="krimi-buehne" id="krimiBuehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="krimiZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="krimiRunde"></span>
+      </div>
+
+      <div class="krimi-teil" id="krimi-intro">
+        <div class="krimi-logo" aria-hidden="true">🔎</div>
+        <h2 class="krimi-titel">Wer war’s?</h2>
+        <p class="krimi-lead">Lord Lennart wurde ermordet! Stell alle Personen in den Grundriss und finde heraus, wer es war.</p>
+        <ol class="krimi-regeln">
+          <li>In <b>jeder Reihe</b> und <b>jeder Spalte</b> steht genau <b>eine Person</b>.</li>
+          <li>Auf 🪴 📚 🕰️ 🎹 kann niemand stehen – auf 🪑 🛋️ 🛏️ und Teppichen schon.</li>
+          <li>Alle <b>Hinweise</b> stimmen.</li>
+          <li>🔪 Wer <b>allein mit dem Opfer</b> in einem Raum war, ist der Mörder.</li>
+        </ol>
+        <div class="farb-stufen" id="krimiStufen">
+          <button type="button" data-stufe="leicht">Leicht<small>4 × 4</small></button>
+          <button type="button" data-stufe="mittel">Mittel<small>5 × 5</small></button>
+          <button type="button" data-stufe="schwer">Schwer<small>6 × 6</small></button>
+        </div>
+        <button class="btn krimi-gross" id="krimiLos" type="button">Neuer Fall 🔎</button>
+        <button class="btn secondary" id="krimiTagBtn" type="button">📅 Fall des Tages</button>
+        <div class="krimi-best" id="krimiBest"></div>
+      </div>
+
+      <div class="krimi-teil" id="krimi-spiel" hidden>
+        <div class="krimi-brett" id="krimiBrett"></div>
+        <div class="krimi-status" id="krimiStatus"></div>
+        <div class="krimi-modus">
+          <button type="button" id="krimiSetzen">👤 Setzen</button>
+          <button type="button" id="krimiKreuz">✕ Ausschließen</button>
+          <button type="button" id="krimiTippBtn">💡 Tipp</button>
+        </div>
+        <div class="krimi-personen" id="krimiPersonen"></div>
+        <h3 class="krimi-h">🗒️ Hinweise</h3>
+        <ul class="krimi-hinweise" id="krimiHinweise"></ul>
+        <button class="krimi-aufgeben" id="krimiAufgeben" type="button">Aufgeben und Lösung zeigen</button>
+      </div>
+
+      <div class="krimi-teil krimi-mitte" id="krimi-ende" hidden>
+        <div class="krimi-stempel">Fall gelöst</div>
+        <div class="krimi-taeter" id="krimiTaeter"></div>
+        <div class="krimi-war">Der Mörder war</div>
+        <div class="krimi-name" id="krimiTaeterName"></div>
+        <div class="krimi-tatort" id="krimiTatort"></div>
+        <div class="krimi-zeit" id="krimiZeit"></div>
+        <button class="btn krimi-gross" id="krimiNochmal" type="button">Nächster Fall 🔎</button>
+        <button class="btn secondary" id="krimiMenue" type="button">Zum Menü</button>
+      </div>
+    </div>
+  </section>
+
   <section class="screen" id="screen-toene">
     <div class="ton-buehne">
       <div class="farb-kopf">
@@ -862,19 +921,20 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=24"></script>
-<script src="haie.js?v=24"></script>
-<script src="porsche.js?v=24"></script>
-<script src="dackel.js?v=24"></script>
-<script src="groesse.js?v=24"></script>
-<script src="gretchen.js?v=24"></script>
-<script src="effekte.js?v=24"></script>
-<script src="app.js?v=24"></script>
-<script src="melden.js?v=24"></script>
-<script src="hub.js?v=24"></script>
-<script src="farben.js?v=24"></script>
-<script src="cello.js?v=24"></script>
-<script src="toene.js?v=24"></script>
-<script src="profile.js?v=24"></script>
+<script src="wale.js?v=25"></script>
+<script src="haie.js?v=25"></script>
+<script src="porsche.js?v=25"></script>
+<script src="dackel.js?v=25"></script>
+<script src="groesse.js?v=25"></script>
+<script src="gretchen.js?v=25"></script>
+<script src="effekte.js?v=25"></script>
+<script src="app.js?v=25"></script>
+<script src="melden.js?v=25"></script>
+<script src="hub.js?v=25"></script>
+<script src="farben.js?v=25"></script>
+<script src="cello.js?v=25"></script>
+<script src="toene.js?v=25"></script>
+<script src="krimi.js?v=25"></script>
+<script src="profile.js?v=25"></script>
 </body>
 </html>

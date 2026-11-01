@@ -71,6 +71,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `hub.js` – Dashboard „Spiele“ mit Zoom-Übergang
 - `cello.js` – Cello-Noten
 - `toene.js` – Ton-Gedächtnis
+- `krimi.js` – Wer war’s? (Krimi-Logikrätsel)
 - `groesse.js` – Größenvergleich
 - `profile.js` – Profile „Wer spielt?“
 - `fonts/` – selbst gehostete Schriften (SIL Open Font License)
@@ -151,3 +152,12 @@ Wie bei Netflix: Beim ersten Start fragt die App nach deinem Namen und einem Bil
 - Ab zwei Profilen zeigt das Dashboard eine **Bestenliste** (🏅 Abzeichen, 📚 gelernt, 🎨 Farb- und 🎧 Ton-Rekord).
 - „Profile verwalten“: Name, Bild und Farbe ändern oder ein Profil löschen.
 - Alles bleibt auf dem Gerät, ohne Anmeldung und ohne Server.
+
+## 🔎 Wer war’s? (Game)
+Krimi-Logikrätsel im Stil eines „Mörder-Sudokus“: Lord Lennart wurde ermordet. Alle Personen kommen in den Grundriss –
+in jeder Reihe und Spalte genau eine, nie auf Pflanzen, Regalen, Standuhren oder dem Klavier. Die Hinweise auf dem Notizzettel stimmen alle.
+Wer allein mit dem Opfer in einem Raum war, ist der Mörder.
+- **Leicht** 4 × 4, **Mittel** 5 × 5, **Schwer** 6 × 6 · 📅 **Fall des Tages** (für alle gleich)
+- Jeder Fall wird neu erzeugt und hat garantiert genau eine Lösung; überflüssige Hinweise werden weggelassen.
+- ✕-Modus zum Ausschließen von Feldern, erfüllte Hinweise werden abgehakt, Konflikte rot markiert, 💡 Tipp setzt eine Person richtig.
+
