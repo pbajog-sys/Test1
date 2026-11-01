@@ -209,6 +209,7 @@ function setHubTheme() {
   Object.keys(WELTEN).forEach((w) => document.body.classList.remove('theme-' + w));
   document.body.classList.add('theme-hub');
   document.querySelector('meta[name="theme-color"]').setAttribute('content', '#141210');
+  document.title = 'Spielekiste';
   setAmbient('hub');
 }
 
@@ -342,4 +343,36 @@ if (pendingChallenge) {
   });
   document.addEventListener('fullscreenchange', zeichnen);
   document.addEventListener('webkitfullscreenchange', zeichnen);
+})();
+
+// ---------- „Als App installieren“ ----------
+// iPhone/iPad bieten das Installieren nie von selbst an → kurze Anleitung (Teilen → Zum Home-Bildschirm).
+// Android/Chrome: echter Installieren-Knopf über beforeinstallprompt.
+(() => {
+  const KEY = 'walquiz.installhinweis.v1';
+  const karte = $('installKarte');
+  const installiert = window.matchMedia('(display-mode: standalone)').matches || navigator.standalone === true;
+  if (installiert || localStorage.getItem(KEY)) return;
+  const ios = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+  if (ios) {
+    $('installSchritte').innerHTML = 'Tippe auf <span class="teilen-symbol" aria-label="Teilen"><svg viewBox="0 0 20 24" width="14" height="17"><path d="M10 2v13M5.5 6.5 10 2l4.5 4.5" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M6 10H3.5a1.5 1.5 0 0 0-1.5 1.5v9A1.5 1.5 0 0 0 3.5 22h13a1.5 1.5 0 0 0 1.5-1.5v-9A1.5 1.5 0 0 0 16.5 10H14" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg></span> „Teilen“ und dann auf <b>„Zum Home-Bildschirm“</b>.';
+    karte.hidden = false;
+  }
+  let angebot = null;
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault();
+    angebot = e;
+    $('installSchritte').textContent = 'Mit eigenem Symbol, im Vollbild und offline spielbar.';
+    $('installLos').hidden = false;
+    karte.hidden = false;
+  });
+  $('installLos').addEventListener('click', async () => {
+    if (!angebot) return;
+    angebot.prompt();
+    const { outcome } = await angebot.userChoice;
+    angebot = null;
+    if (outcome === 'accepted') { karte.hidden = true; localStorage.setItem(KEY, 'installiert'); }
+  });
+  $('installZu').addEventListener('click', () => { karte.hidden = true; localStorage.setItem(KEY, 'weg'); });
+  window.addEventListener('appinstalled', () => { karte.hidden = true; localStorage.setItem(KEY, 'installiert'); });
 })();

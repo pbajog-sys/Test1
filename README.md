@@ -81,8 +81,12 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 ## Auf dem Handy nutzen
 Die Dateien müssen über HTTPS ausgeliefert werden, z. B. mit GitHub Pages
 (Repo → Settings → Pages → Branch auswählen). Danach die Seite öffnen und:
-- **iPhone (Safari):** Teilen → „Zum Home-Bildschirm“
-- **Android (Chrome):** Menü ⋮ → „App installieren“ bzw. „Zum Startbildschirm hinzufügen“
+- **iPhone (Safari):** Teilen → „Zum Home-Bildschirm“ – das Dashboard zeigt dazu selbst einen Hinweis.
+- **Android (Chrome):** Knopf „Installieren“ im Dashboard bzw. Menü ⋮ → „App installieren“
+
+Installiert heißt die App **Spielekiste**: eigenes Symbol (`icons/`), Startbildschirm für die gängigen iPhone-Größen
+(`icons/splash/`), Vollbild ohne Browserleiste, offline spielbar. Symbol und Startbilder wurden aus einer HTML-Vorlage
+mit den App-Schriften gerendert.
 
 Fotos, die einmal angezeigt wurden, sind danach auch offline verfügbar.
 

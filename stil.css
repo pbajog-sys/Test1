@@ -1465,3 +1465,24 @@ body.theme-hub #ambient { display: none; }
 .emoji-regen span { position: absolute; top: 0; line-height: 1; will-change: transform; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.25)); }
 
 @media (prefers-reduced-motion: reduce) { .story-ring::before { animation: none !important; } }
+
+/* ---------- Installieren-Hinweis ---------- */
+.install-karte {
+  position: relative; display: flex; align-items: center; gap: 12px; margin-top: 16px; padding: 12px 40px 12px 12px;
+  border-radius: 16px; background: linear-gradient(135deg, rgba(214,41,118,0.16), rgba(79,91,213,0.14)), var(--flaeche, #1d1a17);
+  border: 1px solid rgba(242,237,230,0.12); animation: coverAuftritt .5s cubic-bezier(.2,.8,.2,1) .3s backwards;
+}
+.install-icon { width: 48px; height: 48px; border-radius: 11px; flex: none; box-shadow: 0 4px 12px rgba(0,0,0,0.4); }
+.install-text { display: grid; gap: 2px; font-size: 0.85rem; color: var(--muted, #a69f95); line-height: 1.35; }
+.install-text b { color: var(--text, #f2ede6); font-size: 0.98rem; }
+.install-text b:not(:first-child) { font-size: inherit; }
+.teilen-symbol { display: inline-grid; place-items: center; vertical-align: -3px; color: #4f8dff; }
+.install-los { flex: none; border: 0; border-radius: 999px; padding: 9px 14px; font: inherit; font-weight: 700; background: var(--accent, #e0a64a); color: #1d1407; cursor: pointer; }
+.install-zu { position: absolute; top: 6px; right: 6px; width: 32px; height: 32px; border: 0; background: none; color: var(--muted, #a69f95); font-size: 1.3rem; cursor: pointer; }
+
+/* ---------- Gefühl wie eine App ---------- */
+button, a, .cover, .story, .kz, .wz, .ar-zelle { touch-action: manipulation; -webkit-touch-callout: none; }
+button, .cover, .story { -webkit-user-select: none; user-select: none; }
+@media (display-mode: standalone) {
+  html, body { overscroll-behavior-y: none; }   /* kein Gummiband-Ziehen über den Rand der App */
+}
