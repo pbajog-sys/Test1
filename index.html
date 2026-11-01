@@ -7,7 +7,7 @@
 <meta name="description" content="Lerne alle Walarten kennen und mach das Seepferdchen der Walkunde.">
 <meta name="theme-color" content="#0b2a4a">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=25">
+<link rel="stylesheet" href="fonts/fonts.css?v=26">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -422,7 +422,7 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=25">
+<link rel="stylesheet" href="stil.css?v=26">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -772,12 +772,12 @@
       </div>
 
       <div class="krimi-teil" id="krimi-intro">
-        <div class="krimi-logo" aria-hidden="true">🔎</div>
+        <div class="krimi-logo" id="krimiLogo" aria-hidden="true"></div>
         <h2 class="krimi-titel">Wer war’s?</h2>
         <p class="krimi-lead">Lord Lennart wurde ermordet! Stell alle Personen in den Grundriss und finde heraus, wer es war.</p>
         <ol class="krimi-regeln">
           <li>In <b>jeder Reihe</b> und <b>jeder Spalte</b> steht genau <b>eine Person</b>.</li>
-          <li>Auf 🪴 📚 🕰️ 🎹 kann niemand stehen – auf 🪑 🛋️ 🛏️ und Teppichen schon.</li>
+          <li>Auf <i class="mini" data-moebel="pflanze"></i><i class="mini" data-moebel="regal"></i><i class="mini" data-moebel="uhr"></i><i class="mini" data-moebel="klavier"></i> kann niemand stehen – auf <i class="mini" data-moebel="stuhl"></i><i class="mini" data-moebel="sofa"></i><i class="mini" data-moebel="bett"></i><i class="mini" data-moebel="teppich"></i> schon.</li>
           <li>Alle <b>Hinweise</b> stimmen.</li>
           <li>🔪 Wer <b>allein mit dem Opfer</b> in einem Raum war, ist der Mörder.</li>
         </ol>
@@ -792,8 +792,10 @@
       </div>
 
       <div class="krimi-teil" id="krimi-spiel" hidden>
+        <div class="krimi-sterne" id="krimiSterne"></div>
         <div class="krimi-brett" id="krimiBrett"></div>
         <div class="krimi-status" id="krimiStatus"></div>
+        <div class="krimi-tipp" id="krimiTippText" hidden></div>
         <div class="krimi-modus">
           <button type="button" id="krimiSetzen">👤 Setzen</button>
           <button type="button" id="krimiKreuz">✕ Ausschließen</button>
@@ -812,6 +814,7 @@
         <div class="krimi-name" id="krimiTaeterName"></div>
         <div class="krimi-tatort" id="krimiTatort"></div>
         <div class="krimi-zeit" id="krimiZeit"></div>
+        <div class="krimi-brett krimi-endbrett" id="krimiEndBrett" aria-hidden="true"></div>
         <button class="btn krimi-gross" id="krimiNochmal" type="button">Nächster Fall 🔎</button>
         <button class="btn secondary" id="krimiMenue" type="button">Zum Menü</button>
       </div>
@@ -921,20 +924,21 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=25"></script>
-<script src="haie.js?v=25"></script>
-<script src="porsche.js?v=25"></script>
-<script src="dackel.js?v=25"></script>
-<script src="groesse.js?v=25"></script>
-<script src="gretchen.js?v=25"></script>
-<script src="effekte.js?v=25"></script>
-<script src="app.js?v=25"></script>
-<script src="melden.js?v=25"></script>
-<script src="hub.js?v=25"></script>
-<script src="farben.js?v=25"></script>
-<script src="cello.js?v=25"></script>
-<script src="toene.js?v=25"></script>
-<script src="krimi.js?v=25"></script>
-<script src="profile.js?v=25"></script>
+<script src="wale.js?v=26"></script>
+<script src="haie.js?v=26"></script>
+<script src="porsche.js?v=26"></script>
+<script src="dackel.js?v=26"></script>
+<script src="groesse.js?v=26"></script>
+<script src="gretchen.js?v=26"></script>
+<script src="effekte.js?v=26"></script>
+<script src="app.js?v=26"></script>
+<script src="melden.js?v=26"></script>
+<script src="hub.js?v=26"></script>
+<script src="farben.js?v=26"></script>
+<script src="cello.js?v=26"></script>
+<script src="toene.js?v=26"></script>
+<script src="krimi-grafik.js?v=26"></script>
+<script src="krimi.js?v=26"></script>
+<script src="profile.js?v=26"></script>
 </body>
 </html>

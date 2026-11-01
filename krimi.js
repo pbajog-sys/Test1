@@ -16,19 +16,19 @@ const VERDAECHTIGE = [
   { name: 'Malerin Mia', emoji: '👩‍🎨' },
   { name: 'Doktor Dietrich', emoji: '👨‍⚕️' },
   { name: 'Tante Trude', emoji: '👵' },
-  { name: 'Kapitän Kurt', emoji: '👨‍✈️' },
+  { name: 'Kapitän Hannes', emoji: '👨‍✈️' },
   { name: 'Sängerin Sophie', emoji: '👩‍🎤' },
 ];
 const OPFER = { name: 'Lord Lennart', emoji: '🧐', opfer: true };
 const RAEUME = [
-  { name: 'Küche', im: 'in der Küche', farbe: '#f6dcc4' },
-  { name: 'Salon', im: 'im Salon', farbe: '#dfe7f5' },
-  { name: 'Bibliothek', im: 'in der Bibliothek', farbe: '#e8dcc8' },
-  { name: 'Wintergarten', im: 'im Wintergarten', farbe: '#d9eed6' },
-  { name: 'Speisezimmer', im: 'im Speisezimmer', farbe: '#f3d6da' },
-  { name: 'Schlafzimmer', im: 'im Schlafzimmer', farbe: '#e6dcf2' },
-  { name: 'Bad', im: 'im Bad', farbe: '#d3eef0' },
-  { name: 'Arbeitszimmer', im: 'im Arbeitszimmer', farbe: '#efe7c9' },
+  { name: 'Küche', im: 'in der Küche', farbe: '#efe4cf' },
+  { name: 'Salon', im: 'im Salon', farbe: '#d7a774' },
+  { name: 'Bibliothek', im: 'in der Bibliothek', farbe: '#b8865a' },
+  { name: 'Wintergarten', im: 'im Wintergarten', farbe: '#b7cfae' },
+  { name: 'Speisezimmer', im: 'im Speisezimmer', farbe: '#e0b688' },
+  { name: 'Schlafzimmer', im: 'im Schlafzimmer', farbe: '#c7b3d6' },
+  { name: 'Bad', im: 'im Bad', farbe: '#d3e5ea' },
+  { name: 'Arbeitszimmer', im: 'im Arbeitszimmer', farbe: '#c4976a' },
 ];
 // frei: darf man draufstellen · auf/neben: Text für Hinweise
 const MOEBEL = {
@@ -187,10 +187,202 @@ function loesungenZaehlen(fall, hinweise, grenze = 2) {
   return gefunden;
 }
 
-// Ein ganzer Fall: Grundriss, Personen, Lösung, Hinweise
+// ---------- Logik-Löser: löst wie ein Mensch, Schritt für Schritt ----------
+// Jede Person hat eine Menge möglicher Felder. Die Denkschritte sind nach Schwierigkeit gestuft:
+//   1 – Nur noch ein Feld übrig
+//   2 – Versteckter Einzelner (nur eine Person passt noch in eine Reihe/Spalte),
+//       Hinweise über zwei Personen, Raum-Logik (genau eine Person beim Opfer, „allein“)
+//   3 – Annahme: „Stünde X dort, ginge es nicht mehr auf“ (eine Annahme, dann nur Stufe 1–2)
+// Ein Fall gilt nur, wenn er so komplett lösbar ist – Raten ist nie nötig.
+const reiheVon = (fall, z) => Math.floor(z / fall.n);
+const spalteVon = (fall, z) => z % fall.n;
+const imRaum = (fall, R) => fall.raumListe[R].im;
+
+function logikStart(fall, hinweise, fest = {}) {
+  const { n } = fall;
+  const kand = fall.personen.map((_, p) => {
+    if (fest[p] !== undefined) return new Set([fest[p]]);
+    const eigene = hinweise.filter((h) => h.p === p && h.q === undefined && !h.global);
+    return new Set([...Array(n * n).keys()].filter((z) => begehbar(fall, z) && eigene.every((h) => h.f(z))));
+  });
+  return { kand, gesetzt: kand.map(() => false) };
+}
+const kopie = (st) => ({ kand: st.kand.map((k) => new Set(k)), gesetzt: st.gesetzt.slice() });
+const raeumeVon = (fall, k) => new Set([...k].map((z) => fall.raum[z]));
+const sicherIn = (fall, k, R) => k.size > 0 && [...k].every((z) => fall.raum[z] === R);
+const kannIn = (fall, k, R) => [...k].some((z) => fall.raum[z] === R);
+function entferne(st, p, test) {
+  let weg = 0;
+  for (const z of [...st.kand[p]]) if (test(z)) { st.kand[p].delete(z); weg++; }
+  return weg;
+}
+
+function widerspruch(fall, hinweise, st) {
+  const { n } = fall, N = st.kand.length;
+  if (st.kand.some((k) => k.size === 0)) return true;
+  for (let i = 0; i < n; i++) {
+    if (!st.kand.some((k) => [...k].some((z) => reiheVon(fall, z) === i))) return true;
+    if (!st.kand.some((k) => [...k].some((z) => spalteVon(fall, z) === i))) return true;
+  }
+  if (st.kand.every((k) => k.size === 1)) {
+    const pl = st.kand.map((k) => [...k][0]);
+    for (let p = 0; p < N; p++) for (let q = p + 1; q < N; q++) {
+      if (reiheVon(fall, pl[p]) === reiheVon(fall, pl[q]) || spalteVon(fall, pl[p]) === spalteVon(fall, pl[q])) return true;
+    }
+    const or = fall.raum[pl[N - 1]];
+    if (pl.filter((z) => fall.raum[z] === or).length !== 2) return true;
+    if (!hinweise.every((h) => (h.q !== undefined ? h.f(pl[h.p], pl[h.q]) : h.f(pl[h.p], pl)))) return true;
+  }
+  return false;
+}
+
+// Stufe 1: Person hat nur noch ein Feld → steht dort; Reihe und Spalte sind für alle anderen weg
+function schrittEinzel(fall, hinweise, st) {
+  for (let p = 0; p < st.kand.length; p++) {
+    if (st.gesetzt[p] || st.kand[p].size !== 1) continue;
+    const z = [...st.kand[p]][0];
+    st.gesetzt[p] = true;
+    st.kand.forEach((_, q) => { if (q !== p) entferne(st, q, (y) => reiheVon(fall, y) === reiheVon(fall, z) || spalteVon(fall, y) === spalteVon(fall, z)); });
+    return { stufe: 1, art: 'einzel', p, z, text: fall.personen[p].name + ' kann nur noch auf einem Feld stehen.' };
+  }
+  return null;
+}
+
+// Stufe 2a: In eine Reihe/Spalte passt nur noch eine Person → sie muss dort stehen
+function schrittVersteckt(fall, hinweise, st) {
+  const { n } = fall;
+  for (const [lage, von, wort] of [['Reihe', reiheVon, 'Reihe'], ['Spalte', spalteVon, 'Spalte']]) {
+    for (let i = 0; i < n; i++) {
+      const wer = st.kand.map((k, p) => ([...k].some((z) => von(fall, z) === i) ? p : -1)).filter((p) => p >= 0);
+      if (wer.length !== 1) continue;
+      const p = wer[0];
+      if (entferne(st, p, (z) => von(fall, z) !== i)) {
+        return { stufe: 2, art: 'versteckt', p, text: 'In die ' + (i + 1) + '. ' + wort + ' passt nur noch ' + fall.personen[p].name + '.' };
+      }
+    }
+  }
+  return null;
+}
+
+// Stufe 2b: Hinweise über zwei Personen – Felder ohne passenden Partner fallen weg
+function schrittPaar(fall, hinweise, st) {
+  for (const h of hinweise) {
+    if (h.q === undefined) continue;
+    for (const [a, b, f] of [[h.p, h.q, (x, y) => h.f(x, y)], [h.q, h.p, (x, y) => h.f(y, x)]]) {
+      const weg = entferne(st, a, (z) => ![...st.kand[b]].some((y) => y !== z && reiheVon(fall, y) !== reiheVon(fall, z) && spalteVon(fall, y) !== spalteVon(fall, z) && f(z, y)));
+      if (weg) return { stufe: 2, art: 'paar', p: a, text: 'Wegen „' + h.text.replace(/\.$/, '') + '“ ' + (weg === 1 ? 'fällt für ' + fall.personen[a].name + ' ein Feld' : 'fallen für ' + fall.personen[a].name + ' ' + weg + ' Felder') + ' weg.' };
+    }
+  }
+  return null;
+}
+
+// Stufe 2c: Raum-Logik – beim Opfer war genau eine weitere Person, „allein“ heißt allein
+function schrittRaum(fall, hinweise, st) {
+  const N = st.kand.length, V = N - 1, P = (p) => fall.personen[p].name;
+  const andere = (p) => [...Array(N).keys()].filter((q) => q !== p);
+  // Opfer: Räume ausschließen, in denen keine oder schon zwei andere Personen sicher sind
+  for (const R of raeumeVon(fall, st.kand[V])) {
+    const koennen = andere(V).filter((q) => kannIn(fall, st.kand[q], R));
+    const sicher = andere(V).filter((q) => sicherIn(fall, st.kand[q], R));
+    if (koennen.length === 0 || sicher.length >= 2) {
+      entferne(st, V, (z) => fall.raum[z] === R);
+      return { stufe: 2, art: 'raum', p: V, text: 'Beim Opfer war genau eine weitere Person – ' + (koennen.length ? 'aber ' + imRaum(fall, R) + ' waren schon zwei.' : 'aber ' + imRaum(fall, R) + ' kann sonst niemand sein.') + ' Also war ' + P(V) + ' nicht ' + imRaum(fall, R) + '.' };
+    }
+  }
+  const opferRaeume = raeumeVon(fall, st.kand[V]);
+  if (opferRaeume.size === 1) {
+    const R = [...opferRaeume][0];
+    const sicher = andere(V).filter((q) => sicherIn(fall, st.kand[q], R));
+    if (sicher.length === 1) {
+      for (const q of andere(V)) {
+        if (q !== sicher[0] && entferne(st, q, (z) => fall.raum[z] === R)) {
+          return { stufe: 2, art: 'raum', p: q, text: P(V) + ' und ' + P(sicher[0]) + ' waren ' + imRaum(fall, R) + ' – mehr Personen waren dort nicht. Also war ' + P(q) + ' nicht ' + imRaum(fall, R) + '.' };
+        }
+      }
+    }
+    const koennen = andere(V).filter((q) => kannIn(fall, st.kand[q], R));
+    if (koennen.length === 1 && entferne(st, koennen[0], (z) => fall.raum[z] !== R)) {
+      return { stufe: 2, art: 'raum', p: koennen[0], text: 'Beim Opfer ' + imRaum(fall, R) + ' war genau eine Person – das kann nur ' + P(koennen[0]) + ' sein.' };
+    }
+  }
+  // „X war ganz allein im Raum“
+  for (const h of hinweises(hinweise, 'allein')) {
+    const p = h.p;
+    const R1 = raeumeVon(fall, st.kand[p]);
+    if (R1.size === 1) {
+      const R = [...R1][0];
+      for (const q of andere(p)) {
+        if (entferne(st, q, (z) => fall.raum[z] === R)) return { stufe: 2, art: 'raum', p: q, text: P(p) + ' war allein ' + imRaum(fall, R) + ' – also war ' + P(q) + ' nicht dort.' };
+      }
+    }
+    for (const q of andere(p)) {
+      const Rq = raeumeVon(fall, st.kand[q]);
+      if (Rq.size === 1) {
+        const R = [...Rq][0];
+        if (entferne(st, p, (z) => fall.raum[z] === R)) return { stufe: 2, art: 'raum', p, text: P(q) + ' war sicher ' + imRaum(fall, R) + ' – und ' + P(p) + ' war allein, also nicht dort.' };
+      }
+    }
+  }
+  return null;
+}
+const hinweises = (hinweise, art) => hinweise.filter((h) => h.art === art);
+
+const LEICHTE_SCHRITTE = [schrittEinzel, schrittVersteckt, schrittPaar, schrittRaum];
+function propagiere(fall, hinweise, st) {
+  for (;;) {
+    if (widerspruch(fall, hinweise, st)) return false;
+    if (!LEICHTE_SCHRITTE.some((f) => f(fall, hinweise, st))) return true;
+  }
+}
+
+// Stufe 3: Annahme durchspielen – führt sie zum Widerspruch, fällt das Feld weg
+function schrittAnnahme(fall, hinweise, st) {
+  const reihenfolge = [...st.kand.keys()].filter((p) => st.kand[p].size > 1).sort((a, b) => st.kand[a].size - st.kand[b].size);
+  for (const p of reihenfolge) {
+    for (const z of st.kand[p]) {
+      const probe = kopie(st);
+      probe.kand[p] = new Set([z]);
+      if (!propagiere(fall, hinweise, probe)) {
+        st.kand[p].delete(z);
+        const R = fall.raum[z];
+        return { stufe: 3, art: 'annahme', p, text: 'Angenommen, ' + fall.personen[p].name + ' stünde ' + imRaum(fall, R) + ' in Reihe ' + (reiheVon(fall, z) + 1) + ', Spalte ' + (spalteVon(fall, z) + 1) + ' – dann ginge es nicht mehr auf. Also nicht dort.' };
+      }
+    }
+  }
+  return null;
+}
+
+function logikLoesen(fall, hinweise, fest) {
+  const st = logikStart(fall, hinweise, fest);
+  const schritte = [];
+  while (!st.gesetzt.every(Boolean)) {
+    if (widerspruch(fall, hinweise, st)) return { geloest: false, schritte };
+    const s = LEICHTE_SCHRITTE.reduce((x, f) => x || f(fall, hinweise, st), null) || schrittAnnahme(fall, hinweise, st);
+    if (!s) return { geloest: false, schritte };
+    schritte.push(s);
+    if (schritte.length > 400) return { geloest: false, schritte };
+  }
+  const geloest = st.kand.every((k, p) => [...k][0] === fall.loesung[p]);
+  return { geloest, schritte };
+}
+
+function bewerten(ergebnis) {
+  const s = ergebnis.schritte;
+  const s2 = s.filter((x) => x.stufe === 2).length, s3 = s.filter((x) => x.stufe === 3).length;
+  return { s2, s3, denkschritte: s.length, punkte: s2 + 4 * s3, sterne: s3 >= 2 ? 3 : s3 === 1 || s2 >= 4 ? 2 : 1 };
+}
+// Was ein Fall der Stufe braucht: Leicht ohne Annahmen, Mittel mit echten Schlussfolgerungen, Schwer mit Annahme
+const KRIMI_ZIEL = {
+  leicht: (b) => b.s3 === 0 && b.s2 <= 4,
+  mittel: (b) => b.s3 === 0 && b.s2 >= 3,
+  schwer: (b) => b.s3 >= 1,
+};
+
+// Ein ganzer Fall: Grundriss, Personen, Lösung, Hinweise – dann mit dem Logik-Löser geprüft und bewertet
 function erzeugeFall(stufe, rnd) {
   const { n, raeume } = KRIMI_STUFEN[stufe];
-  for (let versuch = 0; versuch < 300; versuch++) {
+  let notfall = null;
+  for (let versuch = 0; versuch < 400; versuch++) {
     const raum = raeumeAufteilen(n, raeume, rnd);
     if (!raum) continue;
     const fall = { stufe, n, raum, moebel: moebelVerteilen(n, rnd), raumListe: mischen(RAEUME, rnd).slice(0, raeume) };
@@ -200,7 +392,7 @@ function erzeugeFall(stufe, rnd) {
     const opferRaum = raum[fall.loesung[n - 1]];
     if (fall.loesung.filter((z) => raum[z] === opferRaum).length !== 2) continue;
     fall.moerder = fall.loesung.findIndex((z, i) => i !== n - 1 && raum[z] === opferRaum);
-    // Hinweise sammeln, bis die Lösung eindeutig ist – dann überflüssige wieder weglassen
+    // 1. Hinweise sammeln, bis genau eine Lösung bleibt (Zähl-Löser)
     const pool = mischen(alleHinweise(fall, rnd), rnd);
     const hinweise = [];
     for (const h of pool) {
@@ -208,15 +400,23 @@ function erzeugeFall(stufe, rnd) {
       if (loesungenZaehlen(fall, hinweise) === 1) break;
     }
     if (loesungenZaehlen(fall, hinweise) !== 1) continue;
+    // 2. Überflüssige Hinweise weglassen – aber nur, wenn der Fall danach noch ohne Raten lösbar ist
     for (const h of mischen(hinweise, rnd)) {
       const ohne = hinweise.filter((x) => x !== h);
-      if (loesungenZaehlen(fall, ohne) === 1) hinweise.splice(hinweise.indexOf(h), 1);
+      if (loesungenZaehlen(fall, ohne) === 1 && logikLoesen(fall, ohne).geloest) hinweise.splice(hinweise.indexOf(h), 1);
     }
-    // In Lesereihenfolge: erst Hinweise zu einzelnen Personen, dann die über zwei
+    // 3. Logik-Löser: komplett ohne Raten lösbar? Wie schwer?
+    const ergebnis = logikLoesen(fall, hinweise);
+    if (!ergebnis.geloest) continue;
+    fall.bewertung = bewerten(ergebnis);
     fall.hinweise = hinweise.sort((a, b) => (a.q !== undefined) - (b.q !== undefined) || a.p - b.p);
-    return fall;
+    if (KRIMI_ZIEL[stufe](fall.bewertung)) return fall;
+    // Falls die Stufe lange nicht getroffen wird: den passendsten Fall nehmen
+    const naehe = (b) => (stufe === 'schwer' ? b.punkte : stufe === 'leicht' ? -b.punkte : -Math.abs(b.s2 - 4) - 4 * b.s3);
+    if (!notfall || naehe(fall.bewertung) > naehe(notfall.bewertung)) notfall = fall;
+    if (versuch > 120 && notfall) return notfall;
   }
-  return null;
+  return notfall;
 }
 
 // ---------- Spiel ----------
@@ -258,6 +458,8 @@ function krimiStart(tag) {
     if (!fall) return;
     kf = { fall, platz: new Array(fall.personen.length).fill(-1), kreuz: new Set(), wahl: 0, modus: 'setzen', start: Date.now(), hilfen: 0, tag };
     kf.timer = setInterval(krimiUhr, 1000);
+    $('krimiTippText').hidden = true;
+    $('krimiSterne').textContent = 'Schwierigkeit ' + '★'.repeat(fall.bewertung.sterne) + '☆'.repeat(3 - fall.bewertung.sterne) + ' · ' + fall.bewertung.denkschritte + ' Denkschritte';
     krimiTeil('spiel');
     krimiZeichnen();
     krimiUhr();
@@ -285,22 +487,23 @@ function krimiZeichnen() {
     d.type = 'button';
     d.className = 'kz';
     const r = Math.floor(z / n), c = z % n, R = raum[z];
-    d.style.background = raumListe[R].farbe;
+    d.style.setProperty('--boden', raumListe[R].farbe);
+    d.classList.add('boden-' + (KRIMI_BODEN[raumListe[R].name] || 'parkett'));
+    d.dataset.raum = R;
     const wand = (j, rand) => (rand || raum[j] !== R ? '3px solid #2b1d14' : '1px solid rgba(43,29,20,0.15)');
     d.style.borderTop = wand(z - n, r === 0);
     d.style.borderBottom = wand(z + n, r === n - 1);
     d.style.borderLeft = wand(z - 1, c === 0);
     d.style.borderRight = wand(z + 1, c === n - 1);
-    if (moebel[z] === 'teppich') d.classList.add('teppich');
+    if (moebel[z] === 'teppich') { const t = document.createElement('span'); t.className = 'kz-teppich'; t.innerHTML = KRIMI_MOEBEL_SVG.teppich; d.appendChild(t); }
     if (moebel[z] && !MOEBEL[moebel[z]].frei) d.classList.add('fest');
     if (ersteZelle[R] === z) { const l = document.createElement('span'); l.className = 'kz-raum'; l.textContent = raumListe[R].name; d.appendChild(l); }
-    if (moebel[z] && MOEBEL[moebel[z]].emoji) { const m = document.createElement('span'); m.className = 'kz-moebel'; m.textContent = MOEBEL[moebel[z]].emoji; d.appendChild(m); }
+    if (moebel[z] && moebel[z] !== 'teppich') { const m = document.createElement('span'); m.className = 'kz-moebel m-' + moebel[z]; m.innerHTML = KRIMI_MOEBEL_SVG[moebel[z]]; d.appendChild(m); }
     const p = platz.indexOf(z);
     if (p >= 0) {
-      const t = document.createElement('span');
-      t.className = 'kz-person' + (personen[p].opfer ? ' opfer' : '') + (konflikt.has(z) ? ' konflikt' : '');
-      t.textContent = personen[p].emoji;
+      const t = krimiFigur(personen[p], 'kz-person' + (konflikt.has(z) ? ' konflikt' : ''));
       d.appendChild(t);
+      d.classList.add('besetzt');
       d.setAttribute('aria-label', personen[p].name);
     } else if (kreuz.has(z)) {
       const x = document.createElement('span'); x.className = 'kz-kreuz'; x.textContent = '✕'; d.appendChild(x);
@@ -315,8 +518,8 @@ function krimiZeichnen() {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = 'kp' + (kf.wahl === p && kf.modus === 'setzen' ? ' an' : '') + (platz[p] >= 0 ? ' gesetzt' : '') + (pe.opfer ? ' opfer' : '');
-    b.innerHTML = '<span class="kp-e"></span><span class="kp-n"></span>';
-    b.querySelector('.kp-e').textContent = pe.emoji;
+    b.innerHTML = '<span class="kp-n"></span>';
+    b.prepend(krimiFigur(pe, 'kp-fig'));
     b.querySelector('.kp-n').textContent = pe.opfer ? 'Opfer' : pe.name.split(' ').pop();
     b.title = pe.name;
     b.addEventListener('click', () => { kf.wahl = p; kf.modus = 'setzen'; krimiZeichnen(); });
@@ -340,6 +543,7 @@ function krimiZeichnen() {
 
 function zelleTippen(z, el) {
   if (kf.vorbei) return;
+  $('krimiTippText').hidden = true;
   const { fall, platz, kreuz } = kf;
   const p = platz.indexOf(z);
   if (kf.modus === 'kreuz') {
@@ -380,21 +584,41 @@ function pruefeFall() {
   $('krimiBrett').classList.remove('shake'); void $('krimiBrett').offsetWidth; $('krimiBrett').classList.add('shake');
 }
 
+// 💡 Tipp: Der Logik-Löser rechnet von den richtig gesetzten Personen aus weiter und erklärt den nächsten Denkschritt.
 function krimiTipp() {
   if (kf.vorbei) return;
   const { fall, platz } = kf;
-  // erst falsch gesetzte Person zurücknehmen, sonst eine fehlende richtig setzen
-  let p = platz.findIndex((z, i) => z >= 0 && z !== fall.loesung[i]);
-  if (p < 0) p = platz.findIndex((z) => z < 0);
-  if (p < 0) return;
-  const andere = platz.indexOf(fall.loesung[p]);
-  if (andere >= 0) platz[andere] = -1;
-  platz[p] = fall.loesung[p];
   kf.hilfen++;
+  const falsch = platz.findIndex((z, i) => z >= 0 && z !== fall.loesung[i]);
+  if (falsch >= 0) {
+    platz[falsch] = -1;
+    kf.wahl = falsch;
+    krimiZeichnen();
+    krimiTippZeigen('🕵️ ' + fall.personen[falsch].name + ' stand nicht richtig – ich habe die Figur wieder vom Plan genommen.');
+    return;
+  }
+  const fest = {};
+  platz.forEach((z, p) => { if (z >= 0) fest[p] = z; });
+  const { schritte } = logikLoesen(fall, fall.hinweise, fest);
+  const i = schritte.findIndex((st) => st.art === 'einzel' && platz[st.p] < 0);
+  if (i < 0) return;
+  const p = schritte[i].p;
+  // der Denkschritt, der diese Person festgelegt hat (sonst der allgemeinste davor)
+  const grund = schritte.slice(0, i).reverse().find((st) => st.p === p && st.art !== 'einzel');
+  platz[p] = fall.loesung[p];
   const naechste = platz.findIndex((x) => x < 0);
   if (naechste >= 0) kf.wahl = naechste;
   krimiZeichnen();
+  const z = fall.loesung[p];
+  krimiTippZeigen('💡 ' + (grund ? grund.text + ' Damit bleibt für ' + fall.personen[p].name + ' nur ein Feld.'
+    : 'Für ' + fall.personen[p].name + ' bleibt nur noch ein freies Feld: Reihe ' + (reiheVon(fall, z) + 1) + ', Spalte ' + (spalteVon(fall, z) + 1) + '.'));
   pruefeFall();
+}
+function krimiTippZeigen(text) {
+  const t = $('krimiTippText');
+  t.textContent = text;
+  t.hidden = false;
+  t.classList.remove('neu'); void t.offsetWidth; t.classList.add('neu');
 }
 
 function fallGeloest() {
@@ -409,12 +633,18 @@ function fallGeloest() {
   if (kf.tag) st.tag[heute() + ':' + fall.stufe] = true;
   saveJson(KRIMI_KEY, st);
   const m = fall.personen[fall.moerder];
-  $('krimiTaeter').textContent = m.emoji;
+  $('krimiTaeter').replaceChildren(krimiFigur(m, 'krimi-taeter-fig'));
+  // Grundriss der Lösung: nur der Tatort leuchtet
+  const eb = $('krimiEndBrett');
+  eb.innerHTML = $('krimiBrett').innerHTML;
+  eb.style.setProperty('--n', fall.n);
+  eb.dataset.tatort = fall.raum[fall.loesung[fall.personen.length - 1]];
+  eb.querySelectorAll('.kz').forEach((c) => c.classList.toggle('tatort', c.dataset.raum === eb.dataset.tatort));
   $('krimiTaeterName').textContent = m.name;
   $('krimiTatort').textContent = 'allein mit ' + OPFER.name + ' ' + fall.raumListe[fall.raum[fall.loesung[fall.personen.length - 1]]].im;
   $('krimiZeit').textContent = '⏱ ' + zeitText(sek) + (kf.hilfen ? ' · 💡 ' + kf.hilfen + (kf.hilfen === 1 ? ' Tipp' : ' Tipps') : '') + (neu ? ' · 🏆 Bestzeit!' : '');
   krimiTeil('ende');
-  konfetti(50, ['🔎', '🕵️', '✨', '🎉', '🗝️']);
+  setTimeout(() => konfetti(26, ['✨', '🗝️', '🔎']), 500);
 }
 
 document.querySelectorAll('#krimiStufen button').forEach((b) => b.addEventListener('click', () => {
@@ -439,3 +669,8 @@ $('krimiAufgeben').addEventListener('click', () => {
 });
 $('krimiZurueck').addEventListener('click', () => { if (kf) clearInterval(kf.timer); kf = null; zeigeHub(); });
 $('hubKrimi').addEventListener('click', () => zoomZu($('hubKrimi'), () => { show('krimi', '🔎 Wer war\'s?'); krimiIntro(); }));
+
+// Grafiken einsetzen (aus krimi-grafik.js)
+$('krimiLogo').innerHTML = KRIMI_VILLA;
+document.querySelector('#hubKrimi .hc-krimi-icon').innerHTML = KRIMI_LUPE;
+document.querySelectorAll('[data-moebel]').forEach((el) => { el.innerHTML = KRIMI_MOEBEL_SVG[el.dataset.moebel]; });
