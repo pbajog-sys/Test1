@@ -1148,7 +1148,7 @@ body.theme-hub {
   background-image: repeating-linear-gradient(transparent 0 25px, rgba(43,29,20,0.07) 25px 26px);
   animation: kartenAuftritt .5s var(--ease-spring) backwards;
 }
-.akte-kapitel:nth-of-type(odd) { transform: rotate(-0.4deg); } .akte-kapitel:nth-of-type(even) { transform: rotate(0.4deg); }
+.akte-kapitel:nth-of-type(even) { transform: rotate(-0.4deg); } .akte-kapitel:nth-of-type(odd) { transform: rotate(0.4deg); }
 .akte-kapitel.zu { opacity: .5; cursor: default; filter: grayscale(.6); }
 .akte-kapitel.dran { box-shadow: 0 0 0 3px #d9a441, 0 8px 24px rgba(217,164,65,0.35); }
 .akk-nr { font-family: "Bebas Neue", Impact, sans-serif; font-size: 2rem; color: #a3241f; width: 22px; text-align: center; }

@@ -171,3 +171,12 @@ bis ein Zähl-Löser genau eine Lösung findet; überflüssige Hinweise werden g
 in Stufen denkt (Einzelfeld → Schlussfolgerung aus einem Hinweis → Annahme), prüft, dass man nie raten muss – die
 nötigen Denkschritte bestimmen die Schwierigkeit und liefern die Erklärungen für den Tipp.
 `krimi-zentrale.js` enthält Menü, Einstellungen, Uhr, Rekorde und den Auflösungs-Bildschirm.
+
+## 📱🖥️ Ansichten (automatisch)
+- **Hochformat** (Handy): alles untereinander – wie gewohnt.
+- **Querformat** (Handy quer, Tablet, Desktop): Die Seiten sind in zwei Hälften aufgeteilt
+  (`.spalten > .spalte-a / .spalte-b` in `index.html`, Regeln in `ansichten.css`). Im Hochformat sind diese Hüllen
+  unsichtbar (`display: contents`). Spielbrett bzw. Foto links (bleibt beim Scrollen stehen), Bedienung und Hinweise rechts.
+- **Handy quer** (wenig Höhe): kompaktere Köpfe, Bretter passen in die Bildschirmhöhe.
+- **Vollbild**: Knopf ⛶ im Dashboard (Desktop und Android). Als installierte App darf Android jetzt auch quer drehen.
+

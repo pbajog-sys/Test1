@@ -137,3 +137,20 @@ if (pendingChallenge) {
 } else {
   zeigeHub();
 }
+
+// Vollbild (Desktop und Android – das iPhone kann das im Browser nicht, dort: „Zum Home-Bildschirm“)
+(() => {
+  const btn = $('vollbildBtn');
+  const el = document.documentElement;
+  const kann = document.fullscreenEnabled || document.webkitFullscreenEnabled;
+  if (!kann || window.matchMedia('(display-mode: standalone)').matches) return;
+  btn.hidden = false;
+  const an = () => !!(document.fullscreenElement || document.webkitFullscreenElement);
+  const zeichnen = () => { btn.textContent = an() ? '✕' : '⛶'; btn.title = an() ? 'Vollbild beenden' : 'Vollbild'; };
+  btn.addEventListener('click', () => {
+    if (an()) (document.exitFullscreen || document.webkitExitFullscreen).call(document);
+    else (el.requestFullscreen || el.webkitRequestFullscreen).call(el).catch?.(() => {});
+  });
+  document.addEventListener('fullscreenchange', zeichnen);
+  document.addEventListener('webkitfullscreenchange', zeichnen);
+})();

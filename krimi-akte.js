@@ -90,6 +90,12 @@ function akteZeigen() {
   kAktiv = { teil: 'akte', modus: null, akte: null };
   const box = $('krimi-akte');
   box.innerHTML = '';
+  // zwei Spalten (greifen nur im Querformat): links das Deckblatt, rechts Kapitel und Anklage
+  const spalten = Object.assign(document.createElement('div'), { className: 'spalten akte-spalten' });
+  const spA = Object.assign(document.createElement('div'), { className: 'spalte spalte-a' });
+  const spB = Object.assign(document.createElement('div'), { className: 'spalte spalte-b' });
+  spalten.append(spA, spB);
+  box.appendChild(spalten);
   // Deckblatt
   const deck = document.createElement('div');
   deck.className = 'akte-deckblatt';
@@ -105,7 +111,7 @@ function akteZeigen() {
     d.append(krimiFigur(pe, 'akte-pbild'), Object.assign(document.createElement('span'), { textContent: pe.name }));
     deck.querySelector('.akte-leute').appendChild(d);
   });
-  box.appendChild(deck);
+  spA.appendChild(deck);
   // Kapitel
   let offenGefunden = false;
   AKTE_KAPITEL.forEach((k, i) => {
@@ -122,7 +128,7 @@ function akteZeigen() {
     c.querySelector('small').textContent = k.text;
     if (fertig) c.querySelector('.akk-beweis').textContent = a.erledigt[k.id];
     if (dran || fertig) c.addEventListener('click', () => akteKapitelStarten(k.id));
-    box.appendChild(c);
+    spB.appendChild(c);
   });
   // Finale
   const fin = document.createElement('div');
@@ -156,7 +162,7 @@ function akteZeigen() {
       });
     }
   }
-  box.appendChild(fin);
+  spB.appendChild(fin);
   krimiTeil('akte');
   krimiHilfeBeimErstenMal('akte');
 }

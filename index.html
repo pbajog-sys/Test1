@@ -7,7 +7,7 @@
 <meta name="description" content="Lerne alle Walarten kennen und mach das Seepferdchen der Walkunde.">
 <meta name="theme-color" content="#0b2a4a">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=32">
+<link rel="stylesheet" href="fonts/fonts.css?v=33">
 <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
@@ -422,7 +422,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=32">
+<link rel="stylesheet" href="stil.css?v=33">
+<link rel="stylesheet" href="ansichten.css?v=33">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -436,9 +437,11 @@
   <!-- Dashboard -->
   <section class="screen active" id="screen-hub">
     <div class="hub-kopf">
-      <div class="hub-zeile"><div class="hub-gruss">Hey! 👋 Was spielen wir?</div><button class="profil-btn" id="profilBtn" type="button" hidden></button></div>
+      <div class="hub-zeile"><div class="hub-gruss">Hey! 👋 Was spielen wir?</div><span class="hub-knoepfe"><button class="vollbild-btn" id="vollbildBtn" type="button" aria-label="Vollbild" title="Vollbild" hidden>⛶</button><button class="profil-btn" id="profilBtn" type="button" hidden></button></span></div>
       <h1 class="hub-titel">Spiele</h1>
     </div>
+    <div class="spalten hub-spalten">
+    <div class="spalte spalte-a">
     <div class="hub-familie" id="hubFamilie" hidden>
       <h2 class="hub-h"><span>🏆</span> Bestenliste</h2>
       <ul class="familie-liste" id="familieListe"></ul>
@@ -449,6 +452,8 @@
       <span class="hq-text"><span class="hq-titel">Quizzes</span><span class="hq-sub">Wale · Haie · Porsche · Dackel</span><span class="hq-stand" id="hubQuizStand"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
+    </div>
+    <div class="spalte spalte-b">
     <h2 class="hub-h"><span>🎮</span> Games</h2>
     <button class="hub-game" id="hubFarben" type="button">
       <span class="hg-av hg-av-farben" aria-hidden="true"><span class="hg-in"><span class="farb-logo"><span></span><span></span><span></span><span></span><span></span></span></span></span>
@@ -471,6 +476,8 @@
       <span class="hg-pfeil">▶</span>
     </button>
     <div class="hub-mehr">Bald mehr Games ✨</div>
+    </div>
+    </div>
     <a class="hub-ds" href="datenschutz.html">Datenschutz</a>
   </section>
 
@@ -492,6 +499,8 @@
       <button data-welt="porsche" type="button"><span>🏎️</span>Porsche</button>
       <button data-welt="dackel" type="button"><span>🐕</span>Dackel</button>
     </div>
+    <div class="spalten start-spalten">
+    <div class="spalte spalte-a">
     <div class="hero">
       <img class="logo" id="heroLogo" src="icons/icon.svg" alt="">
       <div class="hero-emoji" id="heroEmoji" hidden>🏎️</div>
@@ -511,6 +520,8 @@
       <p id="challengeText"></p>
       <div class="row"><button class="btn" id="challengeGo">Annehmen 💪</button><button class="btn secondary" id="challengeNo">Später</button></div>
     </div>
+    </div>
+    <div class="spalte spalte-b">
     <div class="menu">
       <button class="menu-btn" data-go="pick-practice">
         <span class="emoji" id="practiceEmoji">🐋</span>
@@ -531,6 +542,8 @@
     </div>
     <div class="learn"><div class="muted" id="learnText"></div><div class="bar"><div id="learnBar"></div></div></div>
     <div class="badges" id="badges"></div>
+    </div>
+    </div>
     <button class="melde-link" id="meldeAllgemein" type="button">🐞 Fehler oder Idee melden</button>
   </section>
 
@@ -544,6 +557,8 @@
   <section class="screen" id="screen-quiz">
     <div class="progress"><span id="qCounter"></span><span id="qScore"></span></div>
     <div class="bar"><div id="qBar"></div></div>
+    <div class="spalten quiz-spalten">
+    <div class="spalte spalte-a">
     <div class="gretchen-box" id="gretchenBox" hidden>
       <span class="ig-ring small"><img id="gretchenImg" alt="Gretchen"></span>
       <div class="bubble" id="gretchenBubble"></div>
@@ -563,6 +578,8 @@
     </div>
     <div class="credit" id="qCredit"></div>
 
+    </div>
+    <div class="spalte spalte-b">
     <div class="q-row">
       <div class="question" id="questionText">Welcher Wal ist das?</div>
       <button class="tip-btn" id="tipBtn" type="button">💡 Tipp</button>
@@ -583,11 +600,15 @@
       <div id="fbExtra"></div>
     </div>
     <div class="next-row" id="nextRow"><button class="btn" id="nextBtn">Weiter</button></div>
+    </div>
+    </div>
   </section>
 
   <!-- Ergebnis -->
   <section class="screen" id="screen-result">
     <div class="result">
+      <div class="spalten result-spalten">
+      <div class="spalte spalte-a">
       <div id="resultHead"></div>
       <div class="big" id="resultScore"></div>
       <div class="vs" id="resultVs" hidden></div>
@@ -598,6 +619,8 @@
         <button class="btn" id="storyBtn" type="button">📸 Story-Bild für Instagram</button>
         <div class="msg" id="storyMsg"></div>
       </div>
+      </div>
+      <div class="spalte spalte-b">
       <div class="share">
         <label for="nameInput" id="shareLabel">Fordere Freunde mit denselben Walen heraus:</label>
         <div class="row">
@@ -607,6 +630,8 @@
         <div class="msg" id="shareMsg"></div>
       </div>
       <ul class="review" id="review"></ul>
+      </div>
+      </div>
       <div class="result-actions">
         <button class="btn" id="againBtn">Nochmal versuchen</button>
         <button class="btn secondary" id="practiceBtn">Diese Stufe üben</button>
@@ -649,9 +674,13 @@
       </div>
 
       <div class="farb-teil" id="farb-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="farb-logo" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
         <h2>Farb-Gedächtnis</h2>
         <p>Eine Farbe blitzt kurz auf. Dann mischst du sie aus dem Kopf nach – mit Farbton, Sättigung und Helligkeit. Fünf Farben, bis zu 50 Punkte.</p>
+        </div>
+        <div class="spalte spalte-b">
         <div class="farb-challenge" id="farbChallenge" hidden></div>
         <div class="farb-wahl" id="farbReglerWahl">
           <span>Regler:</span><button type="button" data-regler="rgb">Rot · Grün · Blau</button><button type="button" data-regler="hsb">Farbton · Sättigung · Helligkeit</button>
@@ -664,6 +693,8 @@
         <button class="btn farb-gross" id="farbLos" type="button">Los geht’s 🎨</button>
         <button class="btn secondary" id="farbTagBtn" type="button">📅 Tagesfarben</button>
         <div class="muted farb-best" id="farbBest"></div>
+        </div>
+        </div>
       </div>
 
       <div class="farb-teil farb-mitte" id="farb-zeigen" hidden>
@@ -672,7 +703,11 @@
       </div>
 
       <div class="farb-teil" id="farb-mischen" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="farb-vorschau" id="farbVorschau"><span>Deine Farbe</span></div>
+        </div>
+        <div class="spalte spalte-b">
         <div class="farb-reglergruppe" id="farbReglerRgb">
           <label class="farb-regler rgb-r"><span>Rot <b id="farbWert-r"></b></span><input type="range" id="farbRegler-r" min="0" max="255" step="1"></label>
           <label class="farb-regler rgb-g"><span>Grün <b id="farbWert-g"></b></span><input type="range" id="farbRegler-g" min="0" max="255" step="1"></label>
@@ -684,15 +719,21 @@
           <label class="farb-regler">Helligkeit<input type="range" id="farbRegler-v" min="0" max="100" step="1"></label>
         </div>
         <button class="btn farb-gross" id="farbFertig" type="button">Fertig ✓</button>
+        </div>
+        </div>
       </div>
 
       <div class="farb-teil" id="farb-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="farb-vergleich">
           <div class="farb-halb" id="farbZiel"><span>Original<small id="farbZielHex"></small></span></div>
           <div class="farb-halb" id="farbDein"><span>Deine<small id="farbDeinHex"></small></span></div>
         </div>
         <div class="farb-punkte" id="farbPunkte"></div>
         <div class="farb-kommentar" id="farbKommentar"></div>
+        </div>
+        <div class="spalte spalte-b">
         <div class="farb-analyse">
           <div class="farb-tipp" id="farbTipp"></div>
           <table class="farb-tabelle" id="farbRgb"></table>
@@ -701,16 +742,24 @@
           <div class="farb-deltae" id="farbDeltaE"></div>
         </div>
         <button class="btn farb-gross" id="farbWeiter" type="button">Nächste Farbe</button>
+        </div>
+        </div>
       </div>
 
       <div class="farb-teil" id="farb-ende" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="farb-summe" id="farbSumme"></div>
         <div class="farb-rekord" id="farbRekord"></div>
         <div class="farb-rekord" id="farbVergleich" hidden></div>
+        </div>
+        <div class="spalte spalte-b">
         <ul class="farb-liste" id="farbListe"></ul>
         <button class="btn farb-gross" id="farbTeilen" type="button">📤 Ergebnis teilen</button>
         <div class="muted" id="farbTeilenMsg"></div>
         <button class="btn secondary" id="farbNochmal" type="button">Nochmal spielen</button>
+        </div>
+        </div>
       </div>
     </div>
   </section>
@@ -724,9 +773,13 @@
       </div>
 
       <div class="cello-teil" id="cello-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <h2 class="cello-titel">Cello-Noten</h2>
         <p class="cello-lead">Lerne die Lagen auf dem Griffbrett – mit den Fingern, die man dort wirklich nimmt. Jeder Ton erklingt.</p>
         <div class="cello-stufen" id="celloStufen"></div>
+        </div>
+        <div class="spalte spalte-b">
         <div class="cello-modi" id="celloModi">
           <button type="button" data-modus="finden"><span>🎻</span><b>Griff finden</b><small>Note sehen – Saite und Finger in der Lage tippen</small></button>
           <button type="button" data-modus="benennen"><span>🔎</span><b>Griff lesen</b><small>Finger auf dem Griffbrett sehen – Ton nennen</small></button>
@@ -740,18 +793,26 @@
         </div>
         <button class="btn cello-los" id="celloLos" type="button">Los geht’s 🎵</button>
         <div class="cello-best" id="celloBest"></div>
+        </div>
+        </div>
       </div>
 
       <div class="cello-teil" id="cello-spiel" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="cello-leiste"><span id="celloModusTitel"></span><span id="celloStand"></span></div>
         <div class="cello-zeit" id="celloZeitBox"><div class="cello-zeitbar"><i id="celloZeitBar"></i></div><span id="celloZeit"></span></div>
         <div class="cello-papier"><div id="celloNoten"></div><div class="cello-schluesselname" id="celloSchluesselName"></div></div>
         <div class="cello-feedback" id="celloFeedback"></div>
+        </div>
+        <div class="spalte spalte-b">
         <div class="cello-lagename" id="celloLageName"></div>
         <div class="cello-griff" id="celloGriff"></div>
         <div class="cello-legende" id="celloLegende" hidden></div>
         <div class="cello-tasten" id="celloTasten"></div>
         <button class="btn secondary" id="celloStopp" type="button">Beenden</button>
+        </div>
+        </div>
       </div>
 
       <div class="cello-teil" id="cello-ende" hidden>
@@ -772,6 +833,8 @@
       </div>
 
       <div class="krimi-teil" id="krimi-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="villa-szene" aria-hidden="true">
           <div class="vs-himmel"><i class="vs-mond"></i></div>
           <div class="vs-blitz"></div>
@@ -801,25 +864,39 @@
         </div>
         <h2 class="krimi-titel">Wer war’s?</h2>
         <p class="krimi-lead">Mord in der Villa! Die Krimi-Rätsel für echte Ermittler.</p>
+        </div>
+        <div class="spalte spalte-b">
         <div id="krimiAkteKarte"></div>
         <h3 class="krimi-h km-h">Einzeln üben</h3>
         <div class="krimi-modi" id="krimiModi"></div>
+        </div>
+        </div>
       </div>
 
       <div class="krimi-teil" id="krimi-setup" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="ks-kopf"><span class="ks-bild" id="ksBild"></span><div><h2 class="ks-titel" id="ksTitel"></h2><div class="ks-unter" id="ksUnter"></div><p class="krimi-lead" id="ksLead"></p></div></div>
         <ol class="krimi-regeln" id="ksRegeln"></ol>
         <details class="ks-anleitung"><summary>So gehst du vor</summary><ol id="ksAnleitung"></ol></details>
+        </div>
+        <div class="spalte spalte-b">
         <div class="farb-stufen" id="ksStufen"></div>
         <button class="btn krimi-gross" id="ksLos" type="button"></button>
         <button class="btn secondary" id="ksTag" type="button"></button>
         <div class="krimi-best" id="ksBest"></div>
+        </div>
+        </div>
       </div>
 
       <div class="krimi-teil" id="krimi-spiel" hidden>
-        <div class="krimi-opfer" id="krimiOpfer"></div>
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="krimi-sterne" id="krimiSterne"></div>
         <div class="krimi-brett" id="krimiBrett"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="krimi-opfer" id="krimiOpfer"></div>
         <div class="krimi-status" id="krimiStatus"></div>
         <div class="krimi-tipp" id="krimiTippText" hidden></div>
         <div class="krimi-modus">
@@ -831,11 +908,17 @@
         <h3 class="krimi-h"><i class="mini" data-k-icon="notizen"></i> Hinweise</h3>
         <ul class="krimi-hinweise" id="krimiHinweise"></ul>
         <button class="krimi-aufgeben" id="krimiAufgeben" type="button">Aufgeben und Lösung zeigen</button>
+        </div>
+        </div>
       </div>
 
       <div class="krimi-teil" id="krimi-wachen" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="krimi-sterne" id="wachenSterne"></div>
         <div class="krimi-brett wachen-brett" id="wachenBrett"></div>
+        </div>
+        <div class="spalte spalte-b">
         <div class="krimi-status" id="wachenStatus"></div>
         <div class="krimi-tipp" id="wachenTipp" hidden></div>
         <div class="krimi-modus">
@@ -844,22 +927,32 @@
           <button type="button" id="wachenTippBtn"><i class="mini" data-k-icon="tipp"></i> Tipp</button>
         </div>
         <p class="krimi-regel-kurz">Je Reihe, Spalte und Raum eine Wache · nie berühren · Tippen: ✕ → Wache → leer</p>
+        </div>
+        </div>
       </div>
 
       <div class="krimi-teil" id="krimi-verhoer" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="vh-raum">
           <div class="vh-lampe" aria-hidden="true"><i></i></div>
           <div class="krimi-opfer" id="verhoerOpfer"></div>
           <div class="vh-regel" id="verhoerRegel"></div>
         </div>
+        </div>
+        <div class="spalte spalte-b">
         <div class="vh-karten" id="verhoerKarten"></div>
         <div class="krimi-tipp" id="verhoerTipp" hidden></div>
         <div class="krimi-modus vh-modus">
           <button type="button" id="verhoerTippBtn"><i class="mini" data-k-icon="tipp"></i> Tipp: jemanden ausschließen</button>
         </div>
+        </div>
+        </div>
       </div>
 
       <div class="krimi-teil" id="krimi-alibi" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="krimi-sterne" id="alibiSterne"></div>
         <div class="ar-rahmen"><table class="alibi-raster" id="alibiRaster"></table></div>
         <div class="krimi-tipp" id="alibiTipp" hidden></div>
@@ -867,8 +960,12 @@
           <button type="button" id="alibiLeeren">Leeren</button>
           <button type="button" id="alibiTippBtn"><i class="mini" data-k-icon="tipp"></i> Tipp</button>
         </div>
+        </div>
+        <div class="spalte spalte-b">
         <h3 class="krimi-h"><i class="mini" data-k-icon="notizen"></i> Hinweise</h3>
         <ul class="krimi-hinweise ar-hinweise" id="alibiHinweise"></ul>
+        </div>
+        </div>
       </div>
 
       <div class="krimi-teil akte" id="krimi-akte" hidden></div>
@@ -885,15 +982,21 @@
       </div>
 
       <div class="krimi-teil krimi-mitte" id="krimi-ende" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="krimi-orden"><i data-k-icon="geloest"></i><span class="krimi-stempel" id="krimiStempelText">Fall gelöst</span></div>
         <div class="krimi-taeter" id="krimiTaeter"></div>
         <div class="krimi-war" id="krimiTaeterWar"></div>
         <div class="krimi-name" id="krimiTaeterName"></div>
         <div class="krimi-tatort" id="krimiTatort"></div>
         <div class="krimi-zeit" id="krimiZeit"></div>
+        </div>
+        <div class="spalte spalte-b">
         <div class="krimi-brett krimi-endbrett" id="krimiEndBrett" aria-hidden="true"></div>
         <button class="btn krimi-gross" id="krimiNochmal" type="button">Nächstes Rätsel</button>
         <button class="btn secondary" id="krimiMenue" type="button">Zum Menü</button>
+        </div>
+        </div>
       </div>
     </div>
   </section>
@@ -906,10 +1009,14 @@
       </div>
 
       <div class="ton-teil" id="ton-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="ton-logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
         <h2 class="ton-titel">Ton-Gedächtnis</h2>
         <p class="ton-lead">Ein Ton erklingt kurz. Danach suchst du ihn mit dem Schieber – solange du ihn festhältst, hörst du deinen Ton. Fünf Töne, bis zu 50 Punkte.</p>
         <p class="ton-hinweis">🔔 iPhone: Stumm-Schalter ausschalten und Lautstärke hoch.</p>
+        </div>
+        <div class="spalte spalte-b">
         <div class="ton-challenge" id="tonChallenge" hidden></div>
         <div class="farb-stufen ton-stufen" id="tonStufen">
           <button type="button" data-stufe="leicht">Leicht<small>3 Sek. · 2× hören</small></button>
@@ -919,6 +1026,8 @@
         <button class="btn ton-gross" id="tonLos" type="button">Los geht’s 🎧</button>
         <button class="btn secondary" id="tonTagBtn" type="button">📅 Tagestöne</button>
         <div class="ton-best" id="tonBest"></div>
+        </div>
+        </div>
       </div>
 
       <div class="ton-teil ton-mitte" id="ton-hoeren" hidden>
@@ -930,19 +1039,29 @@
       </div>
 
       <div class="ton-teil" id="ton-treffen" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="ton-merk">Finde den Ton</div>
         <div class="ton-welle klein" id="tonWelleMix"></div>
         <div class="ton-hz" id="tonMixHz"></div>
+        </div>
+        <div class="spalte spalte-b">
         <input class="ton-regler" type="range" id="tonRegler" min="0" max="1000" step="1" aria-label="Tonhöhe">
         <div class="ton-skala"><span>tief</span><span>hoch</span></div>
         <div class="ton-tipp-klein">Schieber festhalten = Ton hören</div>
         <button class="btn secondary" id="tonProbe" type="button">🔊 Meinen Ton kurz anhören</button>
         <button class="btn ton-gross" id="tonFertig" type="button">Fertig ✓</button>
+        </div>
+        </div>
       </div>
 
       <div class="ton-teil" id="ton-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
         <div class="ton-punkte" id="tonPunkte"></div>
         <div class="ton-kommentar" id="tonKommentar"></div>
+        </div>
+        <div class="spalte spalte-b">
         <div class="ton-analyse">
           <div class="farb-tipp" id="tonTipp"></div>
           <div class="ton-skala-bild"><i class="tz" id="tonSkalaZiel"></i><i class="tm" id="tonSkalaMix"></i></div>
@@ -956,6 +1075,8 @@
           <div class="farb-deltae">100 Cent = ein Halbton. Unter etwa 10 Cent hören die meisten keinen Unterschied.</div>
         </div>
         <button class="btn ton-gross" id="tonWeiter" type="button">Nächster Ton</button>
+        </div>
+        </div>
       </div>
 
       <div class="ton-teil" id="ton-ende" hidden>
@@ -1001,26 +1122,26 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=32"></script>
-<script src="haie.js?v=32"></script>
-<script src="porsche.js?v=32"></script>
-<script src="dackel.js?v=32"></script>
-<script src="groesse.js?v=32"></script>
-<script src="gretchen.js?v=32"></script>
-<script src="effekte.js?v=32"></script>
-<script src="app.js?v=32"></script>
-<script src="melden.js?v=32"></script>
-<script src="hub.js?v=32"></script>
-<script src="farben.js?v=32"></script>
-<script src="cello.js?v=32"></script>
-<script src="toene.js?v=32"></script>
-<script src="krimi-grafik.js?v=32"></script>
-<script src="krimi.js?v=32"></script>
-<script src="krimi-wachen.js?v=32"></script>
-<script src="krimi-verhoer.js?v=32"></script>
-<script src="krimi-alibi.js?v=32"></script>
-<script src="krimi-akte.js?v=32"></script>
-<script src="krimi-zentrale.js?v=32"></script>
-<script src="profile.js?v=32"></script>
+<script src="wale.js?v=33"></script>
+<script src="haie.js?v=33"></script>
+<script src="porsche.js?v=33"></script>
+<script src="dackel.js?v=33"></script>
+<script src="groesse.js?v=33"></script>
+<script src="gretchen.js?v=33"></script>
+<script src="effekte.js?v=33"></script>
+<script src="app.js?v=33"></script>
+<script src="melden.js?v=33"></script>
+<script src="hub.js?v=33"></script>
+<script src="farben.js?v=33"></script>
+<script src="cello.js?v=33"></script>
+<script src="toene.js?v=33"></script>
+<script src="krimi-grafik.js?v=33"></script>
+<script src="krimi.js?v=33"></script>
+<script src="krimi-wachen.js?v=33"></script>
+<script src="krimi-verhoer.js?v=33"></script>
+<script src="krimi-alibi.js?v=33"></script>
+<script src="krimi-akte.js?v=33"></script>
+<script src="krimi-zentrale.js?v=33"></script>
+<script src="profile.js?v=33"></script>
 </body>
 </html>
