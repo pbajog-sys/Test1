@@ -11,6 +11,7 @@ const VERLAUF_SPIELE = {
   augen: { name: 'Augenmaß', emoji: '📐', farbe: '#5eead4' },
   karte: { name: 'Karten-Gefühl', emoji: '🧭', farbe: '#34d399' },
   tiefgang: { name: 'Tiefgang', emoji: '🤿', farbe: '#22d3ee' },
+  riff: { name: 'Riffbau', emoji: '🎲', farbe: '#fb7185' },
   krimi: { name: 'Wer war’s?', emoji: '🔎', farbe: '#ef4444' },
 };
 const tagSchluessel = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');

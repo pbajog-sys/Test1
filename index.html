@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=48">
+<link rel="stylesheet" href="fonts/fonts.css?v=49">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=48">
-<link rel="stylesheet" href="ansichten.css?v=48">
+<link rel="stylesheet" href="stil.css?v=49">
+<link rel="stylesheet" href="ansichten.css?v=49">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -526,6 +526,11 @@
     <button class="hub-game hub-tiefgang" id="hubTiefgang" type="button" data-regen="🤿,🫧,🐚,💰">
       <span class="hg-av hg-av-tiefgang" aria-hidden="true"><span class="hg-in"><span class="tg-mini"><i></i><i></i><i></i><b>🤿</b></span></span></span>
       <span class="hg-text"><span class="hg-titel">Tiefgang</span><span class="hg-sub">Tauch tiefer für Schätze – aber zweimal dieselbe Gefahr, und alles ist weg.</span><span class="hg-best" id="hubTiefgangBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-riff" id="hubRiff" type="button" data-regen="🎲,🪸,🐠,🟥">
+      <span class="hg-av hg-av-riff" aria-hidden="true"><span class="hg-in"><span class="rf-mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Riffbau</span><span class="hg-sub">Würfeln, drehen, bauen – ein buntes Korallenriff für satte Fische.</span><span class="hg-best" id="hubRiffBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-krimi" id="hubKrimi" type="button" data-regen="🔎,🕵️,🗝️,🕯️">
@@ -908,6 +913,70 @@
         <button class="btn tg-gross-btn" id="tgTeilen" type="button">📤 Ergebnis teilen</button>
         <div class="muted" id="tgTeilenMsg"></div>
         <button class="btn secondary" id="tgNochmal" type="button">Nochmal tauchen</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-riff">
+    <div class="rf-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="rfZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="rfRunde"></span>
+      </div>
+
+      <div class="rf-teil" id="rf-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="rf-logo" aria-hidden="true">🎲🪸</div>
+        <h2 class="rf-titel">Riffbau</h2>
+        <p class="rf-lead">Zehn Runden, zwei Würfel: einer zeigt die Form, einer die Korallenfarbe. Dreh die Form und setz sie ins Riff – Felsen 🪨 und belegte Felder sind tabu.</p>
+        <div class="rf-regeln">
+          <div><span>🪸</span>Jede zusammenhängende <b>Farbfläche ab 3 Feldern</b> zählt so viele Punkte, wie sie groß ist.</div>
+          <div><span>➖</span>Jede <b>volle Reihe oder Spalte</b> +4.</div>
+          <div><span>🐠</span>Ein <b>Fisch</b>, dessen Feld mit seiner Lieblingsfarbe bedeckt ist, +4.</div>
+          <div><span>⭐</span>Beim <b>Joker</b> suchst du die Farbe selbst aus.</div>
+        </div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge rf-challenge" id="rfChallenge" hidden></div>
+        <button class="btn rf-gross-btn" id="rfLos" type="button">Riff bauen 🎲</button>
+        <button class="btn secondary" id="rfTagBtn" type="button"></button>
+        <div class="rf-best" id="rfBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="rf-teil" id="rf-spiel" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="rf-brett" id="rfBrett"></div>
+        <div class="rf-punkte"><b id="rfPunkte">0</b><small id="rfAufteilung"></small></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="rf-wuerfel">
+          <div class="rf-w"><div class="rf-w-form" id="rfWuerfelForm"></div><small id="rfWuerfelFormName"></small></div>
+          <div class="rf-w"><div class="rf-w-farbe" id="rfWuerfelFarbe"></div><small id="rfWuerfelFarbeName"></small></div>
+        </div>
+        <div class="rf-joker" id="rfJoker" hidden><button type="button" style="--f:#f43f5e" aria-label="Rot"></button><button type="button" style="--f:#facc15" aria-label="Gelb"></button><button type="button" style="--f:#38bdf8" aria-label="Blau"></button><button type="button" style="--f:#a78bfa" aria-label="Lila"></button><button type="button" style="--f:#4ade80" aria-label="Grün"></button></div>
+        <div class="rf-hinweis" id="rfHinweis"></div>
+        <div class="rf-knoepfe">
+          <button class="btn secondary" id="rfDrehen" type="button">↻ Drehen</button>
+          <button class="btn rf-gross-btn" id="rfSetzen" type="button" disabled>Setzen ✓</button>
+        </div>
+        <button class="btn secondary" id="rfPassen" type="button" hidden>Passen ➜</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="rf-teil" id="rf-ende" hidden>
+        <div class="farb-summe" id="rfSumme"></div>
+        <div class="farb-rekord" id="rfRekord"></div>
+        <div class="farb-rekord" id="rfVergleich" hidden></div>
+        <div class="rf-brett klein" id="rfEndBrett"></div>
+        <ul class="rf-wertung" id="rfEndWertung"></ul>
+        <button class="btn rf-gross-btn" id="rfTeilen" type="button">📤 Riff teilen</button>
+        <div class="muted" id="rfTeilenMsg"></div>
+        <button class="btn secondary" id="rfNochmal" type="button">Neues Riff</button>
       </div>
     </div>
   </section>
@@ -1632,34 +1701,35 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=48"></script>
-<script src="haie.js?v=48"></script>
-<script src="porsche.js?v=48"></script>
-<script src="dackel.js?v=48"></script>
-<script src="groesse.js?v=48"></script>
-<script src="gretchen.js?v=48"></script>
-<script src="effekte.js?v=48"></script>
-<script src="app.js?v=48"></script>
-<script src="melden.js?v=48"></script>
-<script src="verlauf.js?v=48"></script>
-<script src="hub.js?v=48"></script>
-<script src="farben.js?v=48"></script>
-<script src="cello.js?v=48"></script>
-<script src="instrumente.js?v=48"></script>
-<script src="toene.js?v=48"></script>
-<script src="takt.js?v=48"></script>
-<script src="punkte.js?v=48"></script>
-<script src="augen.js?v=48"></script>
-<script src="karten-daten.js?v=48"></script>
-<script src="karte.js?v=48"></script>
-<script src="tiefgang.js?v=48"></script>
-<script src="krimi-grafik.js?v=48"></script>
-<script src="krimi.js?v=48"></script>
-<script src="krimi-wachen.js?v=48"></script>
-<script src="krimi-verhoer.js?v=48"></script>
-<script src="krimi-alibi.js?v=48"></script>
-<script src="krimi-akte.js?v=48"></script>
-<script src="krimi-zentrale.js?v=48"></script>
-<script src="profile.js?v=48"></script>
+<script src="wale.js?v=49"></script>
+<script src="haie.js?v=49"></script>
+<script src="porsche.js?v=49"></script>
+<script src="dackel.js?v=49"></script>
+<script src="groesse.js?v=49"></script>
+<script src="gretchen.js?v=49"></script>
+<script src="effekte.js?v=49"></script>
+<script src="app.js?v=49"></script>
+<script src="melden.js?v=49"></script>
+<script src="verlauf.js?v=49"></script>
+<script src="hub.js?v=49"></script>
+<script src="farben.js?v=49"></script>
+<script src="cello.js?v=49"></script>
+<script src="instrumente.js?v=49"></script>
+<script src="toene.js?v=49"></script>
+<script src="takt.js?v=49"></script>
+<script src="punkte.js?v=49"></script>
+<script src="augen.js?v=49"></script>
+<script src="karten-daten.js?v=49"></script>
+<script src="karte.js?v=49"></script>
+<script src="tiefgang.js?v=49"></script>
+<script src="riff.js?v=49"></script>
+<script src="krimi-grafik.js?v=49"></script>
+<script src="krimi.js?v=49"></script>
+<script src="krimi-wachen.js?v=49"></script>
+<script src="krimi-verhoer.js?v=49"></script>
+<script src="krimi-alibi.js?v=49"></script>
+<script src="krimi-akte.js?v=49"></script>
+<script src="krimi-zentrale.js?v=49"></script>
+<script src="profile.js?v=49"></script>
 </body>
 </html>

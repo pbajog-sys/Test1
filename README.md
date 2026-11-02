@@ -75,6 +75,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `takt.js` – Takt-Gefühl (Zeitgefühl, Tempo, Taktart)
 - `verlauf.js` – Verlauf & Statistik
 - `tiefgang.js` – Tiefgang
+- `riff.js` – Riffbau
 - `punkte.js` – Punktwolke (Korrelation schätzen und sortieren)
 - `augen.js` – Augenmaß
 - `karte.js`, `karten-daten.js` – Karten-Gefühl (Kartendaten aus `werkzeuge/karten.py`)
@@ -249,6 +250,12 @@ Luft begrenzt die Schritte, Luftblasen geben Luft zurück, jede neue Tierart im 
 nächsten Schritts in %, Profi hat weniger Luft und mehr Gefahren. Tagestauchgang und Challenge-Links (gleiche Karte an gleicher
 Stelle für alle). Balance per Simulation geprüft: Kluges Abwägen (Risiko < 20 %) schlägt Vorsicht und Gier.
 
+## 🎲 Riffbau (Roll & Write)
+Eigenes Würfel-Puzzle im Roll-&-Write-Genre: 6×6-Riff mit Felsen und Fischen, 10 Runden. Ein Würfel zeigt die Form
+(Einzeln, Zweier, Dreier, Ecke, Block, Joker), einer die Korallenfarbe (fünf Farben oder Joker). Form drehen, Feld antippen
+(zweimal tippen = setzen) – oder passen, wenn nichts passt. Wertung: Farbflächen ab 3 Feldern = Größe, volle Reihe/Spalte +4,
+satte Fische (Feld in Lieblingsfarbe) +4. Tagesriff, Challenge-Links (gleiche Würfe) und Teilen als Emoji-Raster.
+
 ## 📅 Verlauf & Statistik
 Jedes Spiel trägt beim Ende einen Eintrag in den Verlauf ein (Spiel, Punkte, Stufe, Uhrzeit), je Profil, die letzten 400 Tage.
 Die Karte „Dein Verlauf“ im Dashboard zeigt die Tagesserie 🔥 und die letzten 7 Tage. Der Verlaufs-Bildschirm zeigt Serie,
@@ -261,5 +268,5 @@ und je Spiel Anzahl, Bestwert, Schnitt der letzten 7 Runden und eine Verlaufskur
   laufende Tonwelle, schwingendes Metronom, Mini-Punktwolke, Winkel, Kompass, suchende Lupe, Porsche und Gretchen auf der Küstenstraße, Wal mit Fontäne und Haiflosse im Meer.
   Jede Figur ist ein Schnellstart in ihr Spiel (mit Flip und Emoji-Regen). Rechts oben: Profilbild zum Wechseln.
 - **Games** als Zeilen mit rundem Bild, Stand und ▶: **Quizzes** (im Kreis wechseln die Welten als Diashow), Farb-Gedächtnis,
-  Noten & Griffe (Cello, Klavier, Gitarre, Ukulele), Ton-Gedächtnis, Takt-Gefühl, Punktwolke, Augenmaß, Karten-Gefühl, Tiefgang und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
+  Noten & Griffe (Cello, Klavier, Gitarre, Ukulele), Ton-Gedächtnis, Takt-Gefühl, Punktwolke, Augenmaß, Karten-Gefühl, Tiefgang, Riffbau und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
 - Akku: Farbflecken als Verlauf statt Weichzeichner, Bühne und Diashow pausieren außerhalb des Bildschirms; „Bewegung reduzieren“ wird beachtet.
