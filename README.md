@@ -297,14 +297,19 @@ Eigenes Puzzle im Genre „Farben sortieren und Pixelbild abbauen“, mit Amazon
 
 ## 🐉 Slowenisch mit Zmajček
 Eigenes Sprachlernspiel (`slo.js`): Mit Zmajček, dem kleinen Drachen aus dem Wappen von Ljubljana, reist man durch Slowenien.
-- **11 Stationen**, je ein Thema mit 11–13 Wörtern und 6–8 Sätzen: Ljubljana (Begrüßen), Bled (Sich vorstellen), Piran (Zahlen),
-  Postojna (Farben), Maribor (Essen & Trinken), Ptuj (Familie), Soča (Tiere), Celje (In der Stadt), Kranjska Gora (Tage & Wetter),
-  Triglav (Natur), Lipica (Unterhalten). Jede Station hat einen 💡 Tipp mit Grammatik (Du/Sie, biti, Dual, Fälle, Endungen),
-  Aussprache und Landeskunde.
+- **20 Stationen mit 241 Wörtern und 122 Sätzen:** Ljubljana (Begrüßen), Bled (Sich vorstellen), Piran (Zahlen), Postojna (Farben),
+  Maribor (Essen & Trinken), Ptuj (Familie), Soča (Tiere), Celje (In der Stadt), Kranjska Gora (Tage & Wetter), Triglav (Natur),
+  Lipica (Unterhalten), Planica (Körper & Gesundheit), Idrija (Kleidung), Škofja Loka (Zuhause), Novo mesto (Schule & Arbeit),
+  Bovec (Freizeit), Kras (Einkaufen), Velika planina (Zeit & Uhrzeit), Koper (Reisen), Portorož (Gefühle). Jede Station hat einen
+  💡 Tipp mit Grammatik (Du/Sie, biti, Dual, Fälle, Endungen, Befehlsform), Aussprache und Landeskunde.
 - **Drei Stufen je Station:** neue Wörter → Sätze → Meistern. Stufe 1 öffnet die nächste Station, nach Stufe 3 gibt es 👑 und Wiederholen.
 - **Aufgaben:** neues Wort, Bild wählen, Übersetzung in beide Richtungen, Paare finden, Satz verstehen, Satz aus Kacheln bauen
-  (Slowenisch und Deutsch), Lücke füllen, Wort tippen (č š ž-Tasten, fehlende Häkchen zählen als „fast richtig“) und – nur wenn das
-  Gerät eine slowenische Stimme hat – Hören (🔊, 🐢 langsam). Falsches kommt am Ende der Lektion noch einmal.
+  (Slowenisch und Deutsch), Lücke füllen, Wort tippen (č š ž-Tasten, fehlende Häkchen zählen als „fast richtig“), **Hören** und
+  **Diktat** („Tippe, was du hörst“, 🔊 und 🐢 langsam) sowie **Nachsprechen** mit dem Mikrofon (Spracherkennung `sl-SI`, 60 % der
+  Wörter müssen erkannt werden; „Gerade nicht sprechen“ schaltet es eine Stunde ab). Slowenische Antworten werden beim Antippen
+  vorgelesen. Falsches kommt am Ende der Lektion noch einmal, Serien richtiger Antworten zeigen eine 🔥-Combo.
+- **Ton:** Liegen Aufnahmen in `audio/slo/` (mit `index.json`: normierter Text → Datei), spielt die App diese ab; sonst nutzt sie
+  eine slowenische Systemstimme, falls das Gerät eine hat. Ohne beides sind Hören und Diktat ausgeblendet.
 - **XP & Tagesziel:** 10 XP je Lektion, +5 ohne Fehler, +5 in Stufe 3; Ring fürs Tagesziel (30 XP), Serie 🔥, Wortstärke je Wort,
   „💪 Üben“ mit den schwächsten Wörtern, „📖 Wörter“ als Wörterbuch. Ergebnisse landen im Verlauf.
 

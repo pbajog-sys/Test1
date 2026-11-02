@@ -4,6 +4,8 @@
 // Lektion noch einmal dran. Fortschritt, XP, Tagesziel, Serie und Wortstärke je Profil.
 const SLO_KEY = 'walquiz.slo.v1';
 const SLO_TAGESZIEL = 30;
+const SLO_SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+let sloAudio = null, sloAudioEl = null, sloStimme = null;
 
 // ---------- Inhalte ----------
 // woerter: [slowenisch, deutsch, Bild]; saetze: [slowenisch, deutsch, weitere slowenische Lösungen, weitere deutsche Lösungen]
@@ -94,6 +96,76 @@ const SLO_EINHEITEN = [
       ['spati', 'schlafen', '😴'], ['delati', 'arbeiten', '💼'], ['vedeti', 'wissen', '🧠'], ['živeti', 'leben', '🏡'], ['ljubiti', 'lieben', '❤️'], ['iti', 'gehen', '🚶']],
     saetze: [['Govorim malo slovensko.', 'Ich spreche ein bisschen Slowenisch.', [], ['Ich spreche ein wenig Slowenisch']], ['Ali govorite nemško?', 'Sprechen Sie Deutsch?'], ['Ne razumem.', 'Ich verstehe nicht.', [], ['Ich verstehe das nicht']],
       ['Ne vem.', 'Ich weiß nicht.', [], ['Ich weiß es nicht']], ['Rad te imam.', 'Ich hab dich lieb.', ['Rada te imam'], ['Ich liebe dich', 'Ich habe dich lieb']], ['Živim v Ljubljani.', 'Ich wohne in Ljubljana.', [], ['Ich lebe in Ljubljana']]] },
+  { id: 'telo', ort: 'Planica', ortEmoji: '🎿', titel: 'Telo in zdravje', de: 'Körper & Gesundheit', farbe: '#e11d48',
+    tipp: '<p><b>Es tut weh:</b> <i>Boli me glava.</i> – wörtlich „Mich schmerzt der Kopf“.</p>'
+      + '<p>Männer sagen <i>Sem bolan</i>, Frauen <i>Sem bolna</i> (ich bin krank).</p>'
+      + '<p>In Planica stehen die größten Skiflugschanzen der Welt – hier wurde schon über 250 m weit geflogen.</p>',
+    woerter: [['glava', 'Kopf', '🧑'], ['roka', 'Hand', '✋'], ['noga', 'Bein', '🦵'], ['oko', 'Auge', '👁️'], ['uho', 'Ohr', '👂'], ['nos', 'Nase', '👃'],
+      ['usta', 'Mund', '👄'], ['zob', 'Zahn', '🦷'], ['srce', 'Herz', '❤️'], ['lasje', 'Haare', '💇'], ['zdravnik', 'Arzt', '🧑‍⚕️'], ['bolan', 'krank', '🤒']],
+    saetze: [['Boli me glava.', 'Mir tut der Kopf weh.', [], ['Ich habe Kopfschmerzen']], ['Sem bolan.', 'Ich bin krank.', ['Sem bolna']], ['Potrebujem zdravnika.', 'Ich brauche einen Arzt.'],
+      ['Imam modre oči.', 'Ich habe blaue Augen.'], ['Umij si roke.', 'Wasch dir die Hände.'], ['Kako se počutiš?', 'Wie fühlst du dich?']] },
+  { id: 'oblacila', ort: 'Idrija', ortEmoji: '🧵', titel: 'Oblačila', de: 'Kleidung', farbe: '#d946ef',
+    tipp: '<p><b>tragen</b> = <i>nositi</i>: <i>Nosim očala.</i> = Ich trage eine Brille.</p>'
+      + '<p>Manche Wörter gibt es nur im Plural: <i>hlače</i> (Hose), <i>očala</i> (Brille) – wie im Deutschen „die Leute“.</p>'
+      + '<p>Die Klöppelspitze aus Idrija (<i>idrijska čipka</i>) ist weltberühmt.</p>',
+    woerter: [['majica', 'T-Shirt', '👕'], ['hlače', 'Hose', '👖'], ['obleka', 'Kleid', '👗'], ['čevlji', 'Schuhe', '👟'], ['plašč', 'Mantel', '🧥'], ['kapa', 'Mütze', '🧢'],
+      ['šal', 'Schal', '🧣'], ['nogavice', 'Socken', '🧦'], ['rokavice', 'Handschuhe', '🧤'], ['očala', 'Brille', '👓'], ['torba', 'Tasche', '👜'], ['dežnik', 'Regenschirm', '☂️']],
+    saetze: [['Ta majica je lepa.', 'Dieses T-Shirt ist schön.'], ['Kje so moji čevlji?', 'Wo sind meine Schuhe?'], ['Zunaj je mrzlo, vzemi plašč.', 'Draußen ist es kalt, nimm den Mantel.', [], ['Draußen ist es kalt, nimm einen Mantel']],
+      ['Koliko stane ta obleka?', 'Wie viel kostet dieses Kleid?', [], ['Was kostet dieses Kleid']], ['Nosim očala.', 'Ich trage eine Brille.'], ['Idrijska čipka je znana po vsem svetu.', 'Die Idrijaer Spitze ist auf der ganzen Welt bekannt.', [], ['Die Spitze aus Idrija ist weltbekannt']]] },
+  { id: 'doma', ort: 'Škofja Loka', ortEmoji: '🏡', titel: 'Doma', de: 'Zuhause', farbe: '#eab308',
+    tipp: '<p><b>doma</b> = zu Hause, <b>domov</b> = nach Hause: <i>Grem domov.</i></p>'
+      + '<p>Befehle mit „du“ enden oft auf <b>-i</b>: <i>odpri</i> (mach auf), <i>ugasni</i> (mach aus), <i>zapri</i> (mach zu).</p>'
+      + '<p>Škofja Loka ist eine der am besten erhaltenen mittelalterlichen Städte Sloweniens.</p>',
+    woerter: [['hiša', 'Haus', '🏠'], ['stanovanje', 'Wohnung', '🏢'], ['soba', 'Zimmer', '🛋️'], ['kuhinja', 'Küche', '🍳'], ['kopalnica', 'Bad', '🛁'], ['postelja', 'Bett', '🛏️'],
+      ['miza', 'Tisch', '🍽️'], ['stol', 'Stuhl', '🪑'], ['okno', 'Fenster', '🪟'], ['vrata', 'Tür', '🚪'], ['ključ', 'Schlüssel', '🔑'], ['vrt', 'Garten', '🌻'], ['luč', 'Licht', '💡']],
+    saetze: [['Moja soba je majhna.', 'Mein Zimmer ist klein.'], ['Ključ je na mizi.', 'Der Schlüssel ist auf dem Tisch.', [], ['Der Schlüssel liegt auf dem Tisch']], ['Odpri okno, prosim.', 'Mach bitte das Fenster auf.', [], ['Öffne bitte das Fenster', 'Mach das Fenster auf, bitte']],
+      ['V kuhinji kuham kosilo.', 'In der Küche koche ich das Mittagessen.', [], ['Ich koche in der Küche das Mittagessen']], ['Živimo v stanovanju.', 'Wir wohnen in einer Wohnung.'], ['Ugasni luč.', 'Mach das Licht aus.']] },
+  { id: 'sola', ort: 'Novo mesto', ortEmoji: '🏫', titel: 'Šola in delo', de: 'Schule & Arbeit', farbe: '#0891b2',
+    tipp: '<p><b>Wohin? v + Akkusativ:</b> <i>Grem v šolo.</i> · <b>Wo? v + Lokativ:</b> <i>Sem v šoli.</i></p>'
+      + '<p><i>učitelj</i> (Lehrer) · <i>učiteljica</i> (Lehrerin) – die weibliche Form endet oft auf <b>-ica</b>.</p>',
+    woerter: [['šola', 'Schule', '🏫'], ['učitelj', 'Lehrer', '👨‍🏫'], ['učiteljica', 'Lehrerin', '👩‍🏫'], ['knjiga', 'Buch', '📖'], ['svinčnik', 'Bleistift', '✏️'], ['zvezek', 'Heft', '📓'],
+      ['računalnik', 'Computer', '💻'], ['telefon', 'Telefon', '📱'], ['služba', 'Arbeitsstelle', '💼'], ['pisarna', 'Büro', '🗄️'], ['naloga', 'Aufgabe', '📝'], ['odmor', 'Pause', '⏸️']],
+    saetze: [['Grem v šolo.', 'Ich gehe in die Schule.', [], ['Ich gehe zur Schule']], ['Učiteljica je prijazna.', 'Die Lehrerin ist nett.', [], ['Die Lehrerin ist freundlich']], ['Berem knjigo.', 'Ich lese ein Buch.'],
+      ['Delam v pisarni.', 'Ich arbeite in einem Büro.', [], ['Ich arbeite im Büro']], ['Imam veliko dela.', 'Ich habe viel Arbeit.', [], ['Ich habe viel zu tun']], ['Kdaj je odmor?', 'Wann ist Pause?', [], ['Wann ist die Pause']]] },
+  { id: 'prosti', ort: 'Bovec', ortEmoji: '🪂', titel: 'Prosti čas', de: 'Freizeit', farbe: '#10b981',
+    tipp: '<p><b>gern tun:</b> <i>rad</i> / <i>rada</i> + Verb: <i>Rad igram nogomet.</i> = Ich spiele gern Fußball.</p>'
+      + '<p><b>können</b> (etwas gelernt haben) = <i>znati</i>: <i>Ali znaš plavati?</i></p>'
+      + '<p>„Greva?“ ist wieder der Dual: „Gehen wir zwei?“ Bovec ist das Zentrum für Rafting und Paragliding im Soča-Tal.</p>',
+    woerter: [['igrati', 'spielen', '🎮'], ['plavati', 'schwimmen', '🏊'], ['teči', 'laufen', '🏃'], ['brati', 'lesen', '📚'], ['peti', 'singen', '🎤'], ['plesati', 'tanzen', '💃'],
+      ['kolo', 'Fahrrad', '🚲'], ['nogomet', 'Fußball', '⚽'], ['glasba', 'Musik', '🎵'], ['film', 'Film', '🎬'], ['izlet', 'Ausflug', '🥾'], ['smučati', 'Ski fahren', '⛷️']],
+    saetze: [['Rad igram nogomet.', 'Ich spiele gern Fußball.', ['Rada igram nogomet']], ['Ob vikendih gremo na izlet.', 'Am Wochenende machen wir einen Ausflug.'], ['Ali znaš plavati?', 'Kannst du schwimmen?'],
+      ['Poslušam glasbo.', 'Ich höre Musik.'], ['Pozimi smučamo.', 'Im Winter fahren wir Ski.'], ['Greva v kino?', 'Gehen wir ins Kino?']] },
+  { id: 'nakup', ort: 'Kras', ortEmoji: '🍖', titel: 'Nakupovanje', de: 'Einkaufen', farbe: '#b45309',
+    tipp: '<p><b>Mengen + Genitiv:</b> <i>kilogram jabolk</i> (ein Kilo Äpfel), <i>liter mleka</i> (ein Liter Milch).</p>'
+      + '<p><b>pre-</b> heißt „zu“: <i>drago</i> (teuer) → <i>predrago</i> (zu teuer).</p>'
+      + '<p>Aus dem Karst kommen der luftgetrocknete <i>kraški pršut</i> und der rote Wein <i>teran</i>.</p>',
+    woerter: [['tržnica', 'Markt', '🧺'], ['denar', 'Geld', '💶'], ['cena', 'Preis', '🏷️'], ['drago', 'teuer', '💎'], ['poceni', 'billig', '🪙'], ['kupiti', 'kaufen', '🛒'],
+      ['plačati', 'bezahlen', '💳'], ['kilogram', 'Kilo', '⚖️'], ['vrečka', 'Tüte', '🛍️'], ['pršut', 'Rohschinken', '🍖'], ['sadje', 'Obst', '🍇'], ['zelenjava', 'Gemüse', '🥦']],
+    saetze: [['Kilogram jabolk, prosim.', 'Ein Kilo Äpfel, bitte.'], ['To je predrago.', 'Das ist zu teuer.'], ['Lahko plačam s kartico?', 'Kann ich mit Karte zahlen?', [], ['Kann ich mit Karte bezahlen']],
+      ['Potrebujem vrečko.', 'Ich brauche eine Tüte.'], ['Na tržnici kupim sadje.', 'Auf dem Markt kaufe ich Obst.', [], ['Ich kaufe Obst auf dem Markt']], ['Kraški pršut je slasten.', 'Der Karst-Rohschinken ist lecker.', [], ['Der Karster Schinken ist lecker']]] },
+  { id: 'cas', ort: 'Velika planina', ortEmoji: '🐄', titel: 'Čas in ura', de: 'Zeit & Uhrzeit', farbe: '#8b5cf6',
+    tipp: '<p><b>Uhrzeit:</b> <i>Ura je tri.</i> (3 Uhr) · <i>pol osmih</i> = halb acht – genau wie im Deutschen „halb zur Acht“.</p>'
+      + '<p><b>Doppelte Verneinung</b> ist richtig: <i>Nikoli ne zamudim.</i> – wörtlich „Ich komme nie nicht zu spät“.</p>'
+      + '<p>Auf der Hochalm Velika planina stehen ovale Hirtenhütten, die es so nur hier gibt.</p>',
+    woerter: [['ura', 'Uhr', '⏰'], ['minuta', 'Minute', '⏱️'], ['zjutraj', 'morgens', '🌄'], ['zvečer', 'abends', '🌃'], ['ponoči', 'nachts', '🌌'], ['opoldne', 'mittags', '🕛'],
+      ['zgodaj', 'früh', '🐓'], ['pozno', 'spät', '🦉'], ['vedno', 'immer', '♾️'], ['nikoli', 'nie', '🚫'], ['včasih', 'manchmal', '🔀'], ['kmalu', 'bald', '⏳'], ['leto', 'Jahr', '📆'], ['mesec', 'Monat', '🗓️']],
+    saetze: [['Koliko je ura?', 'Wie spät ist es?', [], ['Wie viel Uhr ist es']], ['Ura je pol osmih.', 'Es ist halb acht.'], ['Zjutraj pijem kavo.', 'Morgens trinke ich Kaffee.', [], ['Am Morgen trinke ich Kaffee']],
+      ['Nikoli ne zamudim.', 'Ich komme nie zu spät.'], ['Se vidimo kmalu.', 'Bis bald.', [], ['Wir sehen uns bald']], ['Na Veliki planini so pastirske koče.', 'Auf der Velika planina gibt es Hirtenhütten.', [], ['Auf der Velika planina stehen Hirtenhütten']]] },
+  { id: 'potovanje', ort: 'Koper', ortEmoji: '⛵', titel: 'Potovanje', de: 'Reisen', farbe: '#2563eb',
+    tipp: '<p><b>nach (Ort):</b> <i>do</i> + Genitiv: <i>do Kopra</i>, <i>do Ljubljane</i>.</p>'
+      + '<p><b>um (Uhrzeit):</b> <i>ob</i>: <i>ob devetih</i> = um neun.</p>'
+      + '<p>Koper ist Sloweniens einziger großer Hafen – die Küste ist nur etwa 47 km lang.</p>',
+    woerter: [['letališče', 'Flughafen', '✈️'], ['letalo', 'Flugzeug', '🛫'], ['potni list', 'Reisepass', '🛂'], ['kovček', 'Koffer', '🧳'], ['hotel', 'Hotel', '🏨'], ['vozovnica', 'Fahrkarte', '🎫'],
+      ['zemljevid', 'Landkarte', '🗺️'], ['plaža', 'Strand', '🏖️'], ['ladja', 'Schiff', '🚢'], ['avto', 'Auto', '🚗'], ['dopust', 'Urlaub', '🌴'], ['meja', 'Grenze', '🚧']],
+    saetze: [['Eno vozovnico do Kopra, prosim.', 'Eine Fahrkarte nach Koper, bitte.'], ['Kje je letališče?', 'Wo ist der Flughafen?'], ['Imam rezervacijo.', 'Ich habe eine Reservierung.'],
+      ['Gremo na dopust.', 'Wir fahren in den Urlaub.', [], ['Wir gehen in den Urlaub']], ['Moj kovček je težek.', 'Mein Koffer ist schwer.'], ['Ladja odpelje ob devetih.', 'Das Schiff fährt um neun ab.', [], ['Das Schiff fährt um neun Uhr ab']]] },
+  { id: 'custva', ort: 'Portorož', ortEmoji: '🌅', titel: 'Čustva', de: 'Gefühle', farbe: '#f43f5e',
+    tipp: '<p>Gefühlswörter stehen hier in der <b>männlichen</b> Form. Frauen hängen meist <b>-a</b> an: <i>srečen → srečna</i>, <i>žalosten → žalostna</i>, <i>lačen → lačna</i>.</p>'
+      + '<p><i>Dolgčas mi je.</i> = Mir ist langweilig – wörtlich „lange Zeit ist mir“.</p>',
+    woerter: [['srečen', 'glücklich', '😊'], ['žalosten', 'traurig', '😢'], ['jezen', 'wütend', '😠'], ['utrujen', 'müde', '🥱'], ['lačen', 'hungrig', '🤤'], ['žejen', 'durstig', '🚰'],
+      ['vesel', 'froh', '😄'], ['prestrašen', 'erschrocken', '😨'], ['zaljubljen', 'verliebt', '😍'], ['presenečen', 'überrascht', '😮'], ['ponosen', 'stolz', '🦚'], ['dolgčas', 'Langeweile', '😑']],
+    saetze: [['Danes sem zelo srečen.', 'Heute bin ich sehr glücklich.', ['Danes sem zelo srečna']], ['Ali si lačen?', 'Hast du Hunger?', ['Ali si lačna'], ['Bist du hungrig']], ['Utrujena sem.', 'Ich bin müde.', ['Utrujen sem']],
+      ['Ne bodi žalosten.', 'Sei nicht traurig.', ['Ne bodi žalostna']], ['Dolgčas mi je.', 'Mir ist langweilig.'], ['Ponosen sem nate.', 'Ich bin stolz auf dich.', ['Ponosna sem nate']]] },
 ];
 SLO_EINHEITEN.forEach((u) => {
   u.W = u.woerter.map(([sl, de, e]) => ({ sl, de, e, u: u.id }));
@@ -122,23 +194,45 @@ function sloSerie(st) {
 const sloOffen = (st, i) => i === 0 || (st.stufe[SLO_EINHEITEN[i - 1].id] || 0) >= 1;
 
 // ---------- Stimme ----------
-let sloStimme = null;
 function sloStimmeSuchen() {
   if (!('speechSynthesis' in window)) return;
   const v = speechSynthesis.getVoices();
   sloStimme = v.find((x) => /^sl([-_]|$)/i.test(x.lang)) || null;
   const el = $('sloStimme');
-  if (el) el.textContent = sloStimme ? '🔊 Slowenische Stimme: ' + sloStimme.name + ' – tippe auf 🔊 zum Anhören.' : '🔇 Auf diesem Gerät gibt es keine slowenische Stimme – Hör-Aufgaben sind ausgeblendet. Die Aussprache steht im 💡 Tipp jeder Station.';
+  if (el) el.textContent = (sloAudio ? '🔊 Mit Sprachaufnahmen – tippe auf 🔊 zum Anhören.' : sloStimme ? '🔊 Slowenische Stimme: ' + sloStimme.name + ' – tippe auf 🔊 zum Anhören.' : '🔇 Auf diesem Gerät gibt es keine slowenische Stimme – Hör-Aufgaben sind ausgeblendet. Die Aussprache steht im 💡 Tipp jeder Station.')
+    + (sloSprechenMoeglich() ? ' 🎙️ Nachsprechen ist an.' : '');
 }
 if ('speechSynthesis' in window) { sloStimmeSuchen(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', sloStimmeSuchen); }
+// Fertige Aufnahmen (audio/slo/index.json: normierter Text → Datei) haben Vorrang vor der Gerätestimme
+fetch('audio/slo/index.json').then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && typeof j === 'object') { sloAudio = j; sloStimmeSuchen(); } }).catch(() => {});
+const sloDatei = (text) => sloAudio && sloAudio[sloNorm(text)];
+const sloHatTon = (text) => !!(sloDatei(text) || sloStimme);
+const sloTonDa = () => !!(sloStimme || sloAudio);
 function sloSprich(text, langsam) {
+  const datei = sloDatei(text);
+  if (datei) {
+    if ('speechSynthesis' in window) speechSynthesis.cancel();
+    if (sloAudioEl) sloAudioEl.pause();
+    sloAudioEl = new Audio('audio/slo/' + datei);
+    sloAudioEl.playbackRate = langsam ? 0.7 : 1; sloAudioEl.preservesPitch = true;
+    sloAudioEl.play().catch(() => {});
+    return;
+  }
   if (!sloStimme) return;
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.voice = sloStimme; u.lang = sloStimme.lang; u.rate = langsam ? 0.6 : 0.9;
   speechSynthesis.speak(u);
 }
-const sloLaut = (text) => (sloStimme ? '<button type="button" class="slo-laut" data-sprich="' + sloEsc(text) + '" aria-label="Anhören">🔊</button>' : '');
+const sloLaut = (text) => (sloHatTon(text) ? '<button type="button" class="slo-laut" data-sprich="' + sloEsc(text) + '" aria-label="Anhören">🔊</button>' : '');
+
+// Nachsprechen mit Spracherkennung (Safari/Chrome), abschaltbar für eine Stunde
+function sloSprechenMoeglich() { const st = loadJson(SLO_KEY); return !!SLO_SR && !(st.sprechenAus > Date.now()); }
+// Anteil der Zielwörter, die erkannt wurden (Häkchen egal)
+function sloSprachTreffer(gesagt, ziel) {
+  const z = sloOhneZeichen(ziel).split(' ').filter(Boolean), g = new Set(sloOhneZeichen(gesagt).split(' '));
+  return z.length ? z.filter((w) => g.has(w)).length / z.length : 0;
+}
 
 // kleine Töne für richtig / falsch
 let sloAc = null;
@@ -187,7 +281,7 @@ function sloLektion(u, stufe) {
   const W1 = W.slice(0, haelfte), W2 = W.slice(haelfte);
   const wortAufgabe = (w, i) => {
     const typen = ['bild', 'slde', 'desl'];
-    if (sloStimme && stufe >= 2) typen.push('hoeren');
+    if (sloTonDa() && stufe >= 2) typen.push('hoeren');
     return { typ: typen[(i + stufe) % typen.length], w };
   };
   if (stufe === 1) {
@@ -195,10 +289,14 @@ function sloLektion(u, stufe) {
     W1.forEach((w, i) => { A.push({ typ: 'neu', w }); A.push(wortAufgabe(w, i)); });
     A.push({ typ: 'paare', liste: sloMisch(W1).slice(0, 5) });
     sloMisch(W1).slice(0, 3).forEach((w) => A.push({ typ: 'desl', w }));
+    if (sloSprechenMoeglich()) A.splice(A.length - 2, 0, { typ: 'sprechen', w: W1[Math.floor(Math.random() * W1.length)] });
   } else if (stufe === 2) {
     W2.forEach((w, i) => { A.push({ typ: 'neu', w }); A.push(wortAufgabe(w, i + 1)); });
     A.push({ typ: 'paare', liste: sloMisch(W).slice(0, 5) });
-    sloMisch(S).slice(0, 4).forEach((s) => { A.push({ typ: 'satzwahl', s }); A.push({ typ: 'bauen', s, nach: 'sl' }); });
+    const ss = sloMisch(S);
+    ss.slice(0, 4).forEach((s) => { A.push({ typ: 'satzwahl', s }); A.push({ typ: 'bauen', s, nach: 'sl' }); });
+    if (sloTonDa()) A.push({ typ: 'diktat', s: ss[4] || ss[0] });
+    if (sloSprechenMoeglich()) A.push({ typ: 'sprechen', s: ss[0] });
   } else {
     // Stufe 3 und Wiederholen: alles gemischt, mit Tippen und Rückübersetzung
     const ws = sloMisch(W), ss = sloMisch(S);
@@ -207,7 +305,8 @@ function sloLektion(u, stufe) {
     ss.slice(2, 4).forEach((s) => A.push({ typ: 'bauen', s, nach: 'de' }));
     ss.slice(4, 6).forEach((s) => A.push({ typ: 'bauen', s, nach: 'sl' }));
     A.push({ typ: 'paare', liste: ws.slice(3, 8) });
-    if (sloStimme) ws.slice(8, 10).forEach((w) => A.push({ typ: 'hoeren', w }));
+    if (sloTonDa()) { ws.slice(8, 10).forEach((w) => A.push({ typ: 'hoeren', w })); ss.slice(0, 2).forEach((s) => A.push({ typ: 'diktat', s })); }
+    if (sloSprechenMoeglich()) ss.slice(2, 4).forEach((s) => A.push({ typ: 'sprechen', s }));
     ws.slice(10, 12).forEach((w, i) => A.push({ typ: i ? 'desl' : 'bild', w }));
     const rest = sloMisch(A.filter((x) => x.typ !== 'paare'));
     rest.splice(Math.floor(rest.length / 2), 0, ...A.filter((x) => x.typ === 'paare'));
@@ -221,7 +320,7 @@ function sloUebung(st) {
   const woerter = offen.flatMap((u) => u.W.slice(0, (st.stufe[u.id] || 0) >= 2 ? u.W.length : Math.ceil(u.W.length / 2)));
   if (!woerter.length) return null;
   const schwach = woerter.map((w) => ({ w, s: (st.wort[w.sl] || 0) + Math.random() * 1.5 })).sort((a, b) => a.s - b.s).slice(0, 10).map((x) => x.w);
-  const typen = ['tippen', 'desl', 'slde', 'bild'].concat(sloStimme ? ['hoeren'] : []);
+  const typen = ['tippen', 'desl', 'slde', 'bild'].concat(sloTonDa() ? ['hoeren'] : [], sloSprechenMoeglich() ? ['sprechen'] : []);
   const A = schwach.map((w, i) => ({ typ: typen[i % typen.length], w }));
   if (schwach.length >= 4) A.splice(5, 0, { typ: 'paare', liste: schwach.slice(0, 5) });
   return A;
@@ -296,9 +395,9 @@ function sloPruefen() {
   const r = slo.pruefe();
   if (!r) return;
   slo.zustand = 'weiter'; slo.bewertet++;
-  if (r.ok) { slo.richtig++; sloKlang(true); if (navigator.vibrate) navigator.vibrate(12); }
+  if (r.ok) { slo.richtig++; slo.combo = (slo.combo || 0) + 1; sloKlang(true); if (navigator.vibrate) navigator.vibrate(12); }
   else {
-    slo.fehler++; sloKlang(false); if (navigator.vibrate) navigator.vibrate([40, 40, 40]);
+    slo.fehler++; slo.combo = 0; sloKlang(false); if (navigator.vibrate) navigator.vibrate([40, 40, 40]);
     // falsch beantwortet: kommt am Ende noch einmal (einmal je Aufgabe)
     if (!slo.nochmal.has(a)) { slo.nochmal.add(a); slo.liste.push({ ...a, nochmal: true }); }
     slo.fehlerListe.push(a);
@@ -308,7 +407,8 @@ function sloPruefen() {
   $('sloFuss').className = 'slo-fuss ' + (r.ok ? 'gut' : 'schlecht');
   $('sloUrteil').innerHTML = '<div class="slo-urteil-kopf">' + sloDrache(r.ok ? 'jubel' : 'traurig') + '<b>' + (r.ok ? lob[Math.floor(Math.random() * lob.length)] + ' <small>(richtig!)</small>' : 'Ni čisto prav <small>(nicht ganz)</small>') + '</b></div>'
     + (r.loesung ? '<div class="slo-loesung">' + (r.ok ? '' : 'Richtig: ') + r.loesung + (r.laut ? ' ' + sloLaut(r.laut) : '') + '</div>' : '')
-    + (r.hinweis ? '<div class="slo-hinweis">' + r.hinweis + '</div>' : '');
+    + (r.hinweis ? '<div class="slo-hinweis">' + r.hinweis + '</div>' : '')
+    + (r.ok && slo.combo >= 3 && slo.combo % (slo.combo >= 10 ? 5 : 3) === 0 ? '<div class="slo-combo">🔥 ' + slo.combo + ' richtig in Folge!</div>' : '');
   $('sloUrteil').querySelectorAll('[data-sprich]').forEach((b) => b.addEventListener('click', () => sloSprich(b.dataset.sprich)));
   sloBereit(true, 'Weiter');
   $('sloAufgabe').querySelectorAll('button, input').forEach((b) => { if (!b.classList.contains('slo-laut')) b.disabled = true; });
@@ -344,24 +444,25 @@ function sloEnde() {
 }
 
 // ---------- Aufgaben-Typen ----------
-function sloOptionen(box, optionen, istRichtig, html) {
+function sloOptionen(box, optionen, istRichtig, html, vorlesen) {
   box.querySelector('.slo-optionen').innerHTML = optionen.map((o, i) => '<button type="button" class="slo-opt" data-i="' + i + '">' + html(o) + '</button>').join('');
   box.querySelectorAll('.slo-opt').forEach((b) => b.addEventListener('click', () => {
     box.querySelectorAll('.slo-opt').forEach((x) => x.classList.toggle('gewaehlt', x === b));
     slo.antwort = optionen[Number(b.dataset.i)];
+    if (vorlesen) sloSprich(vorlesen(slo.antwort));
     sloBereit(true);
   }));
   slo.pruefe = () => { if (!slo.antwort) return null; const ok = istRichtig(slo.antwort); box.querySelectorAll('.slo-opt').forEach((x) => { const o = optionen[Number(x.dataset.i)]; if (istRichtig(o)) x.classList.add('richtig'); else if (x.classList.contains('gewaehlt')) x.classList.add('falsch'); }); return { ok }; };
 }
 // Wort-Kacheln zum Satzbauen
-function sloKacheln(box, ziel, vorrat, pruefen) {
+function sloKacheln(box, ziel, vorrat, pruefen, vorlesen) {
   const gewaehlt = [];
   const kacheln = vorrat.map((t, i) => ({ t, i }));
   const zeichnen = () => {
     box.querySelector('.slo-zeile').innerHTML = gewaehlt.length ? gewaehlt.map((k, j) => '<button type="button" class="slo-kachel drin" data-j="' + j + '">' + sloEsc(k.t) + '</button>').join('') : '<span class="slo-leer">Tippe die Wörter in der richtigen Reihenfolge an</span>';
     box.querySelector('.slo-bank').innerHTML = kacheln.map((k) => '<button type="button" class="slo-kachel' + (gewaehlt.includes(k) ? ' weg' : '') + '" data-i="' + k.i + '">' + sloEsc(k.t) + '</button>').join('');
     box.querySelectorAll('.slo-zeile .slo-kachel').forEach((b) => b.addEventListener('click', () => { gewaehlt.splice(Number(b.dataset.j), 1); zeichnen(); }));
-    box.querySelectorAll('.slo-bank .slo-kachel:not(.weg)').forEach((b) => b.addEventListener('click', () => { gewaehlt.push(kacheln[Number(b.dataset.i)]); zeichnen(); }));
+    box.querySelectorAll('.slo-bank .slo-kachel:not(.weg)').forEach((b) => b.addEventListener('click', () => { const k = kacheln[Number(b.dataset.i)]; gewaehlt.push(k); if (vorlesen) sloSprich(k.t); zeichnen(); }));
     sloBereit(gewaehlt.length > 0);
   };
   zeichnen();
@@ -392,7 +493,7 @@ const SLO_RENDER = {
   desl(a, box) {
     const opt = sloMisch([a.w, ...sloAndere(sloPool(a.w), a.w, 3, 'sl')]);
     box.innerHTML = '<div class="slo-titel">Wie sagt man auf Slowenisch</div><div class="slo-frage">' + a.w.e + ' „' + sloEsc(a.w.de) + '“</div><div class="slo-optionen"></div>';
-    sloOptionen(box, opt, (o) => sloNorm(o.sl) === sloNorm(a.w.sl), (o) => sloEsc(o.sl));
+    sloOptionen(box, opt, (o) => sloNorm(o.sl) === sloNorm(a.w.sl), (o) => sloEsc(o.sl), (o) => o.sl);
     const p = slo.pruefe; slo.pruefe = () => { const r = p(); return r && { ...r, loesung: sloEsc(a.w.de) + ' = ' + sloEsc(a.w.sl), laut: a.w.sl }; };
   },
   hoeren(a, box) {
@@ -470,7 +571,52 @@ const SLO_RENDER = {
     sloKacheln(box, ziel, vorrat, (txt) => {
       const ok = passt.includes(sloNorm(txt));
       return { ok, loesung: sloEsc(ziel), laut: a.s.sl };
+    }, nachSl && sloStimme && !sloAudio);
+  },
+  diktat(a, box) {
+    const teile = sloTeile(a.s.sl), schon = new Set(teile.map(sloNorm)), passt = [a.s.sl].concat(a.s.slAlt).map(sloNorm);
+    const pool = (slo.u ? slo.u.S : sloSatzPool()).filter((s) => s !== a.s).flatMap((s) => sloTeile(s.sl)).filter((t) => { const k = sloNorm(t); if (schon.has(k)) return false; schon.add(k); return true; });
+    const vorrat = sloMisch(teile.concat(sloMisch(pool).slice(0, Math.max(2, Math.round(teile.length / 2)))));
+    box.innerHTML = '<div class="slo-titel">Tippe, was du hörst</div><div class="slo-hoer"><button type="button" class="slo-laut gross" data-sprich="' + sloEsc(a.s.sl) + '">🔊</button><button type="button" class="slo-laut langsam" data-sprich="' + sloEsc(a.s.sl) + '">🐢</button></div>'
+      + '<div class="slo-zeile"></div><div class="slo-bank"></div>';
+    sloKacheln(box, a.s.sl, vorrat, (txt) => ({ ok: passt.includes(sloNorm(txt)), loesung: sloEsc(a.s.sl) + ' = ' + sloEsc(a.s.de), laut: a.s.sl }));
+    setTimeout(() => sloSprich(a.s.sl), 250);
+  },
+  sprechen(a, box) {
+    const text = a.s ? a.s.sl : a.w.sl, de = a.s ? a.s.de : a.w.de;
+    box.innerHTML = '<div class="slo-titel">Sprich nach</div><div class="slo-frage satz">' + (a.w ? a.w.e + ' ' : '') + '„' + sloEsc(text) + '“ ' + sloLaut(text) + '</div><div class="slo-uebersetzung">' + sloEsc(de) + '</div>'
+      + '<button type="button" class="slo-mikro" id="sloMikro"><span>🎙️</span><b>Tippen und sprechen</b></button><div class="slo-gehoert" id="sloGehoert"></div>'
+      + '<button type="button" class="slo-nicht" id="sloNicht">Gerade nicht sprechen</button>';
+    let bester = 0, gehoert = '';
+    $('sloMikro').addEventListener('click', () => {
+      const m = $('sloMikro');
+      if (m.classList.contains('hoert')) return;
+      if ('speechSynthesis' in window) speechSynthesis.cancel();
+      let rec;
+      try { rec = new SLO_SR(); } catch (e) { $('sloGehoert').textContent = 'Spracherkennung startet nicht.'; return; }
+      rec.lang = 'sl-SI'; rec.interimResults = false; rec.maxAlternatives = 4;
+      m.classList.add('hoert'); m.querySelector('b').textContent = 'Ich höre zu …';
+      rec.onresult = (e) => {
+        const alt = [...e.results[0]].map((x) => x.transcript);
+        alt.forEach((t) => { const q = sloSprachTreffer(t, text); if (q > bester || !gehoert) { bester = Math.max(bester, q); gehoert = t; } });
+        $('sloGehoert').innerHTML = 'Verstanden: „' + sloEsc(gehoert) + '“';
+        sloBereit(true);
+        if (bester >= 0.6) sloPruefen();
+      };
+      rec.onerror = (e) => {
+        const grund = { 'not-allowed': 'Kein Zugriff aufs Mikrofon – bitte in den Einstellungen erlauben.', 'language-not-supported': 'Slowenisch wird von der Spracherkennung dieses Geräts nicht unterstützt.', 'no-speech': 'Nichts gehört – noch einmal?', network: 'Die Spracherkennung braucht Internet.' }[e.error] || 'Das hat nicht geklappt (' + e.error + ').';
+        $('sloGehoert').textContent = grund;
+        if (e.error === 'language-not-supported' || e.error === 'not-allowed') { const st = sloStore(); st.sprechenAus = Date.now() + 864e5; saveJson(SLO_KEY, st); }
+      };
+      rec.onend = () => { m.classList.remove('hoert'); m.querySelector('b').textContent = 'Noch einmal sprechen'; };
+      try { rec.start(); } catch (e) { m.classList.remove('hoert'); }
     });
+    $('sloNicht').addEventListener('click', () => {
+      const st = sloStore(); st.sprechenAus = Date.now() + 36e5; saveJson(SLO_KEY, st);
+      slo.liste = slo.liste.filter((x, i) => i <= slo.i || x.typ !== 'sprechen');
+      slo.i++; sloZeigen();
+    });
+    slo.pruefe = () => (gehoert ? { ok: bester >= 0.6, loesung: sloEsc(text), laut: text, hinweis: 'Verstanden wurde: „' + sloEsc(gehoert) + '“ (' + Math.round(bester * 100) + ' % der Wörter)' } : null);
   },
   luecke(a, box) {
     const teile = sloTeile(a.s.sl), kand = teile.map((t, i) => [t, i]).filter(([t]) => sloNorm(t).length >= 2);
@@ -481,7 +627,7 @@ const SLO_RENDER = {
     const opt = sloMisch([loch, ...falsch]);
     const satz = teile.map((t, i) => (i === idx ? '<span class="slo-loch">____</span>' : sloEsc(t))).join(' ');
     box.innerHTML = '<div class="slo-titel">Welches Wort fehlt?</div><div class="slo-frage satz">' + satz + '</div><div class="slo-uebersetzung">„' + sloEsc(a.s.de) + '“</div><div class="slo-optionen"></div>';
-    sloOptionen(box, opt, (o) => sloNorm(o) === sloNorm(loch), (o) => sloEsc(o));
+    sloOptionen(box, opt, (o) => sloNorm(o) === sloNorm(loch), (o) => sloEsc(o), (o) => o);
     const p = slo.pruefe; slo.pruefe = () => { const r = p(); if (r) box.querySelector('.slo-loch').textContent = loch; return r && { ...r, loesung: sloEsc(a.s.sl), laut: a.s.sl }; };
   },
 };

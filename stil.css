@@ -2936,3 +2936,10 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .slo-dlg-woerter { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; font-size: .82rem; }
 .slo-dlg-woerter span { padding: 3px 8px; border-radius: 8px; background: rgba(255,255,255,.07); }
 @media (prefers-reduced-motion: reduce) { .slo-mini, .slo-maskottchen, .slo-jubel, .slo-station.jetzt .slo-knoten { animation: none; } }
+.slo-mikro { display: grid; justify-items: center; gap: 6px; padding: 22px; border: 2px solid rgba(96,165,250,.4); border-radius: 22px; background: rgba(29,78,216,.18); color: #dbeafe; font: inherit; cursor: pointer; box-shadow: 0 5px 0 #1e3a8a; }
+.slo-mikro span { font-size: 2.6rem; } .slo-mikro b { font-size: 1rem; }
+.slo-mikro.hoert { border-color: #f87171; background: rgba(239,68,68,.18); animation: sloHoeren 1s ease-in-out infinite; }
+@keyframes sloHoeren { 50% { box-shadow: 0 5px 0 #7f1d1d, 0 0 0 10px rgba(239,68,68,.15); } }
+.slo-gehoert { min-height: 1.3em; text-align: center; color: #bfdbfe; font-size: .92rem; }
+.slo-nicht { justify-self: center; padding: 6px 12px; border: 0; background: none; color: #8fb3a2; font: inherit; font-size: .85rem; text-decoration: underline; cursor: pointer; }
+.slo-combo { justify-self: start; padding: 3px 10px; border-radius: 10px; background: rgba(250,204,21,.16); color: #fde68a; font-weight: 800; font-size: .9rem; animation: aufploppen .4s var(--ease-spring); }
