@@ -2014,7 +2014,8 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .rf-brett.klein { max-width: 260px; pointer-events: none; }
 .rf-feld { position: relative; aspect-ratio: 1; border: 0; border-radius: 10px; padding: 0; cursor: pointer; background: #3fa7b8; box-shadow: inset 0 -3px 0 rgba(0,0,0,.12); font-size: 1.3rem; display: grid; place-items: center; transition: transform .15s; }
 .rf-feld.fels { background: #6b6253; cursor: default; }
-.rf-feld.belegt { background: var(--f); box-shadow: inset 0 -4px 0 rgba(0,0,0,.18), inset 0 3px 0 rgba(255,255,255,.3); animation: rfSetzen .35s var(--ease-spring); }
+.rf-feld.belegt { background: var(--f); box-shadow: inset 0 -4px 0 rgba(0,0,0,.18), inset 0 3px 0 rgba(255,255,255,.3); }
+.rf-feld.neu { animation: rfSetzen .35s var(--ease-spring); }
 @keyframes rfSetzen { from { transform: scale(.4); } }
 .rf-feld.vorschau { background: var(--f); opacity: .75; outline: 3px dashed #fff; outline-offset: -3px; }
 .rf-feld.vorschau.falsch { background: #9f1239; opacity: .7; outline-color: #fecdd3; }
@@ -2044,3 +2045,13 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 @media (prefers-reduced-motion: reduce) { .rf-mini i { animation: none; background: var(--f); } }
 
 .tg-regeln p, .rf-regeln p { margin: 0; }
+
+/* Riffbau: Abschluss-Welle und weiche Überblendung zum Ergebnis */
+#rf-spiel.fertig .rf-wuerfel, #rf-spiel.fertig .rf-joker, #rf-spiel.fertig .rf-knoepfe, #rf-spiel.fertig #rfPassen { opacity: 0; transform: translateY(10px); pointer-events: none; transition: opacity .3s, transform .3s; }
+#rf-spiel.fertig .rf-feld.belegt { animation: rfWelle .6s ease-in-out backwards; animation-delay: calc(var(--i) * 55ms); }
+@keyframes rfWelle { 0% { transform: none; } 40% { transform: translateY(-6px) scale(1.08); filter: brightness(1.25); } 100% { transform: none; } }
+#rf-spiel.fertig .rf-hinweis { font-size: 1.3rem; font-weight: 800; color: #fff; }
+#rf-spiel.aus { opacity: 0; transform: scale(.97); transition: opacity .28s, transform .28s; }
+.rf-brett.klein .rf-feld { animation: none; }
+#rf-ende { animation: rfEnde .5s cubic-bezier(.2,.8,.2,1); }
+@keyframes rfEnde { from { opacity: 0; transform: translateY(14px); } }
