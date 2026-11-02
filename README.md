@@ -77,6 +77,8 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `tiefgang.js` – Tiefgang
 - `riff.js` – Riffbau
 - `punkte.js` – Punktwolke (Korrelation schätzen und sortieren)
+- `funktion.js` – Funktions-Detektiv (Funktionsgraphen lesen und nachbauen)
+- `zufall.js` – Zufalls-Gefühl (Wahrscheinlichkeiten schätzen, live simulieren)
 - `augen.js` – Augenmaß
 - `karte.js`, `karten-daten.js` – Karten-Gefühl (Kartendaten aus `werkzeuge/karten.py`)
 - `krimi.js` – Wer war’s? (Krimi-Logikrätsel)
@@ -230,6 +232,28 @@ Wie stark hängt das zusammen? Ein Spiel zum Korrelationskoeffizienten r, fünf 
   Die **geführte Lernrunde** erklärt das Schätzen in Schritten mit Beispielwolken und endet mit drei Übungen, die Schritt für
   Schritt zum Ergebnis führen. In der Auflösung zeigt eine Ellipse die Form der Wolke mit der Faustregel r ≈ (1 − q²) / (1 + q²)
   für q = Breite : Länge (im Mittel etwa ±0,02 genau).
+
+## 🕵️ Funktions-Detektiv
+Funktionsgraphen lesen lernen, auf einer Schultafel. Fünf Runden, bis zu 50 Punkte:
+- **Formel finden:** Kurve sehen, aus vier Gleichungen die richtige wählen. Die falschen sind typische Verwechslungen
+  (Vorzeichen, Verschiebung in die falsche Richtung, Kehrwert der Steigung …).
+- **Graph finden:** Gleichung sehen, aus vier Kurven die richtige tippen.
+- **Nachbauen:** Die gestrichelte Kurve mit Reglern nachstellen; Punkte nach mittlerem Abstand der Kurven.
+- Stufen: Leicht (Geraden, einfache Parabeln), Mittel (verschobene Parabeln, Betrag), Profi (Sinus, Exponential, Wurzel).
+- Jede Auflösung zeigt am Bild, wie man abliest: y-Achsenabschnitt und Steigungsdreieck, Scheitel/Knick/Startpunkt,
+  Mittellinie, Grenzlinie, mit nummerierten Schritten.
+- **Geführte Lernrunde:** sechs Aufträge mit Reglern (b, m, fallende Gerade, a der Parabel, Scheitel verschieben, Welle),
+  jeder wird erst freigeschaltet, wenn die Kurve genau sitzt. `?` öffnet einen Spickzettel mit allen Familien.
+- Tages-Fall, Bestwerte je Profil, Challenge-Links (`?funktion=`).
+
+## 🎲 Zufalls-Gefühl
+Wahrscheinlichkeiten schätzen: Würfel, Münzen, Kugeln, Karten, Geburtstage, Serien, Ziegenproblem. Nach jedem Tipp
+läuft eine **Live-Simulation mit 1000 Versuchen**, die Trefferquote pendelt sich sichtbar beim exakten Wert ein.
+Danach der Rechenweg mit Bild: 6×6-Würfeltafel, Baumdiagramm, Pascal-Balken, Gegenwahrscheinlichkeits-Kette, Kurven.
+- Alle exakten Werte sind gegen 20 000 Simulationen je Aufgabe geprüft.
+- **Geführte Lernrunde:** günstig ÷ möglich, die 36er-Tafel, Baum (malnehmen), Gegenteil, Gesetz der großen Zahlen,
+  Geburtstagsparadoxon. Spickzettel unter `?`.
+- Tages-Zufall, Bestwerte je Profil, Challenge-Links (`?zufall=`).
 
 ## 📐 Augenmaß
 Fünf Aufgaben, jede einmal pro Runde (bis zu 50 Punkte): **Halbieren** (Mitte einer Linie antippen), **Mittelpunkt** (Kreis, Quadrat,

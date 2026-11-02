@@ -183,7 +183,7 @@ function renderHub() {
     const st = loadJson(key), b = Object.values(st.best || {});
     return Math.max(0, ...(verschachtelt ? b.flatMap((m) => Object.values(m)) : b), ...Object.values(st.tag || {}));
   };
-  [['hubAugenBest', 'walquiz.augen.v1', false], ['hubKarteBest', 'walquiz.karte.v1', true]].forEach(([id, key, v]) => {
+  [['hubAugenBest', 'walquiz.augen.v1', false], ['hubKarteBest', 'walquiz.karte.v1', true], ['hubFunktionBest', 'walquiz.funktion.v1', true], ['hubZufallBest', 'walquiz.zufall.v1', false]].forEach(([id, key, v]) => {
     const r = rekordVon(key, v);
     $(id).textContent = r ? 'Rekord ' + fmt(r) + ' / 50' : 'Noch kein Rekord';
   });

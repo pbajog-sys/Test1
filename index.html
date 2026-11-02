@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=54">
+<link rel="stylesheet" href="fonts/fonts.css?v=55">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=54">
-<link rel="stylesheet" href="ansichten.css?v=54">
+<link rel="stylesheet" href="stil.css?v=55">
+<link rel="stylesheet" href="ansichten.css?v=55">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -460,6 +460,8 @@
       <button class="bu-ding bu-punkte" type="button" data-ziel="hubPunkte" aria-label="Punktwolke"><svg class="pw-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="pm-linie" d="M8 50L52 10"/><circle cx="10" cy="46" r="3.2" style="--k:0"/><circle cx="16" cy="40" r="3.2" style="--k:1"/><circle cx="19" cy="47" r="3.2" style="--k:2"/><circle cx="24" cy="34" r="3.2" style="--k:3"/><circle cx="28" cy="38" r="3.2" style="--k:4"/><circle cx="33" cy="27" r="3.2" style="--k:5"/><circle cx="36" cy="32" r="3.2" style="--k:6"/><circle cx="41" cy="22" r="3.2" style="--k:7"/><circle cx="45" cy="25" r="3.2" style="--k:8"/><circle cx="50" cy="13" r="3.2" style="--k:9"/></svg></button>
       <button class="bu-ding bu-augen" type="button" data-ziel="hubAugen" aria-label="Augenmaß"><svg class="ag-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="am-basis" d="M10 48H52"/><g class="am-arm"><path d="M10 48L46 14"/><circle cx="46" cy="14" r="4"/></g><path class="am-bogen" d="M26 48A16 16 0 0 0 21.7 37.1"/><circle class="am-ecke" cx="10" cy="48" r="3"/></svg></button>
       <button class="bu-ding bu-karte" type="button" data-ziel="hubKarte" aria-label="Karten-Gefühl"><svg class="kt-mini" viewBox="0 0 60 60" aria-hidden="true"><circle class="km-rand" cx="30" cy="30" r="25"/><path class="km-striche" d="M30 7v6M30 47v6M7 30h6M47 30h6"/><g class="km-nadel"><path class="km-nord" d="M30 10l6 20h-12z"/><path class="km-sued" d="M30 50l-6-20h12z"/></g><circle cx="30" cy="30" r="3" class="km-mitte"/></svg></button>
+      <button class="bu-ding bu-funktion" type="button" data-ziel="hubFunktion" aria-label="Funktions-Detektiv"><svg class="fd-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="fm-achse" d="M4 40H56M30 56V4"/><path class="fm-kurve" d="M10 8Q30 72 50 8"/><circle class="fm-punkt" cx="30" cy="40" r="3.5"/></svg></button>
+      <button class="bu-ding bu-zufall" type="button" data-ziel="hubZufall" aria-label="Zufalls-Gefühl"><span>⚄</span><span>⚂</span></button>
       <span class="bu-strasse" aria-hidden="true"><i></i></span>
       <button class="bu-ding bu-porsche" type="button" data-welt="porsche" aria-label="Porsche-Quiz"><svg viewBox="0 0 120 44"><path class="bu-karosse" d="M6 33c0-6 3-9 12-10l16-2C44 12 58 8 72 9c14 1 26 7 36 13 6 2 8 6 8 10v2H6z"/><path class="bu-fenster" d="M40 21c8-7 18-9 30-9 9 0 17 3 24 9z"/><g transform="translate(28 34)"><g class="bu-rad"><circle r="9"/><path d="M0-5.5V5.5M-5.5 0H5.5"/><circle r="2.2" fill="#c9c9d6" stroke="none"/></g></g><g transform="translate(94 34)"><g class="bu-rad"><circle r="9"/><path d="M0-5.5V5.5M-5.5 0H5.5"/><circle r="2.2" fill="#c9c9d6" stroke="none"/></g></g></svg></button>
       <button class="bu-ding bu-dackel" type="button" data-welt="dackel" aria-label="Dackel-Quiz"><img src="img/gretchen/avatar.jpg" alt=""></button>
@@ -526,6 +528,16 @@
     <button class="hub-game hub-tiefgang" id="hubTiefgang" type="button" data-regen="🤿,🫧,🐚,💰">
       <span class="hg-av hg-av-tiefgang" aria-hidden="true"><span class="hg-in"><span class="tg-mini"><i></i><i></i><i></i><b>🤿</b></span></span></span>
       <span class="hg-text"><span class="hg-titel">Tiefgang</span><span class="hg-sub">Tauch tiefer für Schätze – aber zweimal dieselbe Gefahr, und alles ist weg.</span><span class="hg-best" id="hubTiefgangBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-funktion" id="hubFunktion" type="button" data-regen="📈,🕵️,✏️,🔍">
+      <span class="hg-av hg-av-funktion" aria-hidden="true"><span class="hg-in"><svg class="fd-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="fm-achse" d="M4 40H56M30 56V4"/><path class="fm-kurve" d="M10 8Q30 72 50 8"/><circle class="fm-punkt" cx="30" cy="40" r="3.5"/></svg></span></span>
+      <span class="hg-text"><span class="hg-titel">Funktions-Detektiv</span><span class="hg-sub">Kurven lesen: Gerade, Parabel, Welle. Formel finden oder nachbauen.</span><span class="hg-best" id="hubFunktionBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-zufall" id="hubZufall" type="button" data-regen="🎲,🍀,🪙,🃏">
+      <span class="hg-av hg-av-zufall" aria-hidden="true"><span class="hg-in"><span class="zf-mini" aria-hidden="true"><i>⚄</i><i>⚁</i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Zufalls-Gefühl</span><span class="hg-sub">Wie wahrscheinlich ist das? Schätzen – dann 1000-mal live würfeln.</span><span class="hg-best" id="hubZufallBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-riff" id="hubRiff" type="button" data-regen="🎲,🪸,🐠,🟥">
@@ -1555,6 +1567,187 @@
     </div>
   </section>
 
+  <section class="screen" id="screen-funktion">
+    <div class="fd-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="fdZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="fdRunde"></span>
+        <button class="icon-btn pw-hilfe-btn" id="fdHilfeBtn" type="button" aria-label="Hilfe" title="Hilfe">?</button>
+      </div>
+
+      <div class="fd-teil" id="fd-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="fd-logo"><svg class="fd-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="fm-achse" d="M4 40H56M30 56V4"/><path class="fm-kurve" d="M10 8Q30 72 50 8"/><circle class="fm-punkt" cx="30" cy="40" r="3.5"/></svg></div>
+        <h2 class="fd-titel">Funktions-Detektiv</h2>
+        <div class="takt-modi fd-modi" id="fdModi">
+          <button type="button" data-modus="formel"><span>🔍</span>Formel finden</button>
+          <button type="button" data-modus="graph"><span>🖼️</span>Graph finden</button>
+          <button type="button" data-modus="bauen"><span>🎛️</span>Nachbauen</button>
+        </div>
+        <p class="fd-lead" id="fdLead"></p>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge fd-challenge" id="fdChallenge" hidden></div>
+        <div class="farb-stufen fd-stufen" id="fdStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn fd-gross-btn" id="fdLos" type="button">Los geht’s 🕵️</button>
+        <button class="btn secondary" id="fdTagBtn" type="button">📅 Tages-Fall</button>
+        <button class="btn secondary fd-lernen-btn" id="fdLernenBtn" type="button">🧑‍🏫 Geführte Lernrunde: Funktionen verstehen</button>
+        <div class="fd-best" id="fdBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="fd-teil" id="fd-spiel" hidden>
+        <div class="fd-frage" id="fdFrage"></div>
+        <div class="spalten fd-spiel-spalten">
+        <div class="spalte spalte-a"><div id="fdBild"></div></div>
+        <div class="spalte spalte-b"><div class="fd-aktion" id="fdAktion"></div></div>
+        </div>
+      </div>
+
+      <div class="fd-teil" id="fd-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-punkte" id="fdPunkte"></div>
+        <div class="ton-kommentar" id="fdKommentar"></div>
+        <div id="fdLoesBild"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="fd-analyse" id="fdAnalyse"></div>
+        <button class="btn fd-gross-btn" id="fdWeiter" type="button">Nächste Runde</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="fd-teil" id="fd-ende" hidden>
+        <div class="farb-summe" id="fdSumme"></div>
+        <div class="farb-rekord" id="fdRekord"></div>
+        <div class="farb-rekord" id="fdVergleich" hidden></div>
+        <ul class="ton-liste fd-liste" id="fdErgListe"></ul>
+        <button class="btn fd-gross-btn" id="fdTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="fdTeilenMsg"></div>
+        <button class="btn secondary" id="fdNochmal" type="button">Nochmal spielen</button>
+      </div>
+
+      <div class="fd-teil" id="fd-lernen" hidden>
+        <div class="pl-schritte" id="fdlSchritte" aria-hidden="true"></div>
+        <h3 class="pl-titel" id="fdlTitel"></h3>
+        <div class="spalten">
+        <div class="spalte spalte-a"><div class="fd-lernbild" id="fdlBild"></div></div>
+        <div class="spalte spalte-b">
+        <div class="fd-lerntext" id="fdlText"></div>
+        <div class="fd-lernaktion" id="fdlAktion"></div>
+        <div class="pl-nav"><button class="btn secondary" id="fdlZurueck" type="button">‹ Zurück</button><button class="btn fd-gross-btn" id="fdlWeiter" type="button">Weiter ›</button></div>
+        </div>
+        </div>
+      </div>
+
+      <dialog class="pl-dialog fd-dialog" id="fdHilfe" aria-label="Hilfe zum Funktions-Detektiv">
+        <div id="fdHilfeInhalt"></div>
+        <button class="btn pw-gross-btn" id="fdHilfeLernen" type="button">🧑‍🏫 Geführte Lernrunde starten</button>
+        <button class="btn secondary" id="fdHilfeZu" type="button">Schließen</button>
+      </dialog>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-zufall">
+    <div class="zf-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="zfZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="zfRunde"></span>
+        <button class="icon-btn pw-hilfe-btn" id="zfHilfeBtn" type="button" aria-label="Hilfe" title="Hilfe">?</button>
+      </div>
+
+      <div class="zf-teil" id="zf-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="zf-logo"><span>⚄</span><span>⚁</span></div>
+        <h2 class="zf-titel">Zufalls-Gefühl</h2>
+        <p class="zf-lead">Wie wahrscheinlich ist das? Schätz es mit dem Regler – dann wird es <b>1000-mal live</b> ausprobiert, und du siehst den Rechenweg mit Bild.</p>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge zf-challenge" id="zfChallenge" hidden></div>
+        <div class="farb-stufen zf-stufen" id="zfStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn zf-gross-btn" id="zfLos" type="button">Los geht’s 🎲</button>
+        <button class="btn secondary" id="zfTagBtn" type="button">📅 Tages-Zufall</button>
+        <button class="btn secondary zf-lernen-btn" id="zfLernenBtn" type="button">🧑‍🏫 Geführte Lernrunde: so rechnet man Zufall</button>
+        <div class="zf-best" id="zfBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="zf-teil" id="zf-spiel" hidden>
+        <div class="zf-karte">
+          <div class="zf-emoji" id="zfEmoji"></div>
+          <div class="zf-frage" id="zfFrage"></div>
+        </div>
+        <div class="zf-wert" id="zfWert"></div>
+        <input class="zf-regler" id="zfRegler" type="range" min="0" max="100" step="1" value="50" aria-label="Geschätzte Wahrscheinlichkeit in Prozent">
+        <div class="zf-skala"><span>0 % nie</span><span>50 %</span><span>100 % sicher</span></div>
+        <button class="btn zf-gross-btn" id="zfTippen" type="button">Tipp abgeben ✓</button>
+      </div>
+
+      <div class="zf-teil" id="zf-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="zf-auf-frage" id="zfAufFrage"></div>
+        <div id="zfSim"></div>
+        <button class="btn secondary" id="zfUeberspringen" type="button">⏩ Sofort fertig</button>
+        </div>
+        <div class="spalte spalte-b">
+        <div id="zfErgebnis" hidden>
+          <div class="ton-punkte" id="zfPunkte"></div>
+          <div class="ton-kommentar" id="zfKommentar"></div>
+          <div class="zf-analyse">
+            <table class="farb-tabelle" id="zfTabelle"></table>
+            <div class="zf-bild" id="zfBild"></div>
+            <ol class="zf-schritte" id="zfSchritte"></ol>
+          </div>
+        </div>
+        <button class="btn zf-gross-btn" id="zfWeiter" type="button" hidden>Nächste Runde</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="zf-teil" id="zf-ende" hidden>
+        <div class="farb-summe" id="zfSumme"></div>
+        <div class="farb-rekord" id="zfRekord"></div>
+        <div class="farb-rekord" id="zfVergleich" hidden></div>
+        <ul class="ton-liste zf-liste" id="zfErgListe"></ul>
+        <button class="btn zf-gross-btn" id="zfTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="zfTeilenMsg"></div>
+        <button class="btn secondary" id="zfNochmal" type="button">Nochmal spielen</button>
+      </div>
+
+      <div class="zf-teil" id="zf-lernen" hidden>
+        <div class="pl-schritte" id="zflSchritte" aria-hidden="true"></div>
+        <h3 class="pl-titel" id="zflTitel"></h3>
+        <div class="spalten">
+        <div class="spalte spalte-a"><div class="zf-lerntext" id="zflText"></div><div class="zf-geschafft" id="zflGeschafft" hidden></div></div>
+        <div class="spalte spalte-b">
+        <div class="zf-lernbox" id="zflBox"></div>
+        <div class="pl-nav"><button class="btn secondary" id="zflZurueck" type="button">‹ Zurück</button><button class="btn zf-gross-btn" id="zflWeiter" type="button">Weiter ›</button></div>
+        </div>
+        </div>
+      </div>
+
+      <dialog class="pl-dialog zf-dialog" id="zfHilfe" aria-label="Hilfe zum Zufalls-Gefühl">
+        <div id="zfHilfeInhalt"></div>
+        <button class="btn pw-gross-btn" id="zfHilfeLernen" type="button">🧑‍🏫 Geführte Lernrunde starten</button>
+        <button class="btn secondary" id="zfHilfeZu" type="button">Schließen</button>
+      </dialog>
+    </div>
+  </section>
+
   <section class="screen" id="screen-augen">
     <div class="ag-buehne">
       <div class="farb-kopf">
@@ -1722,35 +1915,37 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=54"></script>
-<script src="haie.js?v=54"></script>
-<script src="porsche.js?v=54"></script>
-<script src="dackel.js?v=54"></script>
-<script src="groesse.js?v=54"></script>
-<script src="gretchen.js?v=54"></script>
-<script src="effekte.js?v=54"></script>
-<script src="app.js?v=54"></script>
-<script src="melden.js?v=54"></script>
-<script src="verlauf.js?v=54"></script>
-<script src="hub.js?v=54"></script>
-<script src="farben.js?v=54"></script>
-<script src="cello.js?v=54"></script>
-<script src="instrumente.js?v=54"></script>
-<script src="toene.js?v=54"></script>
-<script src="takt.js?v=54"></script>
-<script src="punkte.js?v=54"></script>
-<script src="augen.js?v=54"></script>
-<script src="karten-daten.js?v=54"></script>
-<script src="karte.js?v=54"></script>
-<script src="tiefgang.js?v=54"></script>
-<script src="riff.js?v=54"></script>
-<script src="krimi-grafik.js?v=54"></script>
-<script src="krimi.js?v=54"></script>
-<script src="krimi-wachen.js?v=54"></script>
-<script src="krimi-verhoer.js?v=54"></script>
-<script src="krimi-alibi.js?v=54"></script>
-<script src="krimi-akte.js?v=54"></script>
-<script src="krimi-zentrale.js?v=54"></script>
-<script src="profile.js?v=54"></script>
+<script src="wale.js?v=55"></script>
+<script src="haie.js?v=55"></script>
+<script src="porsche.js?v=55"></script>
+<script src="dackel.js?v=55"></script>
+<script src="groesse.js?v=55"></script>
+<script src="gretchen.js?v=55"></script>
+<script src="effekte.js?v=55"></script>
+<script src="app.js?v=55"></script>
+<script src="melden.js?v=55"></script>
+<script src="verlauf.js?v=55"></script>
+<script src="hub.js?v=55"></script>
+<script src="farben.js?v=55"></script>
+<script src="cello.js?v=55"></script>
+<script src="instrumente.js?v=55"></script>
+<script src="toene.js?v=55"></script>
+<script src="takt.js?v=55"></script>
+<script src="punkte.js?v=55"></script>
+<script src="funktion.js?v=55"></script>
+<script src="zufall.js?v=55"></script>
+<script src="augen.js?v=55"></script>
+<script src="karten-daten.js?v=55"></script>
+<script src="karte.js?v=55"></script>
+<script src="tiefgang.js?v=55"></script>
+<script src="riff.js?v=55"></script>
+<script src="krimi-grafik.js?v=55"></script>
+<script src="krimi.js?v=55"></script>
+<script src="krimi-wachen.js?v=55"></script>
+<script src="krimi-verhoer.js?v=55"></script>
+<script src="krimi-alibi.js?v=55"></script>
+<script src="krimi-akte.js?v=55"></script>
+<script src="krimi-zentrale.js?v=55"></script>
+<script src="profile.js?v=55"></script>
 </body>
 </html>

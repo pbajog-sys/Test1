@@ -8,6 +8,8 @@ const VERLAUF_SPIELE = {
   toene: { name: 'Ton-Gedächtnis', emoji: '🎧', farbe: '#67e8f9' },
   takt: { name: 'Takt-Gefühl', emoji: '⏱️', farbe: '#ff8a3d' },
   punkte: { name: 'Punktwolke', emoji: '📈', farbe: '#fde047' },
+  funktion: { name: 'Funktions-Detektiv', emoji: '🕵️', farbe: '#a3e635' },
+  zufall: { name: 'Zufalls-Gefühl', emoji: '🎲', farbe: '#fbbf24' },
   augen: { name: 'Augenmaß', emoji: '📐', farbe: '#5eead4' },
   karte: { name: 'Karten-Gefühl', emoji: '🧭', farbe: '#34d399' },
   tiefgang: { name: 'Tiefgang', emoji: '🤿', farbe: '#22d3ee' },
