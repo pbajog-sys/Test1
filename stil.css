@@ -2349,3 +2349,149 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .zf-kasten { font-size: 0.86rem; background: rgba(255,255,255,.06); border-radius: 12px; padding: 10px 12px; }
 .zf-kasten ul { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 2px; }
 @media (prefers-reduced-motion: reduce) { .fd-mini .fm-kurve, .fd-mini .fm-punkt, .zf-mini i, .bu-zufall span, .zf-logo span, .fd-kurve.zeichnen { animation: none; } }
+
+/* ===================================================================
+   🧑‍🏫 Führung: Spickzettel und geführte Einführung für alle Spiele (fuehrung.js)
+   Farben je Spiel über Variablen, Grundlook dunkel
+   =================================================================== */
+.fh { --fh-bg: #15151f; --fh-text: #f4f4fa; --fh-karte: rgba(255,255,255,.07); --fh-akzent: #a78bfa; --fh-akzent-text: #160f2e; --fh-gut: #4ade80;
+  width: min(580px, calc(100vw - 20px)); max-height: 90dvh; padding: 0; border: 0; border-radius: 22px; overflow: hidden;
+  background: var(--fh-bg); color: var(--fh-text); font-family: "Outfit", system-ui, sans-serif; box-shadow: 0 24px 70px rgba(0,0,0,.5); }
+.fh[open] { display: flex; flex-direction: column; animation: aufploppen .35s var(--ease-spring); }
+.fh::backdrop { background: rgba(0,0,0,.55); backdrop-filter: blur(3px); }
+.fht-farben { --fh-bg: #1b1426; --fh-akzent: #f472b6; --fh-akzent-text: #2a0a1e; }
+.fht-toene { --fh-bg: #08202a; --fh-akzent: #67e8f9; --fh-akzent-text: #062028; }
+.fht-takt { --fh-bg: #1f1208; --fh-akzent: #ff8a3d; --fh-akzent-text: #2a1206; }
+.fht-augen { --fh-bg: #0a1c36; --fh-akzent: #ffb547; --fh-akzent-text: #241500; }
+.fht-karte { --fh-bg: #0f2a2a; --fh-akzent: #34d399; --fh-akzent-text: #052016; }
+.fht-tiefgang { --fh-bg: #06223f; --fh-akzent: #22d3ee; --fh-akzent-text: #04202b; }
+.fht-riff { --fh-bg: #0b1f22; --fh-akzent: #fb7185; --fh-akzent-text: #2a0710; }
+.fht-cello { --fh-bg: #1e140c; --fh-akzent: #d6a35c; --fh-akzent-text: #1e140c; }
+.fht-krimi { --fh-bg: #1a0f0f; --fh-akzent: #ef4444; --fh-akzent-text: #fff; }
+.fh-kopf { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; font-size: 1.05rem; }
+.fh-emoji { font-size: 1.5rem; }
+.fh-kopf b { flex: 1; }
+.fh-x { width: 36px; height: 36px; border-radius: 50%; border: 0; background: var(--fh-karte); color: inherit; font-size: 1.4rem; line-height: 1; cursor: pointer; }
+.fh-inhalt { display: grid; gap: 12px; padding: 0 16px calc(env(safe-area-inset-bottom) + 16px); overflow-y: auto; }
+.fh-inhalt h3 { margin: 0; text-align: center; font-size: 1.3rem; }
+.fh-spick { display: grid; gap: 10px; }
+.fh-regelzeile { display: grid; grid-template-columns: 36px 1fr; gap: 10px; align-items: start; font-size: 0.92rem; line-height: 1.45; }
+.fh-regelzeile > span { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; background: var(--fh-akzent); color: var(--fh-akzent-text); font-weight: 800; }
+.fh-regelzeile b { display: block; }
+.fh-kasten { background: var(--fh-karte); border-radius: 14px; padding: 10px 12px; font-size: 0.88rem; line-height: 1.45; }
+.fh-kasten ul { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 3px; }
+.fh-haupt, .fh-zweit, .fh-opt { padding: 13px 14px; border-radius: 14px; border: 0; font: inherit; font-weight: 700; cursor: pointer; transition: transform .15s var(--ease-spring), background .2s; }
+.fh-haupt { background: var(--fh-akzent); color: var(--fh-akzent-text); font-size: 1.05rem; box-shadow: 0 4px 0 rgba(0,0,0,.25); }
+.fh-zweit, .fh-opt { background: var(--fh-karte); color: inherit; }
+.fh-haupt:disabled, .fh-zweit:disabled { opacity: .35; cursor: default; }
+.fh-haupt:active, .fh-opt:active { transform: scale(.97); }
+.fh-opt.richtig { background: rgba(74,222,128,.22); box-shadow: inset 0 0 0 2px var(--fh-gut); }
+.fh-opt.falsch { background: rgba(248,113,113,.2); box-shadow: inset 0 0 0 2px #f87171; }
+.fh-opt:disabled { cursor: default; }
+.fh-punkte { display: flex; justify-content: center; gap: 6px; }
+.fh-punkte i { width: 24px; height: 6px; border-radius: 3px; background: rgba(255,255,255,.18); }
+.fh-punkte i.fertig { background: var(--fh-gut); } .fh-punkte i.jetzt { background: var(--fh-akzent); }
+.fh-schritt-titel { animation: aufploppen .35s var(--ease-spring); }
+.fh-bild { display: grid; gap: 8px; justify-items: center; animation: aufploppen .4s var(--ease-spring) .05s backwards; }
+.fh-text { background: var(--fh-karte); border-radius: 14px; padding: 12px 14px; line-height: 1.55; }
+.fh-text b, .fh-geschafft b { color: var(--fh-akzent); }
+.fh-auftrag { display: grid; gap: 10px; }
+.fh-frage { font-weight: 700; text-align: center; line-height: 1.45; }
+.fh-wahl { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 8px; }
+.fh-nein { font-size: 0.88rem; opacity: .85; text-align: center; min-height: 1.2em; }
+.fh-geschafft { background: rgba(74,222,128,.14); border: 1.5px solid rgba(74,222,128,.5); border-radius: 14px; padding: 10px 12px; line-height: 1.5; animation: aufploppen .4s var(--ease-spring); }
+.fh-nav { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+.fh-ueber { justify-self: center; border: 0; background: none; color: inherit; opacity: .55; font: inherit; font-size: 0.82rem; text-decoration: underline; cursor: pointer; }
+.fh-messung { text-align: center; font-variant-numeric: tabular-nums; min-height: 1.3em; }
+.fh-regel { display: grid; gap: 4px; font-size: 0.9rem; }
+.fh-regler { -webkit-appearance: none; appearance: none; width: 100%; height: 34px; border-radius: 17px; margin: 0; touch-action: none; background: var(--spur, linear-gradient(90deg, rgba(255,255,255,.08), rgba(255,255,255,.3))); box-shadow: inset 0 0 0 1.5px rgba(255,255,255,.2); }
+.fh-regler::-webkit-slider-thumb { -webkit-appearance: none; width: 34px; height: 34px; border-radius: 50%; background: #fff; border: 5px solid var(--fh-akzent); box-shadow: 0 2px 8px rgba(0,0,0,.4); cursor: grab; }
+.fh-regler::-moz-range-thumb { width: 26px; height: 26px; border-radius: 50%; background: #fff; border: 5px solid var(--fh-akzent); }
+.fh-felder { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.fh-felder > div { display: grid; gap: 4px; text-align: center; font-size: 0.8rem; opacity: .9; }
+.fh-felder i { display: block; height: 70px; border-radius: 14px; box-shadow: inset 0 0 0 2px rgba(255,255,255,.15); }
+.fh-reihe { display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; }
+.fh-kleck { display: inline-grid; justify-items: center; gap: 4px; font-size: 0.78rem; }
+.fh-kleck i { display: block; width: 54px; height: 54px; border-radius: 50%; box-shadow: inset 0 0 0 2px rgba(255,255,255,.2), 0 4px 10px rgba(0,0,0,.3); }
+.fh-gleichung { display: flex; align-items: center; justify-content: center; gap: 8px; font-size: 1.3rem; font-weight: 800; flex-wrap: wrap; }
+.fh-chip { padding: 6px 12px; border-radius: 10px; background: var(--fh-akzent); color: var(--fh-akzent-text); font-size: 1.1rem; }
+.fh-wellen { width: 100%; max-width: 360px; }
+.fh-wellen path { fill: none; stroke: var(--fh-akzent); stroke-width: 3; }
+.fh-wellen path.hoch { stroke: #f9a8d4; }
+.fh-skala { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; width: 100%; text-align: center; font-size: 0.78rem; }
+.fh-skala > div { background: var(--fh-karte); border-radius: 10px; padding: 8px 2px; display: grid; gap: 2px; }
+.fh-halten { width: 150px; height: 150px; justify-self: center; border-radius: 50%; border: 4px solid var(--fh-akzent); background: var(--fh-karte); color: inherit; font: inherit; font-weight: 700; cursor: pointer; touch-action: none; user-select: none; -webkit-user-select: none; transition: transform .2s, background .2s; }
+.fh-halten.an { background: var(--fh-akzent); color: var(--fh-akzent-text); transform: scale(.94); }
+.fh-puls { display: grid; place-items: center; height: 90px; }
+.fh-puls i { width: 50px; height: 50px; border-radius: 50%; background: var(--fh-akzent); animation: fhPuls var(--dauer) ease-out infinite; }
+@keyframes fhPuls { 0% { transform: scale(1.35); opacity: 1; } 60%, 100% { transform: scale(.8); opacity: .45; } }
+.fh-tipp { font-size: 1.2rem; padding: 18px; }
+.fh-takt { display: flex; align-items: center; gap: 4px; flex-wrap: wrap; justify-content: center; }
+.fh-takt > b { width: 42px; }
+.fh-takt i { width: 28px; height: 28px; border-radius: 8px; display: grid; place-items: center; font-style: normal; font-size: 0.8rem; background: var(--fh-karte); }
+.fh-takt i.eins { background: var(--fh-akzent); color: var(--fh-akzent-text); font-weight: 800; transform: scale(1.12); }
+.fh-takt i.halb { box-shadow: inset 0 0 0 2px var(--fh-akzent); }
+.fh-takt span { opacity: .4; }
+.fh-tafel { width: 100%; max-width: 380px; background: rgba(0,0,0,.25); border-radius: 14px; touch-action: manipulation; }
+.fh-linie, .fh-linie path { stroke: #e8f1ff; stroke-width: 3.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+.fh-du { stroke: var(--fh-akzent); stroke-width: 3; }
+.fh-mitte { stroke: var(--fh-gut); stroke-width: 3; }
+.fh-du-punkt { fill: var(--fh-akzent); stroke: #fff; stroke-width: 2; }
+.fh-ziel-punkt { fill: var(--fh-gut); stroke: #fff; stroke-width: 2; }
+.fh-hilfe { stroke: var(--fh-gut); stroke-width: 1.5; stroke-dasharray: 5 4; }
+.fh-ring { fill: rgba(52,211,153,.08); stroke: var(--fh-akzent); stroke-width: 2; stroke-dasharray: 6 5; }
+.fh-svg-text { fill: currentColor; font-size: 13px; font-family: "Outfit", system-ui, sans-serif; font-weight: 700; }
+.fh-karte { width: 100%; border-radius: 14px; overflow: hidden; touch-action: manipulation; }
+.fh-karte .kt-svg { display: block; width: 100%; height: auto; max-height: 52dvh; }
+.fh-anker { fill: #1f2937; stroke: #fff; stroke-width: 1; }
+.fh-karten-text { fill: #1f2937; font-weight: 700; font-family: "Outfit", system-ui, sans-serif; paint-order: stroke; stroke: #fff; stroke-width: 3px; }
+.fh-tabelle { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; text-align: center; font-size: 0.88rem; }
+.fh-tabelle th, .fh-tabelle td { padding: 6px 4px; }
+.fh-tabelle tr + tr { border-top: 1px solid rgba(255,255,255,.1); }
+.fh-tabelle th:first-child { text-align: left; }
+.fh-karten { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; justify-content: center; }
+.fh-karten i { width: 44px; height: 56px; border-radius: 10px; display: grid; place-items: center; font-style: normal; font-size: 1.6rem; background: var(--fh-karte); box-shadow: 0 3px 0 rgba(0,0,0,.25); animation: aufploppen .4s var(--ease-spring) backwards; animation-delay: calc(var(--k) * .12s); }
+.fh-karten i.boom { box-shadow: inset 0 0 0 2px #f87171; background: rgba(248,113,113,.2); }
+.fh-karten b { font-size: 1.8rem; }
+.fh-zonen { display: grid; gap: 6px; width: 100%; }
+.fh-zonen > div { display: grid; padding: 10px 12px; border-radius: 12px; font-size: 0.88rem; }
+.fh-riff { display: grid; grid-template-columns: repeat(6, 1fr); gap: 3px; width: 100%; max-width: 260px; padding: 6px; border-radius: 12px; background: #0e7490; }
+.fh-riff i { aspect-ratio: 1; border-radius: 5px; background: rgba(255,255,255,.15); display: grid; place-items: center; font-style: normal; font-size: 1rem; }
+.fh-riff i.hervor { box-shadow: 0 0 0 3px #fff; z-index: 1; }
+.fh-riff span { display: grid; place-items: center; width: 80%; height: 80%; border-radius: 50%; box-shadow: 0 0 0 3px var(--fisch); }
+.fh-wuerfel { display: grid; gap: 8px; width: 100%; }
+.fh-wuerfel > div { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+.fh-wuerfel b { width: 52px; font-size: 0.85rem; }
+.fh-wuerfel span { width: 40px; height: 40px; border-radius: 9px; background: #fff; display: grid; place-items: center; color: #111; box-shadow: 0 3px 0 rgba(0,0,0,.25); }
+.fh-wuerfel svg { width: 28px; height: 28px; } .fh-wuerfel rect { fill: #0e7490; }
+.fh-wuerfel span i { width: 24px; height: 24px; border-radius: 50%; display: block; }
+.fh-noten { background: #fbf7ef; border-radius: 12px; padding: 4px; color: #1e140c; width: 100%; max-width: 300px; }
+.fh-noten svg { display: block; width: 100%; height: auto; }
+.fh-noten line { stroke: #1e140c; }
+.fh-noten-klein { display: grid; gap: 2px; justify-items: center; width: 84px; }
+.fh-noten-klein .fh-noten { padding: 0; }
+.fh-griff { width: 100%; max-width: 340px; }
+.fh-griff svg { width: 100%; height: auto; }
+.fh-klavier { width: 100%; max-width: 360px; }
+.fh-klavier .w { fill: #fbf7ef; stroke: #1e140c; } .fh-klavier .w.an { fill: #fde68a; } .fh-klavier .s { fill: #1e140c; }
+.fh-klavier text { font-size: 9px; font-weight: 700; fill: #1e140c; font-family: "Outfit", system-ui, sans-serif; }
+.fh-saiten { display: grid; gap: 10px; width: 100%; max-width: 340px; }
+.fh-saiten > div { display: grid; grid-template-columns: 24px 1fr; align-items: center; gap: 8px; }
+.fh-saiten i { display: block; height: var(--d); background: linear-gradient(90deg, #d6a35c, #fde68a, #d6a35c); border-radius: 2px; }
+.fh-gitter { display: grid; grid-template-columns: repeat(var(--n), 1fr); width: 100%; max-width: 260px; border: 2px solid #1a0f0f; border-radius: 6px; overflow: hidden; }
+.fh-gitter i { aspect-ratio: 1; display: grid; place-items: center; font-style: normal; font-size: 1.15rem; font-weight: 800; color: #7f1d1d; border: 0 solid #1a0f0f; }
+.fh-gitter i.hervor { box-shadow: inset 0 0 0 3px #ef4444; }
+.fh-raster { display: grid; grid-template-columns: auto repeat(3, 1fr); gap: 4px; width: 100%; font-size: 0.82rem; }
+.fh-raster .kopf { display: grid; place-items: center; text-align: center; padding: 4px; font-weight: 700; }
+.fh-raster button { aspect-ratio: 1.6; border: 0; border-radius: 8px; background: var(--fh-karte); color: inherit; font: inherit; font-size: 1.3rem; font-weight: 800; cursor: pointer; }
+/* ?-Knopf in den Spielen, Sprechblase beim ersten Mal */
+.farb-kopf { position: relative; }
+.fh-knopf { font-weight: 800; font-size: 1.1rem; margin-left: auto; }
+.farb-kopf > span:not(.fh-blase):not(.k-kopf-rechts) { flex: 1; text-align: center; }
+.fh-knopf.neu { animation: fhLeuchten 1.4s ease-in-out infinite; }
+@keyframes fhLeuchten { 0%, 100% { box-shadow: 0 0 0 0 rgba(255,255,255,.6); } 50% { box-shadow: 0 0 0 8px rgba(255,255,255,0); } }
+.fh-blase { position: absolute; right: 0; top: calc(100% + 8px); z-index: 5; max-width: 220px; padding: 8px 12px; border-radius: 12px; background: #fff; color: #111; font-size: 0.85rem; font-weight: 600; text-align: left; box-shadow: 0 8px 24px rgba(0,0,0,.3); cursor: pointer; animation: aufploppen .4s var(--ease-spring); }
+.fh-blase::before { content: ''; position: absolute; right: 14px; top: -6px; width: 12px; height: 12px; background: #fff; transform: rotate(45deg); }
+.btn.fh-intro-btn { width: 100%; border: 2px dashed rgba(255,255,255,.35); }
+.btn.fh-krimi-btn { width: 100%; }
+@media (prefers-reduced-motion: reduce) { .fh-puls i, .fh-takt i, .fh-knopf.neu { animation: none; } }

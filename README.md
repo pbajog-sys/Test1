@@ -79,6 +79,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `punkte.js` – Punktwolke (Korrelation schätzen und sortieren)
 - `funktion.js` – Funktions-Detektiv (Funktionsgraphen lesen und nachbauen)
 - `zufall.js` – Zufalls-Gefühl (Wahrscheinlichkeiten schätzen, live simulieren)
+- `fuehrung.js` – Hilfe für alle Spiele: Spickzettel (?), geführte Einführung mit Aufträgen, Übungsfälle für „Wer war’s?“
 - `augen.js` – Augenmaß
 - `karte.js`, `karten-daten.js` – Karten-Gefühl (Kartendaten aus `werkzeuge/karten.py`)
 - `krimi.js` – Wer war’s? (Krimi-Logikrätsel)
@@ -232,6 +233,18 @@ Wie stark hängt das zusammen? Ein Spiel zum Korrelationskoeffizienten r, fünf 
   Die **geführte Lernrunde** erklärt das Schätzen in Schritten mit Beispielwolken und endet mit drei Übungen, die Schritt für
   Schritt zum Ergebnis führen. In der Auflösung zeigt eine Ellipse die Form der Wolke mit der Faustregel r ≈ (1 − q²) / (1 + q²)
   für q = Breite : Länge (im Mittel etwa ±0,02 genau).
+
+## 🧑‍🏫 Führung in allen Spielen
+`fuehrung.js` gibt jedem Spiel (außer den Quizzes) Hilfe zum Lernen:
+- **?-Knopf** oben rechts: Spickzettel mit Regeln, Punktewertung und Tricks.
+- **Geführte Einführung** (Knopf auf der Startseite des Spiels oder im Spickzettel): Schritt für Schritt mit Bildern und
+  kleinen Aufträgen, die erst weitergehen, wenn sie gelöst sind (überspringbar). Beispiele: Farbton mit dem Regler treffen,
+  Ton nach Gehör finden, 2 Sekunden halten, im Takt tippen, Linie halbieren, Schwerpunkt antippen, Berlin auf der Karte finden,
+  Tiefgang-Risiko abwägen (aus den echten Kartengewichten berechnet), Riff-Punkte zählen, Noten im Bass- und Violinschlüssel lesen.
+- **Erstes Öffnen:** Der ?-Knopf leuchtet und eine Sprechblase weist auf die Einführung hin (einmal je Spiel und Profil).
+- **Wer war’s?:** In der Regel-Hilfe jedes Modus ein Übungsfall – Queens (Sperrfelder, kleinster Raum, Raum in einer Reihe),
+  Murdoku, Verhör (Annahmen durchprobieren) und Alibi-Raster (zum Selberlösen).
+- Punktwolke, Funktions-Detektiv und Zufalls-Gefühl haben eigene, ausführliche Lernrunden.
 
 ## 🕵️ Funktions-Detektiv
 Funktionsgraphen lesen lernen, auf einer Schultafel. Fünf Runden, bis zu 50 Punkte:
