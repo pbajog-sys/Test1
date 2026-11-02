@@ -271,10 +271,13 @@ Ein Leben als Tier – gesellschaftskritisch, aber sachlich und mit Quellen:
 
 ## 🐟 Piranha-Schwarm
 Eigenes Puzzle im Genre „Farben sortieren und Pixelbild abbauen“, mit Amazonas-Thema:
-- **Bild:** 10 eigene Szenen als Pixelbild mit Hintergrund (Wassermelone, Sonnenuntergang am Fluss, Tukan, Frosch auf Seerose,
-  Morphofalter, Ara, Piranha, Flussdelfin, Seerose bei Nacht, Erdbeeren), als kleine Vektorzeichnungen auf 36×36 gerastert,
-  auf eine 13-Farben-Palette gerundet und von Kantenresten bereinigt (1 296 Pixel, 7–11 Farben je Bild). Nach dem Sieg blendet
-  das fertige Bild wieder ein.
+- **Bild:** 19 eigene Szenen als Pixelbild mit Hintergrund – zuerst Meer und Cuxhaven (Buckelwal-Fluke, Kugelbake, Clownfisch,
+  Leuchtturm an der Elbe, Orca, Strandkörbe in Duhnen, Seehund im Watt, Containerschiff vor Cuxhaven, Blauwal), dann Amazonas
+  (Wassermelone, Sonnenuntergang am Fluss, Tukan, Frosch auf Seerose, Morphofalter, Ara, Piranha, Flussdelfin, Seerose bei Nacht,
+  Erdbeeren). Als kleine Vektorzeichnungen auf 36×36 gerastert, auf eine 15-Farben-Palette gerundet und von Kantenresten bereinigt
+  (1 296 Pixel, 6–13 Farben je Bild).
+- **Satter Schwarm:** Fische sind halb durchsichtig. Wer gefressen hat, schwimmt danach unter dem Bild weiter und scheint durch die
+  Lücken. Beim Lösen sammeln sich alle zu einem pulsierenden Herz über dem wieder eingeblendeten Bild.
 - **Höhlen-Raster** (6 Spalten, 24–31 Schwärme): antippbar sind nur Höhlen mit freiem Weg zum Fluss; ab Level 5 versteckte Höhlen ❓.
 - **Fressen von unten:** Ein Schwarm frisst Pixel seiner Farbe, die von unten erreichbar sind (Flut durch schon Gefressenes).
 - **Buchten** (6 → 5 → 4): Was nicht gefressen werden kann, wartet und frisst automatisch nach, sobald seine Farbe frei liegt.

@@ -11,6 +11,7 @@ const PR_FARBEN = [
   { name: 'Rot', c: '#e53935' }, { name: 'Orange', c: '#fb8c00' }, { name: 'Gelb', c: '#fdd835' }, { name: 'Hellgrün', c: '#8bc34a' },
   { name: 'Dunkelgrün', c: '#2e7d32' }, { name: 'Türkis', c: '#26c6da' }, { name: 'Blau', c: '#1e88e5' }, { name: 'Dunkelblau', c: '#283593' },
   { name: 'Lila', c: '#8e24aa' }, { name: 'Rosa', c: '#f48fb1' }, { name: 'Braun', c: '#795548' }, { name: 'Weiß', c: '#f5f5f5' }, { name: 'Schwarz', c: '#263238' },
+  { name: 'Grau', c: '#90a4ae' }, { name: 'Sand', c: '#e6c88a' },
 ];
 const PR_RGB = PR_FARBEN.map((f) => [1, 3, 5].map((k) => parseInt(f.c.slice(k, k + 2), 16)));
 const PB = 36;   // Bildgröße in Pixeln (quadratisch)
@@ -19,6 +20,162 @@ const PR_SPALTEN = 6;
 // ---------- Motive: kleine Vektorszenen, gerastert auf 36×36 und auf die Palette gerundet ----------
 const F = (i) => PR_FARBEN[i].c;
 const PR_MOTIVE = [
+  { name: 'Buckelwal-Fluke', emoji: '🐋', mal(x) {
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 14);
+    x.fillStyle = F(11); [[6, 5, 4], [26, 4, 5]].forEach(([a, b, r]) => { x.beginPath(); x.ellipse(a, b, r, r * 0.5, 0, 0, 7); x.fill(); });
+    x.fillStyle = F(6); x.fillRect(0, 14, 36, 22);
+    x.fillStyle = F(7); for (let i = 0; i < 4; i++) x.fillRect(0, 22 + i * 4, 36, 1.4);
+    x.fillStyle = F(11); [[8, 26], [20, 24], [30, 30]].forEach(([a, b]) => x.fillRect(a, b, 4, 1));
+    // Fluke
+    x.fillStyle = F(12);
+    x.beginPath(); x.moveTo(18, 26); x.lineTo(16.5, 15); x.quadraticCurveTo(10, 14, 4, 7); x.quadraticCurveTo(11, 9, 18, 11); x.quadraticCurveTo(25, 9, 32, 7); x.quadraticCurveTo(26, 14, 19.5, 15); x.lineTo(20, 26); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.moveTo(8, 9.5); x.quadraticCurveTo(13, 12, 17, 12.5); x.lineTo(16, 13.5); x.quadraticCurveTo(11, 13, 8, 9.5); x.fill();
+    x.beginPath(); x.moveTo(28, 9.5); x.quadraticCurveTo(23, 12, 19, 12.5); x.lineTo(20, 13.5); x.quadraticCurveTo(25, 13, 28, 9.5); x.fill();
+    x.fillStyle = F(11); [[13, 26, 3], [23, 26, 3], [18, 27, 4]].forEach(([a, b, r]) => { x.beginPath(); x.ellipse(a, b, r, 1.3, 0, 0, 7); x.fill(); });
+    [[12, 23], [24, 22], [16, 21], [21, 20]].forEach(([a, b]) => { x.beginPath(); x.arc(a, b, 0.9, 0, 7); x.fill(); });
+  } },
+  { name: 'Kugelbake in Cuxhaven', emoji: '⚓', mal(x) {
+    [[1, 0, 6], [9, 6, 5], [2, 11, 4]].forEach(([c, y, h]) => { x.fillStyle = F(c); x.fillRect(0, y, 36, h); });
+    x.fillStyle = F(11); x.beginPath(); x.arc(28, 10, 3, 0, 7); x.fill();
+    x.fillStyle = F(6); x.fillRect(0, 15, 36, 9);
+    x.fillStyle = F(1); [[22, 17, 9], [24, 20, 6]].forEach(([a, b, w]) => x.fillRect(a, b, w, 0.9));
+    x.fillStyle = F(13); x.fillRect(0, 24, 36, 12);
+    x.fillStyle = F(10); for (let i = 0; i < 5; i++) x.fillRect(i * 8 + 1, 27 + (i % 2) * 4, 5, 1);
+    // Bake: Mast, schräge Streben, Querbalken, Kugel aus Ringen
+    x.fillStyle = F(12);
+    x.fillRect(13.3, 4, 1.4, 24);
+    x.beginPath(); x.moveTo(14, 12); x.lineTo(8, 28); x.lineTo(9.5, 28); x.lineTo(14.5, 13); x.fill();
+    x.beginPath(); x.moveTo(14, 12); x.lineTo(20, 28); x.lineTo(18.5, 28); x.lineTo(13.5, 13); x.fill();
+    for (let y = 16; y < 28; y += 4) { const w = (y - 12) * 0.38; x.fillRect(14 - w, y, w * 2, 0.9); }
+    x.strokeStyle = F(12); x.lineWidth = 1;
+    x.beginPath(); x.arc(14, 6, 3.6, 0, 7); x.stroke();
+    x.beginPath(); x.ellipse(14, 6, 1.5, 3.6, 0, 0, 7); x.stroke();
+    x.fillRect(10, 5.5, 8, 0.9);
+    x.fillRect(13.6, 0, 0.9, 3);
+    // Möwe
+    x.strokeStyle = F(11); x.lineWidth = 0.9; x.beginPath(); x.moveTo(23, 4); x.quadraticCurveTo(25, 2.5, 26.5, 4); x.quadraticCurveTo(28, 2.5, 30, 4); x.stroke();
+  } },
+  { name: 'Clownfisch', emoji: '🐠', mal(x) {
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(6); x.fillRect(0, 26, 36, 10);
+    for (let i = 0; i < 10; i++) { x.fillStyle = i % 2 ? F(9) : F(8); x.beginPath(); x.ellipse(1 + i * 3.8, 31, 1.5, 5 + (i % 3), 0.25 * (i % 3 - 1), 0, 7); x.fill(); }
+    x.fillStyle = F(11); [[4, 5], [7, 2], [31, 8]].forEach(([a, b]) => { x.beginPath(); x.arc(a, b, 0.9, 0, 7); x.fill(); });
+    // Körper mit schwarzem Rand
+    const koerper = () => { x.beginPath(); x.ellipse(18, 15, 12.5, 8, 0, 0, 7); };
+    x.fillStyle = F(12);
+    koerper(); x.fill();
+    x.beginPath(); x.moveTo(7, 15); x.lineTo(0, 7); x.lineTo(0, 23); x.fill();
+    x.beginPath(); x.moveTo(11, 8.5); x.quadraticCurveTo(18, 1, 25, 8.5); x.fill();
+    x.fillStyle = F(1);
+    x.beginPath(); x.ellipse(18, 15, 11.3, 6.9, 0, 0, 7); x.fill();
+    x.beginPath(); x.moveTo(7, 15); x.lineTo(1, 9); x.lineTo(1, 21); x.fill();
+    x.beginPath(); x.moveTo(12, 9); x.quadraticCurveTo(18, 3, 24, 9); x.fill();
+    x.beginPath(); x.ellipse(15, 23, 3, 1.6, 0.4, 0, 7); x.fill();
+    // weiße Bänder nur im Körper
+    x.save(); x.beginPath(); x.ellipse(18, 15, 11.3, 6.9, 0, 0, 7); x.clip();
+    [[25, 1.6], [17.5, 2], [10, 1.5]].forEach(([a, w]) => { x.fillStyle = F(12); x.fillRect(a - w - 0.9, 0, w * 2 + 1.8, 36); x.fillStyle = F(11); x.fillRect(a - w, 0, w * 2, 36); });
+    x.restore();
+    x.fillStyle = F(12); x.beginPath(); x.arc(27.3, 13, 1.4, 0, 7); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.arc(27.7, 12.6, 0.5, 0, 7); x.fill();
+  } },
+  { name: 'Leuchtturm an der Elbe', emoji: '🗼', mal(x) {
+    x.fillStyle = F(7); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(11); [[3, 3], [9, 8], [30, 4], [33, 11], [5, 13]].forEach(([a, b]) => x.fillRect(a, b, 1, 1));
+    x.fillStyle = F(2); x.globalAlpha = 0.9;
+    x.beginPath(); x.moveTo(18, 6); x.lineTo(0, 1); x.lineTo(0, 9); x.fill();
+    x.beginPath(); x.moveTo(18, 6); x.lineTo(36, 4); x.lineTo(36, 11); x.fill(); x.globalAlpha = 1;
+    x.fillStyle = F(6); x.fillRect(0, 26, 36, 10);
+    x.fillStyle = F(4); x.beginPath(); x.moveTo(0, 28); x.quadraticCurveTo(18, 20, 36, 28); x.lineTo(36, 30); x.lineTo(0, 30); x.fill();
+    x.fillStyle = F(3); x.beginPath(); x.moveTo(4, 27); x.quadraticCurveTo(18, 21, 32, 27); x.lineTo(32, 28); x.lineTo(4, 28); x.fill();
+    // Turm mit Streifen
+    for (let i = 0; i < 6; i++) { x.fillStyle = i % 2 ? F(11) : F(0); x.beginPath(); const y0 = 9 + i * 3, w0 = 3.2 + i * 0.35, w1 = 3.2 + (i + 1) * 0.35; x.moveTo(18 - w0, y0); x.lineTo(18 + w0, y0); x.lineTo(18 + w1, y0 + 3); x.lineTo(18 - w1, y0 + 3); x.fill(); }
+    x.fillStyle = F(12); x.fillRect(13.5, 8, 9, 1.4); x.fillRect(15, 3, 6, 5);
+    x.fillStyle = F(2); x.fillRect(16, 4, 4, 3);
+    x.fillStyle = F(0); x.beginPath(); x.moveTo(14.5, 3); x.lineTo(18, 0); x.lineTo(21.5, 3); x.fill();
+    x.fillStyle = F(12); x.fillRect(17, 20, 2, 3);
+    x.fillStyle = F(11); [[5, 32], [24, 33], [30, 31]].forEach(([a, b]) => x.fillRect(a, b, 4, 0.9));
+  } },
+  { name: 'Orca', emoji: '🐳', mal(x) {
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 20);
+    x.fillStyle = F(11); x.beginPath(); x.ellipse(8, 5, 5, 2, 0, 0, 7); x.fill();
+    x.fillStyle = F(6); x.fillRect(0, 20, 36, 16);
+    x.fillStyle = F(7); for (let i = 0; i < 3; i++) x.fillRect(0, 25 + i * 4, 36, 1.4);
+    x.save(); x.translate(18, 17); x.rotate(-0.45);
+    x.fillStyle = F(12); x.beginPath(); x.ellipse(0, 0, 14, 5.5, 0, 0, 7); x.fill();
+    x.beginPath(); x.moveTo(-1, -4); x.lineTo(1, -12); x.lineTo(4, -4); x.fill();
+    x.beginPath(); x.moveTo(-13, 0); x.lineTo(-18, -4); x.lineTo(-16, 0); x.lineTo(-18, 4); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.ellipse(2, 3, 10, 2.2, 0, 0, 7); x.fill();
+    x.beginPath(); x.ellipse(9, -2, 2.2, 1.1, 0.2, 0, 7); x.fill();
+    x.fillStyle = F(13); x.beginPath(); x.ellipse(-3, -3.5, 3, 1, 0, 0, 7); x.fill();
+    x.restore();
+    x.fillStyle = F(11); [[9, 21, 4], [27, 21, 4], [18, 22, 3]].forEach(([a, b, r]) => { x.beginPath(); x.ellipse(a, b, r, 1.6, 0, 0, 7); x.fill(); });
+  } },
+  { name: 'Strandkörbe in Duhnen', emoji: '🏖️', mal(x) {
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 12);
+    x.fillStyle = F(2); x.beginPath(); x.arc(30, 4, 3, 0, 7); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.ellipse(9, 5, 5, 1.8, 0, 0, 7); x.fill();
+    x.fillStyle = F(6); x.fillRect(0, 12, 36, 7);
+    x.fillStyle = F(11); x.fillRect(0, 18, 36, 1);
+    x.fillStyle = F(14); x.fillRect(0, 19, 36, 17);
+    const korb = (a, b, c) => {
+      x.fillStyle = F(11); x.beginPath(); x.moveTo(a, b + 9); x.lineTo(a, b + 2); x.quadraticCurveTo(a + 4, b - 2, a + 8, b + 2); x.lineTo(a + 8, b + 9); x.fill();
+      x.fillStyle = F(c); for (let i = 0; i < 4; i++) x.fillRect(a + 0.5 + i * 2, b + 1, 1, 5);
+      x.fillStyle = F(10); x.fillRect(a + 1.5, b + 4, 5, 4.5);
+      x.fillStyle = F(c); x.fillRect(a + 1.5, b + 7, 5, 1.5);
+    };
+    korb(2, 21, 6); korb(14, 23, 0); korb(26, 21, 6);
+    x.fillStyle = F(10); [[11, 33], [24, 34]].forEach(([a, b]) => x.fillRect(a, b, 2, 1));
+  } },
+  { name: 'Seehund im Watt', emoji: '🦭', mal(x) {
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 12);
+    x.fillStyle = F(11); x.beginPath(); x.ellipse(26, 4, 5, 1.6, 0, 0, 7); x.fill();
+    x.fillStyle = F(6); x.fillRect(0, 12, 36, 4);
+    x.fillStyle = F(14); x.fillRect(0, 16, 36, 20);
+    x.fillStyle = F(10); for (let i = 0; i < 6; i++) { x.beginPath(); x.ellipse((i * 13) % 36 + 2, 18 + (i * 7) % 16, 3, 0.5, 0, 0, 7); x.fill(); }
+    x.fillStyle = F(5); [[5, 33, 4], [31, 31, 3.5]].forEach(([a, b, r]) => { x.beginPath(); x.ellipse(a, b, r, 1.2, 0, 0, 7); x.fill(); });
+    // Seehund, liegend, Kopf hoch
+    x.fillStyle = F(12);
+    x.beginPath(); x.ellipse(19, 25, 13.5, 6.2, -0.08, 0, 7); x.fill();
+    x.beginPath(); x.ellipse(9, 17, 6.2, 5.6, 0, 0, 7); x.fill();
+    x.fillStyle = F(13);
+    x.beginPath(); x.ellipse(19, 25, 12.6, 5.3, -0.08, 0, 7); x.fill();
+    x.beginPath(); x.ellipse(9, 17.3, 5.3, 4.8, 0, 0, 7); x.fill();
+    x.beginPath(); x.moveTo(6, 20); x.lineTo(13, 20); x.lineTo(14, 25); x.lineTo(7, 25); x.fill();
+    x.beginPath(); x.moveTo(30, 25); x.lineTo(35.5, 21); x.lineTo(35, 29); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.ellipse(18, 28.5, 9, 1.8, -0.05, 0, 7); x.fill();
+    x.fillStyle = F(12); [[17, 23], [22, 24], [26, 22], [13, 25], [20, 21], [24, 26]].forEach(([a, b]) => x.fillRect(a, b, 1, 1));
+    x.beginPath(); x.ellipse(15, 28, 2.5, 1.1, 0.3, 0, 7); x.fill();
+    x.beginPath(); x.arc(7, 16, 1.3, 0, 7); x.fill(); x.beginPath(); x.arc(11, 16, 1.3, 0, 7); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.arc(7.4, 15.6, 0.45, 0, 7); x.fill(); x.beginPath(); x.arc(11.4, 15.6, 0.45, 0, 7); x.fill();
+    x.fillStyle = F(12); x.beginPath(); x.ellipse(9, 19.3, 1.4, 0.9, 0, 0, 7); x.fill();
+  } },
+  { name: 'Containerschiff vor Cuxhaven', emoji: '🚢', mal(x) {
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 18);
+    x.fillStyle = F(11); [[6, 4, 5], [25, 6, 6]].forEach(([a, b, r]) => { x.beginPath(); x.ellipse(a, b, r, 1.8, 0, 0, 7); x.fill(); });
+    x.fillStyle = F(6); x.fillRect(0, 18, 36, 18);
+    x.fillStyle = F(7); for (let i = 0; i < 4; i++) x.fillRect(0, 24 + i * 3, 36, 1);
+    x.fillStyle = F(0); x.beginPath(); x.moveTo(1, 17); x.lineTo(35, 17); x.lineTo(32, 23); x.lineTo(3, 23); x.fill();
+    x.fillStyle = F(12); x.fillRect(3, 21, 29, 2);
+    const farben = [0, 6, 2, 4, 1, 11, 7, 3];
+    for (let r = 0; r < 3; r++) for (let c = 0; c < 6; c++) { x.fillStyle = F(farben[(r * 3 + c * 5) % farben.length]); x.fillRect(7 + c * 4, 14 - r * 3, 3.6, 2.7); }
+    x.fillStyle = F(11); x.fillRect(29, 6, 4, 11); x.fillStyle = F(12); x.fillRect(29.5, 7, 3, 1); x.fillRect(29.5, 9, 3, 1);
+    x.fillStyle = F(0); x.fillRect(30, 3, 2, 3);
+    x.fillStyle = F(11); [[5, 25], [15, 27], [27, 29]].forEach(([a, b]) => x.fillRect(a, b, 5, 0.9));
+  } },
+  { name: 'Blauwal', emoji: '🐋', mal(x) {
+    x.fillStyle = F(7); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(6); x.fillRect(0, 0, 36, 7);
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 2.5);
+    x.fillStyle = F(6); for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(8 + i * 11, 7); x.lineTo(4 + i * 11, 36); x.lineTo(5 + i * 11, 36); x.lineTo(10 + i * 11, 7); x.fill(); }
+    // Wal
+    x.fillStyle = F(13); x.beginPath(); x.moveTo(1, 19); x.quadraticCurveTo(12, 9, 28, 16); x.quadraticCurveTo(31, 18, 28, 21); x.quadraticCurveTo(12, 28, 1, 19); x.fill();
+    x.beginPath(); x.moveTo(27, 17); x.lineTo(35.5, 11); x.lineTo(33, 19); x.lineTo(35.5, 26); x.lineTo(27, 20); x.fill();
+    x.beginPath(); x.moveTo(11, 22); x.lineTo(16, 29); x.lineTo(15, 22); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.ellipse(13, 22, 9, 2, 0.1, 0, 7); x.fill();
+    x.fillStyle = F(13); for (let i = 0; i < 2; i++) x.fillRect(5, 21 + i * 2, 12, 1);
+    x.fillStyle = F(12); x.fillRect(6, 17, 2, 1);
+    x.fillStyle = F(11); [[3, 14, 1], [4, 11, 1], [5, 8, 2]].forEach(([a, b, r]) => x.fillRect(a, b, r, r));
+  } },
   { name: 'Wassermelone', emoji: '🍉', mal(x) {
     x.fillStyle = F(5); x.fillRect(0, 0, 36, 36);
     x.fillStyle = F(11); for (let i = 0; i < 6; i++) { x.beginPath(); x.arc(4 + i * 6, 4 + (i % 2) * 3, 1.3, 0, 7); x.fill(); }
@@ -318,7 +475,7 @@ function piranhaBauen(opts) {
   if (!L) { $('prMeldung').textContent = 'Konnte kein Level bauen – bitte nochmal.'; return; }
   pr = { nr, taeglich: !!opts.taeglich, motiv: L.motiv, farbe: L.farbe, weg: new Uint8Array(PB * PB), sichtbar: new Uint8Array(PB * PB).fill(1),
     hoehlen: L.hoehlen.map((z) => (z ? { ...z } : null)), start: L.hoehlen.map((z) => (z ? { ...z } : null)), buchtenMax: L.buchten, bucht: [],
-    fische: [], zuege: 0, verlauf: [], maxBuchten: 0, fertig: false, verloren: false, wackel: {}, fischeGesamt: L.fische };
+    fische: [], schwarm: [], zuege: 0, verlauf: [], maxBuchten: 0, fertig: false, verloren: false, wackel: {}, fischeGesamt: L.fische };
   $('prKopf').textContent = (pr.taeglich ? '📅 Tagesbild' : 'Level ' + nr) + ' · ' + L.motiv.emoji + ' ' + L.motiv.name;
   $('prMeldung').textContent = '';
   prGroesse(); prEbeneNeu(); prStatus();
@@ -429,7 +586,7 @@ function prRueckgaengig() {
 function prNeu() {
   if (!pr) return;
   pr.weg = new Uint8Array(PB * PB); pr.sichtbar = new Uint8Array(PB * PB).fill(1); pr.hoehlen = pr.start.map((z) => (z ? { ...z } : null));
-  pr.bucht = []; pr.fische = []; pr.verlauf = []; pr.zuege = 0; pr.maxBuchten = 0; pr.fertig = false; pr.verloren = false;
+  pr.bucht = []; pr.fische = []; pr.schwarm = []; pr.verlauf = []; pr.zuege = 0; pr.maxBuchten = 0; pr.fertig = false; pr.verloren = false;
   $('prMeldung').textContent = ''; prEbeneNeu(); prStatus();
 }
 function prTipp2() {
@@ -444,11 +601,51 @@ function prTipp2() {
 }
 
 // ---------- Animation ----------
+const PR_SCHWARM_MAX = 520;
+function prSchwarmDazu(f) {
+  // satte Fische schwimmen unter dem Bild weiter
+  const p = f.pfad, [x1, y1] = p[p.length - 1], [x0, y0] = p[Math.max(0, p.length - 2)];
+  const w = Math.atan2(y1 - y0, x1 - x0) || Math.random() * 6.28, v = 0.04 + Math.random() * 0.04;
+  const neu = { x: x1, y: y1, vx: Math.cos(w) * v, vy: Math.sin(w) * v, f: f.f, ph: Math.random() * 6.28 };
+  if (pr.schwarm.length < PR_SCHWARM_MAX) pr.schwarm.push(neu);
+  else pr.schwarm[Math.floor(Math.random() * PR_SCHWARM_MAX)] = neu;
+}
+function prHerzZiele() {
+  // Herzform: x = 16 sin³t, y = 13 cos t − 5 cos 2t − 2 cos 3t − cos 4t, von innen nach außen gefüllt
+  const { W, bildH } = prG, n = pr.schwarm.length, s = Math.min(W, bildH) / 36, cx = W / 2, cy = bildH * 0.46;
+  pr.schwarm.forEach((z, k) => {
+    const rand = k < n * 0.35, t = rand ? (k / (n * 0.35)) * Math.PI * 2 : k * 2.39996;
+    const r = rand ? 1 : 0.15 + 0.82 * Math.sqrt((k - n * 0.35 + 0.5) / (n * 0.65));
+    z.zx = cx + r * 16 * Math.pow(Math.sin(t), 3) * s;
+    z.zy = cy - r * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * s;
+    z.verz = Math.random() * 500;
+  });
+}
+function prSchwarmBewegen(t) {
+  const dt = Math.min(50, t - (pr.letztT || t)); pr.letztT = t;
+  if (!pr.schwarm.length || !dt) return;
+  const { W, bildH } = prG;
+  pr.schwarm.forEach((z) => {
+    if (pr.fertig && z.zx !== undefined) {
+      if (t - pr.fertigT < z.verz) return;
+      const k = Math.min(1, dt * 0.0035), ax = z.x, ay = z.y;
+      z.x += (z.zx - z.x) * k; z.y += (z.zy - z.y) * k;
+      z.vx = (z.x - ax) / dt || z.vx * 0.9; z.vy = (z.y - ay) / dt || z.vy * 0.9;
+      return;
+    }
+    const w = Math.atan2(z.vy, z.vx) + (Math.random() - 0.5) * 0.25, v = Math.hypot(z.vx, z.vy);
+    z.vx = Math.cos(w) * v; z.vy = Math.sin(w) * v;
+    z.x += z.vx * dt; z.y += z.vy * dt;
+    if (z.x < 4 || z.x > W - 4) { z.vx = -z.vx; z.x = Math.max(4, Math.min(W - 4, z.x)); }
+    if (z.y < 4 || z.y > bildH - 4) { z.vy = -z.vy; z.y = Math.max(4, Math.min(bildH - 4, z.y)); }
+  });
+}
 function prUpdate(t) {
+  prSchwarmBewegen(t);
   if (!pr.fische.length) return;
   let geaendert = false;
   pr.fische = pr.fische.filter((f) => {
-    if (t - f.start >= f.dauer) { if (f.ziel >= 0) { pr.sichtbar[f.ziel] = 0; prPixelWeg(f.ziel); geaendert = true; } return false; }
+    if (t - f.start >= f.dauer) { if (f.ziel >= 0) { pr.sichtbar[f.ziel] = 0; prPixelWeg(f.ziel); geaendert = true; prSchwarmDazu(f); } return false; }
     return true;
   });
   if (geaendert) prStatus();
@@ -457,6 +654,7 @@ function prUpdate(t) {
 }
 function prGeschafft() {
   pr.fertig = true; pr.fertigT = performance.now();
+  prHerzZiele();
   // fertiges Bild zum Einblenden
   pr.original = document.createElement('canvas');
   const dpr = window.devicePixelRatio || 1; pr.original.width = pr.ebene.width; pr.original.height = pr.ebene.height;
@@ -512,9 +710,15 @@ function prZeichnen(t) {
   x.fillStyle = g; x.fillRect(0, 0, W, hoehe);
   x.strokeStyle = 'rgba(190,240,215,0.07)'; x.lineWidth = 2;
   for (let i = 0; i < 8; i++) { x.beginPath(); const y = ((i * 89 + t / 35) % (hoehe + 40)) - 20; x.moveTo(0, y); x.bezierCurveTo(W * 0.3, y - 12, W * 0.6, y + 12, W, y); x.stroke(); }
+  // satter Schwarm unter dem Bild (scheint durch die weggefressenen Stellen)
+  if (!pr.fertig) prSchwarmMalen(x, t, 0.42);
   // Bild (nach dem Sieg blendet das fertige Bild wieder ein)
   x.drawImage(pr.ebene, 0, 0, W, bildH);
-  if (pr.fertig && pr.original) { x.globalAlpha = Math.min(1, (t - pr.fertigT) / 1400); x.drawImage(pr.original, 0, 0, W, bildH); x.globalAlpha = 1; }
+  if (pr.fertig && pr.original) {
+    x.globalAlpha = Math.min(1, (t - pr.fertigT) / 1400) * 0.55; x.drawImage(pr.original, 0, 0, W, bildH);
+    x.globalAlpha = Math.min(1, (t - pr.fertigT) / 1400) * 0.3; x.fillStyle = '#0b2a24'; x.fillRect(0, 0, W, bildH); x.globalAlpha = 1;
+    prSchwarmMalen(x, t, 0.92);
+  }
   // Fluss mit Buchten
   x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, flussY, W, flussH);
   for (let k = 0; k < pr.buchtenMax; k++) {
@@ -543,13 +747,14 @@ function prZeichnen(t) {
     x.fillStyle = 'rgba(255,255,255,.22)'; x.beginPath(); x.roundRect(bx + ox + 3, by + 3, bw - 6, (bh - 6) * 0.35, 8); x.fill();
     x.fillStyle = 'rgba(0,0,0,.35)'; x.beginPath(); x.ellipse(cx + ox, cy + bh * 0.18, bw * 0.28, bh * 0.16, 0, 0, 7); x.fill();
     x.font = '800 ' + Math.round(Math.min(18, bh * 0.42)) + 'px Outfit, system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-    const hell = [2, 3, 5, 9, 11].includes(z.f) && !versteckt;
+    const hell = [2, 3, 5, 9, 11, 13, 14].includes(z.f) && !versteckt;
     x.fillStyle = hell ? '#1b1b1b' : '#fff';
     x.fillText(versteckt ? '?' : z.n, cx + ox, cy - bh * 0.06);
     x.globalAlpha = 1;
     if (pr.tipp && pr.tipp.i === i && t < pr.tipp.bis) { x.strokeStyle = '#fff'; x.lineWidth = 3; x.setLineDash([6, 5]); x.beginPath(); x.roundRect(bx - 3, by - 3, bw + 6, bh + 6, 12); x.stroke(); x.setLineDash([]); }
   });
   // Fische
+  x.globalAlpha = 0.75;
   const viele = pr.fische.length > 250;
   pr.fische.forEach((f) => {
     const a = (t - f.start) / f.dauer;
@@ -563,6 +768,31 @@ function prZeichnen(t) {
     if (viele) { x.fillStyle = farbe; x.beginPath(); x.ellipse(fx, fy, 3.6, 2.2, w, 0, 7); x.fill(); }
     else prFisch(x, farbe, fx, fy, w, t, Math.max(8, prG.P * 1.2));
   });
+  x.globalAlpha = 1;
+}
+function prSchwarmMalen(x, t, alpha) {
+  if (!pr.schwarm.length) return;
+  const g = Math.max(4.5, prG.P * 0.85), puls = pr.fertig ? 1 + 0.06 * Math.sin((t - pr.fertigT) / 260) : 1;
+  const cx = prG.W / 2, cy = prG.bildH * 0.46;
+  x.globalAlpha = alpha;
+  // nach Farbe gebündelt zeichnen – ein Pfad pro Farbe
+  const nachFarbe = {};
+  pr.schwarm.forEach((z) => { (nachFarbe[z.f] = nachFarbe[z.f] || []).push(z); });
+  Object.keys(nachFarbe).forEach((f) => {
+    x.fillStyle = PR_FARBEN[f].c; x.beginPath();
+    nachFarbe[f].forEach((z) => {
+      const px = cx + (z.x - cx) * puls, py = cy + (z.y - cy) * puls;
+      const w = Math.atan2(z.vy, z.vx), c = Math.cos(w), s = Math.sin(w), wedel = Math.sin(t / 120 + z.ph) * g * 0.25;
+      x.moveTo(px + c * g * 0.6, py + s * g * 0.6);
+      x.ellipse(px, py, g * 0.6, g * 0.36, w, 0, 6.283);
+      x.moveTo(px - c * g * 0.45, py - s * g * 0.45);
+      x.lineTo(px - c * g * 0.95 - s * (g * 0.35 + wedel), py - s * g * 0.95 + c * (g * 0.35 + wedel));
+      x.lineTo(px - c * g * 0.95 + s * (g * 0.35 - wedel), py - s * g * 0.95 - c * (g * 0.35 - wedel));
+      x.closePath();
+    });
+    x.fill();
+  });
+  x.globalAlpha = 1;
 }
 
 // ---------- Knöpfe ----------
