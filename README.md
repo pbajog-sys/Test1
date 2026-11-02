@@ -264,6 +264,9 @@ Ein Leben als Tier – gesellschaftskritisch, aber sachlich und mit Quellen:
   eigene Pixelgrafik mit vier Farbtönen je Welt (Stall, Meer, Wald), Steuerkreuz/Pfeiltasten und A-Knopf, Textbox mit Entscheidungen.
   Im Stall wird es von Kapitel zu Kapitel voller (am Ende quetscht man sich durch), die Tür nach draußen bleibt zu, das Kalb sieht
   die Mutter nur hinter dem Gitter. Bei bedrohten Arten muss man Schiffen, Netzen, Lärm, Plantage und Feuer wirklich ausweichen.
+  Bei Geflügel wird der Stall bis zum letzten Kapitel fast lückenlos voll (Hunderte Tiere, dunkler und enger).
+  Am Ende folgt – nach einem Inhaltshinweis, überspringbar – die Schlachtung als Pixel-Animation am Beispiel des
+  Elektro-Wasserbads: Ausstallen, Transport, Einhängen, Betäubung, Töten (ohne Blut), dann die Tageszahl laut Destatis.
 
 ## 🧑‍🏫 Führung in allen Spielen
 `fuehrung.js` gibt jedem Spiel (außer den Quizzes) Hilfe zum Lernen:

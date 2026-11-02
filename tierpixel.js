@@ -133,12 +133,20 @@ function tpKarte(id, k, K, n) {
       m.mutter = true;
     }
     // Enge: Zahl der Artgenossen wächst bis fast alles voll ist
-    const voll = n > 1 ? k / (n - 1) : 1, anzahl = Math.round(3 + voll * 52);
+    const voll = n > 1 ? k / (n - 1) : 1, gefluegel = ['huhn', 'pute', 'ente'].includes(TP_TIER[id]);
+    let freieFelder = 0; for (let yy = 1; yy < H - 1; yy++) for (let xx = 1; xx < W - 1; xx++) if (frei(xx, yy)) freieFelder++;
+    const anzahl = Math.round(freieFelder * (gefluegel ? 0.06 + voll * 0.88 : 0.05 + voll * 0.55));
     const sprite = TP_TIER[id];
+    m.voll = voll;
+    // Zusätzliche Tiere zwischen den Kacheln: nur Bild, kein Hindernis – zeigt die echte Dichte
+    m.deko = [];
+    const dekoAnzahl = gefluegel ? Math.round(voll * voll * 170) : Math.round(voll * 25);
+    for (let i = 0; i < dekoAnzahl; i++) m.deko.push({ x: 1 + Math.random() * (W - 2.6), y: 1 + Math.random() * (H - 2.8), spiegeln: Math.random() < 0.5, p: Math.random() * 1000 });
+    m.deko.sort((a, b) => a.y - b.y);
     let versuche = 0;
     while (m.npcs.filter((p) => !p.fest).length < anzahl && versuche++ < 3000) {
       const x = 1 + Math.floor(Math.random() * (W - 2)), y = 1 + Math.floor(Math.random() * (H - 2));
-      if (!frei(x, y) || (Math.abs(x - m.start[0]) <= 0 && y >= H - 3) || (x === 5 && y <= 2) || (x === 5 && y >= H - 5 && y <= H - 2) || (x === 1 && y === 7)) continue;
+      if (!frei(x, y) || (x === m.start[0] && y === m.start[1]) || (x === 5 && y <= 1) || (x === 4 && y === H - 3) || (x === 1 && y === 7)) continue;
       if (m.npcs.some((p) => p.x === x && p.y === y)) continue;
       m.npcs.push({ x, y, sprite, spiegeln: Math.random() < 0.5 });
     }
@@ -182,7 +190,7 @@ function tpStart() {
   requestAnimationFrame(frame);
 }
 let tpLaufNr = 0;
-function tpStopp() { tpLaufNr++; tp = null; }
+function tpStopp() { tpLaufNr++; tp = null; const b = $('tpBox'); if (b) { b.classList.remove('szene'); b.hidden = true; } }
 
 function tpKapitel() {
   const L = tl.L, K = L.kapitel[tp.k];
@@ -300,6 +308,11 @@ function tpA() {
 // ---------- Spiellogik pro Frame ----------
 function tpUpdate(t) {
   const dt = tp.letzteZeit ? Math.min(60, t - tp.letzteZeit) : 16; tp.letzteZeit = t;
+  if (tp.szene) {
+    tp.szene.t += dt;
+    if (tp.szene.t >= TP_SZENEN[tp.szene.nr].dauer && tp.szene.nr < TP_SZENEN.length - 1) { tp.dialog = null; tpSzeneWeiter(); }
+    return;
+  }
   const s = tp.spieler, m = tp.karte;
   // gleitende Bewegung
   const v = dt * (tp.langsam ? 0.045 : 0.11);
@@ -354,15 +367,133 @@ function tpUpdate(t) {
   }
 }
 function tpNaechstes() {
-  if (tp.k >= tl.L.kapitel.length - 1) { tpStopp(); tlEnde(); return; }
+  if (tp.k >= tl.L.kapitel.length - 1) {
+    if (TP_SCHLACHT_TIERE.includes(tl.id)) { tpSchlachtFrage(); return; }
+    tpStopp(); tlEnde(); return;
+  }
   tp.k++;
   tpKapitel();
 }
 
+// ---------- Schlachtung: Geflügel, Elektro-Wasserbad (eine der üblichen Methoden) ----------
+const TP_SCHLACHT_TIERE = ['masthuhn', 'legehenne', 'pute', 'ente'];
+const TP_PRO_TAG = { masthuhn: 640.3, legehenne: 20.7, pute: 27.6, ente: 8.3 };
+function tpSchlachtFrage() {
+  const s = tp.spieler; s.px = s.x * TP_T; s.py = s.y * TP_T; tp.tasten = {};
+  tpDialog([{ html: '<b>Inhaltshinweis</b><br>Als Nächstes folgt die Schlachtung – als Pixel-Animation, ohne Blut, aber ohne Beschönigung. Gezeigt wird das Elektro-Wasserbad, eine der üblichen Methoden für Geflügel in Deutschland.',
+    optionen: [['Ansehen'], ['Überspringen']], wahl: (i) => { tp.dialog = null; tpDialogZeigen(); if (i === 0) tpSchlachtStart(); else { tpStopp(); tlEnde(); } } }]);
+}
+const TP_SZENEN = [
+  { dauer: 7000, text: () => '<b>Ausstallen</b><br>Nach wenigen Wochen kommen Fängertrupps in den Stall – oft nachts, weil die Tiere im Dunkeln ruhiger sind. Sie werden gegriffen und in Transportkisten gesetzt.' },
+  { dauer: 6000, text: () => '<b>Transport</b><br>Mit Lkw geht es zum Schlachthof. Viele Tiere sind zum ersten Mal unter freiem Himmel – in einer Kiste.' },
+  { dauer: 7000, text: () => '<b>Einhängen</b><br>Am Schlachthof werden die Tiere bei vollem Bewusstsein kopfüber an den Füßen in Metallbügel gehängt. Ein Förderband zieht sie weiter.' },
+  { dauer: 8000, text: () => '<b>Betäubung im Wasserbad</b><br>Die Köpfe werden durch ein unter Strom stehendes Wasserbad gezogen. Das Gesetz schreibt vor, Tiere vor dem Töten zu betäuben (EU-Verordnung 1099/2009). Tiere, die den Kopf heben, können das Bad verfehlen.' },
+  { dauer: 6500, text: () => '<b>Töten</b><br>Danach wird der Hals durchtrennt, die Tiere verbluten. Es folgen Brühen, Rupfen und Zerlegen – am Ende liegt das Fleisch verpackt im Kühlregal.' },
+  { dauer: 9000, text: () => { const n = TP_PRO_TAG[tl.id] || 640.3; return 'Das war ein Leben. In Deutschland geschieht das <b>' + fmt((n * 1e6 / 365 / 1e6).toFixed(2)).replace(',00', '') + ' Millionen</b> Mal – <b>an jedem einzelnen Tag</b> ' + (tl.id === 'masthuhn' ? 'allein mit Masthühnern' : 'allein mit dieser Tierart') + '.<br><small>Quelle: Destatis, Schlachtungen 2025</small>'; } },
+];
+function tpSchlachtStart() {
+  tp.szene = { nr: 0, t: 0 };
+  tp.letzteZeit = 0;
+  tpSzeneText();
+}
+function tpSzeneText() {
+  const S = TP_SZENEN[tp.szene.nr];
+  tp.dialog = { seiten: [{ html: S.text() }], i: 0, fertig: tpSzeneWeiter, szene: true };
+  tpDialogZeigen();
+  $('tpBox').classList.add('szene');
+}
+function tpSzeneWeiter() {
+  if (!tp || !tp.szene) return;
+  if (tp.szene.nr >= TP_SZENEN.length - 1) { tpStopp(); tlEnde(); return; }
+  tp.szene.nr++; tp.szene.t = 0;
+  tpSzeneText();
+}
+const TP_MENSCH = ['................', '......3333......', '.....333333.....', '.....333333.....', '......3333......', '....33333333....', '...3333333333...', '...3333333333...',
+  '..33.333333.33..', '..33.333333.33..', '.....333333.....', '.....33..33.....', '.....33..33.....', '.....33..33.....', '....333..333....', '................'];
+TP_SPRITES.mensch = TP_MENSCH;
+function tpKiste(x, px, py, pal, inhalt) {
+  const c = TP_PALETTEN[pal];
+  x.fillStyle = c[2]; x.fillRect(px, py, 22, 14);
+  x.fillStyle = c[3]; for (let i = 0; i < 22; i += 4) x.fillRect(px + i, py, 1, 14); x.fillRect(px, py, 22, 1); x.fillRect(px, py + 13, 22, 1);
+  if (inhalt) { x.fillStyle = c[0]; for (let i = 0; i < inhalt; i++) x.fillRect(px + 3 + i * 5, py + 4, 3, 3); }
+}
+function tpSzeneZeichnen(x, t) {
+  const sz = tp.szene, pal = 'stall', c = TP_PALETTEN[pal], st = sz.t, tier = TP_TIER[tl.id];
+  x.fillStyle = c[3]; x.fillRect(0, 0, TP_W, TP_H);
+  if (sz.nr === 0) {
+    // dunkler Stall, Kisten rechts, Fänger, Tiere wandern in die Kisten
+    x.fillStyle = '#3a2a14'; x.fillRect(0, 70, TP_W, 74);
+    for (let i = 0; i < 6; i++) tpKiste(x, 120, 120 - i * 15, pal, Math.min(4, Math.max(0, Math.floor(st / 400) - i * 4)));
+    for (let i = 0; i < 26; i++) {
+      const start = i * 230, f = Math.max(0, Math.min(1, (st - start) / 900));
+      const bx = 6 + (i % 7) * 15 + (i * 13) % 9, by = 76 + Math.floor(i / 7) * 16;
+      const px = bx + (122 - bx) * f, py = by + (110 - Math.floor(i / 4) * 2 - by) * f;
+      if (f < 1) x.drawImage(tpBild(tier, pal, i % 2 === 0), Math.round(px), Math.round(py) - (f > 0 && f < 1 ? Math.floor(t / 80) % 2 * 3 : 0));
+    }
+    const fx = 30 + Math.sin(t / 400) * 30;
+    x.drawImage(tpBild('mensch', pal), Math.round(fx), 66); x.drawImage(tpBild('mensch', pal, true), Math.round(fx + 40), 70);
+    x.globalAlpha = 0.28; x.fillStyle = '#000'; x.fillRect(0, 0, TP_W, TP_H); x.globalAlpha = 1;
+    x.fillStyle = c[1]; x.fillRect(0, 0, TP_W, 2);
+  } else if (sz.nr === 1) {
+    // Landstraße bei Nacht, Lkw mit Kistenstapel fährt durch
+    x.fillStyle = '#0d0a05'; x.fillRect(0, 0, TP_W, 90);
+    x.fillStyle = c[0]; for (let i = 0; i < 14; i++) x.fillRect((i * 37 + 11) % TP_W, (i * 23) % 60 + 4, 1, 1);
+    x.fillStyle = '#2a2016'; x.fillRect(0, 90, TP_W, 54);
+    x.fillStyle = c[1]; for (let i = 0; i < 8; i++) x.fillRect(((i * 30 - st / 8) % 240 + 240) % 240 - 40, 116, 14, 2);
+    const lx = -110 + (st / 6000) * 300;
+    for (let r = 0; r < 4; r++) for (let s2 = 0; s2 < 4; s2++) tpKiste(x, Math.round(lx + s2 * 23), 58 + r * 13, pal, 4);
+    x.fillStyle = c[2]; x.fillRect(Math.round(lx) - 2, 110, 96, 6);
+    x.fillStyle = c[1]; x.fillRect(Math.round(lx) + 94, 82, 26, 34); x.fillStyle = c[0]; x.fillRect(Math.round(lx) + 108, 86, 10, 10);
+    x.fillStyle = '#000'; [8, 40, 78, 108].forEach((o) => x.fillRect(Math.round(lx) + o, 114, 10, 10));
+    x.globalAlpha = 0.35; x.fillStyle = '#f8f0d8'; x.beginPath(); x.moveTo(lx + 120, 92); x.lineTo(lx + 200, 80); x.lineTo(lx + 200, 116); x.fill(); x.globalAlpha = 1;
+  } else {
+    // Schlachtband: Schiene oben, Tiere kopfüber an Bügeln
+    const kalt = '#1a1612';
+    x.fillStyle = kalt; x.fillRect(0, 0, TP_W, TP_H);
+    x.fillStyle = '#5a5248'; x.fillRect(0, 18, TP_W, 3);
+    const bad = sz.nr >= 3, dunkel = sz.nr >= 4;
+    const tempo = 0.028, abstand = 26, versatz = (st * tempo) % abstand;
+    if (bad) {
+      x.fillStyle = '#2c4a5a'; x.fillRect(46, 60, 72, 26);
+      x.fillStyle = '#4f7f96'; for (let i = 0; i < 9; i++) x.fillRect(48 + i * 8 + (Math.floor(t / 150) % 2) * 2, 60, 4, 1);
+      x.fillStyle = '#888'; x.fillRect(44, 58, 2, 30); x.fillRect(118, 58, 2, 30);
+    }
+    for (let i = -1; i < 8; i++) {
+      const hx = i * abstand + versatz - 10;
+      x.fillStyle = '#8a8074'; x.fillRect(Math.round(hx) + 7, 20, 2, 12);
+      if (sz.nr === 2 && hx < 30 && i < 1) continue;   // vorne wird gerade eingehängt
+      const imBad = bad && hx > 40 && hx < 112, danach = bad && hx >= 112;
+      x.save();
+      x.translate(Math.round(hx), imBad ? 44 : 32);
+      x.scale(1, -1);
+      if (danach || dunkel) x.globalAlpha = 0.75;
+      x.drawImage(tpBild(tier, pal), 0, -16);
+      x.restore();
+      if (imBad && Math.floor(t / 70) % 2) { x.fillStyle = '#f8f0a0'; x.fillRect(Math.round(hx) + 3, 56, 1, 3); x.fillRect(Math.round(hx) + 12, 57, 1, 3); x.fillRect(Math.round(hx) + 7, 54, 2, 1); }
+    }
+    if (sz.nr === 2) { x.drawImage(tpBild('mensch', pal), 4, 44); x.drawImage(tpBild('mensch', pal, true), 22, 46); }
+    if (dunkel) {
+      const f = Math.min(1, st / 4000);
+      const g = x.createLinearGradient(0, 0, TP_W, 0);
+      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.55, 'rgba(0,0,0,' + (0.4 + f * 0.5) + ')'); g.addColorStop(1, 'rgba(0,0,0,1)');
+      x.fillStyle = g; x.fillRect(0, 0, TP_W, TP_H);
+      x.fillStyle = '#5a1a14'; x.fillRect(118, 100, 42, 2);
+    }
+  }
+  if (sz.nr === 5) {
+    // Zähler: Silhouetten füllen den Bildschirm
+    x.fillStyle = '#000'; x.fillRect(0, 0, TP_W, TP_H);
+    const n = Math.min(360, Math.floor(st / 18));
+    for (let i = 0; i < n; i++) x.drawImage(tpBild(tier, pal, i % 3 === 0), (i % 20) * 8, Math.floor(i / 20) * 8, 8, 8);
+  }
+}
+
 // ---------- Zeichnen ----------
 function tpZeichnen(t) {
-  const cv = $('tpBild'), x = cv.getContext('2d'), m = tp.karte, pal = m.welt, s = tp.spieler;
+  const cv = $('tpBild'), x = cv.getContext('2d');
   x.imageSmoothingEnabled = false;
+  if (tp.szene) { tpSzeneZeichnen(x, t); return; }
+  const m = tp.karte, pal = m.welt, s = tp.spieler;
   const camX = Math.max(0, Math.min(m.W * TP_T - TP_W, s.px + 8 - TP_W / 2)), camY = Math.max(0, Math.min(m.H * TP_T - TP_H, s.py + 8 - TP_H / 2));
   x.fillStyle = TP_PALETTEN[pal][3]; x.fillRect(0, 0, TP_W, TP_H);
   const welle = Math.floor(t / 500) % 2;
@@ -402,6 +533,10 @@ function tpZeichnen(t) {
   });
   // Tiere (Artgenossen, dann du)
   const sprite = TP_TIER[tl.id];
+  (m.deko || []).forEach((d) => {
+    const wackel = Math.floor((t + d.p) / 260) % 2;
+    x.drawImage(tpBild(sprite, pal, d.spiegeln), Math.round(d.x * TP_T - camX), Math.round(d.y * TP_T - camY) - wackel);
+  });
   m.npcs.forEach((p) => {
     const wackel = Math.floor((t / 300 + p.x * 7 + p.y * 3)) % 2;
     x.drawImage(tpBild(p.sprite, pal, p.spiegeln), p.x * TP_T - camX, p.y * TP_T - camY - wackel);
@@ -411,6 +546,7 @@ function tpZeichnen(t) {
   // Markierung „du“
   x.fillStyle = TP_PALETTEN[pal][3];
   x.fillRect(Math.round(s.px - camX) + 6, Math.round(s.py - camY) - 5 - bob, 4, 2);
+  if (m.welt === 'stall' && m.voll > 0.3) { x.globalAlpha = (m.voll - 0.3) * 0.32; x.fillStyle = TP_PALETTEN.stall[3]; x.fillRect(0, 0, TP_W, TP_H); x.globalAlpha = 1; }
   // Überblendung
   if (tp.uebergang > 0) { x.globalAlpha = tp.uebergang; x.fillStyle = TP_PALETTEN[pal][3]; x.fillRect(0, 0, TP_W, TP_H); x.globalAlpha = 1; }
 }

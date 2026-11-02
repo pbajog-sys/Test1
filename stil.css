@@ -2687,3 +2687,4 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .tp-a { width: 76px; height: 76px; border-radius: 50%; border: 0; background: #a8324a; color: #fde8e8; font-size: 1.6rem; font-weight: 800; box-shadow: 0 5px 0 #5c1424; touch-action: none; cursor: pointer; }
 .tp-a:active { transform: translateY(4px); box-shadow: 0 1px 0 #5c1424; }
 .tp-hilfe { margin: 0; text-align: center; font-size: 0.75rem; color: #8f8b76; }
+.tp-box.szene { position: static; max-height: none; margin: 0; border-radius: 0 0 6px 6px; border-width: 3px 0 0; animation: none; }
