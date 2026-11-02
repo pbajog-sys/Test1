@@ -279,10 +279,11 @@ Eigenes Puzzle im Genre „Farben sortieren und Pixelbild abbauen“, mit Amazon
 - **Steine und Algen** (ab Level 2, bis zu 4): sperren einen 4×4- bis 5×4-Block – nicht fressbar, kein Durchschwimmen. Ein Kreis
   zeigt die Schlüsselfarbe und wie viele ihrer Pixel noch übrig sind; ist die Farbe ganz weg, bröckelt die Sperre weg.
   Generator und Simulation berücksichtigen das, Levels bleiben lösbar.
-- **Genüsslich fressen:** Fische schwimmen langsam (halbe Geschwindigkeit, gestaffelt) und halb durchsichtig zu ihrem Pixel, knabbern
-  es weg (der Pixel schrumpft) und schwimmen dann **dick** zurück in den Fluss und durch eine Felsenhöhle links oder rechts in den
-  Untergrund. Rückgängig ist schon möglich, während sie heimschwimmen. Dezent durchsichtiges Seegras und Blasen im Wasser.
-- **Sieg:** Alle satten Fische kommen aus den Seitenhöhlen, bilden über dem wieder eingeblendeten Bild ein pulsierendes Herz und
+- **Genüsslich fressen:** Fische schwimmen langsam und gestaffelt (deckend) zu ihrem Pixel, knabbern es weg (der Pixel schrumpft)
+  und schwimmen dann **dick** und noch gemächlicher zurück in den Fluss und in eine von zwei plakativen Felsenhöhlen links und rechts
+  (Felsbogen mit Zähnen, leuchtender Rand, Augen im Dunkeln, Seegras). Erst im **Untergrund** werden sie durchsichtig: Sie schwimmen
+  als eigene Vollbild-Ebene hinter dem Spiel herum. Rückgängig geht schon, während sie heimschwimmen. Dezentes Seegras und Blasen.
+- **Sieg:** Die Fische aus dem Untergrund (und weitere aus den Höhlen) kommen hervor, bilden über dem wieder eingeblendeten Bild ein pulsierendes Herz und
   schwimmen dann durchsichtig über den ganzen Bildschirm (mit Seegras und Blasen, eigene Vollbild-Ebene ohne Klicks). Danach kommt
   die Geschafft-Karte: Sterne, „x Züge von minimal y“ (minimal = Anzahl der Schwärme; zurückgenommene Züge zählen mit), höchste
   Buchtenbelegung, Zahl der satten Fische, Nochmal / Weiter.

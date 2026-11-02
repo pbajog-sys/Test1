@@ -2710,6 +2710,8 @@ button, .cover { -webkit-user-select: none; user-select: none; }
   background: radial-gradient(ellipse at 50% 0%, #2a5a3e, transparent 60%), #0c201a; font-family: "Outfit", system-ui, sans-serif;
 }
 .pr-buehne > * { max-width: 560px; margin-left: auto; margin-right: auto; }
+.pr-buehne > :not(.pr-unten) { position: relative; z-index: 1; }
+.pr-unten { position: fixed; inset: 0; width: 100vw; height: 100vh; z-index: 0; pointer-events: none; max-width: none !important; }
 .pr-buehne .farb-kopf .icon-btn { background: rgba(255,255,255,.08); color: inherit; }
 .pr-teil { display: grid; gap: 12px; animation: aufploppen .4s var(--ease-spring); }
 #pr-intro { text-align: center; }
