@@ -12,6 +12,7 @@ const VERLAUF_SPIELE = {
   zufall: { name: 'Zufalls-Gefühl', emoji: '🎲', farbe: '#fbbf24' },
   tierleben: { name: 'Ein Tierleben', emoji: '🐾', farbe: '#a3a380' },
   piranha: { name: 'Piranha-Schwarm', emoji: '🐟', farbe: '#ef4444' },
+  slo: { name: 'Slowenisch', emoji: '🐉', farbe: '#4ade80' },
   augen: { name: 'Augenmaß', emoji: '📐', farbe: '#5eead4' },
   karte: { name: 'Karten-Gefühl', emoji: '🧭', farbe: '#34d399' },
   tiefgang: { name: 'Tiefgang', emoji: '🤿', farbe: '#22d3ee' },

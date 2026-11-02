@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=74">
+<link rel="stylesheet" href="fonts/fonts.css?v=75">
 <link rel="icon" href="icons/favicon-64.png?v=3" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=74">
-<link rel="stylesheet" href="ansichten.css?v=74">
+<link rel="stylesheet" href="stil.css?v=75">
+<link rel="stylesheet" href="ansichten.css?v=75">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -475,6 +475,7 @@
       <button class="bu-ding bu-planet" type="button" data-ziel="hubPiranha" aria-label="Piranha-Schwarm" style="--p1:#f87171;--p2:#7f1d1d"><span>🐟</span></button>
       <button class="bu-ding bu-planet" type="button" data-ziel="hubTierleben" aria-label="Tierleben" style="--p1:#86efac;--p2:#14532d"><span>🐔</span></button>
       <button class="bu-ding bu-planet bu-ring" type="button" data-ziel="hubZahlen" aria-label="Du in Zahlen" style="--p1:#fde68a;--p2:#92400e"><span>🎂</span></button>
+      <button class="bu-ding bu-planet" type="button" data-ziel="hubSlo" aria-label="Slowenisch" style="--p1:#4ade80;--p2:#1e3a8a"><span>🐉</span></button>
       <button class="bu-ding bu-planet" type="button" data-ziel="hubRiff" aria-label="Riffbau" style="--p1:#f9a8d4;--p2:#831843"><span>🪸</span></button>
     </div>
     <div class="install-karte" id="installKarte" hidden>
@@ -555,6 +556,11 @@
     <button class="hub-game hub-tierleben" id="hubTierleben" type="button" data-regen="🐾,🐔,🐋,🦧">
       <span class="hg-av hg-av-tierleben" aria-hidden="true"><span class="hg-in"><span class="tl-mini"><i>🐔</i><i>🐖</i><i>🐋</i><i>🦧</i></span></span></span>
       <span class="hg-text"><span class="hg-titel">Ein Tierleben</span><span class="hg-sub">Geboren als Nutztier – oder als eine der letzten ihrer Art. Mit echten Zahlen.</span><span class="hg-best" id="hubTierlebenBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-slo" id="hubSlo" type="button" data-regen="🐉,🇸🇮,🏔️,💬">
+      <span class="hg-av hg-av-slo" aria-hidden="true"><span class="hg-in"><span class="slo-mini">🐉<i>Živjo!</i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Slowenisch</span><span class="hg-sub">Mit Zmajček, dem kleinen Drachen, durch Slowenien: Wörter, Sätze, Aussprache.</span><span class="hg-best" id="hubSloBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-piranha" id="hubPiranha" type="button" data-regen="🐟,🍒,🌿,💧">
@@ -1851,6 +1857,27 @@
     </div>
   </section>
 
+  <section class="screen" id="screen-slo">
+    <div class="slo-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="sloZurueck" type="button" aria-label="Zurück">←</button>
+        <span>🐉 Slowenisch</span>
+      </div>
+      <div class="slo-teil" id="slo-karte">
+        <div class="slo-status" id="sloStatus"></div>
+        <div class="slo-aktionen"><button class="btn secondary" id="sloUeben" type="button">💪 Üben</button><button class="btn secondary" id="sloWoerterBtn" type="button">📖 Wörter</button></div>
+        <div class="slo-pfad" id="sloPfad"></div>
+        <p class="slo-stimme" id="sloStimme"></p>
+      </div>
+      <div class="slo-teil" id="slo-lektion" hidden>
+        <div class="slo-lk-kopf"><button class="slo-x" id="sloAbbruch" type="button" aria-label="Lektion abbrechen">×</button><div class="slo-balken"><i id="sloBalken"></i></div></div>
+        <div class="slo-aufgabe" id="sloAufgabe"></div>
+        <div class="slo-fuss" id="sloFuss"><div class="slo-urteil" id="sloUrteil"></div><button class="btn slo-gross" id="sloPruefen" type="button" disabled>Prüfen</button></div>
+      </div>
+      <div class="slo-teil" id="slo-ende" hidden></div>
+      <div class="slo-teil" id="slo-woerter" hidden></div>
+    </div>
+  </section>
   <section class="screen" id="screen-piranha">
     <div class="pr-buehne">
       <canvas class="pr-unten" id="prUnten" aria-hidden="true"></canvas>
@@ -2064,42 +2091,43 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=74"></script>
-<script src="haie.js?v=74"></script>
-<script src="porsche.js?v=74"></script>
-<script src="dackel.js?v=74"></script>
-<script src="groesse.js?v=74"></script>
-<script src="gretchen.js?v=74"></script>
-<script src="effekte.js?v=74"></script>
-<script src="app.js?v=74"></script>
-<script src="melden.js?v=74"></script>
-<script src="verlauf.js?v=74"></script>
-<script src="hub.js?v=74"></script>
-<script src="farben.js?v=74"></script>
-<script src="cello.js?v=74"></script>
-<script src="instrumente.js?v=74"></script>
-<script src="toene.js?v=74"></script>
-<script src="takt.js?v=74"></script>
-<script src="punkte.js?v=74"></script>
-<script src="funktion.js?v=74"></script>
-<script src="zufall.js?v=74"></script>
-<script src="zahlen.js?v=74"></script>
-<script src="tierleben.js?v=74"></script>
-<script src="tierpixel.js?v=74"></script>
-<script src="piranha.js?v=74"></script>
-<script src="augen.js?v=74"></script>
-<script src="karten-daten.js?v=74"></script>
-<script src="karte.js?v=74"></script>
-<script src="tiefgang.js?v=74"></script>
-<script src="riff.js?v=74"></script>
-<script src="krimi-grafik.js?v=74"></script>
-<script src="krimi.js?v=74"></script>
-<script src="krimi-wachen.js?v=74"></script>
-<script src="krimi-verhoer.js?v=74"></script>
-<script src="krimi-alibi.js?v=74"></script>
-<script src="krimi-akte.js?v=74"></script>
-<script src="krimi-zentrale.js?v=74"></script>
-<script src="profile.js?v=74"></script>
-<script src="fuehrung.js?v=74"></script>
+<script src="wale.js?v=75"></script>
+<script src="haie.js?v=75"></script>
+<script src="porsche.js?v=75"></script>
+<script src="dackel.js?v=75"></script>
+<script src="groesse.js?v=75"></script>
+<script src="gretchen.js?v=75"></script>
+<script src="effekte.js?v=75"></script>
+<script src="app.js?v=75"></script>
+<script src="melden.js?v=75"></script>
+<script src="verlauf.js?v=75"></script>
+<script src="hub.js?v=75"></script>
+<script src="farben.js?v=75"></script>
+<script src="cello.js?v=75"></script>
+<script src="instrumente.js?v=75"></script>
+<script src="toene.js?v=75"></script>
+<script src="takt.js?v=75"></script>
+<script src="punkte.js?v=75"></script>
+<script src="funktion.js?v=75"></script>
+<script src="zufall.js?v=75"></script>
+<script src="zahlen.js?v=75"></script>
+<script src="tierleben.js?v=75"></script>
+<script src="tierpixel.js?v=75"></script>
+<script src="piranha.js?v=75"></script>
+<script src="slo.js?v=75"></script>
+<script src="augen.js?v=75"></script>
+<script src="karten-daten.js?v=75"></script>
+<script src="karte.js?v=75"></script>
+<script src="tiefgang.js?v=75"></script>
+<script src="riff.js?v=75"></script>
+<script src="krimi-grafik.js?v=75"></script>
+<script src="krimi.js?v=75"></script>
+<script src="krimi-wachen.js?v=75"></script>
+<script src="krimi-verhoer.js?v=75"></script>
+<script src="krimi-alibi.js?v=75"></script>
+<script src="krimi-akte.js?v=75"></script>
+<script src="krimi-zentrale.js?v=75"></script>
+<script src="profile.js?v=75"></script>
+<script src="fuehrung.js?v=75"></script>
 </body>
 </html>

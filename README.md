@@ -295,6 +295,19 @@ Eigenes Puzzle im Genre „Farben sortieren und Pixelbild abbauen“, mit Amazon
   Spieler-Simulation Schwärme parken muss (ab Level 1, ab Level 5 drei von vier Buchten), aber noch gewinnt – garantiert lösbar.
 - Alles passt auf einen Bildschirm (Bild so breit wie möglich, Höhlenreihen passen sich an). Tipp, Rückgängig, Tagesbild.
 
+## 🐉 Slowenisch mit Zmajček
+Eigenes Sprachlernspiel (`slo.js`): Mit Zmajček, dem kleinen Drachen aus dem Wappen von Ljubljana, reist man durch Slowenien.
+- **11 Stationen**, je ein Thema mit 11–13 Wörtern und 6–8 Sätzen: Ljubljana (Begrüßen), Bled (Sich vorstellen), Piran (Zahlen),
+  Postojna (Farben), Maribor (Essen & Trinken), Ptuj (Familie), Soča (Tiere), Celje (In der Stadt), Kranjska Gora (Tage & Wetter),
+  Triglav (Natur), Lipica (Unterhalten). Jede Station hat einen 💡 Tipp mit Grammatik (Du/Sie, biti, Dual, Fälle, Endungen),
+  Aussprache und Landeskunde.
+- **Drei Stufen je Station:** neue Wörter → Sätze → Meistern. Stufe 1 öffnet die nächste Station, nach Stufe 3 gibt es 👑 und Wiederholen.
+- **Aufgaben:** neues Wort, Bild wählen, Übersetzung in beide Richtungen, Paare finden, Satz verstehen, Satz aus Kacheln bauen
+  (Slowenisch und Deutsch), Lücke füllen, Wort tippen (č š ž-Tasten, fehlende Häkchen zählen als „fast richtig“) und – nur wenn das
+  Gerät eine slowenische Stimme hat – Hören (🔊, 🐢 langsam). Falsches kommt am Ende der Lektion noch einmal.
+- **XP & Tagesziel:** 10 XP je Lektion, +5 ohne Fehler, +5 in Stufe 3; Ring fürs Tagesziel (30 XP), Serie 🔥, Wortstärke je Wort,
+  „💪 Üben“ mit den schwächsten Wörtern, „📖 Wörter“ als Wörterbuch. Ergebnisse landen im Verlauf.
+
 ## 🧑‍🏫 Führung in allen Spielen
 `fuehrung.js` gibt jedem Spiel (außer den Quizzes) Hilfe zum Lernen:
 - **?-Knopf** oben rechts: Spickzettel mit Regeln, Punktewertung und Tricks.

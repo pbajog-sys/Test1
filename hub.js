@@ -195,6 +195,8 @@ function renderHub() {
   $('hubTierlebenBest').textContent = tlL ? '📖 ' + tlL + (tlL === 1 ? ' Leben' : ' Leben') + ' gelebt' : 'Noch kein Leben gelebt';
   const prSt = loadJson('walquiz.piranha.v1'), prS = Object.values(prSt.sterne || {}).reduce((a, b) => a + b, 0);
   $('hubPiranhaBest').textContent = prSt.level > 1 ? 'Level ' + prSt.level + ' · ⭐ ' + prS : 'Noch nicht gespielt';
+  const sloSt = loadJson('walquiz.slo.v1'), sloF = Object.values(sloSt.stufe || {}).filter((x) => x >= 3).length, sloB = Object.keys(sloSt.stufe || {}).length;
+  $('hubSloBest').textContent = sloSt.xp ? '⚡ ' + sloSt.xp + ' XP · ' + sloB + ' von 11 Stationen' + (sloF ? ' · 👑 ' + sloF : '') : 'Noch nicht begonnen';
   const krimi = loadJson('walquiz.krimi.v1');
   const summe = (o) => Object.values((o && o.geloest) || {}).reduce((x, y) => x + y, 0);
   const faelle = summe(krimi) + Object.values(krimi.modi || {}).reduce((x, m) => x + summe(m), 0);

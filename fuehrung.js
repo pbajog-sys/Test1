@@ -512,7 +512,27 @@ fuehrung('piranha', {
 });
 
 // ---------- Oberfläche ----------
-const FH_SCREENS = { farben: 'farben', toene: 'toene', takt: 'takt', augen: 'augen', karte: 'karte', tiefgang: 'tiefgang', riff: 'riff', cello: 'cello', instrument: 'instrument', piranha: 'piranha' };
+// ---------- 🐉 Slowenisch ----------
+fuehrung('slo', {
+  titel: 'Slowenisch', emoji: '🐉', thema: 'karte', intro: 'slo-karte',
+  spick: () => '<h3>So lernst du mit Zmajček</h3>'
+    + '<div class="fh-regelzeile"><span>1</span><div><b>Station für Station</b>Jede Station auf der Reise ist ein Thema mit drei Stufen: neue Wörter, dann Sätze, dann Meistern (tippen, Lücken, Rückübersetzung). Mit Stufe 1 öffnet sich die nächste Station.</div></div>'
+    + '<div class="fh-regelzeile"><span>2</span><div><b>Fehler kommen wieder</b>Was falsch war, kommt am Ende der Lektion noch einmal. „💪 Üben“ nimmt deine schwächsten Wörter aus allen Stationen.</div></div>'
+    + '<div class="fh-regelzeile"><span>3</span><div><b>Tagesziel</b>Jede Lektion bringt 10 XP, ohne Fehler 15, in Stufe 3 noch 5 extra. 30 XP am Tag füllen den Ring, jeder Tag mit XP verlängert die Serie 🔥.</div></div>'
+    + '<div class="fh-kasten"><b>Aussprache</b> č = tsch · š = sch · ž = wie „j“ in Journal · c = z · z = weiches s · s = scharfes s. Mit slowenischer Stimme auf dem Gerät gibt es 🔊 und Hör-Aufgaben (🐢 = langsam).</div>',
+  schritte: [
+    { titel: 'Die Reise', text: 'Du reist mit Zmajček, dem kleinen Drachen aus dem Wappen von Ljubljana, durch Slowenien: von Ljubljana über Bled und Piran bis Lipica. Tippe auf eine Station, um eine Lektion zu starten. 💡 Tipp zeigt Grammatik und Aussprache.' },
+    { titel: 'Ein erstes Wort', text: '<b>hvala</b> heißt „danke“, <b>prosim</b> heißt „bitte“.',
+      auftrag: (box, ok) => fhQuiz(box, ok, 'Was sagst du, wenn dir jemand einen Kaffee bringt?', [
+        { t: 'Hvala!', richtig: true, warum: 'Genau – und noch höflicher: „Hvala lepa!“ (Vielen Dank!).' },
+        { t: 'Prosim!', warum: '„Prosim“ ist „bitte“ – das sagt eher der, der den Kaffee bringt.' }]) },
+    { titel: 'Eine Besonderheit: der Dual', text: 'Slowenisch hat eine eigene Form für <b>genau zwei</b>: en brat (ein Bruder), <b>dva brata</b> (zwei Brüder), pet bratov (fünf Brüder).',
+      auftrag: (box, ok) => fhQuiz(box, ok, 'Was heißt „Ich habe zwei Brüder“?', [
+        { t: 'Imam dva brata.', richtig: true, warum: 'Richtig – dva brata ist der Dual.' },
+        { t: 'Imam dva brati.', warum: 'Fast – „brati“ heißt „lesen“. Zwei Brüder: dva brata.' }]) },
+  ],
+});
+const FH_SCREENS = { farben: 'farben', toene: 'toene', takt: 'takt', augen: 'augen', karte: 'karte', tiefgang: 'tiefgang', riff: 'riff', cello: 'cello', instrument: 'instrument', piranha: 'piranha', slo: 'slo' };
 const fhStand = () => loadJson(FH_KEY);
 let fhAktiv = null;
 const fhDlg = document.createElement('dialog');

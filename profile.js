@@ -3,7 +3,7 @@
 // seinem Profil abgelegt, der Stand des anderen geladen und die Seite neu geladen.
 // Gemeldete und geprüfte Fotos gelten für alle Profile gemeinsam.
 const PROFIL_KEY = 'walquiz.profile.v1';
-const PROFIL_DATEN = [STORE_KEY, STATS_KEY, 'walquiz.farben.v1', 'walquiz.cello.v1', 'walquiz.instrumente.v1', 'walquiz.instrument.v1', 'walquiz.toene.v1', 'walquiz.takt.v1', 'walquiz.punkte.v1', 'walquiz.funktion.v1', 'walquiz.zufall.v1', 'walquiz.fuehrung.v1', 'walquiz.zahlen.v1', 'walquiz.tierleben.v1', 'walquiz.piranha.v1', 'walquiz.augen.v1', 'walquiz.karte.v1', 'walquiz.verlauf.v1', 'walquiz.tiefgang.v1', 'walquiz.riff.v1', 'walquiz.krimi.v1', 'walquiz.zuletzt.v1', 'walquiz.gesehen.v1'];
+const PROFIL_DATEN = [STORE_KEY, STATS_KEY, 'walquiz.farben.v1', 'walquiz.cello.v1', 'walquiz.instrumente.v1', 'walquiz.instrument.v1', 'walquiz.toene.v1', 'walquiz.takt.v1', 'walquiz.punkte.v1', 'walquiz.funktion.v1', 'walquiz.zufall.v1', 'walquiz.fuehrung.v1', 'walquiz.zahlen.v1', 'walquiz.tierleben.v1', 'walquiz.piranha.v1', 'walquiz.slo.v1', 'walquiz.augen.v1', 'walquiz.karte.v1', 'walquiz.verlauf.v1', 'walquiz.tiefgang.v1', 'walquiz.riff.v1', 'walquiz.krimi.v1', 'walquiz.zuletzt.v1', 'walquiz.gesehen.v1'];
 const PROFIL_AVATARE = ['🐋', '🦈', '🐕', '🏎️', '🎻', '🎨', '🦄', '🐙', '🐢', '🦊', '🐼', '🦖', '🐧', '🦁', '🐸', '🚀'];
 const PROFIL_FARBEN = ['#e50914', '#2563eb', '#16a34a', '#f59e0b', '#9333ea', '#0891b2', '#db2777'];
 const profilAblage = (id) => 'walquiz.profil.' + id;
