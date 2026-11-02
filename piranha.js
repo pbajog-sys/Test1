@@ -1,160 +1,288 @@
-// 🐟 Piranha-Schwarm: Ein Fluss-Puzzle in großem Maßstab. In der Flussmitte treibt ein großes Pixelbild aus Früchten
-// (64 Felder breit, rund 1500–2500 Pixel), oben und unten warten riesige Piranha-Schwärme in Wurzelhöhlen.
-// Höhle antippen → der Schwarm frisst sich wie eine Flut durchs Bild: jeder Fisch zum nächsten erreichbaren Pixel seiner Farbe,
-// gefressene Pixel öffnen sofort den Weg dahinter. Bis zu zwei Schwärme gleichzeitig.
-// Weil Fressen nur Hindernisse entfernt (nie neue schafft), ist jedes Level lösbar, solange am Ende alles erreichbar ist –
-// das prüft eine Simulation beim Erzeugen. Sie liefert auch die Ziel-Zugzahl für die Sterne und den Tipp.
+// 🐟 Piranha-Schwarm: Pixelbilder abknabbern. Oben ein bildschirmbreites Pixelbild (36×36, bis zu 13 Farben, mit Hintergrund),
+// darunter der Fluss mit wenigen Warte-Buchten, unten ein Raster aus Wurzelhöhlen mit nummerierten Piranha-Schwärmen.
+//  • Antippen geht nur bei Höhlen mit freiem Weg zum Fluss (vorderste Reihe oder freie Nachbarfelder).
+//  • Der Schwarm schwimmt von unten ins Bild und frisst Pixel seiner Farbe, die am freien Wasser liegen (von unten erreichbar).
+//  • Was er nicht fressen kann, wartet in einer Bucht und frisst automatisch weiter, sobald seine Farbe frei wird.
+//  • Alle Buchten voll und ein Schwarm findet nichts → der Fluss ist verstopft (mit „Zurück“ rettbar).
+// Levels entstehen rückwärts aus dem Bild (garantiert lösbar), werden dann gemischt und per Simulation geprüft.
 // (Viele Piranha-Arten fressen tatsächlich auch Früchte und Samen, die ins Wasser fallen.)
 const PR_KEY = 'walquiz.piranha.v1';
 const PR_FARBEN = [
-  { id: 'rot', name: 'Rot', haupt: '#ef4444', bauch: '#fca5a5', frucht: '#dc2626', hell: '#f87171' },
-  { id: 'gelb', name: 'Gelb', haupt: '#facc15', bauch: '#fef08a', frucht: '#eab308', hell: '#fde047' },
-  { id: 'blau', name: 'Blau', haupt: '#38bdf8', bauch: '#bae6fd', frucht: '#0284c7', hell: '#7dd3fc' },
-  { id: 'lila', name: 'Lila', haupt: '#a78bfa', bauch: '#ddd6fe', frucht: '#7c3aed', hell: '#c4b5fd' },
-  { id: 'orange', name: 'Orange', haupt: '#fb923c', bauch: '#fed7aa', frucht: '#ea580c', hell: '#fdba74' },
-  { id: 'gruen', name: 'Grün', haupt: '#4ade80', bauch: '#bbf7d0', frucht: '#16a34a', hell: '#86efac' },
+  { name: 'Rot', c: '#e53935' }, { name: 'Orange', c: '#fb8c00' }, { name: 'Gelb', c: '#fdd835' }, { name: 'Hellgrün', c: '#8bc34a' },
+  { name: 'Dunkelgrün', c: '#2e7d32' }, { name: 'Türkis', c: '#26c6da' }, { name: 'Blau', c: '#1e88e5' }, { name: 'Dunkelblau', c: '#283593' },
+  { name: 'Lila', c: '#8e24aa' }, { name: 'Rosa', c: '#f48fb1' }, { name: 'Braun', c: '#795548' }, { name: 'Weiß', c: '#f5f5f5' }, { name: 'Schwarz', c: '#263238' },
 ];
-// Zelltypen
-const WASSER = 0, FELS = 1, PIXEL = 2, HOEHLE = 3;
+const PR_RGB = PR_FARBEN.map((f) => [1, 3, 5].map((k) => parseInt(f.c.slice(k, k + 2), 16)));
+const PB = 36;   // Bildgröße in Pixeln (quadratisch)
+const PR_SPALTEN = 6;
 
-// ---------- Bilder ----------
-// Vorlagen 8 breit (r rot, g gelb, b blau, l lila, o orange, n grün, . Wasser); werden mit Scale2x dreimal geglättet vergrößert (×8)
-const PR_BILDER = [
-  { name: 'Kirschen', emoji: '🍒', zeilen: ['....nn..', '...n..n.', '..n....n', '.rr...rr', 'rrrr.rrr', '.rr...rr'] },
-  { name: 'Wassermelone', emoji: '🍉', zeilen: ['rrrrrrrr', 'rlrrrrlr', 'rrrlrrrr', '.rrrrrr.', '.nnnnnn.', '..nnnn..'] },
-  { name: 'Erdbeere', emoji: '🍓', zeilen: ['..nnnn..', '.rrnnrr.', 'rrgrrgrr', 'rrrrrrrr', '.rgrrgr.', '..rrrr..', '...rr...'] },
-  { name: 'Ananas', emoji: '🍍', zeilen: ['..n.n.n.', '...nnn..', '..goggo.', '.ggogggo', '.goggogg', '.ggogggo', '..goggo.'] },
-  { name: 'Weintrauben', emoji: '🍇', zeilen: ['....nn..', '.lllnll.', 'llllllll', '.llllll.', '..llll..', '...ll...'] },
-  { name: 'Sonnenblume', emoji: '🌻', zeilen: ['.gg..gg.', 'ggoooogg', '.goooog.', 'ggoooogg', '.gg..gg.', '...nn...', '..nnnn..'] },
-  { name: 'Banane', emoji: '🍌', zeilen: ['......no', '.....gg.', '....ggg.', '..gggg..', 'gggggg..', '.gggg...'] },
-  { name: 'Blaubeeren', emoji: '🫐', zeilen: ['..nn....', '.bbbb.n.', 'bbbbbbbn', 'bbllbbbb', '.bbbbbb.', '..bbbb..'] },
-  { name: 'Orange', emoji: '🍊', zeilen: ['...nn...', '..oonno.', '.oooooo.', 'oooogooo', 'oooooooo', '.oooooo.', '..oooo..'] },
-  { name: 'Paprika', emoji: '🫑', zeilen: ['...nn...', '..rnnr..', '.rrrrrr.', 'rrrgrrrr', 'rrrrrrrr', '.rrrrrr.', '..r..r..'] },
+// ---------- Motive: kleine Vektorszenen, gerastert auf 36×36 und auf die Palette gerundet ----------
+const F = (i) => PR_FARBEN[i].c;
+const PR_MOTIVE = [
+  { name: 'Wassermelone', emoji: '🍉', mal(x) {
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(11); for (let i = 0; i < 6; i++) { x.beginPath(); x.arc(4 + i * 6, 4 + (i % 2) * 3, 1.3, 0, 7); x.fill(); }
+    x.save(); x.translate(18, 13); x.rotate(0.25);
+    x.fillStyle = F(4); x.beginPath(); x.arc(0, 0, 17, 0, Math.PI); x.fill();
+    x.fillStyle = F(3); x.beginPath(); x.arc(0, 0, 15, 0, Math.PI); x.fill();
+    x.fillStyle = F(0); x.beginPath(); x.arc(0, 0, 13, 0, Math.PI); x.fill();
+    x.fillStyle = F(9); x.beginPath(); x.arc(-4, 2, 6, 0, Math.PI); x.fill();
+    x.fillStyle = F(12); [[-8, 4], [-3, 7], [2, 5], [7, 3], [0, 10], [-6, 9], [5, 9]].forEach(([a, b]) => { x.beginPath(); x.ellipse(a, b, 1, 1.6, 0.3, 0, 7); x.fill(); });
+    x.restore();
+  } },
+  { name: 'Sonnenuntergang am Fluss', emoji: '🌅', mal(x) {
+    [[8, 0, 7], [9, 7, 5], [1, 12, 5], [2, 17, 4]].forEach(([c, y, h]) => { x.fillStyle = F(c); x.fillRect(0, y, 36, h); });
+    x.fillStyle = F(2); x.beginPath(); x.arc(18, 21, 7, Math.PI, 0); x.fill();
+    x.fillStyle = F(7); x.fillRect(0, 21, 36, 15);
+    x.fillStyle = F(1); [[14, 23, 8], [12, 26, 12], [15, 29, 6], [13, 32, 10]].forEach(([a, b, w]) => x.fillRect(a, b, w, 1.2));
+    x.fillStyle = F(12);
+    [[4, 21], [31, 21]].forEach(([px, py]) => {
+      x.fillRect(px - 0.7, py - 13, 1.6, 13);
+      [[-6, -2], [6, -2], [-4, 2], [4, 2], [0, -4]].forEach(([dx, dy]) => { x.beginPath(); x.moveTo(px, py - 13); x.quadraticCurveTo(px + dx * 0.6, py - 16 + dy, px + dx, py - 11 + dy); x.lineTo(px, py - 12); x.fill(); });
+    });
+    x.fillRect(0, 20, 36, 1.5);
+  } },
+  { name: 'Tukan', emoji: '🐦', mal(x) {
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(4); [[3, 6, 6], [32, 9, 7], [5, 30, 6], [33, 31, 6]].forEach(([a, b, r]) => { x.beginPath(); x.arc(a, b, r, 0, 7); x.fill(); });
+    x.fillStyle = F(10); x.fillRect(0, 27, 36, 3);
+    x.fillStyle = F(12); x.beginPath(); x.ellipse(13, 18, 7, 10, 0.2, 0, 7); x.fill();
+    x.fillStyle = F(2); x.beginPath(); x.ellipse(15, 12, 4, 4.5, 0, 0, 7); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.ellipse(15, 14, 3, 2.5, 0, 0, 7); x.fill();
+    x.fillStyle = F(1); x.beginPath(); x.moveTo(17, 8); x.quadraticCurveTo(31, 7, 33, 13); x.quadraticCurveTo(26, 14, 17, 13); x.fill();
+    x.fillStyle = F(0); x.beginPath(); x.moveTo(29, 9); x.quadraticCurveTo(33, 10, 33, 13); x.lineTo(29, 13); x.fill();
+    x.fillStyle = F(12); x.fillRect(17, 10.5, 15, 0.8);
+    x.fillStyle = F(6); x.beginPath(); x.arc(14, 9, 1.8, 0, 7); x.fill(); x.fillStyle = F(12); x.beginPath(); x.arc(14.3, 9, 0.8, 0, 7); x.fill();
+    x.fillStyle = F(0); x.fillRect(10, 26, 7, 1.5);
+  } },
+  { name: 'Frosch auf Seerose', emoji: '🐸', mal(x) {
+    x.fillStyle = F(7); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(6); for (let i = 0; i < 5; i++) x.fillRect(0, 3 + i * 7, 36, 1.2);
+    x.fillStyle = F(4); x.beginPath(); x.ellipse(18, 26, 16, 7, 0, 0.3, Math.PI * 2 - 0.1); x.lineTo(18, 26); x.fill();
+    x.fillStyle = F(3); x.beginPath(); x.ellipse(18, 21, 9, 7, 0, 0, 7); x.fill();
+    x.fillStyle = F(2); x.beginPath(); x.ellipse(18, 23, 6, 4, 0, 0, 7); x.fill();
+    x.fillStyle = F(3); [[13, 14], [23, 14]].forEach(([a, b]) => { x.beginPath(); x.arc(a, b, 3.4, 0, 7); x.fill(); });
+    x.fillStyle = F(11); [[13, 14], [23, 14]].forEach(([a, b]) => { x.beginPath(); x.arc(a, b, 2.2, 0, 7); x.fill(); });
+    x.fillStyle = F(12); [[13.5, 14], [23.5, 14]].forEach(([a, b]) => { x.beginPath(); x.arc(a, b, 1.1, 0, 7); x.fill(); });
+    x.fillStyle = F(0); x.fillRect(15, 19, 6, 0.9);
+    x.fillStyle = F(9); x.beginPath(); for (let k = 0; k < 6; k++) { const w = k * Math.PI / 3; x.ellipse(30 + Math.cos(w) * 2.5, 7 + Math.sin(w) * 2.5, 2.4, 1.4, w, 0, 7); } x.fill();
+    x.fillStyle = F(2); x.beginPath(); x.arc(30, 7, 1.4, 0, 7); x.fill();
+  } },
+  { name: 'Morphofalter', emoji: '🦋', mal(x) {
+    x.fillStyle = F(3); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(4); [[0, 0, 12], [36, 36, 13], [36, 0, 8], [0, 36, 9]].forEach(([a, b, r]) => { x.beginPath(); x.arc(a, b, r, 0, 7); x.fill(); });
+    const fluegel = (s) => {
+      x.fillStyle = F(12); x.beginPath(); x.ellipse(18 + s * 8, 12, 10, 9, s * 0.5, 0, 7); x.fill(); x.beginPath(); x.ellipse(18 + s * 6, 25, 7, 7, -s * 0.4, 0, 7); x.fill();
+      x.fillStyle = F(6); x.beginPath(); x.ellipse(18 + s * 7.5, 12, 8, 7, s * 0.5, 0, 7); x.fill(); x.beginPath(); x.ellipse(18 + s * 5.5, 24.5, 5.5, 5.5, -s * 0.4, 0, 7); x.fill();
+      x.fillStyle = F(5); x.beginPath(); x.ellipse(18 + s * 6, 13, 4, 3.5, s * 0.5, 0, 7); x.fill();
+      x.fillStyle = F(11); [[13, 6], [15, 9], [9, 22]].forEach(([a, b]) => { x.beginPath(); x.arc(18 + s * a, b, 0.9, 0, 7); x.fill(); });
+    };
+    fluegel(-1); fluegel(1);
+    x.fillStyle = F(12); x.beginPath(); x.ellipse(18, 18, 1.5, 10, 0, 0, 7); x.fill();
+    x.strokeStyle = F(12); x.lineWidth = 0.8; x.beginPath(); x.moveTo(17.5, 9); x.lineTo(14, 3); x.moveTo(18.5, 9); x.lineTo(22, 3); x.stroke();
+  } },
+  { name: 'Ara', emoji: '🦜', mal(x) {
+    x.fillStyle = F(2); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(1); for (let i = 0; i < 36; i += 6) { x.beginPath(); x.arc(i, 36, 5, 0, 7); x.fill(); }
+    x.fillStyle = F(6); x.beginPath(); x.ellipse(22, 27, 9, 11, -0.3, 0, 7); x.fill();
+    x.fillStyle = F(2); x.beginPath(); x.ellipse(24, 23, 5, 4, -0.3, 0, 7); x.fill();
+    x.fillStyle = F(0); x.beginPath(); x.ellipse(15, 17, 11, 12, 0, 0, 7); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.ellipse(13, 15, 5.5, 6, 0, 0, 7); x.fill();
+    x.strokeStyle = F(12); x.lineWidth = 0.6; for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(9.5, 13 + i * 2); x.lineTo(15, 14 + i * 2); x.stroke(); }
+    x.fillStyle = F(2); x.beginPath(); x.arc(14, 13, 2.2, 0, 7); x.fill(); x.fillStyle = F(12); x.beginPath(); x.arc(14, 13, 1.1, 0, 7); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.moveTo(6, 14); x.quadraticCurveTo(-1, 16, 3, 24); x.quadraticCurveTo(6, 21, 8, 19); x.fill();
+    x.fillStyle = F(12); x.beginPath(); x.moveTo(4, 20); x.quadraticCurveTo(6, 23, 3, 24); x.lineTo(7, 19); x.fill();
+  } },
+  { name: 'Piranha', emoji: '🐟', mal(x) {
+    x.fillStyle = F(7); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(6); for (let i = 0; i < 6; i++) { x.beginPath(); x.arc(4 + i * 6, 3 + (i % 3) * 2, 0.9, 0, 7); x.fill(); }
+    x.fillStyle = F(4); [[2, 36], [8, 36], [30, 36], [35, 36]].forEach(([a, b]) => x.fillRect(a, b - 10, 1.5, 10));
+    x.fillStyle = F(5); x.beginPath(); x.moveTo(4, 18); x.lineTo(0, 10); x.lineTo(0, 26); x.fill();
+    x.fillStyle = F(6); x.beginPath(); x.ellipse(18, 18, 14, 11, 0, 0, 7); x.fill();
+    x.fillStyle = F(0); x.beginPath(); x.ellipse(19, 23, 11, 5, 0, 0, Math.PI); x.fill(); x.beginPath(); x.ellipse(19, 22, 12, 4, 0, 0, 7); x.fill();
+    x.fillStyle = F(5); x.beginPath(); x.moveTo(14, 7); x.lineTo(20, 2); x.lineTo(22, 8); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.arc(25, 14, 3, 0, 7); x.fill(); x.fillStyle = F(12); x.beginPath(); x.arc(26, 14, 1.6, 0, 7); x.fill();
+    x.fillStyle = F(12); x.beginPath(); x.moveTo(32, 19); x.lineTo(24, 21); x.lineTo(32, 23); x.fill();
+    x.fillStyle = F(11); for (let i = 0; i < 4; i++) { x.beginPath(); x.moveTo(25 + i * 2, 21); x.lineTo(26 + i * 2, 22.6); x.lineTo(27 + i * 2, 21); x.fill(); }
+  } },
+  { name: 'Flussdelfin', emoji: '🐬', mal(x) {
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(6); [6, 14, 22, 30].forEach((y) => { for (let i = 0; i < 36; i += 8) x.fillRect(i + (y % 16), y, 5, 1); });
+    x.fillStyle = F(10); x.fillRect(0, 31, 36, 5); x.fillStyle = F(4); [[3, 31], [12, 31], [27, 31]].forEach(([a, b]) => { x.beginPath(); x.ellipse(a, b, 3, 4, 0, 0, 7); x.fill(); });
+    x.fillStyle = F(9); x.beginPath(); x.moveTo(3, 18); x.quadraticCurveTo(14, 6, 28, 13); x.quadraticCurveTo(34, 15, 35, 17); x.quadraticCurveTo(30, 18, 27, 20); x.quadraticCurveTo(16, 27, 6, 22); x.fill();
+    x.beginPath(); x.moveTo(5, 19); x.lineTo(0, 13); x.lineTo(2, 19); x.lineTo(0, 25); x.fill();
+    x.beginPath(); x.moveTo(15, 11); x.lineTo(18, 7); x.lineTo(20, 11); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.ellipse(18, 20, 8, 3, 0.1, 0, 7); x.fill();
+    x.fillStyle = F(12); x.beginPath(); x.arc(27, 15, 1, 0, 7); x.fill();
+  } },
+  { name: 'Seerose bei Nacht', emoji: '🪷', mal(x) {
+    x.fillStyle = F(7); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(2); x.beginPath(); x.arc(28, 7, 4.5, 0, 7); x.fill(); x.fillStyle = F(7); x.beginPath(); x.arc(30, 6, 4, 0, 7); x.fill();
+    x.fillStyle = F(11); [[4, 4], [10, 9], [16, 3], [21, 11], [6, 14]].forEach(([a, b]) => x.fillRect(a, b, 1, 1));
+    x.fillStyle = F(6); x.fillRect(0, 20, 36, 16);
+    x.fillStyle = F(4); [[7, 29, 8], [29, 31, 7]].forEach(([a, b, r]) => { x.beginPath(); x.ellipse(a, b, r, r * 0.45, 0, 0.4, Math.PI * 2 - 0.2); x.lineTo(a, b); x.fill(); });
+    for (let k = 0; k < 9; k++) {
+      const w = Math.PI + (k / 8) * Math.PI;
+      x.fillStyle = k % 2 ? F(11) : F(9);
+      x.beginPath(); x.ellipse(18 + Math.cos(w) * 6, 23 + Math.sin(w) * 4, 5, 2.2, w, 0, 7); x.fill();
+    }
+    x.fillStyle = F(9); x.beginPath(); x.ellipse(18, 22, 4, 4, 0, Math.PI, 0); x.fill();
+    x.fillStyle = F(2); x.beginPath(); x.arc(18, 22, 2, 0, 7); x.fill();
+    x.fillStyle = F(9); x.globalAlpha = 0.6; x.fillRect(14, 27, 8, 1); x.fillRect(15, 30, 6, 1); x.globalAlpha = 1;
+  } },
+  { name: 'Erdbeeren', emoji: '🍓', mal(x) {
+    x.fillStyle = F(11); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(9); for (let yy = 0; yy < 36; yy += 6) for (let xx = (yy / 6) % 2 * 3; xx < 36; xx += 6) x.fillRect(xx, yy, 3, 3);
+    const beere = (a, b, s) => {
+      x.fillStyle = F(0); x.beginPath(); x.moveTo(a - 7 * s, b - 3 * s); x.quadraticCurveTo(a, b - 8 * s, a + 7 * s, b - 3 * s); x.quadraticCurveTo(a + 5 * s, b + 7 * s, a, b + 10 * s); x.quadraticCurveTo(a - 5 * s, b + 7 * s, a - 7 * s, b - 3 * s); x.fill();
+      x.fillStyle = F(2); for (let i = 0; i < 7; i++) x.fillRect(a - 4 * s + (i % 3) * 4 * s, b - 1 * s + Math.floor(i / 3) * 3.5 * s, 0.9, 0.9);
+      x.fillStyle = F(4); x.beginPath(); for (let k = 0; k < 5; k++) { const w = -Math.PI / 2 + (k - 2) * 0.6; x.ellipse(a + Math.cos(w) * 3 * s, b - 5 * s + Math.sin(w) * 2 * s, 2.6 * s, 1.1 * s, w, 0, 7); } x.fill();
+      x.fillStyle = F(3); x.fillRect(a - 0.6, b - 10 * s, 1.2, 4 * s);
+    };
+    beere(11, 13, 1); beere(25, 20, 1.15); beere(12, 27, 0.8);
+  } },
 ];
-const PR_ZEICHEN = { r: 0, g: 1, b: 2, l: 3, o: 4, n: 5 };
-// Scale2x (EPX): verdoppelt ein Raster und glättet dabei Treppenkanten
-function prScale2x(g) {
-  const h = g.length, w = g[0].length, aus = Array.from({ length: h * 2 }, () => Array(w * 2));
-  const at = (y, x) => g[Math.max(0, Math.min(h - 1, y))][Math.max(0, Math.min(w - 1, x))];
-  for (let y = 0; y < h; y++) for (let x = 0; x < w; x++) {
-    const P = g[y][x], A = at(y - 1, x), B = at(y, x + 1), C = at(y, x - 1), D = at(y + 1, x);
-    aus[2 * y][2 * x] = C === A && C !== D && A !== B ? A : P;
-    aus[2 * y][2 * x + 1] = A === B && A !== C && B !== D ? B : P;
-    aus[2 * y + 1][2 * x] = D === C && D !== B && C !== A ? C : P;
-    aus[2 * y + 1][2 * x + 1] = B === D && B !== A && D !== C ? D : P;
+// Motiv rastern und auf die Palette runden
+function prMotivRaster(motiv) {
+  const c = document.createElement('canvas'); c.width = c.height = PB;
+  const x = c.getContext('2d');
+  motiv.mal(x);
+  const d = x.getImageData(0, 0, PB, PB).data, aus = new Int8Array(PB * PB);
+  for (let i = 0; i < PB * PB; i++) {
+    const r = d[i * 4], g = d[i * 4 + 1], b = d[i * 4 + 2];
+    let best = 0, bd = 1e9;
+    PR_RGB.forEach(([R, G, B], k) => { const dd = (r - R) ** 2 * 0.3 + (g - G) ** 2 * 0.59 + (b - B) ** 2 * 0.11; if (dd < bd) { bd = dd; best = k; } });
+    aus[i] = best;
+  }
+  // Kantenreste glätten: Pixel ohne gleichfarbigen Nachbarn bekommen die häufigste Nachbarfarbe
+  for (let durchgang = 0; durchgang < 2; durchgang++) {
+    const neu = aus.slice();
+    for (let i = 0; i < PB * PB; i++) {
+      const x0 = i % PB, nb = [];
+      if (x0 > 0) nb.push(aus[i - 1]); if (x0 < PB - 1) nb.push(aus[i + 1]); if (i >= PB) nb.push(aus[i - PB]); if (i < PB * (PB - 1)) nb.push(aus[i + PB]);
+      if (nb.filter((c) => c === aus[i]).length >= 1) continue;
+      const z = {}; nb.forEach((c) => { z[c] = (z[c] || 0) + 1; });
+      neu[i] = Number(Object.entries(z).sort((a, b) => b[1] - a[1])[0][0]);
+    }
+    aus.set(neu);
   }
   return aus;
 }
-function prBildRaster(bild) {
-  let g = bild.zeilen.map((z) => [...z].map((ch) => (ch in PR_ZEICHEN ? PR_ZEICHEN[ch] : -1)));
-  for (let k = 0; k < 3; k++) g = prScale2x(g);
-  return g;
-}
 
-// ---------- Brett ----------
-// b = { W, H, typ: Uint8Array, farbe: Int8Array, hid: Int16Array, hoehlen: [{ f, n, zellen, mitte }], rest: Pixel je Farbe }
-const prKopie = (b) => ({ W: b.W, H: b.H, typ: b.typ.slice(), farbe: b.farbe.slice(), hid: b.hid.slice(), hoehlen: b.hoehlen.map((h) => ({ ...h })), rest: b.rest.slice() });
-function prNachbarn(W, H, i, aus) {
-  const x = i % W; let n = 0;
-  if (x > 0) aus[n++] = i - 1; if (x < W - 1) aus[n++] = i + 1; if (i >= W) aus[n++] = i - W; if (i < W * (H - 1)) aus[n++] = i + W;
-  return n;
-}
-const PR_NB = new Int32Array(4);
-// Flut von einer Höhle aus. essen=false: nur prüfen, ob ein Pixel ihrer Farbe erreichbar ist.
-function prFlut(b, id, essen) {
-  const h = b.hoehlen[id], W = b.W, H = b.H, f = h.f, N = W * H;
-  if (h.n <= 0) return essen ? null : false;
-  const vor = new Int32Array(N).fill(-2), q = new Int32Array(N);
-  let kopf = 0, ende = 0, fische = h.n;
-  const fahrten = [];
-  h.zellen.forEach((c) => { vor[c] = -1; q[ende++] = c; });
-  while (kopf < ende && fische > 0) {
-    const i = q[kopf++], n = prNachbarn(W, H, i, PR_NB);
-    for (let k = 0; k < n; k++) {
-      const j = PR_NB[k];
-      if (vor[j] !== -2) continue;
-      const t = b.typ[j];
-      if (t === PIXEL && b.farbe[j] === f) {
-        if (!essen) return true;
-        vor[j] = i;
-        const weg = []; let m = j; while (m !== -1) { weg.push(m); m = vor[m]; }
-        weg.reverse();
-        fahrten.push({ weg, ziel: j });
-        b.typ[j] = WASSER; b.rest[f]--; fische--; q[ende++] = j;
-        if (fische <= 0) break;
-      } else if (t === WASSER) { vor[j] = i; q[ende++] = j; }
+// ---------- Fressen ----------
+// Bild: farbe[i] (Palette) und weg[i] (1 = gefressen). Pixel sind erreichbar, wenn sie von unten durch gefressene Felder angrenzen.
+// Flut von unten: frisst bis zu n Pixel der Farbe f; liefert Liste [Zielindex, Weg (Bildindizes von unten bis Ziel)] in Fressreihenfolge.
+function prFressen(farbe, weg, f, n, mitWegen) {
+  const N = PB * PB, vor = new Int32Array(N).fill(-2), q = new Int32Array(N);
+  let k = 0, e = 0;
+  const raus = [];
+  // Startrand: unterste Reihe ist vom Fluss aus erreichbar
+  const pruefen = (j, von) => {
+    if (vor[j] !== -2) return;
+    if (weg[j]) { vor[j] = von; q[e++] = j; }
+    else if (farbe[j] === f && raus.length < n) {
+      vor[j] = von; weg[j] = 1; q[e++] = j;
+      if (mitWegen) { const p = []; let m = j; while (m >= 0) { p.push(m); m = vor[m]; } raus.push([j, p.reverse()]); } else raus.push([j]);
     }
+  };
+  for (let xx = 0; xx < PB; xx++) pruefen((PB - 1) * PB + xx, -1);
+  while (k < e && raus.length < n) {
+    const i = q[k++], xx = i % PB;
+    if (xx > 0) pruefen(i - 1, i); if (xx < PB - 1) pruefen(i + 1, i); if (i >= PB) pruefen(i - PB, i); if (i < N - PB) pruefen(i + PB, i);
   }
-  if (!essen) return false;
-  if (!fahrten.length) return null;
-  h.n = fische;
-  if (fische <= 0) h.zellen.forEach((c) => { b.typ[c] = WASSER; b.hid[c] = -1; });
-  return fahrten;
+  return raus;
 }
-const prFertig = (b) => b.rest.every((r) => r <= 0);
-// Simulation: immer den Zug, der eine Höhle ganz leert – sonst den, der am meisten frisst. Liefert Zugfolge oder null.
-function prSimulieren(b0) {
-  const b = prKopie(b0), folge = [];
-  for (let schritt = 0; schritt < 200 && !prFertig(b); schritt++) {
-    let best = -1, wert = -1;
-    b.hoehlen.forEach((h, id) => {
-      if (h.n <= 0 || !prFlut(b, id, false)) return;
-      const probe = prKopie(b), fahrten = prFlut(probe, id, true);
-      const v = (probe.hoehlen[id].n === 0 ? 1e6 : 0) + fahrten.length;
-      if (v > wert) { wert = v; best = id; }
+// Wie viele Pixel der Farbe f wären jetzt (in einem Zug, inkl. Nachrücken) erreichbar?
+function prErreichbar(farbe, weg, f, grenze = 9999) { return prFressen(farbe, weg.slice(), f, grenze, false).length; }
+
+// ---------- Höhlen-Raster ----------
+// h: Array von { f, n, verborgen } oder null (leer); Raster mit PR_SPALTEN Spalten, Reihe 0 liegt am Fluss.
+function prZugaenglich(h) {
+  const R = Math.ceil(h.length / PR_SPALTEN), offen = new Uint8Array(h.length), q = [];
+  // „frei“: leeres Feld, das mit dem Fluss verbunden ist
+  const frei = new Uint8Array(h.length);
+  for (let c = 0; c < PR_SPALTEN; c++) if (c < h.length && !h[c]) { frei[c] = 1; q.push(c); }
+  while (q.length) {
+    const i = q.pop(), r = Math.floor(i / PR_SPALTEN), c = i % PR_SPALTEN;
+    [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].forEach(([rr, cc]) => {
+      if (rr < 0 || rr >= R || cc < 0 || cc >= PR_SPALTEN) return;
+      const j = rr * PR_SPALTEN + cc;
+      if (j < h.length && !h[j] && !frei[j]) { frei[j] = 1; q.push(j); }
     });
-    if (best < 0) return null;
-    prFlut(b, best, true); folge.push(best);
   }
-  return prFertig(b) ? folge : null;
+  h.forEach((z, i) => {
+    if (!z) return;
+    const r = Math.floor(i / PR_SPALTEN), c = i % PR_SPALTEN;
+    if (r === 0) { offen[i] = 1; return; }
+    [[r - 1, c], [r + 1, c], [r, c - 1], [r, c + 1]].forEach(([rr, cc]) => { const j = rr * PR_SPALTEN + cc; if (rr >= 0 && cc >= 0 && cc < PR_SPALTEN && j < h.length && frei[j]) offen[i] = 1; });
+  });
+  return offen;
 }
 
+// ---------- Level ----------
+function prLevelWerte(nr) {
+  const s = Math.min(nr, 30);
+  return { buchten: nr <= 2 ? 6 : nr <= 8 ? 5 : 4, ziel: Math.min(30, 22 + Math.floor(s / 3)), verborgen: nr >= 5 ? Math.min(0.35, (nr - 4) * 0.04) : 0, mischen: 70, zielBuchten: nr <= 2 ? 0 : Math.min(nr <= 8 ? 3 : 3, 1 + Math.floor((nr - 1) / 3)) };
+}
+// Spieler-Simulation mit Buchten: liefert { ok, maxBuchten }
+function prSimulation(farbe, h0, buchten) {
+  const weg = new Uint8Array(PB * PB), h = h0.map((z) => (z ? { ...z } : null)), bucht = [];
+  let maxB = 0, sicher = 0;
+  const futtern = () => { let lief = true; while (lief) { lief = false; for (const b of bucht) { if (b.n <= 0) continue; const r = prFressen(farbe, weg, b.f, b.n, false).length; if (r) { b.n -= r; lief = true; } } } for (let i = bucht.length - 1; i >= 0; i--) if (bucht[i].n <= 0) bucht.splice(i, 1); };
+  // Tiefe je Farbe: wie weit (in Pixeln ab unten) liegt das nächste Pixel dieser Farbe?
+  while (h.some(Boolean) && sicher++ < 500) {
+    const offen = prZugaenglich(h);
+    let best = -1, bestWert = -1;
+    h.forEach((z, i) => { if (!z || !offen[i]) return; const e = Math.min(z.n, prErreichbar(farbe, weg, z.f, z.n)); const v = e === z.n ? 1e6 + e : e; if (v > bestWert) { bestWert = v; best = i; } });
+    if (best < 0) return { ok: false, maxBuchten: maxB };
+    const z = h[best]; h[best] = null;
+    const gefressen = prFressen(farbe, weg, z.f, z.n, false).length;
+    if (gefressen < z.n) { if (bucht.length >= buchten) return { ok: false, maxBuchten: maxB }; bucht.push({ f: z.f, n: z.n - gefressen }); }
+    futtern();
+    maxB = Math.max(maxB, bucht.length);
+  }
+  return { ok: weg.every(Boolean) && !bucht.length, maxBuchten: maxB };
+}
 function prErzeugen(seed, nr) {
-  const stufe = Math.min(nr, 40);
-  const hash = [...seed].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7), bild = PR_BILDER[(seed === 'piranha' ? nr - 1 : hash) % PR_BILDER.length];
-  const raster = prBildRaster(bild), W = raster[0].length, bh = raster.length, ZONE = 12, H = ZONE + 2 + bh + 2 + ZONE;
-  const HS = 5;   // Höhlen sind 5×5 Felder groß
-  for (let versuch = 0; versuch < 60; versuch++) {
+  const motiv = PR_MOTIVE[(seed === 'piranha' ? nr - 1 : [...seed].reduce((a, c) => (a * 31 + c.charCodeAt(0)) >>> 0, 7)) % PR_MOTIVE.length];
+  const farbe = prMotivRaster(motiv), L = prLevelWerte(nr);
+  for (let versuch = 0; versuch < 30; versuch++) {
     const r = zufallsGenerator(seed + '|' + nr + '|' + versuch);
-    const b = { W, H, typ: new Uint8Array(W * H), farbe: new Int8Array(W * H).fill(-1), hid: new Int16Array(W * H).fill(-1), hoehlen: [], rest: new Int32Array(PR_FARBEN.length) };
-    const zaehl = new Array(PR_FARBEN.length).fill(0);
-    raster.forEach((zeile, y) => zeile.forEach((f, x) => { if (f < 0) return; const i = (ZONE + 2 + y) * W + x; b.typ[i] = PIXEL; b.farbe[i] = f; zaehl[f]++; }));
-    zaehl.forEach((n, f) => { b.rest[f] = n; });
-    // Höhlen-Plätze: zwei Reihen à 5×5 oben und unten, zufällig belegt
-    const plaetze = [];
-    for (const y0 of [0, ZONE - HS - 1, H - ZONE + 1, H - HS]) for (let x0 = (y0 % 2); x0 + HS <= W; x0 += HS + 1) plaetze.push([x0, y0]);
-    for (let i = plaetze.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [plaetze[i], plaetze[j]] = [plaetze[j], plaetze[i]]; }
-    const farben = zaehl.map((n, f) => [f, n]).filter(([, n]) => n > 0);
-    const teile = Math.min(5, 2 + Math.floor(stufe / 3));
-    let ok = true;
-    farben.forEach(([f, gesamt]) => {
-      if (!ok) return;
-      const n = Math.max(2, Math.min(teile, Math.ceil(gesamt / 60)));
-      let rest = gesamt;
-      for (let k = 0; k < n; k++) {
-        const anz = k === n - 1 ? rest : Math.max(1, Math.min(rest - (n - 1 - k), Math.round(rest / (n - k) * (0.7 + r() * 0.6))));
-        rest -= anz;
-        // abwechselnd oben und unten
-        const idx = plaetze.findIndex(([, y0]) => (k % 2 === 0) === (y0 < ZONE));
-        if (idx < 0) { ok = false; return; }
-        const [x0, y0] = plaetze.splice(idx, 1)[0], zellen = [];
-        for (let dy = 0; dy < HS; dy++) for (let dx = 0; dx < HS; dx++) { const c = (y0 + dy) * W + x0 + dx; zellen.push(c); b.typ[c] = HOEHLE; b.hid[c] = b.hoehlen.length; }
-        b.hoehlen.push({ f, n: anz, zellen, mitte: [x0 + HS / 2, y0 + HS / 2] });
-      }
-    });
-    if (!ok) continue;
-    // Felsen: kleine Blöcke in den Zonen, mehr in höheren Levels
-    const felsen = Math.min(40, 6 + stufe * 2);
-    for (let k = 0; k < felsen; k++) {
-      const oben = r() < 0.5, x0 = Math.floor(r() * (W - 3)), y0 = oben ? Math.floor(r() * (ZONE - 1)) : H - ZONE + Math.floor(r() * (ZONE - 1));
-      const g = 2 + Math.floor(r() * 2);
-      for (let dy = 0; dy < g; dy++) for (let dx = 0; dx < g; dx++) { const c = (y0 + dy) * W + x0 + dx; if (c < W * H && b.typ[c] === WASSER) b.typ[c] = FELS; }
+    // 1) Rückwärts aus dem Bild: in welcher Reihenfolge können Schwärme das Bild fressen?
+    const weg = new Uint8Array(PB * PB), folge = [];
+    let rest = PB * PB, sicher = 0;
+    while (rest > 0 && sicher++ < 2000) {
+      const kandidaten = [];
+      for (let f = 0; f < PR_FARBEN.length; f++) { const e = prErreichbar(farbe, weg, f, 400); if (e) kandidaten.push([f, e]); }
+      const gute = kandidaten.filter(([, e]) => e >= 6), wahl = gute.length ? gute : kandidaten;
+      const [f, e] = wahl[Math.floor(r() * wahl.length)];
+      const schnitt = PB * PB / L.ziel, groesse = Math.min(e, Math.max(8, Math.round(schnitt * (0.55 + r() * 0.9))));
+      const n = prFressen(farbe, weg, f, groesse, false).length;
+      folge.push({ f, n }); rest -= n;
     }
-    const folge = prSimulieren(b);
-    if (!folge) continue;
-    const blockiert = b.hoehlen.filter((h, id) => !prFlut(b, id, false)).length;
-    if (nr >= 2 && blockiert === 0 && versuch < 40) continue;
-    return { brett: b, par: folge.length, bild, pixel: zaehl.reduce((a, c) => a + c, 0), fische: b.hoehlen.reduce((a, h) => a + h.n, 0) };
+    // kleine Reste der gleichen Farbe zusammenlegen
+    for (let i = folge.length - 1; i > 0; i--) if (folge[i].f === folge[i - 1].f && folge[i].n + folge[i - 1].n <= 2.2 * PB * PB / L.ziel) { folge[i - 1].n += folge[i].n; folge.splice(i, 1); }
+    if (folge.length > L.ziel + 8) continue;
+    // 2) ins Raster: Reihe für Reihe in Fressreihenfolge
+    const R = Math.ceil(folge.length / PR_SPALTEN), h = new Array(R * PR_SPALTEN).fill(null);
+    folge.forEach((z, i) => { h[i] = { ...z }; });
+    for (let row = 0; row < R; row++) { const s = row * PR_SPALTEN; for (let i = PR_SPALTEN - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [h[s + i], h[s + j]] = [h[s + j], h[s + i]]; } }
+    // 3) mischen: Tausche über Reihen hinweg, solange die Simulation es noch schafft
+    let sim = prSimulation(farbe, h, L.buchten);
+    if (!sim.ok) continue;
+    // Mischen mit Ziel: Das Level soll so schwer werden, dass man Schwärme parken muss (zielBuchten), aber lösbar bleiben
+    const t0 = Date.now();
+    for (let k = 0; k < L.mischen && sim.maxBuchten < L.zielBuchten && Date.now() - t0 < 900; k++) {
+      // bevorzugt: einen Schwarm aus den hinteren Reihen nach vorn holen, dessen Farbe erst spät gebraucht wird
+      const a = Math.floor(r() * Math.min(h.length, PR_SPALTEN * 2)), b = Math.min(h.length - 1, a + PR_SPALTEN * (1 + Math.floor(r() * 3)) + Math.floor(r() * 3) - 1);
+      if (a === b || !h[a] || !h[b]) continue;
+      [h[a], h[b]] = [h[b], h[a]];
+      const s = prSimulation(farbe, h, L.buchten);
+      if (s.ok && s.maxBuchten >= sim.maxBuchten && s.maxBuchten <= Math.min(L.buchten - 1, L.zielBuchten + 1)) sim = s; else [h[a], h[b]] = [h[b], h[a]];
+    }
+    if (sim.maxBuchten < L.zielBuchten && versuch < 8) continue;
+    h.forEach((z, i) => { if (z && i >= PR_SPALTEN && r() < L.verborgen) z.verborgen = true; });
+    return { motiv, farbe, hoehlen: h, buchten: L.buchten, sim, pixel: PB * PB, fische: folge.reduce((a, z) => a + z.n, 0) };
   }
   return null;
 }
@@ -164,6 +292,8 @@ let pr = null;
 const prStore = () => loadJson(PR_KEY);
 const prTeile = ['intro', 'spiel'];
 const zeigePrTeil = (t) => prTeile.forEach((x) => { $('pr-' + x).hidden = x !== t; });
+let prLaufNr = 0;
+function prStopp() { prLaufNr++; }
 
 function piranhaIntro() {
   prStopp();
@@ -171,228 +301,268 @@ function piranhaIntro() {
   $('prLevelText').textContent = 'Level ' + level;
   $('prSterne').textContent = '⭐ ' + Object.values(st.sterne || {}).reduce((a, b) => a + b, 0) + ' Sterne gesammelt';
   const t = st.tag && st.tag[heute()];
-  $('prTagBtn').textContent = t ? '📅 Tagesfluss – heute geschafft: ' + '⭐'.repeat(t) : '📅 Tagesfluss (heute für alle gleich)';
+  $('prTagBtn').textContent = t ? '📅 Tagesbild – heute geschafft: ' + '⭐'.repeat(t) : '📅 Tagesbild (heute für alle gleich)';
   zeigePrTeil('intro');
 }
 function piranhaStart(opts = {}) {
   zeigePrTeil('spiel');
   $('prKopf').textContent = '';
-  $('prMeldung').textContent = '🌊 Fluss wird vorbereitet …';
-  const cv = $('prBild'); cv.getContext('2d').clearRect(0, 0, cv.width, cv.height);
+  $('prMeldung').textContent = '🌊 Bild wird gemalt …';
   setTimeout(() => piranhaBauen(opts), 30);
 }
 function piranhaBauen(opts) {
   const st = prStore();
-  const nr = opts.taeglich ? 12 : opts.level || st.level || 1;
+  const nr = opts.taeglich ? 9 : opts.level || st.level || 1;
   const seed = opts.taeglich ? 'pr-' + heute() : 'piranha';
   const L = prErzeugen(seed, nr);
   if (!L) { $('prMeldung').textContent = 'Konnte kein Level bauen – bitte nochmal.'; return; }
-  const b = L.brett;
-  pr = { nr, bild: L.bild, taeglich: !!opts.taeglich, brett: b, start: prKopie(b), par: L.par, zuege: 0, verlauf: [], fische: [],
-    unterwegs: new Int32Array(b.hoehlen.length), ankunft: new Uint8Array(b.W * b.H), maske: b.farbe.slice(), aktiv: new Set(), wackel: {}, fertig: false, pixel: L.pixel };
-  $('prKopf').textContent = (pr.taeglich ? '📅 Tagesfluss' : 'Level ' + nr) + ' · ' + L.bild.emoji + ' ' + L.bild.name + ' · ' + L.pixel.toLocaleString('de-DE') + ' Pixel · ' + L.fische.toLocaleString('de-DE') + ' Piranhas · Ziel: ' + pr.par + ' Züge';
+  pr = { nr, taeglich: !!opts.taeglich, motiv: L.motiv, farbe: L.farbe, weg: new Uint8Array(PB * PB), sichtbar: new Uint8Array(PB * PB).fill(1),
+    hoehlen: L.hoehlen.map((z) => (z ? { ...z } : null)), start: L.hoehlen.map((z) => (z ? { ...z } : null)), buchtenMax: L.buchten, bucht: [],
+    fische: [], zuege: 0, verlauf: [], maxBuchten: 0, fertig: false, verloren: false, wackel: {}, fischeGesamt: L.fische };
+  $('prKopf').textContent = (pr.taeglich ? '📅 Tagesbild' : 'Level ' + nr) + ' · ' + L.motiv.emoji + ' ' + L.motiv.name;
   $('prMeldung').textContent = '';
-  prFreiNeu();
-  prGroesse();
-  prStatus();
+  prGroesse(); prEbeneNeu(); prStatus();
   const lauf = ++prLaufNr;
   const frame = (t) => { if (lauf !== prLaufNr || !pr) return; prUpdate(t); prZeichnen(t); requestAnimationFrame(frame); };
   requestAnimationFrame(frame);
 }
-let prLaufNr = 0;
-function prStopp() { prLaufNr++; }
-// Welche Höhlen haben gerade freien Weg? (nur nach Zügen neu berechnet)
-function prFreiNeu() { pr.frei = pr.brett.hoehlen.map((h, id) => prFlut(pr.brett, id, false)); }
 function prStatus() {
-  const rest = pr.brett.rest.reduce((a, c) => a + Math.max(0, c), 0);
-  $('prZuege').textContent = pr.zuege + (pr.zuege === 1 ? ' Zug' : ' Züge') + ' · noch ' + rest.toLocaleString('de-DE');
-  $('prRueck').disabled = !pr.verlauf.length || pr.fische.length > 0;
+  const rest = pr.weg.reduce((a, v) => a + (v ? 0 : 1), 0);
+  $('prZuege').textContent = 'noch ' + rest.toLocaleString('de-DE') + ' Pixel · Buchten ' + pr.bucht.length + '/' + pr.buchtenMax;
+  $('prRueck').disabled = !pr.verlauf.length || (pr.fische.length > 0 && !pr.verloren);
 }
+const prSnapshot = () => ({ weg: pr.weg.slice(), hoehlen: pr.hoehlen.map((z) => (z ? { ...z } : null)), bucht: pr.bucht.map((b) => ({ ...b })), maxBuchten: pr.maxBuchten });
+
+// ---------- Geometrie ----------
+let prG = { P: 9, W: 360, bx: 0, bildH: 324, flussY: 324, flussH: 64, rasterY: 388, zelleB: 60, zelleH: 48, hoehe: 700 };
+function prGroesse() {
+  const cv = $('prBild'), breite = Math.min(cv.parentElement.clientWidth, 560);
+  const R = Math.ceil(pr.hoehlen.length / PR_SPALTEN), oben = cv.getBoundingClientRect().top + (window.scrollY || 0) - ($('pr-spiel').closest('.pr-buehne').scrollTop || 0);
+  const verfuegbar = Math.max(420, window.innerHeight - Math.max(80, Math.min(140, oben)) - 118);
+  const zelleB = breite / PR_SPALTEN, flussH = 52;
+  // Bild möglichst bildschirmbreit; die Höhlenreihen werden dafür flacher (mindestens 30 px, gut antippbar)
+  const zelleH = Math.min(50, Math.max(30, (verfuegbar - flussH - breite) / R));
+  const bildH = Math.max(breite * 0.6, Math.min(breite, verfuegbar - flussH - R * zelleH));
+  const P = bildH / PB;
+  prG = { P, W: breite, bx: (breite - PB * P) / 2, bildH, flussY: bildH, flussH, rasterY: bildH + flussH, zelleB, zelleH, hoehe: bildH + flussH + R * zelleH + 4 };
+  const dpr = window.devicePixelRatio || 1;
+  cv.width = Math.round(breite * dpr); cv.height = Math.round(prG.hoehe * dpr);
+  cv.style.width = breite + 'px'; cv.style.height = prG.hoehe + 'px';
+  cv.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
+  if (pr.ebene) prEbeneNeu();
+}
+const prHoehlePos = (i) => [(i % PR_SPALTEN + 0.5) * prG.zelleB, prG.rasterY + (Math.floor(i / PR_SPALTEN) + 0.5) * prG.zelleH];
+const prBuchtPos = (k) => [(k + 0.5) * prG.W / pr.buchtenMax, prG.flussY + prG.flussH * 0.55];
+const prPixelPos = (i) => [prG.bx + (i % PB + 0.5) * prG.P, (Math.floor(i / PB) + 0.5) * prG.P];
 
 // ---------- Eingabe ----------
 function prTipp(e) {
-  if (!pr || pr.fertig) return;
-  const b = pr.brett, cv = $('prBild'), r = cv.getBoundingClientRect();
-  const px = (e.clientX - r.left) / r.width * b.W, py = (e.clientY - r.top) / r.height * b.H;
-  // nächste Höhle zum Tippunkt (großzügig)
-  let id = -1, d = 1e9;
-  b.hoehlen.forEach((h, k) => { if (h.n <= 0) return; const dd = Math.hypot(h.mitte[0] - px, h.mitte[1] - py); if (dd < d) { d = dd; id = k; } });
-  if (id < 0 || d > 6) return;
-  const h = b.hoehlen[id];
-  if (pr.aktiv.has(id)) return;
-  if (pr.aktiv.size >= 2) { $('prMeldung').textContent = 'Zwei Schwärme sind schon unterwegs – warte kurz.'; return; }
-  if (!prFlut(b, id, false)) { pr.wackel[id] = performance.now(); if (navigator.vibrate) navigator.vibrate(30); $('prMeldung').textContent = 'Kein freier Weg zu einem ' + PR_FARBEN[h.f].name.toLowerCase() + 'en Pixel.'; return; }
-  if (!pr.fische.length) pr.verlauf.push(prKopie(b));
-  const fahrten = prFlut(b, id, true);
-  $('prMeldung').textContent = '';
+  if (!pr || pr.fertig || pr.verloren) return;
+  const r = $('prBild').getBoundingClientRect(), px = e.clientX - r.left, py = e.clientY - r.top;
+  if (py < prG.rasterY) return;
+  const i = Math.floor((py - prG.rasterY) / prG.zelleH) * PR_SPALTEN + Math.floor(px / prG.zelleB);
+  const z = pr.hoehlen[i];
+  if (!z) return;
+  const offen = prZugaenglich(pr.hoehlen);
+  if (!offen[i]) { pr.wackel[i] = performance.now(); if (navigator.vibrate) navigator.vibrate(30); $('prMeldung').textContent = 'Diese Höhle ist noch zugeschüttet – erst die davor leeren.'; return; }
+  pr.verlauf.push(prSnapshot());
   pr.zuege++;
-  pr.aktiv.add(id);
-  const jetzt = performance.now(), abstand = Math.max(2, Math.min(25, 1800 / fahrten.length));
-  fahrten.forEach((f, k) => { pr.fische.push({ weg: f.weg, f: h.f, start: jetzt + k * abstand, ziel: f.ziel, quelle: id, wobble: Math.random() * 6.28 }); pr.ankunft[f.ziel] = 1; });
-  pr.unterwegs[id] += fahrten.length;
-  prFreiNeu();
-  if (navigator.vibrate) navigator.vibrate(15);
+  pr.hoehlen[i] = null;
+  const [sx, sy] = prHoehlePos(i);
+  const ziele = prFressen(pr.farbe, pr.weg, z.f, z.n, true);
+  const jetzt = performance.now();
+  ziele.forEach(([j, p], k) => prFischLos(z.f, [[sx, sy], [sx, prG.flussY + 8]], j, p, jetzt + k * 28));
+  const rest = z.n - ziele.length;
+  if (rest > 0) {
+    if (pr.bucht.length >= pr.buchtenMax) {
+      // Fluss verstopft
+      pr.verloren = true;
+      for (let k = 0; k < Math.min(rest, 40); k++) pr.fische.push({ f: z.f, pfad: [[sx, sy], [sx + (Math.random() - 0.5) * 60, prG.flussY + 20 + Math.random() * 30]], start: jetzt + k * 20, dauer: 700, ziel: -1 });
+      $('prMeldung').innerHTML = '🚫 <b>Der Fluss ist verstopft!</b> Alle Buchten sind voll. Nimm mit ↶ einen Zug zurück.';
+      if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
+    } else {
+      const k = pr.bucht.length, b = { f: z.f, n: rest, ankunft: jetzt + 300 + Math.min(rest, 40) * 15 };
+      pr.bucht.push(b);
+      const [bx, by] = prBuchtPos(k);
+      for (let m = 0; m < Math.min(rest, 30); m++) pr.fische.push({ f: z.f, pfad: [[sx, sy], [bx + (Math.random() - 0.5) * 20, by + (Math.random() - 0.5) * 12]], start: jetzt + m * 25, dauer: 600, ziel: -1 });
+      pr.maxBuchten = Math.max(pr.maxBuchten, pr.bucht.length);
+    }
+  }
+  prBuchtenFuttern(jetzt + 200);
+  if (navigator.vibrate) navigator.vibrate(12);
   prStatus();
 }
-function prRueckgaengig() {
-  if (!pr || !pr.verlauf.length || pr.fische.length) return;
-  pr.brett = pr.verlauf.pop(); pr.zuege++; pr.fertig = false;
-  $('prMeldung').textContent = 'Rückgängig (zählt als Zug)';
-  prFreiNeu(); prSchicht(); prStatus();
+// Wartende Schwärme fressen automatisch, sobald ihre Farbe frei liegt
+function prBuchtenFuttern(ab) {
+  let lief = true;
+  while (lief) {
+    lief = false;
+    pr.bucht.forEach((b, k) => {
+      if (b.n <= 0) return;
+      const ziele = prFressen(pr.farbe, pr.weg, b.f, b.n, true);
+      if (!ziele.length) return;
+      b.n -= ziele.length; lief = true;
+      const [bx, by] = prBuchtPos(k);
+      ziele.forEach(([j, p], m) => prFischLos(b.f, [[bx, by]], j, p, ab + m * 28));
+    });
+  }
+  pr.bucht = pr.bucht.filter((b) => b.n > 0);
 }
-function prNeu() { if (!pr || pr.fische.length) return; pr.brett = prKopie(pr.start); pr.zuege = 0; pr.verlauf = []; pr.fertig = false; $('prMeldung').textContent = ''; prFreiNeu(); prSchicht(); prStatus(); }
+// Fisch auf den Weg schicken: Startpunkte, dann von unten durch den gefressenen Gang zum Ziel
+function prFischLos(f, start, ziel, pfad, t0) {
+  const punkte = start.slice();
+  const ersterX = prG.bx + (pfad[0] % PB + 0.5) * prG.P;
+  punkte.push([ersterX, prG.bildH + 4]);
+  pfad.forEach((i) => punkte.push(prPixelPos(i)));
+  let laenge = 0; for (let k = 1; k < punkte.length; k++) laenge += Math.hypot(punkte[k][0] - punkte[k - 1][0], punkte[k][1] - punkte[k - 1][1]);
+  pr.fische.push({ f, pfad: punkte, start: t0, dauer: Math.max(350, laenge / 0.42), ziel });
+}
+function prRueckgaengig() {
+  if (!pr || !pr.verlauf.length || (pr.fische.length && !pr.verloren)) return;
+  const s = pr.verlauf.pop();
+  pr.weg = s.weg; pr.hoehlen = s.hoehlen; pr.bucht = s.bucht; pr.maxBuchten = s.maxBuchten;
+  pr.fische = []; pr.verloren = false; pr.fertig = false;
+  $('prMeldung').textContent = '↶ Zug zurückgenommen';
+  pr.sichtbar = pr.weg.map((v) => (v ? 0 : 1));
+  prEbeneNeu(); prStatus();
+}
+function prNeu() {
+  if (!pr) return;
+  pr.weg = new Uint8Array(PB * PB); pr.sichtbar = new Uint8Array(PB * PB).fill(1); pr.hoehlen = pr.start.map((z) => (z ? { ...z } : null));
+  pr.bucht = []; pr.fische = []; pr.verlauf = []; pr.zuege = 0; pr.maxBuchten = 0; pr.fertig = false; pr.verloren = false;
+  $('prMeldung').textContent = ''; prEbeneNeu(); prStatus();
+}
 function prTipp2() {
-  if (!pr || pr.fertig) return;
-  if (pr.fische.length) { $('prMeldung').textContent = 'Warte, bis die Schwärme fertig sind.'; return; }
-  const l = prSimulieren(pr.brett);
-  if (!l) { $('prMeldung').textContent = 'Von hier aus geht es nicht mehr – nimm einen Zug zurück oder fang neu an.'; return; }
-  pr.wackel[l[0]] = performance.now(); pr.tipp = { id: l[0], bis: performance.now() + 2400 };
-  $('prMeldung').textContent = '💡 Probier die markierte Höhle.';
+  if (!pr || pr.fertig || pr.verloren) return;
+  // nächste zugängliche Höhle, deren Schwarm am meisten sofort frisst
+  const offen = prZugaenglich(pr.hoehlen);
+  let best = -1, wert = -1;
+  pr.hoehlen.forEach((z, i) => { if (!z || !offen[i]) return; const e = Math.min(z.n, prErreichbar(pr.farbe, pr.weg, z.f, z.n)); const v = e === z.n ? 1e6 + e : e; if (v > wert) { wert = v; best = i; } });
+  if (best < 0) return;
+  pr.tipp = { i: best, bis: performance.now() + 2400 }; pr.wackel[best] = performance.now();
+  $('prMeldung').textContent = wert >= 1e6 ? '💡 Dieser Schwarm findet jetzt genug zu fressen.' : '💡 Kein Schwarm passt ganz – dieser frisst am meisten (Rest geht in eine Bucht).';
 }
 
 // ---------- Animation ----------
-const PR_TEMPO = 0.045;   // Felder pro ms
 function prUpdate(t) {
   if (!pr.fische.length) return;
-  const b = pr.brett;
   let geaendert = false;
   pr.fische = pr.fische.filter((f) => {
-    const s = (t - f.start) * PR_TEMPO;
-    if (s >= f.weg.length - 1) {
-      pr.ankunft[f.ziel] = 0; prPixelWeg(f.ziel); pr.unterwegs[f.quelle]--; geaendert = true;
-      return false;
-    }
+    if (t - f.start >= f.dauer) { if (f.ziel >= 0) { pr.sichtbar[f.ziel] = 0; prPixelWeg(f.ziel); geaendert = true; } return false; }
     return true;
   });
-  pr.aktiv.forEach((q) => { if (pr.unterwegs[q] <= 0) pr.aktiv.delete(q); });
   if (geaendert) prStatus();
-  if (!pr.fische.length) {
-    pr.aktiv.clear();
-    if (prFertig(b)) prGeschafft();
-    else if (!pr.frei.some(Boolean)) $('prMeldung').textContent = 'Festgefahren! Nimm einen Zug zurück oder fang neu an.';
-    prStatus();
-  }
+  if (!pr.fische.length && !pr.fertig && !pr.verloren && pr.weg.every(Boolean) && !pr.bucht.length) prGeschafft();
+  else if (!pr.fische.length && !pr.fertig && !pr.verloren && !pr.hoehlen.some(Boolean) && pr.bucht.length) $('prMeldung').textContent = 'Die Schwärme in den Buchten kommen nicht mehr ran – nimm einen Zug zurück.';
 }
 function prGeschafft() {
-  pr.fertig = true;
-  const sterne = pr.zuege <= pr.par ? 3 : pr.zuege <= pr.par + 3 ? 2 : 1;
+  pr.fertig = true; pr.fertigT = performance.now();
+  // fertiges Bild zum Einblenden
+  pr.original = document.createElement('canvas');
+  const dpr = window.devicePixelRatio || 1; pr.original.width = pr.ebene.width; pr.original.height = pr.ebene.height;
+  const ox = pr.original.getContext('2d'); ox.setTransform(dpr, 0, 0, dpr, 0, 0);
+  for (let i = 0; i < PB * PB; i++) prPixelMalen(ox, i, 1);
+  const sterne = pr.maxBuchten <= Math.floor(pr.buchtenMax / 2) ? 3 : pr.maxBuchten < pr.buchtenMax ? 2 : 1;
   const st = prStore();
   st.sterne = st.sterne || {}; st.tag = st.tag || {};
   if (pr.taeglich) st.tag[heute()] = Math.max(st.tag[heute()] || 0, sterne);
   else { st.sterne[pr.nr] = Math.max(st.sterne[pr.nr] || 0, sterne); st.level = Math.max(st.level || 1, pr.nr + 1); }
   saveJson(PR_KEY, st);
-  if (typeof merkeVerlauf === 'function') merkeVerlauf('piranha', sterne, 3, pr.taeglich ? 'Tagesfluss' : 'Level ' + pr.nr);
-  konfetti(28, ['🐟', '🍒', '✨', '🌿']);
+  if (typeof merkeVerlauf === 'function') merkeVerlauf('piranha', sterne, 3, (pr.taeglich ? 'Tagesbild' : 'Level ' + pr.nr) + ' · ' + pr.motiv.name);
+  konfetti(32, ['🐟', '✨', '🌿', pr.motiv.emoji]);
   if (navigator.vibrate) navigator.vibrate([30, 40, 30, 40, 60]);
-  $('prMeldung').innerHTML = '<b>' + '⭐'.repeat(sterne) + '☆'.repeat(3 - sterne) + '</b> ' + pr.bild.emoji + ' ' + pr.bild.name + ' weggefuttert – ' + pr.pixel.toLocaleString('de-DE') + ' Pixel in ' + pr.zuege + ' Zügen (Ziel: ' + pr.par + ').';
+  $('prMeldung').innerHTML = '<b>' + '⭐'.repeat(sterne) + '☆'.repeat(3 - sterne) + '</b> ' + pr.motiv.emoji + ' ' + pr.motiv.name + ' komplett weggefuttert! Höchstens ' + pr.maxBuchten + ' von ' + pr.buchtenMax + ' Buchten gleichzeitig belegt.';
   $('prWeiterBtn').hidden = pr.taeglich;
 }
 
 // ---------- Zeichnen ----------
-// Bild-Pixel liegen auf einer eigenen Ebene; gefressene werden dort einmalig gelöscht (schnell auch bei Tausenden Pixeln)
-let prPx = 6, prEbene = null;
-function prGroesse() {
-  const b = pr.brett, cv = $('prBild'), breite = Math.min(cv.parentElement.clientWidth, 720), hoehe = Math.max(360, window.innerHeight - 220);
-  prPx = Math.max(3, Math.min(breite / b.W, hoehe / b.H));
+function prEbeneNeu() {
   const dpr = window.devicePixelRatio || 1;
-  cv.width = Math.round(b.W * prPx * dpr); cv.height = Math.round(b.H * prPx * dpr);
-  cv.style.width = b.W * prPx + 'px'; cv.style.height = b.H * prPx + 'px';
-  cv.getContext('2d').setTransform(dpr, 0, 0, dpr, 0, 0);
-  prSchicht();
-}
-function prSchicht() {
-  const b = pr.brett, P = prPx, dpr = window.devicePixelRatio || 1;
-  prEbene = prEbene || document.createElement('canvas');
-  prEbene.width = Math.round(b.W * P * dpr); prEbene.height = Math.round(b.H * P * dpr);
-  const x = prEbene.getContext('2d');
+  pr.ebene = pr.ebene || document.createElement('canvas');
+  pr.ebene.width = Math.round(prG.W * dpr); pr.ebene.height = Math.round(prG.bildH * dpr);
+  const x = pr.ebene.getContext('2d');
   x.setTransform(dpr, 0, 0, dpr, 0, 0);
-  x.clearRect(0, 0, b.W * P, b.H * P);
-  for (let i = 0; i < b.W * b.H; i++) {
-    if (pr.maske[i] < 0) continue;
-    const gx = (i % b.W) * P, gy = Math.floor(i / b.W) * P;
-    if (b.typ[i] === PIXEL || pr.ankunft[i]) prPixelMalen(x, i, gx, gy, P);
-    else prGeistMalen(x, i, gx, gy, P);
-  }
+  for (let i = 0; i < PB * PB; i++) prPixelMalen(x, i, pr.sichtbar[i]);
 }
-function prPixelMalen(x, i, gx, gy, P) {
-  const F = PR_FARBEN[pr.maske[i]], y = Math.floor(i / pr.brett.W), xx = i % pr.brett.W;
-  x.fillStyle = (xx + y) % 2 ? F.frucht : F.haupt;
-  x.fillRect(gx, gy, P + 0.5, P + 0.5);
-  if ((xx * 7 + y * 13) % 11 === 0) { x.fillStyle = F.hell; x.fillRect(gx, gy, P * 0.6, P * 0.6); }
+function prPixelMalen(x, i, da) {
+  const P = prG.P, gx = prG.bx + (i % PB) * P, gy = Math.floor(i / PB) * P;
+  x.clearRect(gx - 0.5, gy - 0.5, P + 1, P + 1);
+  if (!da) return;
+  x.fillStyle = PR_FARBEN[pr.farbe[i]].c; x.fillRect(gx, gy, P + 0.4, P + 0.4);
+  x.fillStyle = 'rgba(255,255,255,.16)'; x.fillRect(gx, gy, P, P * 0.22);
+  x.fillStyle = 'rgba(0,0,0,.14)'; x.fillRect(gx, gy + P * 0.8, P, P * 0.2);
 }
-function prGeistMalen(x, i, gx, gy, P) {
-  x.clearRect(gx, gy, P + 0.5, P + 0.5);
-  x.fillStyle = PR_FARBEN[pr.maske[i]].haupt; x.globalAlpha = 0.1; x.fillRect(gx, gy, P + 0.5, P + 0.5); x.globalAlpha = 1;
-}
-function prPixelWeg(i) {
-  if (!prEbene) return;
-  const x = prEbene.getContext('2d'), P = prPx;
-  prGeistMalen(x, i, (i % pr.brett.W) * P, Math.floor(i / pr.brett.W) * P, P);
+function prPixelWeg(i) { if (pr.ebene) prPixelMalen(pr.ebene.getContext('2d'), i, 0); }
+function prFisch(x, farbe, px, py, w, t, g) {
+  x.save(); x.translate(px, py); x.rotate(w);
+  const s = Math.sin(t / 70 + px) * 0.35;
+  x.fillStyle = farbe;
+  x.beginPath(); x.moveTo(-g * 0.5, 0); x.lineTo(-g * 0.95, -g * 0.36 + s * g * 0.3); x.lineTo(-g * 0.95, g * 0.36 + s * g * 0.3); x.fill();
+  x.beginPath(); x.ellipse(0, 0, g * 0.6, g * 0.4, 0, 0, 7); x.fill();
+  x.fillStyle = 'rgba(0,0,0,.25)'; x.beginPath(); x.ellipse(g * 0.05, g * 0.16, g * 0.42, g * 0.18, 0, 0, Math.PI); x.fill();
+  x.fillStyle = '#fff'; x.beginPath(); x.arc(g * 0.3, -g * 0.1, g * 0.13, 0, 7); x.fill();
+  x.fillStyle = '#111'; x.beginPath(); x.arc(g * 0.34, -g * 0.1, g * 0.06, 0, 7); x.fill();
+  x.restore();
 }
 function prZeichnen(t) {
-  const b = pr.brett, x = $('prBild').getContext('2d'), P = prPx, W = b.W, H = b.H;
-  // Fluss
-  const g = x.createLinearGradient(0, 0, 0, H * P);
-  g.addColorStop(0, '#1f4d3a'); g.addColorStop(0.5, '#173f33'); g.addColorStop(1, '#0f2f2a');
-  x.fillStyle = g; x.fillRect(0, 0, W * P, H * P);
-  x.strokeStyle = 'rgba(180,230,200,0.06)'; x.lineWidth = 2;
-  for (let i = 0; i < 7; i++) { x.beginPath(); const y = ((i * 97 + t / 40) % (H * P + 40)) - 20; x.moveTo(0, y); x.bezierCurveTo(W * P * 0.3, y - 14, W * P * 0.6, y + 14, W * P, y); x.stroke(); }
-  // Felsen
-  x.fillStyle = '#4b5548';
-  for (let i = 0; i < W * H; i++) if (b.typ[i] === FELS) x.fillRect((i % W) * P, Math.floor(i / W) * P, P + 0.5, P + 0.5);
-  // Bild
-  x.drawImage(prEbene, 0, 0, W * P, H * P);
-  // Höhlen
-  b.hoehlen.forEach((h, id) => {
-    if (h.n <= 0 && pr.unterwegs[id] <= 0) return;
-    const F = PR_FARBEN[h.f], cx = h.mitte[0] * P, cy = h.mitte[1] * P, R = P * 2.6;
-    let ox = 0;
-    if (pr.wackel[id] && t - pr.wackel[id] < 400) ox = Math.sin((t - pr.wackel[id]) / 25) * 4;
-    const frei = pr.aktiv.has(id) || pr.frei[id];
-    x.globalAlpha = h.n > 0 ? 1 : 0.5;
-    x.fillStyle = '#3a2a1a'; x.beginPath(); x.arc(cx + ox, cy, R, 0, Math.PI * 2); x.fill();
-    x.fillStyle = '#120c06'; x.beginPath(); x.arc(cx + ox, cy + R * 0.08, R * 0.74, 0, Math.PI * 2); x.fill();
-    x.strokeStyle = F.haupt; x.lineWidth = Math.max(3, P * 0.7); x.globalAlpha = frei ? 1 : 0.35;
-    x.beginPath(); x.arc(cx + ox, cy, R * 0.93, 0, Math.PI * 2); x.stroke(); x.globalAlpha = 1;
-    for (let k = 0; k < Math.min(5, Math.ceil(h.n / 30)); k++) prFisch(x, F, cx + ox + Math.cos(t / 500 + k * 1.3) * R * 0.4, cy + Math.sin(t / 600 + k * 1.7) * R * 0.35, t / 500 + k * 1.3 + Math.PI / 2, t, R * 0.42);
-    if (h.n > 0) {
-      const fs = Math.max(11, Math.round(R * 0.62));
-      x.font = '800 ' + fs + 'px Outfit, system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
-      const txt = String(h.n), bw = Math.max(fs * 1.3, x.measureText(txt).width + fs * 0.6);
-      const bx = Math.min(W * P - bw / 2, Math.max(bw / 2, cx + ox + R * 0.7)), by = Math.min(H * P - fs * 0.62, Math.max(fs * 0.62, cy - R * 0.75));
-      x.fillStyle = 'rgba(0,0,0,.78)'; x.beginPath(); x.roundRect(bx - bw / 2, by - fs * 0.62, bw, fs * 1.24, fs * 0.62); x.fill();
-      x.fillStyle = '#fff'; x.fillText(txt, bx, by + 1);
+  const x = $('prBild').getContext('2d'), { W, bildH, flussY, flussH, rasterY, zelleB, zelleH, hoehe } = prG;
+  // Wasser unter dem Bild (sichtbar, wo gefressen)
+  const g = x.createLinearGradient(0, 0, 0, hoehe);
+  g.addColorStop(0, '#0f3b33'); g.addColorStop(0.5, '#155447'); g.addColorStop(1, '#0b2a24');
+  x.fillStyle = g; x.fillRect(0, 0, W, hoehe);
+  x.strokeStyle = 'rgba(190,240,215,0.07)'; x.lineWidth = 2;
+  for (let i = 0; i < 8; i++) { x.beginPath(); const y = ((i * 89 + t / 35) % (hoehe + 40)) - 20; x.moveTo(0, y); x.bezierCurveTo(W * 0.3, y - 12, W * 0.6, y + 12, W, y); x.stroke(); }
+  // Bild (nach dem Sieg blendet das fertige Bild wieder ein)
+  x.drawImage(pr.ebene, 0, 0, W, bildH);
+  if (pr.fertig && pr.original) { x.globalAlpha = Math.min(1, (t - pr.fertigT) / 1400); x.drawImage(pr.original, 0, 0, W, bildH); x.globalAlpha = 1; }
+  // Fluss mit Buchten
+  x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, flussY, W, flussH);
+  for (let k = 0; k < pr.buchtenMax; k++) {
+    const [bx, by] = prBuchtPos(k), b = pr.bucht[k], bw = W / pr.buchtenMax - 8;
+    x.fillStyle = b ? 'rgba(255,255,255,.12)' : 'rgba(255,255,255,.05)';
+    x.strokeStyle = b ? PR_FARBEN[b.f].c : 'rgba(255,255,255,.18)'; x.lineWidth = 2;
+    x.beginPath(); x.roundRect(bx - bw / 2, flussY + 8, bw, flussH - 16, 14); x.fill(); x.stroke();
+    if (b) {
+      for (let m = 0; m < Math.min(6, Math.ceil(b.n / 8)); m++) prFisch(x, PR_FARBEN[b.f].c, bx + Math.cos(t / 400 + m * 1.1) * bw * 0.28, by + Math.sin(t / 500 + m * 1.7) * 8, t / 400 + m * 1.1 + Math.PI / 2, t, 11);
+      x.font = '800 13px Outfit, system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+      x.fillStyle = 'rgba(0,0,0,.7)'; x.beginPath(); x.roundRect(bx + bw / 2 - 26, flussY + 10, 24, 16, 8); x.fill();
+      x.fillStyle = '#fff'; x.fillText(b.n, bx + bw / 2 - 14, flussY + 18.5);
     }
-    if (pr.tipp && pr.tipp.id === id && t < pr.tipp.bis) { x.strokeStyle = '#fff'; x.lineWidth = 3; x.setLineDash([6, 5]); x.beginPath(); x.arc(cx, cy, R * 1.2 + Math.sin(t / 120) * 3, 0, Math.PI * 2); x.stroke(); x.setLineDash([]); }
+  }
+  // Höhlen
+  const offen = prZugaenglich(pr.hoehlen);
+  pr.hoehlen.forEach((z, i) => {
+    const [cx, cy] = prHoehlePos(i);
+    const bx = cx - zelleB / 2 + 3, by = cy - zelleH / 2 + 3, bw = zelleB - 6, bh = zelleH - 6;
+    if (!z) { x.fillStyle = 'rgba(0,0,0,.12)'; x.beginPath(); x.roundRect(bx, by, bw, bh, 10); x.fill(); return; }
+    let ox = 0; if (pr.wackel[i] && t - pr.wackel[i] < 400) ox = Math.sin((t - pr.wackel[i]) / 25) * 4;
+    const versteckt = z.verborgen && !offen[i], farbe = versteckt ? '#55606b' : PR_FARBEN[z.f].c;
+    x.globalAlpha = offen[i] ? 1 : 0.62;
+    x.fillStyle = '#3a2a1a'; x.beginPath(); x.roundRect(bx + ox, by, bw, bh, 10); x.fill();
+    x.fillStyle = farbe; x.beginPath(); x.roundRect(bx + ox + 3, by + 3, bw - 6, bh - 6, 8); x.fill();
+    x.fillStyle = 'rgba(255,255,255,.22)'; x.beginPath(); x.roundRect(bx + ox + 3, by + 3, bw - 6, (bh - 6) * 0.35, 8); x.fill();
+    x.fillStyle = 'rgba(0,0,0,.35)'; x.beginPath(); x.ellipse(cx + ox, cy + bh * 0.18, bw * 0.28, bh * 0.16, 0, 0, 7); x.fill();
+    x.font = '800 ' + Math.round(Math.min(18, bh * 0.42)) + 'px Outfit, system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    const hell = [2, 3, 5, 9, 11].includes(z.f) && !versteckt;
+    x.fillStyle = hell ? '#1b1b1b' : '#fff';
+    x.fillText(versteckt ? '?' : z.n, cx + ox, cy - bh * 0.06);
+    x.globalAlpha = 1;
+    if (pr.tipp && pr.tipp.i === i && t < pr.tipp.bis) { x.strokeStyle = '#fff'; x.lineWidth = 3; x.setLineDash([6, 5]); x.beginPath(); x.roundRect(bx - 3, by - 3, bw + 6, bh + 6, 12); x.stroke(); x.setLineDash([]); }
   });
-  // Fische: bei Hunderten eine einfache Form, sonst mit Details
-  const viele = pr.fische.length > 300, gr = Math.max(4, P * 1.15);
+  // Fische
+  const viele = pr.fische.length > 250;
   pr.fische.forEach((f) => {
-    if (t < f.start) return;
-    const s = (t - f.start) * PR_TEMPO, i = Math.min(f.weg.length - 2, Math.floor(s)), a = s - i;
-    const p0 = f.weg[Math.max(0, i)], p1 = f.weg[Math.min(f.weg.length - 1, i + 1)];
-    const x0 = p0 % W + 0.5, y0 = Math.floor(p0 / W) + 0.5, x1 = p1 % W + 0.5, y1 = Math.floor(p1 / W) + 0.5;
-    const fx = (x0 + (x1 - x0) * a) * P + Math.sin(t / 90 + f.wobble) * P * 0.35, fy = (y0 + (y1 - y0) * a) * P + Math.cos(t / 110 + f.wobble) * P * 0.35;
-    const w = Math.atan2(y1 - y0, x1 - x0), F = PR_FARBEN[f.f];
-    if (viele) {
-      const c = Math.cos(w), sn = Math.sin(w);
-      x.fillStyle = F.haupt;
-      x.beginPath(); x.moveTo(fx + c * gr * 0.6, fy + sn * gr * 0.6); x.lineTo(fx - sn * gr * 0.35 - c * gr * 0.3, fy + c * gr * 0.35 - sn * gr * 0.3);
-      x.lineTo(fx - c * gr * 0.9, fy - sn * gr * 0.9); x.lineTo(fx + sn * gr * 0.35 - c * gr * 0.3, fy - c * gr * 0.35 - sn * gr * 0.3); x.fill();
-    } else prFisch(x, F, fx, fy, w, t, gr);
+    const a = (t - f.start) / f.dauer;
+    if (a < 0) return;
+    const p = f.pfad, seg = p.length - 1;
+    // gleichmäßig über die Punkte (einfach: nach Index)
+    const s = Math.min(seg - 1e-6, a * seg), k = Math.floor(s), u = s - k;
+    const [x0, y0] = p[k], [x1, y1] = p[Math.min(seg, k + 1)];
+    const fx = x0 + (x1 - x0) * u + Math.sin(t / 90 + f.start) * 1.5, fy = y0 + (y1 - y0) * u + Math.cos(t / 110 + f.start) * 1.5;
+    const w = Math.atan2(y1 - y0, x1 - x0), farbe = PR_FARBEN[f.f].c;
+    if (viele) { x.fillStyle = farbe; x.beginPath(); x.ellipse(fx, fy, 3.6, 2.2, w, 0, 7); x.fill(); }
+    else prFisch(x, farbe, fx, fy, w, t, Math.max(8, prG.P * 1.2));
   });
-}
-function prFisch(x, F, px, py, winkel, t, groesse) {
-  const g = groesse;
-  x.save(); x.translate(px, py); x.rotate(winkel);
-  const schwanz = Math.sin(t / 70 + px) * 0.35;
-  x.fillStyle = F.haupt;
-  x.beginPath(); x.moveTo(-g * 0.55, 0); x.lineTo(-g * 0.95, -g * 0.35 + schwanz * g * 0.3); x.lineTo(-g * 0.95, g * 0.35 + schwanz * g * 0.3); x.closePath(); x.fill();
-  x.beginPath(); x.ellipse(0, 0, g * 0.6, g * 0.4, 0, 0, Math.PI * 2); x.fill();
-  x.fillStyle = F.bauch; x.beginPath(); x.ellipse(g * 0.05, g * 0.15, g * 0.42, g * 0.2, 0, 0, Math.PI); x.fill();
-  x.fillStyle = '#fff'; x.beginPath(); x.arc(g * 0.3, -g * 0.1, g * 0.12, 0, Math.PI * 2); x.fill();
-  x.fillStyle = '#111'; x.beginPath(); x.arc(g * 0.33, -g * 0.1, g * 0.06, 0, Math.PI * 2); x.fill();
-  x.restore();
 }
 
 // ---------- Knöpfe ----------

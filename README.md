@@ -270,14 +270,18 @@ Ein Leben als Tier – gesellschaftskritisch, aber sachlich und mit Quellen:
   Elektro-Wasserbads: Ausstallen, Transport, Einhängen, Betäubung, Töten (ohne Blut), dann die Tageszahl laut Destatis.
 
 ## 🐟 Piranha-Schwarm
-Eigenes Fluss-Puzzle im Amazonas, im großen Maßstab: In der Flussmitte treibt ein **riesiges Pixelbild aus Früchten**
-(10 Motive, 64 Felder breit, je **1 500–2 600 Pixel**, mit Scale2x geglättet), oben und unten warten Höhlen mit
-**Hunderten bis über tausend Piranhas**. Höhle antippen – der Schwarm frisst sich wie eine Flut durchs Bild: jeder Fisch zum
-nächsten erreichbaren Pixel seiner Farbe, gefressene Pixel öffnen sofort den Weg dahinter. Schwärme von beiden Seiten fressen
-aufeinander zu, **zwei dürfen gleichzeitig** unterwegs sein (über 1 000 Fische auf einmal, flüssig dank eigener Bildebene und
-vereinfachter Fischform bei großen Mengen). Volle Höhlen, Pixel und Felsen versperren Wege. Weil Fressen nur Hindernisse
-entfernt, prüft eine Simulation jedes Level auf Lösbarkeit und liefert die Ziel-Zugzahl (⭐⭐⭐) und den Tipp.
-Rückgängig, Neustart, Tagesfluss, Sterne je Profil.
+Eigenes Puzzle im Genre „Farben sortieren und Pixelbild abbauen“, mit Amazonas-Thema:
+- **Bild:** 10 eigene Szenen als Pixelbild mit Hintergrund (Wassermelone, Sonnenuntergang am Fluss, Tukan, Frosch auf Seerose,
+  Morphofalter, Ara, Piranha, Flussdelfin, Seerose bei Nacht, Erdbeeren), als kleine Vektorzeichnungen auf 36×36 gerastert,
+  auf eine 13-Farben-Palette gerundet und von Kantenresten bereinigt (1 296 Pixel, 7–11 Farben je Bild). Nach dem Sieg blendet
+  das fertige Bild wieder ein.
+- **Höhlen-Raster** (6 Spalten, 24–31 Schwärme): antippbar sind nur Höhlen mit freiem Weg zum Fluss; ab Level 5 versteckte Höhlen ❓.
+- **Fressen von unten:** Ein Schwarm frisst Pixel seiner Farbe, die von unten erreichbar sind (Flut durch schon Gefressenes).
+- **Buchten** (6 → 5 → 4): Was nicht gefressen werden kann, wartet und frisst automatisch nach, sobald seine Farbe frei liegt.
+  Alle voll → Fluss verstopft, mit ↶ rettbar. ⭐⭐⭐ = höchstens die Hälfte der Buchten gleichzeitig belegt.
+- **Levelbau:** rückwärts aus dem Bild (in welcher Reihenfolge Schwärme fressen könnten), dann gezielt gemischt, bis eine
+  Spieler-Simulation Schwärme parken muss (ab Level 3), aber noch gewinnt – garantiert lösbar.
+- Alles passt auf einen Bildschirm (Bild so breit wie möglich, Höhlenreihen passen sich an). Tipp, Rückgängig, Tagesbild.
 
 ## 🧑‍🏫 Führung in allen Spielen
 `fuehrung.js` gibt jedem Spiel (außer den Quizzes) Hilfe zum Lernen:

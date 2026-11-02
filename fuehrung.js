@@ -491,18 +491,18 @@ fuehrung('krimi-alibi', {
 // ---------- 🐟 Piranha-Schwarm ----------
 fuehrung('piranha', {
   titel: 'Piranha-Schwarm', emoji: '🐟', thema: 'karte', intro: 'pr-intro',
-  spick: () => '<h3>So knackst du jeden Fluss</h3>'
-    + '<div class="fh-regelzeile"><span>1</span><div><b>Erst die freien Höhlen</b>Leuchtet der Ring einer Höhle kräftig, hat ihr Schwarm einen freien Weg. Blasse Ringe sind (noch) blockiert.</div></div>'
-    + '<div class="fh-regelzeile"><span>2</span><div><b>Wer versperrt wen?</b>Volle Höhlen und Bild-Pixel sind Hindernisse. Such die Höhle, deren Auszug einen Weg für eine andere frei macht.</div></div>'
-    + '<div class="fh-regelzeile"><span>3</span><div><b>Von außen nach innen</b>Fische fressen nur Pixel, die am freien Wasser liegen. Schau, welche Farbe gerade außen am Bild liegt – die ist dran.</div></div>'
-    + '<div class="fh-kasten"><b>Sterne</b> ⭐⭐⭐ = so wenige Züge wie der beste Weg (oben angezeigt), ⭐⭐ = bis zu 2 mehr. „Zurück“ zählt als Zug. Steckst du fest, hilft 💡 Tipp.</div>',
+  spick: () => '<h3>So knabberst du jedes Bild weg</h3>'
+    + '<div class="fh-regelzeile"><span>1</span><div><b>Von unten nach oben</b>Schwärme kommen von unten. Schau, welche Farben gerade am unteren Rand und an den Fressgängen liegen – die sind dran.</div></div>'
+    + '<div class="fh-regelzeile"><span>2</span><div><b>Buchten sparen</b>Ein Schwarm, der nicht alles fressen kann, belegt eine Bucht. Schick lieber Schwärme los, deren Farbe gerade frei liegt.</div></div>'
+    + '<div class="fh-regelzeile"><span>3</span><div><b>Höhlen freiräumen</b>Hintere Höhlen werden erst erreichbar, wenn ein Weg zum Fluss frei ist. Manchmal muss man einen Schwarm „parken“, um an den richtigen zu kommen.</div></div>'
+    + '<div class="fh-kasten"><b>Sterne</b> ⭐⭐⭐ = höchstens die Hälfte der Buchten gleichzeitig belegt, ⭐⭐ = nie alle. 💡 Tipp zeigt den Schwarm, der gerade am meisten frisst. Volle Buchten + Schwarm ohne Futter = verstopft → ↶ Zurück.</div>',
   schritte: [
-    { titel: 'Der Schwarm will zur Frucht', text: 'Oben treibt ein Bild aus Früchten. Jede Höhle hat eine Farbe und eine Zahl: so viele Piranhas warten darin. Tippst du sie an, frisst jeder Fisch ein erreichbares Pixel seiner Farbe.' },
-    { titel: 'Hindernisse', text: 'Felsen, volle Höhlen und noch nicht gefressene Pixel sind im Weg. Ist eine Höhle leer oder ein Pixel gefressen, wird das Feld zu freiem Wasser.',
-      auftrag: (box, ok) => fhQuiz(box, ok, 'Eine rote Höhle steht direkt vor der gelben. Die gelbe hat keinen Weg. Was tust du zuerst?', [
-        { t: 'Die rote Höhle', richtig: true, warum: 'Genau: Ist die rote leer, wird ihr Feld frei – und die gelbe kommt durch.' },
-        { t: 'Die gelbe Höhle', warum: 'Die ist noch blockiert und wackelt nur.' }]) },
-    { titel: 'Planen statt raten', text: 'Gute Reihenfolge: von außen nach innen und von oben nach unten – erst die Schwärme, die anderen im Weg stehen. Wenn du festsitzt: ↶ Zurück oder 💡 Tipp.' },
+    { titel: 'Das Bild abknabbern', text: 'Oben schwimmt ein Pixelbild. Jede Höhle unten hat eine Farbe und eine Zahl: so viele Piranhas. Ein Schwarm frisst Pixel seiner Farbe – aber nur solche, die von unten erreichbar sind.' },
+    { titel: 'Die Buchten', text: 'Findet ein Schwarm nicht genug zu fressen, wartet der Rest in einer Bucht im Fluss und frisst automatisch, sobald seine Farbe frei wird. Buchten sind knapp!',
+      auftrag: (box, ok) => fhQuiz(box, ok, 'Unten im Bild liegt gerade nur Blau frei. Welchen Schwarm schickst du?', [
+        { t: 'Den blauen', richtig: true, warum: 'Genau: Er frisst sofort und braucht keine Bucht.' },
+        { t: 'Den roten', warum: 'Rot liegt noch nicht frei – der Schwarm müsste in eine Bucht.' }]) },
+    { titel: 'Planen', text: 'Gute Strategie: erst Schwärme, deren Farbe frei liegt. Ist keiner passend, park den Schwarm, der als Nächstes gebraucht wird – und räum dabei Wege zu hinteren Höhlen frei.' },
   ],
 });
 
