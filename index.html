@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=62">
+<link rel="stylesheet" href="fonts/fonts.css?v=63">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=62">
-<link rel="stylesheet" href="ansichten.css?v=62">
+<link rel="stylesheet" href="stil.css?v=63">
+<link rel="stylesheet" href="ansichten.css?v=63">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -548,6 +548,11 @@
     <button class="hub-game hub-tierleben" id="hubTierleben" type="button" data-regen="🐾,🐔,🐋,🦧">
       <span class="hg-av hg-av-tierleben" aria-hidden="true"><span class="hg-in"><span class="tl-mini"><i>🐔</i><i>🐖</i><i>🐋</i><i>🦧</i></span></span></span>
       <span class="hg-text"><span class="hg-titel">Ein Tierleben</span><span class="hg-sub">Geboren als Nutztier – oder als eine der letzten ihrer Art. Mit echten Zahlen.</span><span class="hg-best" id="hubTierlebenBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-piranha" id="hubPiranha" type="button" data-regen="🐟,🍒,🌿,💧">
+      <span class="hg-av hg-av-piranha" aria-hidden="true"><span class="hg-in"><span class="pr-mini"><i></i><i></i><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Piranha-Schwarm</span><span class="hg-sub">Lass die Schwärme in der richtigen Reihenfolge los – jeder will zu seiner Frucht.</span><span class="hg-best" id="hubPiranhaBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-riff" id="hubRiff" type="button" data-regen="🎲,🪸,🐠,🟥">
@@ -1839,6 +1844,36 @@
     </div>
   </section>
 
+  <section class="screen" id="screen-piranha">
+    <div class="pr-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="prZurueck" type="button" aria-label="Zurück">←</button>
+        <span>🐟 Piranha-Schwarm</span>
+      </div>
+      <div class="pr-teil" id="pr-intro">
+        <div class="pr-logo">🐟🐟🐟</div>
+        <h2 class="pr-titel">Piranha-Schwarm</h2>
+        <p class="pr-lead">Im Amazonas warten Piranha-Schwärme in ihren Wurzelhöhlen. Tippe eine Höhle an – der Schwarm strömt heraus und schwimmt zu den Früchten in seiner Farbe.</p>
+        <ul class="pr-regeln">
+          <li>🐟 Fische schwimmen nur durch freies Wasser – Felsen, volle Höhlen und Früchte versperren den Weg.</li>
+          <li>🍒 Jede Frucht braucht so viele Fische, wie auf ihr steht. Ist sie gefressen, wird der Weg frei.</li>
+          <li>⭐ Drei Sterne, wenn du so wenige Züge brauchst wie der beste Weg.</li>
+        </ul>
+        <p class="pr-wusstest">Wusstest du? Viele Piranha-Arten fressen auch Früchte und Samen, die in der Regenzeit ins Wasser fallen.</p>
+        <button class="btn pr-gross" id="prLos" type="button">Spielen · <span id="prLevelText">Level 1</span></button>
+        <button class="btn secondary" id="prTagBtn" type="button">📅 Tagesfluss</button>
+        <div class="pr-sterne" id="prSterne"></div>
+      </div>
+      <div class="pr-teil" id="pr-spiel" hidden>
+        <div class="pr-zeile"><b id="prKopf"></b><span id="prZuege"></span></div>
+        <div class="pr-feld"><canvas id="prBild"></canvas></div>
+        <div class="pr-meldung" id="prMeldung"></div>
+        <div class="pr-knoepfe"><button class="btn secondary" id="prRueck" type="button">↶ Zurück</button><button class="btn secondary" id="prHinweis" type="button">💡 Tipp</button><button class="btn secondary" id="prNeu" type="button">↺ Neu</button></div>
+        <button class="btn pr-gross" id="prWeiterBtn" type="button" hidden>Nächstes Level ▶</button>
+      </div>
+    </div>
+  </section>
+
   <section class="screen" id="screen-augen">
     <div class="ag-buehne">
       <div class="farb-kopf">
@@ -2006,41 +2041,42 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=62"></script>
-<script src="haie.js?v=62"></script>
-<script src="porsche.js?v=62"></script>
-<script src="dackel.js?v=62"></script>
-<script src="groesse.js?v=62"></script>
-<script src="gretchen.js?v=62"></script>
-<script src="effekte.js?v=62"></script>
-<script src="app.js?v=62"></script>
-<script src="melden.js?v=62"></script>
-<script src="verlauf.js?v=62"></script>
-<script src="hub.js?v=62"></script>
-<script src="farben.js?v=62"></script>
-<script src="cello.js?v=62"></script>
-<script src="instrumente.js?v=62"></script>
-<script src="toene.js?v=62"></script>
-<script src="takt.js?v=62"></script>
-<script src="punkte.js?v=62"></script>
-<script src="funktion.js?v=62"></script>
-<script src="zufall.js?v=62"></script>
-<script src="zahlen.js?v=62"></script>
-<script src="tierleben.js?v=62"></script>
-<script src="tierpixel.js?v=62"></script>
-<script src="augen.js?v=62"></script>
-<script src="karten-daten.js?v=62"></script>
-<script src="karte.js?v=62"></script>
-<script src="tiefgang.js?v=62"></script>
-<script src="riff.js?v=62"></script>
-<script src="krimi-grafik.js?v=62"></script>
-<script src="krimi.js?v=62"></script>
-<script src="krimi-wachen.js?v=62"></script>
-<script src="krimi-verhoer.js?v=62"></script>
-<script src="krimi-alibi.js?v=62"></script>
-<script src="krimi-akte.js?v=62"></script>
-<script src="krimi-zentrale.js?v=62"></script>
-<script src="profile.js?v=62"></script>
-<script src="fuehrung.js?v=62"></script>
+<script src="wale.js?v=63"></script>
+<script src="haie.js?v=63"></script>
+<script src="porsche.js?v=63"></script>
+<script src="dackel.js?v=63"></script>
+<script src="groesse.js?v=63"></script>
+<script src="gretchen.js?v=63"></script>
+<script src="effekte.js?v=63"></script>
+<script src="app.js?v=63"></script>
+<script src="melden.js?v=63"></script>
+<script src="verlauf.js?v=63"></script>
+<script src="hub.js?v=63"></script>
+<script src="farben.js?v=63"></script>
+<script src="cello.js?v=63"></script>
+<script src="instrumente.js?v=63"></script>
+<script src="toene.js?v=63"></script>
+<script src="takt.js?v=63"></script>
+<script src="punkte.js?v=63"></script>
+<script src="funktion.js?v=63"></script>
+<script src="zufall.js?v=63"></script>
+<script src="zahlen.js?v=63"></script>
+<script src="tierleben.js?v=63"></script>
+<script src="tierpixel.js?v=63"></script>
+<script src="piranha.js?v=63"></script>
+<script src="augen.js?v=63"></script>
+<script src="karten-daten.js?v=63"></script>
+<script src="karte.js?v=63"></script>
+<script src="tiefgang.js?v=63"></script>
+<script src="riff.js?v=63"></script>
+<script src="krimi-grafik.js?v=63"></script>
+<script src="krimi.js?v=63"></script>
+<script src="krimi-wachen.js?v=63"></script>
+<script src="krimi-verhoer.js?v=63"></script>
+<script src="krimi-alibi.js?v=63"></script>
+<script src="krimi-akte.js?v=63"></script>
+<script src="krimi-zentrale.js?v=63"></script>
+<script src="profile.js?v=63"></script>
+<script src="fuehrung.js?v=63"></script>
 </body>
 </html>

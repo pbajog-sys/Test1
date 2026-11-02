@@ -82,6 +82,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `zahlen.js` – Du in Zahlen (das eigene Leben in belegten Zahlen)
 - `tierleben.js` – Ein Tierleben (Nutztiere nach Schlachtzahlen, bedrohte Arten)
 - `tierpixel.js` – Ein Tierleben als Pixel-Abenteuer (eigene 16×16-Pixelgrafik, Kachelkarten, Steuerkreuz)
+- `piranha.js` – Piranha-Schwarm (Fluss-Puzzle mit Löser)
 - `fuehrung.js` – Hilfe für alle Spiele: Spickzettel (?), geführte Einführung mit Aufträgen, Übungsfälle für „Wer war’s?“
 - `augen.js` – Augenmaß
 - `karte.js`, `karten-daten.js` – Karten-Gefühl (Kartendaten aus `werkzeuge/karten.py`)
@@ -267,6 +268,13 @@ Ein Leben als Tier – gesellschaftskritisch, aber sachlich und mit Quellen:
   Bei Geflügel wird der Stall bis zum letzten Kapitel fast lückenlos voll (Hunderte Tiere, dunkler und enger).
   Am Ende folgt – nach einem Inhaltshinweis, überspringbar – die Schlachtung als Pixel-Animation am Beispiel des
   Elektro-Wasserbads: Ausstallen, Transport, Einhängen, Betäubung, Töten (ohne Blut), dann die Tageszahl laut Destatis.
+
+## 🐟 Piranha-Schwarm
+Eigenes Fluss-Puzzle im Amazonas: Wurzelhöhlen mit Piranha-Schwärmen, Früchte in passenden Farben am Ufer. Höhle antippen –
+der Schwarm strömt (animiert, Fisch für Fisch) den kürzesten freien Weg zur Frucht. Volle Höhlen, Früchte und Felsen versperren
+Wege, die Reihenfolge ist das Rätsel. Levels werden erzeugt und per Breitensuche geprüft: garantiert lösbar, Ziel = kleinste
+Zugzahl (⭐⭐⭐), ab Level 3 ist am Anfang mindestens eine Höhle blockiert. Rückgängig, Neustart, Tipp vom Löser, Tagesfluss,
+Fortschritt und Sterne je Profil.
 
 ## 🧑‍🏫 Führung in allen Spielen
 `fuehrung.js` gibt jedem Spiel (außer den Quizzes) Hilfe zum Lernen:

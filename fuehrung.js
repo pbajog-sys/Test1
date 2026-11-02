@@ -488,8 +488,26 @@ fuehrung('krimi-alibi', {
   ],
 });
 
+// ---------- 🐟 Piranha-Schwarm ----------
+fuehrung('piranha', {
+  titel: 'Piranha-Schwarm', emoji: '🐟', thema: 'karte', intro: 'pr-intro',
+  spick: () => '<h3>So knackst du jeden Fluss</h3>'
+    + '<div class="fh-regelzeile"><span>1</span><div><b>Erst die freien Höhlen</b>Leuchtet der Ring einer Höhle kräftig, hat ihr Schwarm einen freien Weg. Blasse Ringe sind (noch) blockiert.</div></div>'
+    + '<div class="fh-regelzeile"><span>2</span><div><b>Wer versperrt wen?</b>Volle Höhlen und Früchte sind Hindernisse. Such die Höhle, deren Auszug einen Weg für eine andere frei macht.</div></div>'
+    + '<div class="fh-regelzeile"><span>3</span><div><b>Früchte räumen den Weg</b>Ist eine Frucht ganz gefressen, verschwindet sie – oft öffnet das den Weg zum Ufer.</div></div>'
+    + '<div class="fh-kasten"><b>Sterne</b> ⭐⭐⭐ = so wenige Züge wie der beste Weg (oben angezeigt), ⭐⭐ = bis zu 2 mehr. „Zurück“ zählt als Zug. Steckst du fest, hilft 💡 Tipp.</div>',
+  schritte: [
+    { titel: 'Der Schwarm will zur Frucht', text: 'Jede Höhle hat eine Farbe und eine Zahl: so viele Piranhas warten darin. Tippst du sie an, schwimmen sie den kürzesten freien Weg zu einer Frucht in ihrer Farbe.' },
+    { titel: 'Hindernisse', text: 'Felsen, volle Höhlen und noch nicht gefressene Früchte sind im Weg. Ist eine Höhle leer oder eine Frucht gefressen, wird ihr Feld zu freiem Wasser.',
+      auftrag: (box, ok) => fhQuiz(box, ok, 'Eine rote Höhle steht direkt vor der gelben. Die gelbe hat keinen Weg. Was tust du zuerst?', [
+        { t: 'Die rote Höhle', richtig: true, warum: 'Genau: Ist die rote leer, wird ihr Feld frei – und die gelbe kommt durch.' },
+        { t: 'Die gelbe Höhle', warum: 'Die ist noch blockiert und wackelt nur.' }]) },
+    { titel: 'Planen statt raten', text: 'Gute Reihenfolge: von außen nach innen und von oben nach unten – erst die Schwärme, die anderen im Weg stehen. Wenn du festsitzt: ↶ Zurück oder 💡 Tipp.' },
+  ],
+});
+
 // ---------- Oberfläche ----------
-const FH_SCREENS = { farben: 'farben', toene: 'toene', takt: 'takt', augen: 'augen', karte: 'karte', tiefgang: 'tiefgang', riff: 'riff', cello: 'cello', instrument: 'instrument' };
+const FH_SCREENS = { farben: 'farben', toene: 'toene', takt: 'takt', augen: 'augen', karte: 'karte', tiefgang: 'tiefgang', riff: 'riff', cello: 'cello', instrument: 'instrument', piranha: 'piranha' };
 const fhStand = () => loadJson(FH_KEY);
 let fhAktiv = null;
 const fhDlg = document.createElement('dialog');

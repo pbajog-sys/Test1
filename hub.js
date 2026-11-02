@@ -193,6 +193,8 @@ function renderHub() {
   $('hubRiffBest').textContent = rfR ? 'Rekord ' + rfR + ' Punkte' : 'Noch kein Rekord';
   const tlL = (loadJson('walquiz.tierleben.v1').leben || []).length;
   $('hubTierlebenBest').textContent = tlL ? '📖 ' + tlL + (tlL === 1 ? ' Leben' : ' Leben') + ' gelebt' : 'Noch kein Leben gelebt';
+  const prSt = loadJson('walquiz.piranha.v1'), prS = Object.values(prSt.sterne || {}).reduce((a, b) => a + b, 0);
+  $('hubPiranhaBest').textContent = prSt.level > 1 ? 'Level ' + prSt.level + ' · ⭐ ' + prS : 'Noch nicht gespielt';
   const krimi = loadJson('walquiz.krimi.v1');
   const summe = (o) => Object.values((o && o.geloest) || {}).reduce((x, y) => x + y, 0);
   const faelle = summe(krimi) + Object.values(krimi.modi || {}).reduce((x, m) => x + summe(m), 0);
