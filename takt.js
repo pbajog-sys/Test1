@@ -498,6 +498,7 @@ function taktEnde() {
   }
   saveJson(TAKT_KEY, st);
   zeigeTaktTeil('ende');
+  if (typeof merkeVerlauf === 'function') merkeVerlauf('takt', summe, 50, tk.modus === 'mix' ? 'Tages-Mix' : TAKT_MODI[tk.modus].name + ' · ' + TAKT_STUFEN[tk.stufe].name);
   $('taktRunde').textContent = '';
   hochzaehlen($('taktSumme'), summe, ' / 50');
   $('taktRekord').textContent = rekord ? '🏆 Neuer Bestwert (' + TAKT_MODI[tk.modus].name + ', ' + TAKT_STUFEN[tk.stufe].name + ')!'

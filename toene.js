@@ -224,6 +224,7 @@ function toeneEnde() {
   if (ts.taeglich && st.tag[heute()] == null) st.tag[heute()] = summe;
   saveJson(TON_KEY, st);
   zeigeTonTeil('ende');
+  if (typeof merkeVerlauf === 'function') merkeVerlauf('toene', summe, 50, TON_STUFEN[ts.stufe].name + (ts.taeglich ? ' · Tagestöne' : ''));
   hochzaehlen($('tonSumme'), summe, ' / 50');
   $('tonRekord').textContent = rekord ? '🏆 Neuer Bestwert (' + TON_STUFEN[ts.stufe].name + ')!' : ts.taeglich ? '📅 Tagestöne vom ' + new Date().toLocaleDateString('de-DE') : '';
   $('tonVergleich').hidden = !ts.gegner;

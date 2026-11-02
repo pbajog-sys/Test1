@@ -73,6 +73,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `instrumente.js` – Noten & Griffe für Klavier, Gitarre, Ukulele
 - `toene.js` – Ton-Gedächtnis
 - `takt.js` – Takt-Gefühl (Zeitgefühl, Tempo, Taktart)
+- `verlauf.js` – Verlauf & Statistik
 - `punkte.js` – Punktwolke (Korrelation schätzen und sortieren)
 - `augen.js` – Augenmaß
 - `karte.js`, `karten-daten.js` – Karten-Gefühl (Kartendaten aus `werkzeuge/karten.py`)
@@ -238,6 +239,12 @@ Wo liegt das? Tippe den Ort auf einer leeren Karte an, Punkte nach Kilometern da
 - Danach zoomt die Karte auf Tipp und Ziel, mit Entfernung und kleinem Fakt. Tagesreise (2× Deutschland, 2× Europa, 1× Welt) und Challenge-Links.
 - Kartendaten: [Natural Earth](https://www.naturalearthdata.com/) (gemeinfrei) über das npm-Paket `world-atlas` (ISC, © Mike Bostock),
   fest eingebaut in `karten-daten.js` (läuft offline). Neu erzeugen mit `werkzeuge/karten.py` (siehe Kopf des Skripts).
+
+## 📅 Verlauf & Statistik
+Jedes Spiel trägt beim Ende einen Eintrag in den Verlauf ein (Spiel, Punkte, Stufe, Uhrzeit), je Profil, die letzten 400 Tage.
+Die Karte „Dein Verlauf“ im Dashboard zeigt die Tagesserie 🔥 und die letzten 7 Tage. Der Verlaufs-Bildschirm zeigt Serie,
+heutige Runden, Runden gesamt, längste Serie, einen Kalender der letzten 15 Wochen (Tag antippen = Einträge des Tages)
+und je Spiel Anzahl, Bestwert, Schnitt der letzten 7 Runden und eine Verlaufskurve. Code: `verlauf.js` (`merkeVerlauf`).
 
 ## 🎮 Dashboard „Spiele“
 - Bunter Neon-Look: dunkler Hintergrund mit wandernden Farbflecken.

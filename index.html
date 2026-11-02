@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=46">
+<link rel="stylesheet" href="fonts/fonts.css?v=47">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=46">
-<link rel="stylesheet" href="ansichten.css?v=46">
+<link rel="stylesheet" href="stil.css?v=47">
+<link rel="stylesheet" href="ansichten.css?v=47">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -477,6 +477,11 @@
 
     <div class="spalten hub-spalten">
     <div class="spalte spalte-a">
+    <button class="hub-verlauf" id="hubVerlauf" type="button">
+      <span class="hv-serie" id="hubVerlaufSerie">🔥 0</span>
+      <span class="hv-text"><b>Dein Verlauf</b><small id="hubVerlaufText"></small></span>
+      <span class="hv-woche" id="hubVerlaufWoche" aria-hidden="true"></span>
+    </button>
     <div class="hub-liste">
     <button class="hub-game hub-quizzeile" id="hubQuizzes" type="button" data-regen="🐋,🦈,🐾,🏎️,🌊">
       <span class="hg-av hg-av-quiz" aria-hidden="true"><span class="hg-in" id="hubQuizStapel"></span></span>
@@ -833,6 +838,41 @@
   </section>
 
   <!-- Cello-Noten -->
+  <section class="screen" id="screen-verlauf">
+    <div class="vl-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="vlZurueck" type="button" aria-label="Zurück">←</button>
+        <span>📅 Verlauf</span>
+      </div>
+      <div class="spalten">
+      <div class="spalte spalte-a">
+      <h2 class="vl-titel">Dein Verlauf</h2>
+      <div class="vl-zahlen">
+        <div class="vl-zahl gross"><b id="vlSerie">0</b><small id="vlSerieText">Tage in Folge</small><span class="vl-flamme" aria-hidden="true">🔥</span></div>
+        <div class="vl-zahl"><b id="vlHeute">0</b><small>heute</small></div>
+        <div class="vl-zahl"><b id="vlGesamt">0</b><small>Runden gesamt</small></div>
+        <div class="vl-zahl"><b id="vlLaengste">0</b><small>längste Serie</small></div>
+      </div>
+      <div class="vl-karte">
+        <div class="vl-kopf"><b>Letzte 15 Wochen</b><small>Tippe einen Tag an</small></div>
+        <div class="vl-kal-rahmen"><div class="vl-wt" aria-hidden="true"><span>Mo</span><span></span><span>Mi</span><span></span><span>Fr</span><span></span><span>So</span></div><div class="vl-kalender" id="vlKalender"></div></div>
+      </div>
+      <div class="vl-karte">
+        <div class="vl-kopf"><b id="vlTagTitel">Heute</b></div>
+        <ul class="vl-tagliste" id="vlTagListe"></ul>
+      </div>
+      </div>
+      <div class="spalte spalte-b">
+      <div class="vl-karte">
+        <div class="vl-kopf"><b>Deine Spiele</b><small>Kurve = letzte 15 Ergebnisse</small></div>
+        <div class="vl-spiele" id="vlSpiele"></div>
+        <p class="vl-leer" id="vlLeer">Noch keine Runden – spiel ein Spiel zu Ende, dann erscheint es hier.</p>
+      </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
   <section class="screen" id="screen-cello">
     <div class="cello-buehne">
       <div class="farb-kopf">
@@ -1518,32 +1558,33 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=46"></script>
-<script src="haie.js?v=46"></script>
-<script src="porsche.js?v=46"></script>
-<script src="dackel.js?v=46"></script>
-<script src="groesse.js?v=46"></script>
-<script src="gretchen.js?v=46"></script>
-<script src="effekte.js?v=46"></script>
-<script src="app.js?v=46"></script>
-<script src="melden.js?v=46"></script>
-<script src="hub.js?v=46"></script>
-<script src="farben.js?v=46"></script>
-<script src="cello.js?v=46"></script>
-<script src="instrumente.js?v=46"></script>
-<script src="toene.js?v=46"></script>
-<script src="takt.js?v=46"></script>
-<script src="punkte.js?v=46"></script>
-<script src="augen.js?v=46"></script>
-<script src="karten-daten.js?v=46"></script>
-<script src="karte.js?v=46"></script>
-<script src="krimi-grafik.js?v=46"></script>
-<script src="krimi.js?v=46"></script>
-<script src="krimi-wachen.js?v=46"></script>
-<script src="krimi-verhoer.js?v=46"></script>
-<script src="krimi-alibi.js?v=46"></script>
-<script src="krimi-akte.js?v=46"></script>
-<script src="krimi-zentrale.js?v=46"></script>
-<script src="profile.js?v=46"></script>
+<script src="wale.js?v=47"></script>
+<script src="haie.js?v=47"></script>
+<script src="porsche.js?v=47"></script>
+<script src="dackel.js?v=47"></script>
+<script src="groesse.js?v=47"></script>
+<script src="gretchen.js?v=47"></script>
+<script src="effekte.js?v=47"></script>
+<script src="app.js?v=47"></script>
+<script src="melden.js?v=47"></script>
+<script src="verlauf.js?v=47"></script>
+<script src="hub.js?v=47"></script>
+<script src="farben.js?v=47"></script>
+<script src="cello.js?v=47"></script>
+<script src="instrumente.js?v=47"></script>
+<script src="toene.js?v=47"></script>
+<script src="takt.js?v=47"></script>
+<script src="punkte.js?v=47"></script>
+<script src="augen.js?v=47"></script>
+<script src="karten-daten.js?v=47"></script>
+<script src="karte.js?v=47"></script>
+<script src="krimi-grafik.js?v=47"></script>
+<script src="krimi.js?v=47"></script>
+<script src="krimi-wachen.js?v=47"></script>
+<script src="krimi-verhoer.js?v=47"></script>
+<script src="krimi-alibi.js?v=47"></script>
+<script src="krimi-akte.js?v=47"></script>
+<script src="krimi-zentrale.js?v=47"></script>
+<script src="profile.js?v=47"></script>
 </body>
 </html>

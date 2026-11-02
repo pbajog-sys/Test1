@@ -254,6 +254,7 @@ function augenEnde() {
   else { rekord = st.best[ag.stufe] == null || summe > st.best[ag.stufe]; st.best[ag.stufe] = Math.max(st.best[ag.stufe] || 0, summe); }
   saveJson(AG_KEY, st);
   zeigeAgTeil('ende');
+  if (typeof merkeVerlauf === 'function') merkeVerlauf('augen', summe, 50, ag.taeglich ? 'Tagesprüfung' : AG_STUFEN[ag.stufe].name);
   $('agRunde').textContent = '';
   hochzaehlen($('agSumme'), summe, ' / 50');
   $('agRekord').textContent = rekord ? '🏆 Neuer Bestwert (' + AG_STUFEN[ag.stufe].name + ')!' : ag.taeglich ? '📅 Tagesprüfung vom ' + new Date().toLocaleDateString('de-DE') : '';

@@ -449,6 +449,7 @@ function instAntwort(wert, knopf) {
 
 function instEnde() {
   clearInterval(is.timer);
+  if (typeof merkeVerlauf === 'function') { if (is.gesamt) merkeVerlauf('cello', is.richtig, is.gesamt, INSTRUMENTE[is.inst].name + ' · ' + (is.test ? 'Abzeichen-Test ' + is.S.emoji : is.modus === 'finden' ? INSTRUMENTE[is.inst].griffWort + ' finden' : is.modus === 'benennen' ? INSTRUMENTE[is.inst].griffWort + ' lesen' : INST_MODI[is.modus].name)); }
   const alle = loadJson(INST_KEY), st = alle[is.inst] = alle[is.inst] || {};
   st.badges = st.badges || {};
   instTeil('ende');

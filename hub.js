@@ -192,6 +192,7 @@ function renderHub() {
   const faelle = summe(krimi) + Object.values(krimi.modi || {}).reduce((x, m) => x + summe(m), 0);
   $('hubKrimiBest').textContent = (faelle ? '🔎 ' + faelle + ' Rätsel gelöst' : 'Noch nichts gelöst') + (krimi.aktenGeloest ? ' · 📁 ' + krimi.aktenGeloest + (krimi.aktenGeloest === 1 ? ' Akte' : ' Akten') : '');
   if (typeof coverBeobachten === 'function') coverBeobachten();
+  if (typeof verlaufKarte === 'function') verlaufKarte();
   if (typeof profilHub === 'function') profilHub();   // profile.js lädt später
 }
 

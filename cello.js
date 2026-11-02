@@ -354,6 +354,7 @@ function celloAntwort(wert, knopf) {
 
 function celloEnde() {
   clearInterval(cs.timer);
+  if (typeof merkeVerlauf === 'function') { if (cs.gesamt) merkeVerlauf('cello', cs.richtig, cs.gesamt, 'Cello · ' + (cs.test ? 'Abzeichen-Test ' + cs.stufeObj.emoji : CELLO_MODI[cs.modus].name)); }
   const st = loadJson(CELLO_KEY);
   st.best = st.best || {};
   st.badges = st.badges || {};

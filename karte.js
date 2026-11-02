@@ -314,6 +314,7 @@ function karteEnde() {
   }
   saveJson(KT_KEY, st);
   zeigeKtTeil('ende');
+  if (typeof merkeVerlauf === 'function') merkeVerlauf('karte', summe, 50, kt.modus === 'mix' ? 'Tagesreise' : KT_MODI[kt.modus].name + ' · ' + KT_STUFEN[kt.stufe].name);
   $('ktRunde').textContent = '';
   hochzaehlen($('ktSumme'), summe, ' / 50');
   $('ktRekord').textContent = rekord ? '🏆 Neuer Bestwert (' + KT_MODI[kt.modus].name + ', ' + KT_STUFEN[kt.stufe].name + ')!'

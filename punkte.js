@@ -242,6 +242,7 @@ function punkteEnde() {
   }
   saveJson(PW_KEY, st);
   zeigePwTeil('ende');
+  if (typeof merkeVerlauf === 'function') merkeVerlauf('punkte', summe, 50, pw.modus === 'mix' ? 'Tages-Wolken' : PW_MODI[pw.modus].name + ' · ' + PW_STUFEN[pw.stufe].name);
   $('pwRunde').textContent = '';
   hochzaehlen($('pwSumme'), summe, ' / 50');
   $('pwRekord').textContent = rekord ? '🏆 Neuer Bestwert (' + PW_MODI[pw.modus].name + ', ' + PW_STUFEN[pw.stufe].name + ')!'

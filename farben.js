@@ -393,6 +393,7 @@ function farbEnde() {
   saveJson(FARB_KEY, st);
 
   zeigeFarbTeil('ende');
+  if (typeof merkeVerlauf === 'function') merkeVerlauf('farben', summe, 50, (fs.art === 'mitte' ? 'Mitte finden · ' : '') + FARB_STUFEN[fs.stufe].name + (fs.taeglich ? ' · Tagesfarben' : ''));
   hochzaehlen($('farbSumme'), summe, ' / 50');
   $('farbRekord').textContent = neuerRekord ? '🏆 Neuer Bestwert (' + (fs.art === 'mitte' ? 'Mitte finden, ' : '') + FARB_STUFEN[fs.stufe].name + ')!' : fs.taeglich ? '📅 Tagesfarben vom ' + new Date().toLocaleDateString('de-DE') : '';
   $('farbVergleich').hidden = !fs.gegner;
