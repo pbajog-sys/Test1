@@ -10,6 +10,7 @@ const VERLAUF_SPIELE = {
   punkte: { name: 'Punktwolke', emoji: '📈', farbe: '#fde047' },
   funktion: { name: 'Funktions-Detektiv', emoji: '🕵️', farbe: '#a3e635' },
   zufall: { name: 'Zufalls-Gefühl', emoji: '🎲', farbe: '#fbbf24' },
+  tierleben: { name: 'Ein Tierleben', emoji: '🐾', farbe: '#a3a380' },
   augen: { name: 'Augenmaß', emoji: '📐', farbe: '#5eead4' },
   karte: { name: 'Karten-Gefühl', emoji: '🧭', farbe: '#34d399' },
   tiefgang: { name: 'Tiefgang', emoji: '🤿', farbe: '#22d3ee' },

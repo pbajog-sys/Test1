@@ -89,7 +89,7 @@ header h1 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes einblenden { from { opacity: 0; } to { opacity: 1; } }
 /* Die Spiele haben eine eigene Vollbild-Bühne (position: fixed). Eine Animation mit transform auf dem
    Bildschirm würde Safari dazu bringen, die Bühne nur innerhalb des Bildschirms zu zeichnen („Fenster im Fenster“). */
-#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-funktion.active, #screen-zufall.active, #screen-zahlen.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-riff.active, #screen-krimi.active { animation: none; }
+#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-funktion.active, #screen-zufall.active, #screen-zahlen.active, #screen-tierleben.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-riff.active, #screen-krimi.active { animation: none; }
 @keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
@@ -2566,3 +2566,94 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .zl-quellen ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 0.8rem; color: #4b5563; line-height: 1.45; }
 @media (prefers-reduced-motion: reduce) { .zl-mini i { animation: none; } }
 .zl-karte p b { display: inline; font-size: inherit; color: #14202b; line-height: inherit; }
+
+/* ===================================================================
+   🐾 Ein Tierleben – ruhig und ernst: dunkles Erdgrün, Strohgelb, wenig Effekte
+   =================================================================== */
+.tl-mini { display: grid; grid-template-columns: 1fr 1fr; place-items: center; width: 100%; height: 100%; font-size: 1.1rem; line-height: 1; }
+.tl-mini i { font-style: normal; animation: tlMini 4s ease-in-out infinite; }
+.tl-mini i:nth-child(2) { animation-delay: 1s; } .tl-mini i:nth-child(3) { animation-delay: 2s; } .tl-mini i:nth-child(4) { animation-delay: 3s; }
+@keyframes tlMini { 0%, 100% { opacity: .55; transform: scale(.9); } 12% { opacity: 1; transform: scale(1.12); } 30% { opacity: .55; transform: scale(.9); } }
+.hub-tierleben { background: linear-gradient(#161a12, #161a12) padding-box, linear-gradient(90deg, #a3a380, #d6c48a, #6b8f71, #a3a380) border-box; background-size: 100% 100%, 300% 100%; box-shadow: 0 16px 50px rgba(163,163,128,0.15); }
+.hub-tierleben .hg-titel { background: linear-gradient(90deg, #e9e2c0, #a7c4a0); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hg-av-tierleben { --ring: conic-gradient(#a3a380, #d6c48a, #6b8f71, #a3a380); }
+.hg-av-tierleben > .hg-in { background: #262b20; border-color: #161a12; padding: 9px; }
+
+.tl-buehne {
+  position: fixed; inset: 0; z-index: 20; overflow-y: auto; color: #ece8d9;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 28px);
+  background: radial-gradient(ellipse at 50% -10%, #343b2a, transparent 60%), #171a14; font-family: "Outfit", system-ui, sans-serif;
+}
+.tl-buehne > * { max-width: 620px; margin-left: auto; margin-right: auto; }
+.tl-buehne .farb-kopf .icon-btn { background: rgba(255,255,255,.08); color: inherit; }
+.tl-teil { display: grid; gap: 14px; animation: aufploppen .4s var(--ease-spring); }
+.tl-titel { margin: 4px 0 0; text-align: center; font-size: 2.5rem; font-weight: 800; color: #e9e2c0; letter-spacing: -0.01em; }
+.tl-lead { margin: 0 auto; max-width: 42ch; text-align: center; line-height: 1.55; color: #c9c4b0; }
+.tl-h { margin: 6px 0 0; font-size: 1.1rem; text-align: center; color: #e9e2c0; }
+.tl-zaehler { display: grid; grid-template-columns: auto 1fr; gap: 12px; align-items: center; padding: 14px; border-radius: 18px; background: rgba(214,196,138,.08); border: 1px solid rgba(214,196,138,.25); }
+.tl-zaehler b { font-size: 2rem; font-variant-numeric: tabular-nums; color: #d6c48a; min-width: 3ch; }
+.tl-zaehler span { font-size: 0.88rem; line-height: 1.4; }
+.tl-zaehler small { color: #9d987f; font-size: 0.75rem; }
+.tl-weg { display: grid; justify-items: center; gap: 4px; padding: 18px; border-radius: 20px; border: 1.5px solid rgba(214,196,138,.4); background: linear-gradient(160deg, rgba(214,196,138,.16), rgba(107,143,113,.12)); color: inherit; font: inherit; cursor: pointer; transition: transform .2s var(--ease-spring); }
+.tl-weg:active { transform: scale(.98); }
+.tl-weg span { font-size: 2.2rem; }
+.tl-weg b { font-size: 1.2rem; }
+.tl-weg small { color: #c9c4b0; }
+.tl-arten { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 8px; }
+.tl-art { display: grid; grid-template-columns: 38px 1fr; grid-template-rows: auto auto; column-gap: 8px; align-items: center; text-align: left; padding: 10px 12px; border-radius: 16px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.04); color: inherit; font: inherit; cursor: pointer; }
+.tl-art span { grid-row: span 2; font-size: 1.8rem; }
+.tl-art b { font-size: 0.88rem; line-height: 1.2; }
+.tl-art small { font-size: 0.74rem; color: #e8a68f; }
+.tl-logbuch { padding: 12px 14px; border-radius: 16px; background: rgba(255,255,255,.04); font-size: 0.88rem; }
+.tl-logbuch p { margin: 4px 0 8px; color: #c9c4b0; }
+.tl-logbuch-liste { display: flex; flex-wrap: wrap; gap: 4px; font-size: 1.3rem; }
+.tl-logbuch-liste .tot { filter: grayscale(1); opacity: .6; }
+.tl-los-balken { position: relative; display: flex; height: 54px; border-radius: 12px; overflow: visible; }
+.tl-los-balken i { display: block; height: 100%; min-width: 3px; }
+.tl-los-balken i:first-child { border-radius: 12px 0 0 12px; } .tl-los-balken i:nth-last-child(2) { border-radius: 0 12px 12px 0; }
+.tl-zeiger { position: absolute; top: -12px; bottom: -12px; width: 4px; margin-left: -2px; border-radius: 2px; background: #fff; box-shadow: 0 0 10px rgba(255,255,255,.8); transition: left 2.2s cubic-bezier(.15,.85,.25,1); }
+.tl-los-legende { display: flex; flex-wrap: wrap; gap: 6px 12px; justify-content: center; font-size: 0.8rem; color: #c9c4b0; }
+.tl-los-legende i { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 4px; }
+.tl-los-ergebnis { display: grid; gap: 8px; justify-items: center; text-align: center; padding: 16px; border-radius: 20px; background: rgba(255,255,255,.05); animation: aufploppen .45s var(--ease-spring); }
+.tl-los-ergebnis h3 { margin: 0; font-size: 1.5rem; color: #e9e2c0; }
+.tl-los-ergebnis p { margin: 0; line-height: 1.5; color: #c9c4b0; }
+.tl-los-emoji, .tl-ende-emoji { font-size: 4rem; line-height: 1; }
+.tl-buehne .btn { width: 100%; }
+.tl-buehne .btn.tl-gross { font-size: 1.1rem; padding: 15px; background: #d6c48a; color: #171a14; box-shadow: 0 4px 0 #8f7f4a; }
+.tl-buehne .btn.secondary { background: rgba(255,255,255,.07); color: inherit; }
+.tl-leben-kopf { display: flex; align-items: center; justify-content: center; gap: 10px; font-size: 1.15rem; color: #e9e2c0; }
+.tl-leben-kopf span { font-size: 2.2rem; }
+.tl-kapitel { display: grid; gap: 12px; }
+.tl-kap { position: relative; padding: 14px 16px 14px 20px; border-radius: 18px; background: rgba(255,255,255,.05); border-left: 4px solid #6b8f71; animation: aufploppen .45s var(--ease-spring); scroll-margin-top: 70px; }
+.tl-zeit { font-size: 0.78rem; font-weight: 700; letter-spacing: .06em; text-transform: uppercase; color: #a7c4a0; }
+.tl-kap h3 { margin: 2px 0 6px; font-size: 1.15rem; color: #e9e2c0; }
+.tl-kap p { margin: 0; line-height: 1.55; }
+.tl-kap p b { color: #f0d98c; }
+.tl-q { display: block; margin-top: 8px; font-size: 0.72rem; color: #8f8b76; line-height: 1.35; }
+.tl-wahl { display: grid; gap: 8px; margin-top: 12px; padding-top: 12px; border-top: 1px dashed rgba(255,255,255,.15); }
+.tl-wahl > b { font-size: 0.95rem; }
+.tl-opt { padding: 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.15); background: rgba(255,255,255,.05); color: inherit; font: inherit; font-weight: 600; cursor: pointer; text-align: left; }
+.tl-opt:disabled { cursor: default; opacity: .45; }
+.tl-opt.gewaehlt { opacity: 1; border-color: #d6c48a; background: rgba(214,196,138,.15); }
+.tl-antwort { padding: 10px 12px; border-radius: 12px; background: rgba(107,143,113,.15); font-size: 0.92rem; animation: aufploppen .35s var(--ease-spring); }
+.tl-tod { padding: 10px 12px; border-radius: 12px; background: rgba(232,166,143,.15); color: #f2b8a2; font-weight: 700; animation: aufploppen .35s var(--ease-spring) .2s backwards; }
+.tl-ende { display: grid; gap: 12px; justify-items: center; text-align: center; }
+.tl-ende h2 { margin: 0; font-size: 1.6rem; color: #e9e2c0; }
+.tl-ende p { margin: 0; line-height: 1.55; }
+.tl-ende p b { color: #f0d98c; }
+.tl-vergleich { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: 100%; }
+.tl-vergleich > div { display: grid; gap: 2px; padding: 12px; border-radius: 14px; background: rgba(255,255,255,.05); }
+.tl-vergleich small { color: #9d987f; font-size: 0.78rem; }
+.tl-vergleich b { font-size: 1.3rem; color: #e9e2c0; }
+.tl-lebensbalken { width: 100%; height: 22px; border-radius: 11px; background: rgba(255,255,255,.1); overflow: hidden; }
+.tl-lebensbalken i { display: block; height: 100%; width: var(--w); background: #d6c48a; border-radius: 11px; animation: tlBalken 1.6s cubic-bezier(.2,.8,.2,1) .3s backwards; }
+@keyframes tlBalken { from { width: 0; } }
+.tl-gross-zahl { font-size: 1.15rem; font-weight: 700; color: #e9e2c0; }
+.tl-kasten { width: 100%; text-align: left; padding: 12px 14px; border-radius: 16px; background: rgba(107,143,113,.12); border: 1px solid rgba(107,143,113,.35); font-size: 0.9rem; line-height: 1.5; }
+.tl-kasten ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; }
+.tl-kasten p { margin: 6px 0 0; }
+.tl-spielregel { font-size: 0.8rem; color: #9d987f; }
+.tl-quellen { width: 100%; text-align: left; font-size: 0.8rem; color: #b7b29b; }
+.tl-quellen summary { cursor: pointer; font-weight: 700; }
+.tl-quellen ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; line-height: 1.4; }
+@media (prefers-reduced-motion: reduce) { .tl-mini i, .tl-lebensbalken i { animation: none; } .tl-zeiger { transition: none; } }

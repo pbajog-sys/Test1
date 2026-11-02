@@ -191,6 +191,8 @@ function renderHub() {
   $('hubTiefgangBest').textContent = tgR ? 'Rekord ' + tgR + ' Punkte' : 'Noch kein Rekord';
   const rfSt = loadJson('walquiz.riff.v1'), rfR = Math.max(rfSt.best || 0, ...Object.values(rfSt.tag || {}));
   $('hubRiffBest').textContent = rfR ? 'Rekord ' + rfR + ' Punkte' : 'Noch kein Rekord';
+  const tlL = (loadJson('walquiz.tierleben.v1').leben || []).length;
+  $('hubTierlebenBest').textContent = tlL ? '📖 ' + tlL + (tlL === 1 ? ' Leben' : ' Leben') + ' gelebt' : 'Noch kein Leben gelebt';
   const krimi = loadJson('walquiz.krimi.v1');
   const summe = (o) => Object.values((o && o.geloest) || {}).reduce((x, y) => x + y, 0);
   const faelle = summe(krimi) + Object.values(krimi.modi || {}).reduce((x, m) => x + summe(m), 0);

@@ -80,6 +80,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `funktion.js` – Funktions-Detektiv (Funktionsgraphen lesen und nachbauen)
 - `zufall.js` – Zufalls-Gefühl (Wahrscheinlichkeiten schätzen, live simulieren)
 - `zahlen.js` – Du in Zahlen (das eigene Leben in belegten Zahlen)
+- `tierleben.js` – Ein Tierleben (Nutztiere nach Schlachtzahlen, bedrohte Arten)
 - `fuehrung.js` – Hilfe für alle Spiele: Spickzettel (?), geführte Einführung mit Aufträgen, Übungsfälle für „Wer war’s?“
 - `augen.js` – Augenmaß
 - `karte.js`, `karten-daten.js` – Karten-Gefühl (Kartendaten aus `werkzeuge/karten.py`)
@@ -246,6 +247,18 @@ Geburtstag (optional Uhrzeit und Geschlecht) eingeben, alles wird nur auf dem Ge
 - **Welt:** Weltbevölkerung bei Geburt und heute, Geburten und Sterbefälle seitdem, ungefähre „Mensch Nr.“ (PRB),
   Lebenserwartung weltweit damals/heute, CO₂ damals/heute, Lebenserwartung in 12 Ländern im Vergleich.
 - **Quellen:** Weltbank/UN WPP (Stand 08.10.2026), Destatis PM 236/2026, NOAA Mauna Loa, PRB 2022 – alles auf der Seite aufgeführt.
+
+## 🐾 Ein Tierleben
+Ein Leben als Tier – gesellschaftskritisch, aber sachlich und mit Quellen:
+- **Als Nutztier geboren werden:** Los nach den echten Schlachtzahlen in Deutschland 2025 (Destatis: 640,3 Mio. Masthühner,
+  44,9 Mio. Schweine, 27,6 Mio. Puten, 20,7 Mio. Suppenhühner, 8,3 Mio. Enten, 2,8 Mio. Rinder). Ein Rind wird je zur Hälfte
+  Milchkuh oder Mastbulle. Kapitel mit Fakten (Lebensdauer nach dem Bundesinformationszentrum Landwirtschaft, Platz nach der
+  Tierschutz-Nutztierhaltungsverordnung); bei den Entscheidungen zeigt sich, dass das Tier kaum etwas entscheiden kann.
+  Am Ende: gelebte vs. mögliche Lebenszeit und was sich ändern lässt.
+- **Als eine der letzten ihrer Art:** Nordatlantischer Glattwal (384 Tiere, NARWC), Vaquita (6–8, IUCN), Sumatra-Orang-Utan,
+  Ostsee-Schweinswal, Weißspitzen-Hochseehai. Entscheidungen beeinflussen das Überleben (als Spielregel gekennzeichnet),
+  die Gefahren sind die echten: Schiffe, Netze, Palmöl, Lärm, Flossenhandel.
+- Live-Zähler der rechnerischen Schlachtungen seit Öffnen der Seite, Logbuch der gelebten Leben, Einträge im Verlauf.
 
 ## 🧑‍🏫 Führung in allen Spielen
 `fuehrung.js` gibt jedem Spiel (außer den Quizzes) Hilfe zum Lernen:
