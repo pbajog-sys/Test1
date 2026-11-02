@@ -226,6 +226,10 @@ Wie stark hängt das zusammen? Ein Spiel zum Korrelationskoeffizienten r, fünf 
 - **Sortieren:** 3–4 Wolken in die richtige Reihenfolge tippen; Punkte nach richtig geordneten Paaren.
 - Die Wolken haben exakt das gewünschte r (Zufallswerte, die senkrecht zu x gemacht werden); angezeigt wird immer das echte r.
 - **Tages-Wolken** (für alle gleich), Bestwerte je Profil und Challenge-Links mit denselben Wolken.
+- **Hilfe:** `?` oben rechts öffnet einen Spickzettel (Richtung → Form → Breite : Länge, Tabelle, typische Fallen).
+  Die **geführte Lernrunde** erklärt das Schätzen in Schritten mit Beispielwolken und endet mit drei Übungen, die Schritt für
+  Schritt zum Ergebnis führen. In der Auflösung zeigt eine Ellipse die Form der Wolke mit der Faustregel r ≈ (1 − q²) / (1 + q²)
+  für q = Breite : Länge (im Mittel etwa ±0,02 genau).
 
 ## 📐 Augenmaß
 Fünf Aufgaben, jede einmal pro Runde (bis zu 50 Punkte): **Halbieren** (Mitte einer Linie antippen), **Mittelpunkt** (Kreis, Quadrat,

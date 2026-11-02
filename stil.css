@@ -1550,7 +1550,7 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .pw-titel { margin: 0; font-size: 2.7rem; font-weight: 800; letter-spacing: -0.02em; color: #1d2340; }
 .pw-titel { background: linear-gradient(transparent 62%, rgba(253,224,71,.85) 62%, rgba(253,224,71,.85) 92%, transparent 92%); display: inline; justify-self: center; padding: 0 6px; }
 .pw-lead { margin: 0 auto; max-width: 36ch; line-height: 1.5; color: #3a4166; min-height: 4.5em; }
-.pw-hinweis { margin: 0 auto; max-width: 38ch; font-size: 0.85rem; color: #5b6285; }
+.pw-buehne .pw-hinweis { margin: 0 auto; max-width: 38ch; font-size: 0.85rem; color: #5b6285; }
 .pw-modi { grid-template-columns: repeat(2, 1fr); }
 .pw-buehne .takt-modi button { border-color: rgba(29,35,64,.18); background: #fff; color: #1d2340; box-shadow: 0 3px 0 rgba(29,35,64,.1); }
 .pw-buehne .takt-modi button.on { border-color: #2b4bb8; background: #e8edff; }
@@ -1616,6 +1616,46 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .pw-ord small { font-size: 0.75rem; color: #5b6285; }
 .pw-liste li { background: #fff; color: #1d2340; cursor: default; box-shadow: 0 3px 0 rgba(29,35,64,.08); }
 #pw-aufloesung #pwWeiter { position: sticky; bottom: 0; z-index: 2; }
+/* Hilfe: Form-Ellipse, Lernrunde, Spickzettel */
+.pw-form ellipse { fill: rgba(253,224,71,.16); stroke: #ca8a04; stroke-width: 2.5; stroke-dasharray: 7 5; animation: aufploppen .5s var(--ease-spring) .3s backwards; transform-box: fill-box; transform-origin: center; }
+.pw-form line { stroke-width: 3.5; stroke-linecap: round; }
+.pw-form .pw-lang { stroke: #e11d48; } .pw-form .pw-breit { stroke: #ca8a04; }
+.pw-faust { font-size: 0.92rem; text-align: center; color: #1d2340; }
+.pw-hilfe-btn { font-weight: 800; font-size: 1.1rem; }
+.pw-buehne .btn.pw-lernen-btn { border: 2px dashed rgba(43,75,184,.45); }
+.pl-schritte { display: flex; justify-content: center; gap: 6px; }
+.pl-schritte i { width: 26px; height: 6px; border-radius: 3px; background: rgba(29,35,64,.15); transition: background .3s; }
+.pl-schritte i.fertig { background: #2b4bb8; } .pl-schritte i.jetzt { background: #fde047; box-shadow: 0 0 0 1.5px #1d2340; }
+.pl-titel { margin: 0; text-align: center; font-size: 1.35rem; }
+.pl-bild { display: grid; gap: 10px; animation: aufploppen .4s var(--ease-spring); }
+.pl-text { background: #fff; border-radius: 14px; padding: 12px 14px; line-height: 1.5; box-shadow: 0 4px 0 rgba(29,35,64,.08); }
+.pl-gelb { color: #a16207; } .pl-rot { color: #be123c; }
+.pl-aktion { display: grid; gap: 10px; }
+.pl-aktion:empty { display: none; }
+.pl-wahl { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; }
+.pl-nav { display: grid; grid-template-columns: 1fr 2fr; gap: 10px; }
+.pl-nav .btn:disabled { opacity: .4; }
+.pl-paar, .pl-formen { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.pl-formen { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 6px; }
+.pl-paar figure, .pl-formen figure { margin: 0; display: grid; gap: 4px; text-align: center; font-size: 0.85rem; }
+.pl-formen figcaption { font-size: 0.72rem; color: #5b6285; display: grid; }
+.pl-formen figcaption b { color: #1d2340; font-size: 0.78rem; }
+.pl-paar .pw-svg, .pl-formen .pw-svg { border-radius: 10px; box-shadow: 0 3px 0 rgba(29,35,64,.08); }
+.pl-tabelle { display: grid; grid-template-columns: auto repeat(6, 1fr); gap: 2px 4px; align-items: center; font-size: 0.78rem; background: #fff8c5; border-radius: 10px; padding: 8px; text-align: center; font-variant-numeric: tabular-nums; }
+.pl-tabelle span { text-align: left; color: #5b6285; white-space: nowrap; }
+.pl-dialog { width: min(560px, calc(100vw - 24px)); max-height: 88dvh; overflow-y: auto; border: 0; border-radius: 20px; padding: 16px; background: #f7f2e3; color: #1d2340; font-family: "Outfit", system-ui, sans-serif; box-shadow: 0 20px 60px rgba(0,0,0,.35); }
+.pl-dialog[open] { display: grid; gap: 10px; animation: aufploppen .35s var(--ease-spring); }
+.pl-dialog::backdrop { background: rgba(29,35,64,.45); backdrop-filter: blur(2px); }
+.pl-dialog h3 { margin: 0; text-align: center; font-size: 1.3rem; }
+.pl-dialog .btn { width: 100%; }
+.pl-dialog .btn.pw-gross-btn { background: #2b4bb8; color: #fff; }
+.pl-dialog .btn.secondary { background: #fff; color: #1d2340; }
+#pwHilfeInhalt { display: grid; gap: 10px; }
+.pl-schritt { display: grid; grid-template-columns: 30px 1fr; gap: 10px; align-items: start; font-size: 0.9rem; line-height: 1.4; }
+.pl-schritt > span { width: 30px; height: 30px; border-radius: 50%; display: grid; place-items: center; background: #2b4bb8; color: #fff; font-weight: 800; }
+.pl-schritt b { display: block; }
+.pl-tipps { font-size: 0.86rem; background: #fff; border-radius: 12px; padding: 10px 12px; }
+.pl-tipps ul { margin: 4px 0 0; padding-left: 18px; display: grid; gap: 3px; }
 @media (prefers-reduced-motion: reduce) { .pw-mini circle, .pw-mini .pm-linie { animation: none; } }
 
 /* ===================================================================

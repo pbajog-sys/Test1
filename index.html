@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=53">
+<link rel="stylesheet" href="fonts/fonts.css?v=54">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=53">
-<link rel="stylesheet" href="ansichten.css?v=53">
+<link rel="stylesheet" href="stil.css?v=54">
+<link rel="stylesheet" href="ansichten.css?v=54">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -1473,6 +1473,7 @@
       <div class="farb-kopf">
         <button class="icon-btn" id="pwZurueck" type="button" aria-label="Zurück">←</button>
         <span id="pwRunde"></span>
+        <button class="icon-btn pw-hilfe-btn" id="pwHilfeBtn" type="button" aria-label="Hilfe: so schätzt du r" title="Hilfe">?</button>
       </div>
 
       <div class="pw-teil" id="pw-intro">
@@ -1496,6 +1497,7 @@
         </div>
         <button class="btn pw-gross-btn" id="pwLos" type="button">Los geht’s 📈</button>
         <button class="btn secondary" id="pwTagBtn" type="button">📅 Tages-Wolken</button>
+        <button class="btn secondary pw-lernen-btn" id="pwLernenBtn" type="button">🧑‍🏫 Geführte Lernrunde: so schätzt du r</button>
         <div class="pw-best" id="pwBest"></div>
         </div>
         </div>
@@ -1522,11 +1524,30 @@
         </div>
       </div>
 
+      <div class="pw-teil" id="pw-lernen" hidden>
+        <div class="pl-schritte" id="plSchritte" aria-hidden="true"></div>
+        <h3 class="pl-titel" id="plTitel"></h3>
+        <div class="spalten">
+        <div class="spalte spalte-a"><div class="pl-bild" id="plBild"></div></div>
+        <div class="spalte spalte-b">
+        <div class="pl-text" id="plText"></div>
+        <div class="pl-aktion" id="plAktion"></div>
+        <div class="pl-nav"><button class="btn secondary" id="plZurueck" type="button">‹ Zurück</button><button class="btn pw-gross-btn" id="plWeiter" type="button">Weiter ›</button></div>
+        </div>
+        </div>
+      </div>
+
+      <dialog class="pl-dialog" id="pwHilfe" aria-label="Hilfe zur Punktwolke">
+        <div id="pwHilfeInhalt"></div>
+        <button class="btn pw-gross-btn" id="pwHilfeLernen" type="button">🧑‍🏫 Geführte Lernrunde starten</button>
+        <button class="btn secondary" id="pwHilfeZu" type="button">Schließen</button>
+      </dialog>
+
       <div class="pw-teil" id="pw-ende" hidden>
         <div class="farb-summe" id="pwSumme"></div>
         <div class="farb-rekord" id="pwRekord"></div>
         <div class="farb-rekord" id="pwVergleich" hidden></div>
-        <ul class="ton-liste pw-liste" id="pwListe"></ul>
+        <ul class="ton-liste pw-liste" id="pwErgListe"></ul>
         <button class="btn pw-gross-btn" id="pwTeilen" type="button">📤 Ergebnis teilen</button>
         <div class="muted" id="pwTeilenMsg"></div>
         <button class="btn secondary" id="pwNochmalSpiel" type="button">Nochmal spielen</button>
@@ -1701,35 +1722,35 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=53"></script>
-<script src="haie.js?v=53"></script>
-<script src="porsche.js?v=53"></script>
-<script src="dackel.js?v=53"></script>
-<script src="groesse.js?v=53"></script>
-<script src="gretchen.js?v=53"></script>
-<script src="effekte.js?v=53"></script>
-<script src="app.js?v=53"></script>
-<script src="melden.js?v=53"></script>
-<script src="verlauf.js?v=53"></script>
-<script src="hub.js?v=53"></script>
-<script src="farben.js?v=53"></script>
-<script src="cello.js?v=53"></script>
-<script src="instrumente.js?v=53"></script>
-<script src="toene.js?v=53"></script>
-<script src="takt.js?v=53"></script>
-<script src="punkte.js?v=53"></script>
-<script src="augen.js?v=53"></script>
-<script src="karten-daten.js?v=53"></script>
-<script src="karte.js?v=53"></script>
-<script src="tiefgang.js?v=53"></script>
-<script src="riff.js?v=53"></script>
-<script src="krimi-grafik.js?v=53"></script>
-<script src="krimi.js?v=53"></script>
-<script src="krimi-wachen.js?v=53"></script>
-<script src="krimi-verhoer.js?v=53"></script>
-<script src="krimi-alibi.js?v=53"></script>
-<script src="krimi-akte.js?v=53"></script>
-<script src="krimi-zentrale.js?v=53"></script>
-<script src="profile.js?v=53"></script>
+<script src="wale.js?v=54"></script>
+<script src="haie.js?v=54"></script>
+<script src="porsche.js?v=54"></script>
+<script src="dackel.js?v=54"></script>
+<script src="groesse.js?v=54"></script>
+<script src="gretchen.js?v=54"></script>
+<script src="effekte.js?v=54"></script>
+<script src="app.js?v=54"></script>
+<script src="melden.js?v=54"></script>
+<script src="verlauf.js?v=54"></script>
+<script src="hub.js?v=54"></script>
+<script src="farben.js?v=54"></script>
+<script src="cello.js?v=54"></script>
+<script src="instrumente.js?v=54"></script>
+<script src="toene.js?v=54"></script>
+<script src="takt.js?v=54"></script>
+<script src="punkte.js?v=54"></script>
+<script src="augen.js?v=54"></script>
+<script src="karten-daten.js?v=54"></script>
+<script src="karte.js?v=54"></script>
+<script src="tiefgang.js?v=54"></script>
+<script src="riff.js?v=54"></script>
+<script src="krimi-grafik.js?v=54"></script>
+<script src="krimi.js?v=54"></script>
+<script src="krimi-wachen.js?v=54"></script>
+<script src="krimi-verhoer.js?v=54"></script>
+<script src="krimi-alibi.js?v=54"></script>
+<script src="krimi-akte.js?v=54"></script>
+<script src="krimi-zentrale.js?v=54"></script>
+<script src="profile.js?v=54"></script>
 </body>
 </html>

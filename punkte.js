@@ -74,13 +74,46 @@ function pwRunden(seed, modus, stufe) {
 }
 
 // ---------- Zeichnen ----------
-// Punktwolke als SVG auf Millimeterpapier. mitLinie = Regressionsgerade (y auf x).
-function pwSvg(w, opt = {}) {
-  const G = 300, P = 18;
-  const ex = (v) => [Math.min(...v), Math.max(...v)];
+// Bildschirm-Koordinaten einer Wolke: normal auf die eigene Spannweite skaliert, mit fest = feste Achsen von −3 bis 3
+const PW_G = 300, PW_P = 18;
+function pwSkala(w, fest) {
+  const ex = (v) => fest ? [-3, 3] : [Math.min(...v), Math.max(...v)];
   const [x0, x1] = ex(w.x), [y0, y1] = ex(w.y);
-  const sx = (x) => P + (x - x0) / (x1 - x0 || 1) * (G - 2 * P);
-  const sy = (y) => G - P - (y - y0) / (y1 - y0 || 1) * (G - 2 * P);
+  const sx = (x) => PW_P + (x - x0) / (x1 - x0 || 1) * (PW_G - 2 * PW_P);
+  const sy = (y) => PW_G - PW_P - (y - y0) / (y1 - y0 || 1) * (PW_G - 2 * PW_P);
+  return { sx, sy, x0, x1 };
+}
+// Form der Wolke: Ellipse über die Streuung (2 Standardabweichungen je Hauptachse).
+// q = Breite / Länge. Für eine gleichmäßig skalierte Wolke gilt r ≈ (1 − q²) / (1 + q²).
+function pwForm(w, fest) {
+  const { sx, sy } = pwSkala(w, fest);
+  const X = w.x.map(sx), Y = w.y.map(sy), n = X.length;
+  const mx = X.reduce((a, b) => a + b, 0) / n, my = Y.reduce((a, b) => a + b, 0) / n;
+  let a = 0, c = 0, bxy = 0;
+  for (let i = 0; i < n; i++) { const dx = X[i] - mx, dy = Y[i] - my; a += dx * dx; c += dy * dy; bxy += dx * dy; }
+  a /= n; c /= n; bxy /= n;
+  const m = (a + c) / 2, d = Math.sqrt(((a - c) / 2) ** 2 + bxy * bxy);
+  const l1 = m + d, l2 = Math.max(0, m - d);
+  const winkel = 0.5 * Math.atan2(2 * bxy, a - c) * 180 / Math.PI;
+  const q = Math.sqrt(l2 / l1);
+  const steigt = bxy < 0;   // Bildschirm-y zeigt nach unten
+  return { cx: mx, cy: my, lang: 2 * Math.sqrt(l1), breit: 2 * Math.sqrt(l2), winkel, q, steigt,
+    rSchaetz: (steigt ? 1 : -1) * (1 - q * q) / (1 + q * q) };
+}
+// Vier Formen als Faustregel
+const PW_FORMEN = [
+  { id: 'kreis', name: 'Kreis', emoji: '⚪', von: 0, bis: 0.2, text: 'rund, kein Trend', q: '1 : 1' },
+  { id: 'ei', name: 'Ei', emoji: '🥚', von: 0.2, bis: 0.6, text: 'etwas länglich', q: '≈ 2 : 3' },
+  { id: 'zigarre', name: 'Zigarre', emoji: '🌭', von: 0.6, bis: 0.88, text: 'deutlich gestreckt', q: '≈ 1 : 3' },
+  { id: 'strich', name: 'Strich', emoji: '➖', von: 0.88, bis: 1, text: 'fast eine Linie', q: '1 : 5 und dünner' },
+];
+const pwFormVon = (r) => PW_FORMEN.find((f) => Math.abs(r) < f.bis) || PW_FORMEN[3];
+const pwQText = (q) => { const k = Math.max(1, Math.round(1 / Math.max(q, 0.05) * 2) / 2); return '1 : ' + fmt(k); };
+
+// Punktwolke als SVG auf Millimeterpapier. mitLinie = Regressionsgerade (y auf x), ellipse = Form der Wolke, achsen = Länge/Breite einzeichnen.
+function pwSvg(w, opt = {}) {
+  const G = PW_G, P = PW_P;
+  const { sx, sy, x0, x1 } = pwSkala(w, opt.fest);
   const gross = w.x.length > 80 ? 3.2 : w.x.length > 40 ? 4 : 5;
   let pkt = '';
   w.x.forEach((x, i) => {
@@ -93,17 +126,26 @@ function pwSvg(w, opt = {}) {
     let sxy = 0, sxx = 0;
     w.x.forEach((x, i) => { sxy += (x - mx) * (w.y[i] - my); sxx += (x - mx) ** 2; });
     const b = sxy / sxx, f = (x) => my + b * (x - mx);
-    linie = '<line class="pw-linie" x1="' + sx(x0) + '" y1="' + sy(f(x0)) + '" x2="' + sx(x1) + '" y2="' + sy(f(x1)) + '"/>';
+    const xa = opt.fest ? -3 : x0, xb = opt.fest ? 3 : x1;
+    linie = '<line class="pw-linie" x1="' + sx(xa) + '" y1="' + sy(f(xa)) + '" x2="' + sx(xb) + '" y2="' + sy(f(xb)) + '"/>';
+  }
+  let form = '';
+  if (opt.ellipse || opt.achsen) {
+    const F = pwForm(w, opt.fest), t = 'translate(' + F.cx.toFixed(1) + ' ' + F.cy.toFixed(1) + ') rotate(' + F.winkel.toFixed(1) + ')';
+    form = '<g class="pw-form" transform="' + t + '">'
+      + (opt.ellipse ? '<ellipse rx="' + F.lang.toFixed(1) + '" ry="' + Math.max(F.breit, 3).toFixed(1) + '"/>' : '')
+      + (opt.achsen ? '<line class="pw-lang" x1="' + (-F.lang).toFixed(1) + '" y1="0" x2="' + F.lang.toFixed(1) + '" y2="0"/>'
+        + '<line class="pw-breit" x1="0" y1="' + (-F.breit).toFixed(1) + '" x2="0" y2="' + F.breit.toFixed(1) + '"/>' : '') + '</g>';
   }
   return '<svg class="pw-svg" viewBox="0 0 ' + G + ' ' + G + '"><rect class="pw-papier" width="' + G + '" height="' + G + '" rx="10"/>'
-    + '<path class="pw-achse" d="M' + P + ' ' + (G - P) + 'H' + (G - 6) + 'M' + P + ' ' + (G - P) + 'V6"/>' + linie + '<g>' + pkt + '</g></svg>';
+    + '<path class="pw-achse" d="M' + P + ' ' + (G - P) + 'H' + (G - 6) + 'M' + P + ' ' + (G - P) + 'V6"/>' + linie + '<g>' + pkt + '</g>' + form + '</svg>';
 }
 
 // ---------- Spielablauf ----------
 let pw = null;
 let pwModus = 'schaetzen', pwStufe = 'leicht', pwGegner = null;
 const pwStore = () => loadJson(PW_KEY);
-const pwTeile = ['intro', 'spiel', 'aufloesung', 'ende'];
+const pwTeile = ['intro', 'spiel', 'aufloesung', 'ende', 'lernen'];
 const zeigePwTeil = (t) => pwTeile.forEach((x) => { $('pw-' + x).hidden = x !== t; });
 
 function punkteIntro() {
@@ -206,7 +248,9 @@ function pwAuswerten(wert) {
   if (rd.art === 'schaetzen') {
     const r = rd.wolke.r, d = wert - r;
     const pos = (v) => ((v + 1) / 2 * 100) + '%';
-    box.innerHTML = '<div class="pw-gross klein">' + pwSvg(rd.wolke, { mitLinie: true, ausreisser: true, ruhig: true }) + '</div>'
+    const F = pwForm(rd.wolke), fo = pwFormVon(F.rSchaetz);
+    box.innerHTML = '<div class="pw-gross klein">' + pwSvg(rd.wolke, { mitLinie: true, ausreisser: true, ruhig: true, ellipse: true }) + '</div>'
+      + '<div class="pw-faust">' + fo.emoji + ' Form: <b>' + fo.name + '</b> · Breite : Länge ≈ <b>' + pwQText(F.q) + '</b> → Faustregel r ≈ <b>' + rText(Math.round(F.rSchaetz * 20) / 20) + '</b></div>'
       + '<table class="farb-tabelle"><tr><th>Echtes r</th><td>' + rText(r) + '</td></tr><tr><th>Dein Tipp</th><td>' + rText(wert) + '</td></tr>'
       + '<tr class="diff"><th>Abweichung</th><td class="' + (Math.abs(d) <= 0.05 ? 'gut' : Math.abs(d) <= 0.15 ? 'mittel' : 'weit') + '">' + (d >= 0 ? '+' : '−') + fmt(Math.abs(d).toFixed(2)) + '</td></tr></table>'
       + '<div class="pw-band"><i class="pw-ziel" style="left:' + pos(r) + '"></i><i class="pw-du" style="left:' + pos(wert) + '"></i></div>'
@@ -253,7 +297,7 @@ function punkteEnde() {
     $('pwVergleich').textContent = summe > g.punkte ? '🏆 Du hast ' + g.name + ' geschlagen (' + fmt(g.punkte) + ')!'
       : summe < g.punkte ? g.name + ' war besser (' + fmt(g.punkte) + '). Revanche?' : 'Unentschieden mit ' + g.name + '!';
   }
-  const liste = $('pwListe');
+  const liste = $('pwErgListe');
   liste.innerHTML = '';
   pw.runden.forEach((rd, i) => {
     const w = pw.antworten[i];
@@ -289,6 +333,149 @@ async function punkteTeilen() {
   catch { $('pwTeilenMsg').textContent = url; }
 }
 
+// ---------- Hilfe: Spickzettel und geführte Lernrunde ----------
+const pwDemo = (k, r, n = 70, aus = 0) => pwWolke(zufallsGenerator('pw-lern-' + k), n, r, aus);
+const pwStreck = (w, fx, fy) => ({ ...w, x: w.x.map((v) => v * fx), y: w.y.map((v) => v * fy) });
+const PW_TABELLE = [['1 : 1', '0'], ['1 : 1,5', '0,4'], ['1 : 2', '0,6'], ['1 : 3', '0,8'], ['1 : 5', '0,92'], ['1 : 10', '0,98']];
+const pwTabelle = () => '<div class="pl-tabelle"><span>Breite : Länge</span>' + PW_TABELLE.map((z) => '<b>' + z[0] + '</b>').join('')
+  + '<span>→ r ≈</span>' + PW_TABELLE.map((z) => '<b>' + z[1] + '</b>').join('') + '</div>';
+const pwFormenBild = () => '<div class="pl-formen">' + PW_FORMEN.map((f, i) => '<figure>'
+  + pwSvg(pwDemo('form' + i, [0.06, 0.42, 0.76, 0.95][i]), { ellipse: true, ruhig: true })
+  + '<figcaption><b>' + f.emoji + ' ' + f.name + '</b>' + fmt(f.von) + ' bis ' + fmt(f.bis) + '</figcaption></figure>').join('') + '</div>';
+const pwPaar = (a, b) => '<div class="pl-paar"><figure>' + a[0] + '<figcaption>' + a[1] + '</figcaption></figure><figure>' + b[0] + '<figcaption>' + b[1] + '</figcaption></figure></div>';
+
+const PW_LERN = [
+  { titel: 'Was zeigt eine Punktwolke?',
+    bild: () => '<div class="pw-gross">' + pwSvg(pwDemo('start', 0.72)) + '</div>',
+    text: () => 'Jeder Punkt ist ein Paar aus zwei Werten, zum Beispiel <b>Körpergröße</b> (x, nach rechts) und <b>Schuhgröße</b> (y, nach oben) von 70 Menschen.<br><br>'
+      + 'Die Zahl <b>r</b> sagt, wie eng beides zusammenhängt: <b>+1</b> = alle Punkte auf einer steigenden Linie, <b>0</b> = gar kein Zusammenhang, <b>−1</b> = alle auf einer fallenden Linie.<br><br>Du schätzt r in <b>drei Schritten</b>.' },
+  { titel: 'Schritt 1: Richtung → Vorzeichen',
+    bild: () => pwPaar([pwSvg(pwDemo('rauf', 0.75), { mitLinie: true }), '↗ steigt: r ist <b>plus</b>'], [pwSvg(pwDemo('runter', -0.75), { mitLinie: true }), '↘ fällt: r ist <b>minus</b>']),
+    text: () => 'Schau zuerst, wohin die Wolke zeigt. Von links unten nach rechts oben: <b>plus</b>. Von links oben nach rechts unten: <b>minus</b>.<br><br>Siehst du gar keine Richtung, liegt r nahe <b>0</b>, dann bist du schon fertig.' },
+  { titel: 'Schritt 2: Form → grobe Stärke',
+    bild: pwFormenBild,
+    text: () => 'Stell dir ein Gummiband um die Wolke vor (gelb). Je <b>dünner</b> es ist, desto <b>stärker</b> der Zusammenhang. Vier Formen reichen für eine gute Schätzung: <b>Kreis, Ei, Zigarre, Strich</b>.' },
+  { titel: 'Schritt 3: Breite ÷ Länge → genauer Wert',
+    bild: () => { const w = pwDemo('mess', 0.8); return '<div class="pw-gross">' + pwSvg(w, { ellipse: true, achsen: true }) + '</div>' + pwTabelle(); },
+    text: () => { const F = pwForm(pwDemo('mess', 0.8)); return 'Vergleiche die <b class="pl-gelb">Breite</b> (kurze Achse) mit der <b class="pl-rot">Länge</b> (lange Achse). '
+      + 'Hier ist die Wolke etwa <b>' + pwQText(F.q) + '</b> so breit wie lang. Laut Tabelle also r ≈ <b>0,8</b>, und weil sie steigt: <b>+0,8</b>. Das echte r ist hier ' + rText(pwDemo('mess', 0.8).r) + '.'; } },
+  { titel: 'Falle 1: Steil heißt nicht stark',
+    bild: () => pwPaar([pwSvg(pwStreck(pwDemo('flach', 0.95), 1, 0.3), { mitLinie: true, fest: true }), 'flach, aber dünn<br>r = <b>0,95</b>'],
+      [pwSvg(pwStreck(pwDemo('steil', 0.55), 0.45, 1), { mitLinie: true, fest: true }), 'steil, aber breit<br>r = <b>0,55</b>']),
+    text: () => 'Wie <b>steil</b> die Linie ist, spielt keine Rolle. Es zählt nur, wie <b>eng</b> die Punkte an ihr liegen. Die flache, dünne Wolke links hängt viel stärker zusammen als die steile, breite rechts.' },
+  { titel: 'Falle 2: Ausreißer',
+    bild: () => '<div class="pw-gross">' + pwSvg(pwDemo('raus', 0.85, 30, 2), { mitLinie: true, ausreisser: true }) + '</div>',
+    text: () => 'Bei wenigen Punkten können schon ein, zwei <b class="pl-rot">Ausreißer</b> r kräftig verändern. Ohne die roten Punkte wäre r hier <b>0,85</b>, mit ihnen nur <b>' + rText(pwDemo('raus', 0.85, 30, 2).r) + '</b>.<br><br>Tipp: Liegen Ausreißer <b>gegen</b> den Trend, schätze etwas schwächer, als die Hauptwolke aussieht.' },
+  { titel: 'Jetzt du!', ueben: true },
+];
+const PW_UEBUNGEN = [0.8, -0.5, 0.3];
+let pl = null;
+
+function punkteLernen() {
+  pl = { schritt: 0, u: 0, phase: 'richtung', punkte: [] };
+  $('pwRunde').textContent = '🧑‍🏫 Lernrunde';
+  zeigePwTeil('lernen');
+  plZeigen();
+}
+function plZeigen() {
+  const S = PW_LERN[pl.schritt];
+  $('plSchritte').innerHTML = PW_LERN.map((_, i) => '<i class="' + (i < pl.schritt ? 'fertig' : i === pl.schritt ? 'jetzt' : '') + '"></i>').join('');
+  $('plTitel').textContent = S.titel;
+  $('plZurueck').disabled = pl.schritt === 0;
+  if (S.ueben) { plUeben(); return; }
+  $('plBild').innerHTML = S.bild();
+  $('plText').innerHTML = S.text();
+  $('plAktion').innerHTML = '';
+  $('plWeiter').hidden = false;
+  $('plWeiter').textContent = pl.schritt === PW_LERN.length - 2 ? 'Selbst probieren ›' : 'Weiter ›';
+  $('pw-lernen').scrollIntoView({ block: 'start', behavior: wenigBewegung() ? 'auto' : 'smooth' });
+}
+function plUeben() {
+  const r = PW_UEBUNGEN[pl.u], w = pwDemo('ueb' + pl.u, r, 60), F = pwForm(w);
+  const ziel = Math.abs(r) < 0.2 ? 'keine' : r > 0 ? 'rauf' : 'runter';
+  const formRichtig = pwFormVon(r);
+  const kopf = '<b>Übung ' + (pl.u + 1) + ' / ' + PW_UEBUNGEN.length + '</b> · ';
+  $('plWeiter').hidden = true;
+  const bild = (opt) => { $('plBild').innerHTML = '<div class="pw-gross">' + pwSvg(w, { ruhig: true, ...opt }) + '</div>'; };
+  const knoepfe = (liste, fn) => {
+    $('plAktion').innerHTML = '<div class="pl-wahl">' + liste.map((k) => '<button class="btn secondary" type="button" data-k="' + k[0] + '">' + k[1] + '</button>').join('') + '</div>';
+    $('plAktion').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => fn(b.dataset.k)));
+  };
+  if (pl.phase === 'richtung') {
+    bild({ ruhig: false });
+    $('plText').innerHTML = kopf + 'Schritt 1: Wohin zeigt die Wolke?';
+    knoepfe([['rauf', '↗ steigt'], ['runter', '↘ fällt'], ['keine', '↔ keine Richtung']], (k) => {
+      pl.richtungOk = k === ziel;
+      pl.phase = 'form'; plUeben();
+      $('plText').innerHTML = (pl.richtungOk ? '✅ Richtig! ' : '❌ Nicht ganz: ') + 'Die Wolke ' + (ziel === 'rauf' ? 'steigt, r ist also <b>plus</b>.' : ziel === 'runter' ? 'fällt, r ist also <b>minus</b>.' : 'hat keine klare Richtung.')
+        + '<br>' + kopf + 'Schritt 2: Welche Form hat sie?';
+    });
+  } else if (pl.phase === 'form') {
+    bild({ mitLinie: true });
+    knoepfe(PW_FORMEN.map((f) => [f.id, f.emoji + ' ' + f.name]), (k) => {
+      const gewaehlt = PW_FORMEN.find((f) => f.id === k);
+      const ok = k === formRichtig.id || Math.abs(F.rSchaetz) >= gewaehlt.von - 0.03 && Math.abs(F.rSchaetz) <= gewaehlt.bis + 0.03;
+      pl.form = ok ? gewaehlt : formRichtig;
+      pl.phase = 'wert'; plUeben();
+      $('plText').innerHTML = (ok ? '✅ Passt! ' : '❌ Eher ' + formRichtig.emoji + ' <b>' + formRichtig.name + '</b>. ')
+        + 'Die Wolke ist etwa <b>' + pwQText(F.q) + '</b> so breit wie lang, r liegt also ungefähr zwischen <b>' + fmt(pl.form.von) + '</b> und <b>' + fmt(pl.form.bis) + '</b>.'
+        + '<br>' + kopf + 'Schritt 3: Schieb den Regler an die passende Stelle.';
+    });
+  } else if (pl.phase === 'wert') {
+    bild({ ellipse: true, achsen: true });
+    const vz = r < 0 ? -1 : 1, start = Math.round(vz * (pl.form.von + pl.form.bis) / 2 * 100);
+    $('plAktion').innerHTML = '<div class="pw-wert" id="plWert"></div><input class="pw-regler" id="plRegler" type="range" min="-100" max="100" step="1" value="' + start + '" aria-label="Geschätztes r">'
+      + '<div class="pw-skala"><span>−1 fallend</span><span>0 · kein</span><span>+1 steigend</span></div>'
+      + pwTabelle() + '<button class="btn pw-gross-btn" id="plPruefen" type="button">Prüfen ✓</button>';
+    const reg = $('plRegler');
+    const zeigen = () => { $('plWert').textContent = 'r = ' + rText(Number(reg.value) / 100); reg.style.setProperty('--pos', ((Number(reg.value) + 100) / 2) + '%'); };
+    reg.addEventListener('input', zeigen); zeigen();
+    $('plPruefen').onclick = () => {
+      const tipp = Number(reg.value) / 100, p = pwPunkte(w.r, tipp);
+      pl.punkte.push(p);
+      const letzte = pl.u === PW_UEBUNGEN.length - 1;
+      $('plText').innerHTML = (p >= 8 ? '🎯 Super! ' : p >= 5 ? '👍 Gar nicht schlecht! ' : '🤔 Noch etwas daneben. ') + 'Das echte r ist <b>' + rText(w.r) + '</b>, du hattest <b>' + rText(tipp) + '</b>. Das wären <b>' + fmt(p) + ' / 10</b> Punkte.'
+        + '<br>' + pwEinordnung(w.r);
+      $('plAktion').innerHTML = '<button class="btn pw-gross-btn" id="plNaechste" type="button">' + (letzte ? 'Fertig 🎓' : 'Nächste Übung ›') + '</button>';
+      if (p >= 9.5) konfetti(18, ['📈', '🎯', '✨']);
+      $('plNaechste').onclick = () => {
+        if (!letzte) { pl.u++; pl.phase = 'richtung'; plUeben(); return; }
+        const summe = pl.punkte.reduce((a, b) => a + b, 0);
+        $('plTitel').textContent = 'Geschafft! 🎓';
+        $('plBild').innerHTML = pwFormenBild();
+        $('plText').innerHTML = 'Du hast in den Übungen <b>' + fmt(Math.round(summe * 10) / 10) + ' von 30</b> Punkten geholt. Merk dir: <b>Richtung → Form → Breite : Länge</b>. Den Spickzettel findest du jederzeit oben rechts unter <b>?</b>.';
+        $('plAktion').innerHTML = '<button class="btn pw-gross-btn" id="plLos" type="button">Echtes Spiel starten 📈</button>';
+        $('plLos').onclick = () => { pl = null; pwModus = 'schaetzen'; punkteStart({ modus: 'schaetzen' }); };
+        $('plSchritte').querySelectorAll('i').forEach((i) => { i.className = 'fertig'; });
+      };
+    };
+  }
+}
+
+function pwHilfeOeffnen() {
+  const imSpiel = !$('pw-spiel').hidden || !$('pw-aufloesung').hidden;
+  $('pwHilfeInhalt').innerHTML = '<h3>So schätzt du r</h3>'
+    + '<div class="pl-schritt"><span>1</span><div><b>Richtung → Vorzeichen</b>↗ steigt = plus · ↘ fällt = minus · keine Richtung ≈ 0</div></div>'
+    + '<div class="pl-schritt"><span>2</span><div><b>Form → grobe Stärke</b>Je dünner die Wolke, desto näher an ±1.</div></div>'
+    + pwFormenBild()
+    + '<div class="pl-schritt"><span>3</span><div><b>Breite : Länge → feiner Wert</b>Wie oft passt die Breite in die Länge?</div></div>'
+    + pwTabelle()
+    + '<div class="pl-tipps"><b>Fallen</b><ul><li>Die <b>Steigung</b> ist egal, nur die Enge zählt.</li><li><b>Ausreißer</b> gegen den Trend ziehen r Richtung 0.</li>'
+    + '<li>Beim <b>Sortieren</b>: fallende Wolken sind immer kleiner als steigende. Innerhalb einer Richtung nach Dicke ordnen.</li></ul></div>';
+  $('pwHilfeLernen').hidden = imSpiel;
+  const d = $('pwHilfe');
+  if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+}
+const pwHilfeZu = () => { const d = $('pwHilfe'); if (d.close) d.close(); else d.removeAttribute('open'); };
+
+$('pwHilfeBtn').addEventListener('click', pwHilfeOeffnen);
+$('pwHilfeZu').addEventListener('click', pwHilfeZu);
+$('pwHilfe').addEventListener('click', (e) => { if (e.target === $('pwHilfe')) pwHilfeZu(); });
+$('pwHilfeLernen').addEventListener('click', () => { pwHilfeZu(); pw = null; punkteLernen(); });
+$('pwLernenBtn').addEventListener('click', punkteLernen);
+$('plWeiter').addEventListener('click', () => { if (pl.schritt < PW_LERN.length - 1) { pl.schritt++; plZeigen(); } });
+$('plZurueck').addEventListener('click', () => { if (pl.schritt > 0) { pl.schritt--; pl.u = 0; pl.phase = 'richtung'; pl.punkte = []; plZeigen(); } });
+
 // ---------- Knöpfe ----------
 $('pwModi').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { pwModus = b.dataset.modus; punkteIntro(); }));
 $('pwStufen').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { pwStufe = b.dataset.stufe; punkteIntro(); }));
@@ -301,7 +488,7 @@ $('pwWeiter').addEventListener('click', () => { pw.i++; if (pw.i >= PW_RUNDEN) p
 $('pwNochmalSpiel').addEventListener('click', () => punkteStart({ modus: pw.modus === 'mix' ? pwModus : pw.modus, stufe: pw.stufe }));
 $('pwTeilen').addEventListener('click', punkteTeilen);
 $('pwZurueck').addEventListener('click', () => {
-  if (pw && $('pw-intro').hidden) { pw = null; punkteIntro(); return; }   // aus dem Spiel erst zurück zur Auswahl
+  if ((pw || pl) && $('pw-intro').hidden) { pw = null; pl = null; punkteIntro(); return; }   // aus dem Spiel erst zurück zur Auswahl
   pw = null;
   zeigeHub();
 });
