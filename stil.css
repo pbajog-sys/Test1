@@ -2657,3 +2657,6 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .tl-quellen summary { cursor: pointer; font-weight: 700; }
 .tl-quellen ul { margin: 6px 0 0; padding-left: 18px; display: grid; gap: 4px; line-height: 1.4; }
 @media (prefers-reduced-motion: reduce) { .tl-mini i, .tl-lebensbalken i { animation: none; } .tl-zeiger { transition: none; } }
+.tl-art.nutz small { color: #d6c48a; }
+.tl-ende-wahl { display: grid; gap: 10px; margin-top: 8px; scroll-margin-top: 60px; }
+.tl-art b { align-self: end; } .tl-art small { align-self: start; }

@@ -161,6 +161,14 @@ const TL_WILD = {
     hebel: 'In der EU müssen Haie seit 2013 mit anhaftenden Flossen angelandet werden. Internationale Fangverbote und Handelskontrollen (CITES) sind der wichtigste Schutz.' },
 };
 
+// Auswahl aller Leben als Knöpfe: Nutztiere (gezielt) und bedrohte Arten
+function tlAuswahl(box, mitNutz, mitWild) {
+  const nutz = mitNutz ? Object.entries(TL_LEBEN).map(([id, l]) => '<button type="button" class="tl-art nutz" data-id="' + id + '"><span>' + l.emoji + '</span><b>' + l.name + '</b><small>lebt ' + tlTageText(l.tage) + '</small></button>').join('') : '';
+  const wild = mitWild ? Object.entries(TL_WILD).map(([id, w]) => '<button type="button" class="tl-art" data-id="' + id + '" data-wild="1"><span>' + w.emoji + '</span><b>' + w.name + '</b><small>' + w.bestand + ' ' + w.bestandText + '</small></button>').join('') : '';
+  box.innerHTML = nutz + wild;
+  box.querySelectorAll('[data-id]').forEach((b) => b.addEventListener('click', () => tlLebenStart(b.dataset.id, !!b.dataset.wild)));
+}
+
 // ---------- Spielablauf ----------
 let tl = null;
 let tlZaehler = null, tlStart = Date.now();
@@ -177,8 +185,8 @@ function tierlebenIntro() {
   clearInterval(tlZaehler);
   const tick = () => { if (!$('screen-tierleben').classList.contains('active')) { clearInterval(tlZaehler); return; } $('tlZaehler').textContent = zlZahlTl((Date.now() - tlStart) / 1000 * TL_PRO_SEK); };
   tick(); tlZaehler = setInterval(tick, 250);
-  $('tlWild').innerHTML = Object.entries(TL_WILD).map(([id, w]) => '<button type="button" class="tl-art" data-id="' + id + '"><span>' + w.emoji + '</span><b>' + w.name + '</b><small>' + w.bestand + ' ' + w.bestandText + '</small></button>').join('');
-  $('tlWild').querySelectorAll('[data-id]').forEach((b) => b.addEventListener('click', () => tlLebenStart(b.dataset.id, true)));
+  tlAuswahl($('tlNutzWahl'), true, false);
+  tlAuswahl($('tlWild'), false, true);
   const st = tlStore(), l = st.leben || [];
   $('tlLogbuch').hidden = !l.length;
   if (l.length) {
@@ -293,6 +301,8 @@ function tlEnde() {
   saveJson(TL_KEY, st);
   if (typeof merkeVerlauf === 'function') merkeVerlauf('tierleben', 1, null, L.name + (tl.wild ? (tl.tot ? ' · gestorben' : ' · überlebt') : ' · ' + tlTageText(L.tage)));
   $('tlEndeInhalt').innerHTML = html;
+  $('tlNochmal').textContent = tl.wild ? 'Nochmal als ' + L.name : '🎲 Neues Los ziehen';
+  tlAuswahl($('tlEndeWahl'), true, true);
   $('tl-ende').scrollIntoView({ block: 'start' });
 }
 
@@ -300,7 +310,7 @@ function tlEnde() {
 $('tlLotterieBtn').addEventListener('click', tlLotterie);
 $('tlWeiter').addEventListener('click', tlWeiter);
 $('tlNochmal').addEventListener('click', () => (tl && tl.wild ? tlLebenStart(tl.id, true) : tlLotterie()));
-$('tlAndere').addEventListener('click', tierlebenIntro);
+$('tlAndere').addEventListener('click', () => $('tlEndeWahlBox').scrollIntoView({ block: 'start', behavior: wenigBewegung() ? 'auto' : 'smooth' }));
 $('tlZurueck').addEventListener('click', () => {
   if (!$('tl-intro').hidden) { clearInterval(tlZaehler); zeigeHub(); return; }
   tierlebenIntro();

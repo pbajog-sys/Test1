@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=58">
+<link rel="stylesheet" href="fonts/fonts.css?v=59">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=58">
-<link rel="stylesheet" href="ansichten.css?v=58">
+<link rel="stylesheet" href="stil.css?v=59">
+<link rel="stylesheet" href="ansichten.css?v=59">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -1798,6 +1798,8 @@
         <p class="tl-lead">Was wäre, wenn du heute als Tier geboren würdest? Erlebe ein Leben – mit belegten Fakten aus amtlichen Statistiken und Artenschutz-Berichten.</p>
         <div class="tl-zaehler"><b id="tlZaehler">0</b><span>Tiere wurden in Deutschland geschlachtet, seit du diese Seite geöffnet hast<br><small>rechnerisch aus 744,6 Mio. Schlachtungen 2025 (Destatis) – rund 24 pro Sekunde</small></span></div>
         <button class="tl-weg" id="tlLotterieBtn" type="button"><span>🎲</span><b>Als Nutztier geboren werden</b><small>Zufall nach den echten Schlachtzahlen in Deutschland</small></button>
+        <h3 class="tl-h">🐄 Oder ein bestimmtes Nutztier</h3>
+        <div class="tl-arten" id="tlNutzWahl"></div>
         <h3 class="tl-h">🌍 Oder: als eine der letzten ihrer Art</h3>
         <div class="tl-arten" id="tlWild"></div>
         <div class="tl-logbuch" id="tlLogbuch" hidden><b>📖 Deine gelebten Leben</b><p id="tlLogbuchText"></p><div class="tl-logbuch-liste" id="tlLogbuchListe"></div></div>
@@ -1820,7 +1822,8 @@
       <div class="tl-teil" id="tl-ende" hidden>
         <div class="tl-ende" id="tlEndeInhalt"></div>
         <button class="btn tl-gross" id="tlNochmal" type="button">Noch ein Leben</button>
-        <button class="btn secondary" id="tlAndere" type="button">Anderes Tier wählen</button>
+        <button class="btn secondary" id="tlAndere" type="button">Anderes Tier wählen ↓</button>
+        <div class="tl-ende-wahl" id="tlEndeWahlBox"><h3 class="tl-h">Ein anderes Leben leben</h3><div class="tl-arten" id="tlEndeWahl"></div></div>
       </div>
     </div>
   </section>
@@ -1992,40 +1995,40 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=58"></script>
-<script src="haie.js?v=58"></script>
-<script src="porsche.js?v=58"></script>
-<script src="dackel.js?v=58"></script>
-<script src="groesse.js?v=58"></script>
-<script src="gretchen.js?v=58"></script>
-<script src="effekte.js?v=58"></script>
-<script src="app.js?v=58"></script>
-<script src="melden.js?v=58"></script>
-<script src="verlauf.js?v=58"></script>
-<script src="hub.js?v=58"></script>
-<script src="farben.js?v=58"></script>
-<script src="cello.js?v=58"></script>
-<script src="instrumente.js?v=58"></script>
-<script src="toene.js?v=58"></script>
-<script src="takt.js?v=58"></script>
-<script src="punkte.js?v=58"></script>
-<script src="funktion.js?v=58"></script>
-<script src="zufall.js?v=58"></script>
-<script src="zahlen.js?v=58"></script>
-<script src="tierleben.js?v=58"></script>
-<script src="augen.js?v=58"></script>
-<script src="karten-daten.js?v=58"></script>
-<script src="karte.js?v=58"></script>
-<script src="tiefgang.js?v=58"></script>
-<script src="riff.js?v=58"></script>
-<script src="krimi-grafik.js?v=58"></script>
-<script src="krimi.js?v=58"></script>
-<script src="krimi-wachen.js?v=58"></script>
-<script src="krimi-verhoer.js?v=58"></script>
-<script src="krimi-alibi.js?v=58"></script>
-<script src="krimi-akte.js?v=58"></script>
-<script src="krimi-zentrale.js?v=58"></script>
-<script src="profile.js?v=58"></script>
-<script src="fuehrung.js?v=58"></script>
+<script src="wale.js?v=59"></script>
+<script src="haie.js?v=59"></script>
+<script src="porsche.js?v=59"></script>
+<script src="dackel.js?v=59"></script>
+<script src="groesse.js?v=59"></script>
+<script src="gretchen.js?v=59"></script>
+<script src="effekte.js?v=59"></script>
+<script src="app.js?v=59"></script>
+<script src="melden.js?v=59"></script>
+<script src="verlauf.js?v=59"></script>
+<script src="hub.js?v=59"></script>
+<script src="farben.js?v=59"></script>
+<script src="cello.js?v=59"></script>
+<script src="instrumente.js?v=59"></script>
+<script src="toene.js?v=59"></script>
+<script src="takt.js?v=59"></script>
+<script src="punkte.js?v=59"></script>
+<script src="funktion.js?v=59"></script>
+<script src="zufall.js?v=59"></script>
+<script src="zahlen.js?v=59"></script>
+<script src="tierleben.js?v=59"></script>
+<script src="augen.js?v=59"></script>
+<script src="karten-daten.js?v=59"></script>
+<script src="karte.js?v=59"></script>
+<script src="tiefgang.js?v=59"></script>
+<script src="riff.js?v=59"></script>
+<script src="krimi-grafik.js?v=59"></script>
+<script src="krimi.js?v=59"></script>
+<script src="krimi-wachen.js?v=59"></script>
+<script src="krimi-verhoer.js?v=59"></script>
+<script src="krimi-alibi.js?v=59"></script>
+<script src="krimi-akte.js?v=59"></script>
+<script src="krimi-zentrale.js?v=59"></script>
+<script src="profile.js?v=59"></script>
+<script src="fuehrung.js?v=59"></script>
 </body>
 </html>
