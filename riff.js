@@ -77,6 +77,7 @@ function riffIntro() {
 function riffStart(opts = {}) {
   const seed = opts.seed || (opts.taeglich ? 'rf-' + heute() : String(Math.random()).slice(2));
   const aufbau = riffAufbau(seed);
+  $('rf-spiel').classList.remove('fertig');
   rf = { seed, taeglich: !!opts.taeglich, aufbau, brett: Array(RIFF_N * RIFF_N).fill(null), runde: 0, drehung: 0, jokerFarbe: 0, vorschau: null, gegner: opts.gegner || null };
   zeigeRiffTeil('spiel');
   riffZeichnen();
@@ -167,18 +168,14 @@ function riffNaechste() {
   rf.runde++; rf.drehung = 0; rf.vorschau = null;
   setTimeout(() => { if (rf) rf.neu = null; }, 400);   // nur der gerade gesetzte Stein ploppt auf
   if (rf.runde < RIFF_RUNDEN) { riffZeichnen(); return; }
-  // Abschluss: Würfel ausblenden, eine Welle läuft über das fertige Riff, dann weich zum Ergebnis
+  // Abschluss ohne Seitenwechsel: Würfel ausblenden, nach oben gleiten, Welle übers Riff, Ergebnis kommt als Karte von unten
   riffZeichnen();
   const spiel = $('rf-spiel');
   spiel.classList.add('fertig');
+  document.querySelector('.rf-buehne').scrollTo({ top: 0, behavior: wenigBewegung() ? 'auto' : 'smooth' });
   $('rfBrett').querySelectorAll('.rf-feld').forEach((f, i) => f.style.setProperty('--i', (Math.floor(i / RIFF_N) + i % RIFF_N)));
   $('rfHinweis').textContent = 'Riff fertig! 🎉';
-  const warte = wenigBewegung() ? 0 : 1300;
-  setTimeout(() => {
-    if (!rf) return;
-    spiel.classList.add('aus');
-    setTimeout(() => { if (!rf) return; spiel.classList.remove('fertig', 'aus'); riffEnde(); }, wenigBewegung() ? 0 : 280);
-  }, warte);
+  setTimeout(() => { if (rf) riffEnde(); }, wenigBewegung() ? 0 : 1400);
 }
 
 function riffEnde() {
@@ -190,8 +187,8 @@ function riffEnde() {
   else { rekord = st.best == null || w.summe > st.best; st.best = Math.max(st.best || 0, w.summe); }
   saveJson(RIFF_KEY, st);
   if (typeof merkeVerlauf === 'function') merkeVerlauf('riff', w.summe, null, rf.taeglich ? 'Tagesriff' : 'Freies Spiel');
-  zeigeRiffTeil('ende');
-  document.querySelector('.rf-buehne').scrollTo({ top: 0 });
+  // Das Riff bleibt stehen, das Ergebnis schiebt sich als Karte darüber
+  $('rf-ende').hidden = false;
   hochzaehlen($('rfSumme'), w.summe, ' Punkte');
   $('rfRekord').textContent = rekord ? '🏆 Neuer Bestwert!' : rf.taeglich ? '📅 Tagesriff vom ' + new Date().toLocaleDateString('de-DE') : '';
   $('rfVergleich').hidden = !rf.gegner;
@@ -199,8 +196,6 @@ function riffEnde() {
     const g = rf.gegner;
     $('rfVergleich').textContent = w.summe > g.punkte ? '🏆 Du hast ' + g.name + ' geschlagen (' + g.punkte + ')!' : w.summe < g.punkte ? g.name + ' war besser (' + g.punkte + '). Revanche?' : 'Unentschieden mit ' + g.name + '!';
   }
-  $('rfEndBrett').innerHTML = $('rfBrett').innerHTML;
-  $('rfEndBrett').querySelectorAll('.rf-feld').forEach((f) => f.style.removeProperty('--i'));
   $('rfEndWertung').innerHTML = '<li><span>🪸 Farbflächen ab 3 Feldern</span><b>' + w.flaechen + '</b></li><li><span>➖ Volle Reihen und Spalten</span><b>' + w.linien + '</b></li><li><span>🐠 Satte Fische</span><b>' + w.fische + '</b></li>';
   if (w.summe >= 40) setTimeout(() => konfetti(40, ['🪸', '🐠', '🎲', '🏆']), 400);
 }
