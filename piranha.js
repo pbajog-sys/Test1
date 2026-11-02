@@ -584,7 +584,7 @@ const prStore = () => loadJson(PR_KEY);
 const prTeile = ['intro', 'spiel'];
 const zeigePrTeil = (t) => prTeile.forEach((x) => { $('pr-' + x).hidden = x !== t; });
 let prLaufNr = 0;
-function prStopp() { prLaufNr++; }
+function prStopp() { prLaufNr++; prMeerWeg(); }
 
 function piranhaIntro() {
   prStopp();
@@ -609,10 +609,10 @@ function piranhaBauen(opts) {
   if (!L) { $('prMeldung').textContent = 'Konnte kein Level bauen – bitte nochmal.'; return; }
   pr = { nr, taeglich: !!opts.taeglich, motiv: L.motiv, echt: L.farbe, farbe: prSperrFarbe(L.farbe, L.steine), steine: L.steine, steinOffen: new Uint8Array(L.steine.length), steinT: {}, weg: new Uint8Array(PB * PB), sichtbar: new Uint8Array(PB * PB).fill(1),
     hoehlen: L.hoehlen.map((z) => (z ? { ...z } : null)), start: L.hoehlen.map((z) => (z ? { ...z } : null)), buchtenMax: L.buchten, bucht: [],
-    fische: [], schwarm: [], zuege: 0, verlauf: [], maxBuchten: 0, fertig: false, verloren: false, wackel: {}, fischeGesamt: L.fische };
+    fische: [], knabber: [], untergrund: [], zuege: 0, verlauf: [], maxBuchten: 0, fertig: false, verloren: false, wackel: {}, fischeGesamt: L.fische };
   $('prKopf').textContent = (pr.taeglich ? '📅 Tagesbild' : 'Level ' + nr) + ' · ' + L.motiv.emoji + ' ' + L.motiv.name;
   $('prMeldung').textContent = L.steine.length ? '🪨 Steine und Algen sperren Pixel – sie lösen sich erst, wenn die Farbe im Kreis ganz weggefressen ist.' : '';
-  prGroesse(); prEbeneNeu(); prStatus();
+  prMeerWeg(); prGroesse(); prEbeneNeu(); prStatus();
   const lauf = ++prLaufNr;
   const frame = (t) => { if (lauf !== prLaufNr || !pr) return; prUpdate(t); prZeichnen(t); requestAnimationFrame(frame); };
   requestAnimationFrame(frame);
@@ -620,9 +620,9 @@ function piranhaBauen(opts) {
 function prStatus() {
   const rest = pr.weg.reduce((a, v) => a + (v ? 0 : 1), 0);
   $('prZuege').textContent = 'noch ' + rest.toLocaleString('de-DE') + ' Pixel · Buchten ' + pr.bucht.length + '/' + pr.buchtenMax;
-  $('prRueck').disabled = !pr.verlauf.length || (pr.fische.length > 0 && !pr.verloren);
+  $('prRueck').disabled = !pr.verlauf.length || (pr.fische.some((f) => !f.heim) && !pr.verloren);
 }
-const prSnapshot = () => ({ weg: pr.weg.slice(), farbe: pr.farbe.slice(), steinOffen: pr.steinOffen.slice(), hoehlen: pr.hoehlen.map((z) => (z ? { ...z } : null)), bucht: pr.bucht.map((b) => ({ ...b })), maxBuchten: pr.maxBuchten });
+const prSnapshot = () => ({ weg: pr.weg.slice(), farbe: pr.farbe.slice(), steinOffen: pr.steinOffen.slice(), hoehlen: pr.hoehlen.map((z) => (z ? { ...z } : null)), bucht: pr.bucht.map((b) => ({ ...b })), maxBuchten: pr.maxBuchten, untergrund: pr.untergrund.length });
 
 // ---------- Geometrie ----------
 let prG = { P: 9, W: 360, bx: 0, bildH: 324, flussY: 324, flussH: 64, rasterY: 388, zelleB: 60, zelleH: 48, hoehe: 700 };
@@ -663,7 +663,7 @@ function prTipp(e) {
   let ziele = prFressen(pr.farbe, pr.weg, z.f, z.n, true);
   while (ziele.length < z.n && prSteineCheck().length) ziele = ziele.concat(prFressen(pr.farbe, pr.weg, z.f, z.n - ziele.length, true));
   const jetzt = performance.now();
-  ziele.forEach(([j, p], k) => prFischLos(z.f, [[sx, sy], [sx, prG.flussY + 8]], j, p, jetzt + k * 28));
+  ziele.forEach(([j, p], k) => prFischLos(z.f, [[sx, sy], [sx, prG.flussY + 8]], j, p, jetzt + k * 42));
   const rest = z.n - ziele.length;
   if (rest > 0) {
     if (pr.bucht.length >= pr.buchtenMax) {
@@ -695,7 +695,7 @@ function prBuchtenFuttern(ab) {
       if (!ziele.length) return;
       b.n -= ziele.length; lief = true;
       const [bx, by] = prBuchtPos(k);
-      ziele.forEach(([j, p], m) => prFischLos(b.f, [[bx, by]], j, p, ab + m * 28));
+      ziele.forEach(([j, p], m) => prFischLos(b.f, [[bx, by]], j, p, ab + m * 42));
     });
     if (prSteineCheck().length) lief = true;
   }
@@ -709,28 +709,36 @@ function prSteineCheck() {
 }
 // Fisch auf den Weg schicken: Startpunkte, dann von unten durch den gefressenen Gang zum Ziel
 function prFischLos(f, start, ziel, pfad, t0) {
-  const punkte = start.slice();
+  const punkte = start.slice(), ab = punkte.length;
   const ersterX = prG.bx + (pfad[0] % PB + 0.5) * prG.P;
   punkte.push([ersterX, prG.bildH + 4]);
   pfad.forEach((i) => punkte.push(prPixelPos(i)));
   let laenge = 0; for (let k = 1; k < punkte.length; k++) laenge += Math.hypot(punkte[k][0] - punkte[k - 1][0], punkte[k][1] - punkte[k - 1][1]);
-  pr.fische.push({ f, pfad: punkte, start: t0, dauer: Math.max(700, laenge / 0.21), ziel });
+  pr.fische.push({ f, pfad: punkte, start: t0, dauer: Math.max(800, laenge / 0.21), ziel, rueck: punkte.slice(ab) });
 }
-function prRueckgaengig() {
-  if (!pr || !pr.verlauf.length || (pr.fische.length && !pr.verloren)) return;
+// satter Fisch: knabbert kurz, schwimmt dann dick und gemütlich zurück und durch eine Seitenhöhle in den Untergrund
+function prHeimweg(f, t) {
+  const p = f.rueck.slice().reverse(), { W, flussY, flussH } = prG, ex = p[p.length - 1][0];
+  const links = ex < W / 2, y = flussY + flussH * (0.35 + Math.random() * 0.4);
+  p.push([ex + (links ? -1 : 1) * (12 + Math.random() * 20), y]);
+  p.push([links ? -14 : W + 14, flussY + flussH * 0.5 + (Math.random() - 0.5) * 8]);
+  let laenge = 0; for (let k = 1; k < p.length; k++) laenge += Math.hypot(p[k][0] - p[k - 1][0], p[k][1] - p[k - 1][1]);
+  pr.fische.push({ f: f.f, pfad: p, start: t + 380 + Math.random() * 200, dauer: Math.max(900, laenge / 0.15), ziel: -2, heim: true });
+}function prRueckgaengig() {
+  if (!pr || !pr.verlauf.length || (pr.fische.some((f) => !f.heim) && !pr.verloren)) return;
   const s = pr.verlauf.pop();
   pr.weg = s.weg; pr.hoehlen = s.hoehlen; pr.bucht = s.bucht; pr.maxBuchten = s.maxBuchten; pr.farbe = s.farbe; pr.steinOffen = s.steinOffen;
+  pr.untergrund.length = Math.min(pr.untergrund.length, s.untergrund);
   pr.steine.forEach((st, k) => { if (!pr.steinOffen[k]) delete pr.steinT[k]; });
-  pr.fische = []; pr.verloren = false; pr.fertig = false;
+  pr.fische = []; pr.knabber = []; pr.verloren = false; pr.fertig = false; prMeerWeg();
   $('prMeldung').textContent = '↶ Zug zurückgenommen';
   pr.sichtbar = pr.weg.map((v) => (v ? 0 : 1));
   prEbeneNeu(); prStatus();
-}
-function prNeu() {
+}function prNeu() {
   if (!pr) return;
   pr.farbe = prSperrFarbe(pr.echt, pr.steine); pr.steinOffen = new Uint8Array(pr.steine.length); pr.steinT = {};
   pr.weg = new Uint8Array(PB * PB); pr.sichtbar = new Uint8Array(PB * PB).fill(1); pr.hoehlen = pr.start.map((z) => (z ? { ...z } : null));
-  pr.bucht = []; pr.fische = []; pr.schwarm = []; pr.verlauf = []; pr.zuege = 0; pr.maxBuchten = 0; pr.fertig = false; pr.verloren = false;
+  pr.bucht = []; pr.fische = []; pr.knabber = []; pr.untergrund = []; pr.verlauf = []; prMeerWeg(); pr.zuege = 0; pr.maxBuchten = 0; pr.fertig = false; pr.verloren = false;
   $('prMeldung').textContent = ''; prEbeneNeu(); prStatus();
 }
 function prTipp2() {
@@ -745,60 +753,23 @@ function prTipp2() {
 }
 
 // ---------- Animation ----------
-const PR_SCHWARM_MAX = 520;
-function prSchwarmDazu(f) {
-  // satte Fische schwimmen unter dem Bild weiter
-  const p = f.pfad, [x1, y1] = p[p.length - 1], [x0, y0] = p[Math.max(0, p.length - 2)];
-  const w = Math.atan2(y1 - y0, x1 - x0) || Math.random() * 6.28, v = 0.02 + Math.random() * 0.02;
-  const neu = { x: x1, y: y1, vx: Math.cos(w) * v, vy: Math.sin(w) * v, f: f.f, ph: Math.random() * 6.28 };
-  if (pr.schwarm.length < PR_SCHWARM_MAX) pr.schwarm.push(neu);
-  else pr.schwarm[Math.floor(Math.random() * PR_SCHWARM_MAX)] = neu;
-}
-function prHerzZiele() {
-  // Herzform: x = 16 sin³t, y = 13 cos t − 5 cos 2t − 2 cos 3t − cos 4t, von innen nach außen gefüllt
-  const { W, bildH } = prG, n = pr.schwarm.length, s = Math.min(W, bildH) / 36, cx = W / 2, cy = bildH * 0.46;
-  pr.schwarm.forEach((z, k) => {
-    const rand = k < n * 0.35, t = rand ? (k / (n * 0.35)) * Math.PI * 2 : k * 2.39996;
-    const r = rand ? 1 : 0.15 + 0.82 * Math.sqrt((k - n * 0.35 + 0.5) / (n * 0.65));
-    z.zx = cx + r * 16 * Math.pow(Math.sin(t), 3) * s;
-    z.zy = cy - r * (13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t)) * s;
-    z.verz = Math.random() * 500;
-  });
-}
-function prSchwarmBewegen(t) {
-  const dt = Math.min(50, t - (pr.letztT || t)); pr.letztT = t;
-  if (!pr.schwarm.length || !dt) return;
-  const { W, bildH } = prG;
-  pr.schwarm.forEach((z) => {
-    if (pr.fertig && z.zx !== undefined) {
-      if (t - pr.fertigT < z.verz) return;
-      const k = Math.min(1, dt * 0.0035), ax = z.x, ay = z.y;
-      z.x += (z.zx - z.x) * k; z.y += (z.zy - z.y) * k;
-      z.vx = (z.x - ax) / dt || z.vx * 0.9; z.vy = (z.y - ay) / dt || z.vy * 0.9;
-      return;
-    }
-    const w = Math.atan2(z.vy, z.vx) + (Math.random() - 0.5) * 0.25, v = Math.hypot(z.vx, z.vy);
-    z.vx = Math.cos(w) * v; z.vy = Math.sin(w) * v;
-    z.x += z.vx * dt; z.y += z.vy * dt;
-    if (z.x < 4 || z.x > W - 4) { z.vx = -z.vx; z.x = Math.max(4, Math.min(W - 4, z.x)); }
-    if (z.y < 4 || z.y > bildH - 4) { z.vy = -z.vy; z.y = Math.max(4, Math.min(bildH - 4, z.y)); }
-  });
-}
 function prUpdate(t) {
-  prSchwarmBewegen(t);
+  if (pr.knabber.length) pr.knabber = pr.knabber.filter((k) => t - k.t < 450);
   if (!pr.fische.length) return;
   let geaendert = false;
+  const heim = [];
   pr.fische = pr.fische.filter((f) => {
-    if (t - f.start >= f.dauer) { if (f.ziel >= 0) { pr.sichtbar[f.ziel] = 0; prPixelWeg(f.ziel); geaendert = true; prSchwarmDazu(f); } return false; }
-    return true;
+    if (t - f.start < f.dauer) return true;
+    if (f.ziel >= 0) { pr.sichtbar[f.ziel] = 0; prPixelWeg(f.ziel); pr.knabber.push({ i: f.ziel, f: f.f, t }); geaendert = true; heim.push(f); }
+    else if (f.heim) pr.untergrund.push(f.f);
+    return false;
   });
+  heim.forEach((f) => prHeimweg(f, t));
   if (geaendert) prStatus();
   if (!pr.fische.length && !pr.fertig && !pr.verloren && pr.weg.every(Boolean) && !pr.bucht.length) prGeschafft();
-  else if (!pr.fische.length && !pr.fertig && !pr.verloren && !pr.hoehlen.some(Boolean) && pr.bucht.length) $('prMeldung').textContent = 'Die Schwärme in den Buchten kommen nicht mehr ran – nimm einen Zug zurück.';
-}
-function prGeschafft() {
+  else if (!pr.fische.some((f) => !f.heim) && !pr.fertig && !pr.verloren && !pr.hoehlen.some(Boolean) && pr.bucht.length) $('prMeldung').textContent = 'Die Schwärme in den Buchten kommen nicht mehr ran – nimm einen Zug zurück.';
+}function prGeschafft() {
   pr.fertig = true; pr.fertigT = performance.now();
-  prHerzZiele();
   // fertiges Bild zum Einblenden
   pr.original = document.createElement('canvas');
   const dpr = window.devicePixelRatio || 1; pr.original.width = pr.ebene.width; pr.original.height = pr.ebene.height;
@@ -811,10 +782,18 @@ function prGeschafft() {
   else { st.sterne[pr.nr] = Math.max(st.sterne[pr.nr] || 0, sterne); st.level = Math.max(st.level || 1, pr.nr + 1); }
   saveJson(PR_KEY, st);
   if (typeof merkeVerlauf === 'function') merkeVerlauf('piranha', sterne, 3, (pr.taeglich ? 'Tagesbild' : 'Level ' + pr.nr) + ' · ' + pr.motiv.name);
-  konfetti(32, ['🐟', '✨', '🌿', pr.motiv.emoji]);
   if (navigator.vibrate) navigator.vibrate([30, 40, 30, 40, 60]);
-  $('prMeldung').innerHTML = '<b>' + '⭐'.repeat(sterne) + '☆'.repeat(3 - sterne) + '</b> ' + pr.motiv.emoji + ' ' + pr.motiv.name + ' komplett weggefuttert! Höchstens ' + pr.maxBuchten + ' von ' + pr.buchtenMax + ' Buchten gleichzeitig belegt.';
-  $('prWeiterBtn').hidden = pr.taeglich;
+  $('prMeldung').textContent = pr.motiv.emoji + ' ' + pr.motiv.name + ' komplett weggefuttert – die Schwärme kommen aus dem Untergrund!';
+  // Geschafft-Karte (erscheint, wenn sich das Herz auflöst)
+  const min = pr.start.filter(Boolean).length;
+  $('prFSterne').textContent = '⭐'.repeat(sterne) + '☆'.repeat(3 - sterne);
+  $('prFZuege').textContent = pr.zuege; $('prFMin').textContent = 'von minimal ' + min;
+  $('prFBuchten').textContent = pr.maxBuchten + '/' + pr.buchtenMax;
+  $('prFFische').textContent = pr.untergrund.length.toLocaleString('de-DE');
+  $('prFLob').textContent = pr.zuege <= min ? (sterne === 3 ? 'Perfekt – kein Zug zu viel und kaum geparkt!' : 'Kein Zug zu viel!') : (pr.zuege - min) + ' Züge mehr als nötig (durch Zurücknehmen).';
+  $('prFWeiter').hidden = pr.taeglich;
+  const k = $('prFertig'); k.style.minHeight = (prG.hoehe - prG.flussY) + 'px';
+  prMeerStart();
 }
 
 // ---------- Zeichnen ----------
@@ -835,18 +814,17 @@ function prPixelMalen(x, i, da) {
   x.fillStyle = 'rgba(0,0,0,.14)'; x.fillRect(gx, gy + P * 0.8, P, P * 0.2);
 }
 function prPixelWeg(i) { if (pr.ebene) prPixelMalen(pr.ebene.getContext('2d'), i, 0); }
-function prFisch(x, farbe, px, py, w, t, g) {
+function prFisch(x, farbe, px, py, w, t, g, dick = 1) {
   x.save(); x.translate(px, py); x.rotate(w);
-  const s = Math.sin(t / 70 + px) * 0.35;
+  const s = Math.sin(t / 110 + px) * 0.35, lx = 0.6 + (dick - 1) * 0.25, ly = 0.4 * dick;
   x.fillStyle = farbe;
-  x.beginPath(); x.moveTo(-g * 0.5, 0); x.lineTo(-g * 0.95, -g * 0.36 + s * g * 0.3); x.lineTo(-g * 0.95, g * 0.36 + s * g * 0.3); x.fill();
-  x.beginPath(); x.ellipse(0, 0, g * 0.6, g * 0.4, 0, 0, 7); x.fill();
-  x.fillStyle = 'rgba(0,0,0,.25)'; x.beginPath(); x.ellipse(g * 0.05, g * 0.16, g * 0.42, g * 0.18, 0, 0, Math.PI); x.fill();
+  x.beginPath(); x.moveTo(-g * 0.5, 0); x.lineTo(-g * 0.98, -g * 0.36 + s * g * 0.3); x.lineTo(-g * 0.98, g * 0.36 + s * g * 0.3); x.fill();
+  x.beginPath(); x.ellipse(0, 0, g * lx, g * ly, 0, 0, 7); x.fill();
+  x.fillStyle = 'rgba(0,0,0,.25)'; x.beginPath(); x.ellipse(g * 0.05, g * ly * 0.4, g * lx * 0.7, g * ly * 0.45, 0, 0, Math.PI); x.fill();
   x.fillStyle = '#fff'; x.beginPath(); x.arc(g * 0.3, -g * 0.1, g * 0.13, 0, 7); x.fill();
   x.fillStyle = '#111'; x.beginPath(); x.arc(g * 0.34, -g * 0.1, g * 0.06, 0, 7); x.fill();
   x.restore();
-}
-function prZeichnen(t) {
+}function prZeichnen(t) {
   const x = $('prBild').getContext('2d'), { W, bildH, flussY, flussH, rasterY, zelleB, zelleH, hoehe } = prG;
   // Wasser unter dem Bild (sichtbar, wo gefressen)
   const g = x.createLinearGradient(0, 0, 0, hoehe);
@@ -854,16 +832,14 @@ function prZeichnen(t) {
   x.fillStyle = g; x.fillRect(0, 0, W, hoehe);
   x.strokeStyle = 'rgba(190,240,215,0.07)'; x.lineWidth = 2;
   for (let i = 0; i < 8; i++) { x.beginPath(); const y = ((i * 89 + t / 35) % (hoehe + 40)) - 20; x.moveTo(0, y); x.bezierCurveTo(W * 0.3, y - 12, W * 0.6, y + 12, W, y); x.stroke(); }
-  // satter Schwarm unter dem Bild (scheint durch die weggefressenen Stellen)
-  if (!pr.fertig) prSchwarmMalen(x, t, 0.42);
+  prDekoMalen(x, t);
   // Bild (nach dem Sieg blendet das fertige Bild wieder ein)
   x.drawImage(pr.ebene, 0, 0, W, bildH);
+  // Knabbern: Pixel schrumpft weg
+  pr.knabber.forEach((k) => { const a = (t - k.t) / 450, [px, py] = prPixelPos(k.i), r = prG.P * 0.5 * (1 - a); x.fillStyle = PR_FARBEN[pr.echt[k.i]].c; x.globalAlpha = 1 - a * 0.5; x.fillRect(px - r, py - r, r * 2, r * 2); });
+  x.globalAlpha = 1;
   prSteineMalen(x, t);
-  if (pr.fertig && pr.original) {
-    x.globalAlpha = Math.min(1, (t - pr.fertigT) / 1400) * 0.55; x.drawImage(pr.original, 0, 0, W, bildH);
-    x.globalAlpha = Math.min(1, (t - pr.fertigT) / 1400) * 0.3; x.fillStyle = '#0b2a24'; x.fillRect(0, 0, W, bildH); x.globalAlpha = 1;
-    prSchwarmMalen(x, t, 0.92);
-  }
+  if (pr.fertig && pr.original) { x.globalAlpha = Math.min(1, (t - pr.fertigT) / 1600); x.drawImage(pr.original, 0, 0, W, bildH); x.globalAlpha = 1; }
   // Fluss mit Buchten
   x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(0, flussY, W, flussH);
   for (let k = 0; k < pr.buchtenMax; k++) {
@@ -898,22 +874,117 @@ function prZeichnen(t) {
     x.globalAlpha = 1;
     if (pr.tipp && pr.tipp.i === i && t < pr.tipp.bis) { x.strokeStyle = '#fff'; x.lineWidth = 3; x.setLineDash([6, 5]); x.beginPath(); x.roundRect(bx - 3, by - 3, bw + 6, bh + 6, 12); x.stroke(); x.setLineDash([]); }
   });
+  // Seitenhöhlen am Fluss: Eingang in den Untergrund
+  prSeitenhoehlen(x, t, false);
   // Fische
   x.globalAlpha = 0.75;
-  const viele = pr.fische.length > 250;
+  const viele = pr.fische.length > 260;
   pr.fische.forEach((f) => {
-    const a = (t - f.start) / f.dauer;
-    if (a < 0) return;
+    let a = (t - f.start) / f.dauer;
+    if (a < 0) { if (!f.heim) return; a = 0; }
     const p = f.pfad, seg = p.length - 1;
     // gleichmäßig über die Punkte (einfach: nach Index)
     const s = Math.min(seg - 1e-6, a * seg), k = Math.floor(s), u = s - k;
     const [x0, y0] = p[k], [x1, y1] = p[Math.min(seg, k + 1)];
     const fx = x0 + (x1 - x0) * u + Math.sin(t / 90 + f.start) * 1.5, fy = y0 + (y1 - y0) * u + Math.cos(t / 110 + f.start) * 1.5;
     const w = Math.atan2(y1 - y0, x1 - x0), farbe = PR_FARBEN[f.f].c;
-    if (viele) { x.fillStyle = farbe; x.beginPath(); x.ellipse(fx, fy, 3.6, 2.2, w, 0, 7); x.fill(); }
-    else prFisch(x, farbe, fx, fy, w, t, Math.max(8, prG.P * 1.2));
+    const dick = f.heim ? 1.45 : 1;
+    if (viele) { x.fillStyle = farbe; x.beginPath(); x.ellipse(fx, fy, 3.6 * (f.heim ? 1.15 : 1), 2.2 * dick, w, 0, 7); x.fill(); }
+    else prFisch(x, farbe, fx, fy, w, t, Math.max(8, prG.P * 1.2), dick);
   });
   x.globalAlpha = 1;
+  prSeitenhoehlen(x, t, true);
+  if (pr.meer) prMeerZeichnen(t);
+}
+// zwei Felsenhöhlen links und rechts am Fluss
+function prSeitenhoehlen(x, t, rand) {
+  const { W, flussY, flussH } = prG, cy = flussY + flussH * 0.5, r = flussH * 0.42;
+  [[0, 1], [W, -1]].forEach(([cx, s]) => {
+    if (!rand) {
+      const g = x.createRadialGradient(cx, cy, 2, cx, cy, r * 1.2); g.addColorStop(0, '#000'); g.addColorStop(1, 'rgba(0,0,0,0)');
+      x.fillStyle = g; x.beginPath(); x.ellipse(cx, cy, r * 0.9, r * 1.1, 0, 0, 7); x.fill();
+      return;
+    }
+    x.fillStyle = '#4a3a2a';
+    [[-0.95, 0.5], [-0.55, 0.85], [0.1, 1.05], [0.65, 0.95], [1.0, 0.6]].forEach(([a, k]) => { x.beginPath(); x.ellipse(cx + s * Math.cos(a) * r * k * 0.95, cy + Math.sin(a) * r * 1.15, r * 0.28, r * 0.22, a, 0, 7); x.fill(); });
+    x.fillStyle = 'rgba(255,255,255,.12)'; x.beginPath(); x.ellipse(cx + s * r * 0.35, cy - r * 1.05, r * 0.16, r * 0.08, 0, 0, 7); x.fill();
+    x.strokeStyle = 'rgba(102,187,106,.55)'; x.lineWidth = 2; x.lineCap = 'round';
+    for (let j = 0; j < 3; j++) { const bx = cx + s * (r * 0.5 + j * 5); x.beginPath(); x.moveTo(bx, cy + r * 1.1); x.quadraticCurveTo(bx + Math.sin(t / 600 + j) * 5, cy + r * 0.4, bx + Math.sin(t / 500 + j * 2) * 3, cy - r * 0.1 - j * 3); x.stroke(); }
+  });
+}
+// dezente, durchsichtige Deko im Wasser: Seegras an den Rändern, aufsteigende Blasen
+function prDekoMalen(x, t) {
+  const { W, hoehe, bildH, bx } = prG;
+  x.lineCap = 'round';
+  const halme = [[4, hoehe, 0.5], [12, hoehe, 0.38], [W - 6, hoehe, 0.45], [W - 15, hoehe, 0.3], [W * 0.3, hoehe, 0.18], [W * 0.68, hoehe, 0.22]];
+  if (bx > 18) halme.push([bx * 0.4, bildH, 0.45], [bx * 0.75, bildH, 0.3], [W - bx * 0.45, bildH, 0.5], [W - bx * 0.8, bildH, 0.32]);
+  halme.forEach(([hx, hy, l], j) => {
+    const h = hoehe * l * (hy === bildH ? 0.55 : 1);
+    x.strokeStyle = j % 2 ? 'rgba(102,187,106,.16)' : 'rgba(46,125,50,.22)'; x.lineWidth = 5;
+    x.beginPath(); x.moveTo(hx, hy); x.bezierCurveTo(hx + Math.sin(t / 900 + j) * 12, hy - h * 0.35, hx - Math.sin(t / 700 + j) * 10, hy - h * 0.7, hx + Math.sin(t / 800 + j * 1.7) * 14, hy - h); x.stroke();
+  });
+  x.fillStyle = 'rgba(200,240,255,.13)';
+  for (let k = 0; k < 10; k++) { const yy = hoehe - ((t / (28 + k * 3) + k * 137) % (hoehe + 20)), xx = (k * 71) % W + Math.sin(t / 500 + k) * 4; x.beginPath(); x.arc(xx, yy, 1.5 + (k % 3), 0, 7); x.fill(); }
+}
+// ---------- Sieg: Schwärme kommen aus dem Untergrund, bilden ein Herz und schwimmen dann über den ganzen Bildschirm ----------
+function prMeerWeg() {
+  document.querySelectorAll('.pr-meer').forEach((c) => c.remove());
+  if (pr) pr.meer = null;
+  const k = $('prFertig'); if (k) k.hidden = true;
+}
+function prMeerStart() {
+  prMeerWeg();
+  const cv = document.createElement('canvas'); cv.className = 'pr-meer'; document.body.appendChild(cv);
+  const r = $('prBild').getBoundingClientRect(), { W, bildH, flussY, flussH } = prG;
+  const farben = pr.untergrund.length ? pr.untergrund : [6], n = Math.min(wenigBewegung() ? 120 : 420, Math.max(120, farben.length));
+  const s = Math.min(W, bildH) / 36, hx = r.left + W / 2, hy = r.top + bildH * 0.46, fische = [];
+  for (let k = 0; k < n; k++) {
+    const rand = k < n * 0.38, w = rand ? (k / (n * 0.38)) * Math.PI * 2 : k * 2.39996;
+    const rr = rand ? 1 : 0.15 + 0.8 * Math.sqrt((k - n * 0.38 + 0.5) / (n * 0.62)), links = k % 2 === 0;
+    fische.push({ f: farben[Math.floor(Math.random() * farben.length)], x: links ? r.left - 6 : r.right + 6, y: r.top + flussY + flussH / 2 + (Math.random() - 0.5) * flussH * 0.4,
+      zx: hx + rr * 16 * Math.pow(Math.sin(w), 3) * s, zy: hy - rr * (13 * Math.cos(w) - 5 * Math.cos(2 * w) - 2 * Math.cos(3 * w) - Math.cos(4 * w)) * s,
+      verz: (k / n) * 1800 + Math.random() * 150, vx: 0, vy: 0, ph: Math.random() * 6.28 });
+  }
+  const deko = Array.from({ length: 12 }, (_, i) => ({ x: (i + Math.random() * 0.6) / 12, h: 0.12 + Math.random() * 0.22, ph: Math.random() * 6, gruen: i % 3 }));
+  const blasen = Array.from({ length: 26 }, () => ({ x: Math.random(), y: Math.random(), r: 1.5 + Math.random() * 4, v: 0.02 + Math.random() * 0.04 }));
+  pr.meer = { cv, fische, deko, blasen, t0: performance.now(), letzt: performance.now(), hx, hy, karte: false };
+}
+function prMeerZeichnen(t) {
+  const m = pr.meer, cv = m.cv, dpr = window.devicePixelRatio || 1, VW = window.innerWidth, VH = window.innerHeight;
+  if (cv.width !== Math.round(VW * dpr) || cv.height !== Math.round(VH * dpr)) { cv.width = Math.round(VW * dpr); cv.height = Math.round(VH * dpr); }
+  const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, VW, VH);
+  const seit = t - m.t0, dt = Math.min(50, t - m.letzt); m.letzt = t;
+  const deko = Math.min(1, seit / 2500);
+  // Seegras vom unteren Rand und Blasen – durchsichtig
+  x.lineCap = 'round';
+  m.deko.forEach((d, i) => {
+    const hx = d.x * VW, h = d.h * VH;
+    x.strokeStyle = ['rgba(46,125,50,', 'rgba(102,187,106,', 'rgba(27,94,32,'][d.gruen] + (0.28 * deko) + ')'; x.lineWidth = 7;
+    x.beginPath(); x.moveTo(hx, VH + 4); x.bezierCurveTo(hx + Math.sin(t / 900 + d.ph) * 18, VH - h * 0.35, hx - Math.sin(t / 700 + d.ph) * 14, VH - h * 0.7, hx + Math.sin(t / 800 + d.ph * 1.7) * 20, VH - h); x.stroke();
+  });
+  x.fillStyle = 'rgba(200,240,255,' + (0.22 * deko) + ')';
+  m.blasen.forEach((b) => { b.y -= b.v * dt / VH * 10; if (b.y < -0.05) { b.y = 1.05; b.x = Math.random(); } x.beginPath(); x.arc(b.x * VW + Math.sin(t / 600 + b.r) * 5, b.y * VH, b.r, 0, 7); x.fill(); });
+  // Phasen: 0–3,4 s Herz bilden, bis 5,6 s halten (pulsieren), danach verteilen und frei über den Bildschirm schwimmen
+  const halten = seit < 5600, puls = seit > 2800 && halten ? 1 + 0.07 * Math.sin((seit - 2800) / 240) : 1;
+  const alpha = halten ? 0.9 : Math.max(0.38, 0.9 - (seit - 5600) / 2400);
+  const g = Math.max(6, prG.P * 1.15);
+  if (!halten && !m.frei) { m.frei = true; m.fische.forEach((f) => { const w = Math.atan2(f.y - m.hy, f.x - m.hx) + (Math.random() - 0.5), v = 0.05 + Math.random() * 0.06; f.vx = Math.cos(w) * v; f.vy = Math.sin(w) * v; }); }
+  x.globalAlpha = alpha;
+  m.fische.forEach((f) => {
+    if (seit < f.verz) return;
+    if (halten) {
+      const k = Math.min(1, dt * 0.0028), ax = f.x, ay = f.y, zx = m.hx + (f.zx - m.hx) * puls, zy = m.hy + (f.zy - m.hy) * puls;
+      f.x += (zx - f.x) * k; f.y += (zy - f.y) * k;
+      if (dt) { const vx = (f.x - ax) / dt, vy = (f.y - ay) / dt; if (Math.hypot(vx, vy) > 0.01) { f.vx = vx; f.vy = vy; } }
+    } else {
+      const w = Math.atan2(f.vy, f.vx) + (Math.random() - 0.5) * 0.12, v = Math.hypot(f.vx, f.vy);
+      f.vx = Math.cos(w) * v; f.vy = Math.sin(w) * v; f.x += f.vx * dt; f.y += f.vy * dt;
+      if (f.x < -20) f.x = VW + 20; if (f.x > VW + 20) f.x = -20; if (f.y < -20) f.y = VH + 20; if (f.y > VH + 20) f.y = -20;
+    }
+    prFisch(x, PR_FARBEN[f.f].c, f.x + Math.sin(t / 300 + f.ph) * 0.8, f.y, Math.atan2(f.vy, f.vx) || 0, t, g, 1.35);
+  });
+  x.globalAlpha = 1;
+  if (!m.karte && seit > 5400) { m.karte = true; $('prFertig').hidden = false; konfetti(14, ['✨', '🫧', '💚', pr.motiv.emoji]); }
 }
 function prSteineMalen(x, t) {
   const P = prG.P;
@@ -949,30 +1020,6 @@ function prSteineMalen(x, t) {
     x.restore();
   });
 }
-function prSchwarmMalen(x, t, alpha) {
-  if (!pr.schwarm.length) return;
-  const g = Math.max(4.5, prG.P * 0.85), puls = pr.fertig ? 1 + 0.06 * Math.sin((t - pr.fertigT) / 260) : 1;
-  const cx = prG.W / 2, cy = prG.bildH * 0.46;
-  x.globalAlpha = alpha;
-  // nach Farbe gebündelt zeichnen – ein Pfad pro Farbe
-  const nachFarbe = {};
-  pr.schwarm.forEach((z) => { (nachFarbe[z.f] = nachFarbe[z.f] || []).push(z); });
-  Object.keys(nachFarbe).forEach((f) => {
-    x.fillStyle = PR_FARBEN[f].c; x.beginPath();
-    nachFarbe[f].forEach((z) => {
-      const px = cx + (z.x - cx) * puls, py = cy + (z.y - cy) * puls;
-      const w = Math.atan2(z.vy, z.vx), c = Math.cos(w), s = Math.sin(w), wedel = Math.sin(t / 120 + z.ph) * g * 0.25;
-      x.moveTo(px + c * g * 0.6, py + s * g * 0.6);
-      x.ellipse(px, py, g * 0.6, g * 0.36, w, 0, 6.283);
-      x.moveTo(px - c * g * 0.45, py - s * g * 0.45);
-      x.lineTo(px - c * g * 0.95 - s * (g * 0.35 + wedel), py - s * g * 0.95 + c * (g * 0.35 + wedel));
-      x.lineTo(px - c * g * 0.95 + s * (g * 0.35 - wedel), py - s * g * 0.95 - c * (g * 0.35 - wedel));
-      x.closePath();
-    });
-    x.fill();
-  });
-  x.globalAlpha = 1;
-}
 
 // ---------- Knöpfe ----------
 $('prBild').addEventListener('pointerdown', prTipp);
@@ -982,6 +1029,8 @@ $('prRueck').addEventListener('click', prRueckgaengig);
 $('prNeu').addEventListener('click', prNeu);
 $('prHinweis').addEventListener('click', prTipp2);
 $('prWeiterBtn').addEventListener('click', () => { $('prWeiterBtn').hidden = true; piranhaStart({ level: pr.nr + 1 }); });
+$('prFWeiter').addEventListener('click', () => { prMeerWeg(); piranhaStart({ level: pr.nr + 1 }); });
+$('prFNochmal').addEventListener('click', prNeu);
 window.addEventListener('resize', () => { if (pr && !$('pr-spiel').hidden) prGroesse(); });
 $('prZurueck').addEventListener('click', () => { if (!$('pr-spiel').hidden) { piranhaIntro(); return; } prStopp(); zeigeHub(); });
 $('hubPiranha').addEventListener('click', () => { merkeZuletzt('piranha'); zoomZu($('hubPiranha'), () => { show('piranha', '🐟 Piranha-Schwarm'); piranhaIntro(); }); });

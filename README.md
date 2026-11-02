@@ -279,8 +279,13 @@ Eigenes Puzzle im Genre „Farben sortieren und Pixelbild abbauen“, mit Amazon
 - **Steine und Algen** (ab Level 2, bis zu 4): sperren einen 4×4- bis 5×4-Block – nicht fressbar, kein Durchschwimmen. Ein Kreis
   zeigt die Schlüsselfarbe und wie viele ihrer Pixel noch übrig sind; ist die Farbe ganz weg, bröckelt die Sperre weg.
   Generator und Simulation berücksichtigen das, Levels bleiben lösbar.
-- **Satter Schwarm:** Fische sind halb durchsichtig. Wer gefressen hat, schwimmt danach unter dem Bild weiter und scheint durch die
-  Lücken. Beim Lösen sammeln sich alle zu einem pulsierenden Herz über dem wieder eingeblendeten Bild.
+- **Genüsslich fressen:** Fische schwimmen langsam (halbe Geschwindigkeit, gestaffelt) und halb durchsichtig zu ihrem Pixel, knabbern
+  es weg (der Pixel schrumpft) und schwimmen dann **dick** zurück in den Fluss und durch eine Felsenhöhle links oder rechts in den
+  Untergrund. Rückgängig ist schon möglich, während sie heimschwimmen. Dezent durchsichtiges Seegras und Blasen im Wasser.
+- **Sieg:** Alle satten Fische kommen aus den Seitenhöhlen, bilden über dem wieder eingeblendeten Bild ein pulsierendes Herz und
+  schwimmen dann durchsichtig über den ganzen Bildschirm (mit Seegras und Blasen, eigene Vollbild-Ebene ohne Klicks). Danach kommt
+  die Geschafft-Karte: Sterne, „x Züge von minimal y“ (minimal = Anzahl der Schwärme; zurückgenommene Züge zählen mit), höchste
+  Buchtenbelegung, Zahl der satten Fische, Nochmal / Weiter.
 - **Höhlen-Raster** (6 Spalten, 26–42 Schwärme): antippbar sind nur Höhlen mit freiem Weg zum Fluss; ab Level 3 versteckte Höhlen ❓ (bis 45 %).
 - **Fressen von unten:** Ein Schwarm frisst Pixel seiner Farbe, die von unten erreichbar sind (Flut durch schon Gefressenes).
 - **Buchten** (5 → 4): Was nicht gefressen werden kann, wartet und frisst automatisch nach, sobald seine Farbe frei liegt.
