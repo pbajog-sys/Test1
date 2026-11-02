@@ -187,6 +187,8 @@ function renderHub() {
     const r = rekordVon(key, v);
     $(id).textContent = r ? 'Rekord ' + fmt(r) + ' / 50' : 'Noch kein Rekord';
   });
+  const tgR = rekordVon('walquiz.tiefgang.v1', false);
+  $('hubTiefgangBest').textContent = tgR ? 'Rekord ' + tgR + ' Punkte' : 'Noch kein Rekord';
   const krimi = loadJson('walquiz.krimi.v1');
   const summe = (o) => Object.values((o && o.geloest) || {}).reduce((x, y) => x + y, 0);
   const faelle = summe(krimi) + Object.values(krimi.modi || {}).reduce((x, m) => x + summe(m), 0);

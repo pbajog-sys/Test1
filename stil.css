@@ -89,7 +89,7 @@ header h1 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes einblenden { from { opacity: 0; } to { opacity: 1; } }
 /* Die Spiele haben eine eigene Vollbild-Bühne (position: fixed). Eine Animation mit transform auf dem
    Bildschirm würde Safari dazu bringen, die Bühne nur innerhalb des Bildschirms zu zeichnen („Fenster im Fenster“). */
-#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-krimi.active { animation: none; }
+#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-krimi.active { animation: none; }
 @keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
@@ -1895,3 +1895,80 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .vl-spark text { fill: #8b8bab; font-size: 10px; text-anchor: middle; }
 .vl-leer { color: #a3a3c2; text-align: center; margin: 6px 0; }
 @media (prefers-reduced-motion: reduce) { .vl-flamme { animation: none; } }
+
+/* ===================================================================
+   🤿 Tiefgang – das Meer wird mit der Tiefe dunkler, Blasen steigen auf
+   =================================================================== */
+.hub-tiefgang { background: linear-gradient(#071a2b, #071a2b) padding-box, linear-gradient(90deg, #67e8f9, #0e7490, #1e3a8a, #67e8f9) border-box; background-size: 100% 100%, 300% 100%; box-shadow: 0 16px 50px rgba(14,116,144,0.3); }
+.hub-tiefgang .hg-titel { background: linear-gradient(90deg, #a5f3fc, #38bdf8); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hg-av-tiefgang { --ring: conic-gradient(#a5f3fc, #0e7490, #1e3a8a, #a5f3fc); }
+.hg-av-tiefgang > .hg-in { background: linear-gradient(#38bdf8, #0e3a5f 70%, #041626); border-color: #071a2b; }
+.tg-mini { position: relative; width: 100%; height: 100%; display: block; }
+.tg-mini b { position: absolute; left: 50%; top: 18%; font-size: 1.7rem; transform: translateX(-50%); animation: tgAbtauchen 4s ease-in-out infinite; }
+.tg-mini i { position: absolute; bottom: 10%; width: 6px; height: 6px; border-radius: 50%; border: 1.5px solid rgba(255,255,255,.75); animation: tgBlase 3s ease-in infinite; }
+.tg-mini i:nth-child(1) { left: 30%; } .tg-mini i:nth-child(2) { left: 55%; animation-delay: 1s; } .tg-mini i:nth-child(3) { left: 70%; animation-delay: 2s; width: 4px; height: 4px; }
+@keyframes tgAbtauchen { 0%, 100% { transform: translate(-50%, 0) rotate(-8deg); } 50% { transform: translate(-50%, 22px) rotate(8deg); } }
+@keyframes tgBlase { from { transform: translateY(0); opacity: 0; } 20% { opacity: 1; } to { transform: translateY(-46px); opacity: 0; } }
+
+.tg-buehne {
+  --tiefe: 0;
+  position: fixed; inset: 0; z-index: 20; overflow-y: auto; overflow-x: hidden; color: #e0f7ff;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 24px);
+  background: linear-gradient(180deg, hsl(200, 75%, calc(42% - var(--tiefe) * 34%)), hsl(215, 80%, calc(22% - var(--tiefe) * 17%)) 70%, hsl(225, 80%, calc(10% - var(--tiefe) * 6%)));
+  transition: background 1s ease; font-family: "Outfit", system-ui, sans-serif;
+}
+.tg-buehne > *:not(.tg-blasen) { position: relative; max-width: 620px; margin-left: auto; margin-right: auto; }
+.tg-buehne .farb-kopf .icon-btn { background: rgba(255,255,255,0.12); color: inherit; }
+.tg-blasen { position: fixed; inset: 0; pointer-events: none; overflow: hidden; }
+.tg-blasen i { position: absolute; bottom: -20px; width: 10px; height: 10px; border-radius: 50%; border: 1.5px solid rgba(224,247,255,.35); animation: tgSteigen 9s linear infinite; }
+.tg-blasen i:nth-child(1) { left: 8%; } .tg-blasen i:nth-child(2) { left: 22%; animation-delay: 3s; width: 6px; height: 6px; }
+.tg-blasen i:nth-child(3) { left: 47%; animation-delay: 6s; } .tg-blasen i:nth-child(4) { left: 64%; animation-delay: 1.5s; width: 14px; height: 14px; }
+.tg-blasen i:nth-child(5) { left: 81%; animation-delay: 4.5s; width: 7px; height: 7px; } .tg-blasen i:nth-child(6) { left: 93%; animation-delay: 7.5s; }
+@keyframes tgSteigen { from { transform: translateY(0) translateX(0); } 50% { transform: translateY(-55vh) translateX(10px); } to { transform: translateY(-110vh) translateX(-6px); } }
+.tg-buehne.wackeln > *:not(.tg-blasen) { animation: shake .45s; }
+.tg-teil { display: grid; gap: 14px; animation: aufploppen .4s var(--ease-spring); }
+#tg-intro { text-align: center; padding-top: 2vh; }
+.tg-logo { font-size: 4.4rem; animation: tgAbtauchenGross 4s ease-in-out infinite; }
+@keyframes tgAbtauchenGross { 0%, 100% { transform: translateY(0) rotate(-6deg); } 50% { transform: translateY(14px) rotate(6deg); } }
+.tg-titel { margin: 0; font-size: 3rem; font-weight: 800; letter-spacing: -0.02em; color: #e0f7ff; text-shadow: 0 0 24px rgba(103,232,249,.5); }
+.tg-lead { margin: 0 auto; max-width: 38ch; line-height: 1.5; color: #bfe9f7; }
+.tg-regeln { display: grid; gap: 8px; text-align: left; }
+.tg-regeln div { display: grid; grid-template-columns: 60px 1fr; gap: 8px; align-items: center; padding: 10px 12px; border-radius: 14px; background: rgba(4,22,38,.35); font-size: 0.9rem; line-height: 1.4; }
+.tg-regeln span { font-size: 1.2rem; text-align: center; }
+.tg-buehne .farb-stufen button small { font-size: 0.68rem; }
+.tg-challenge { background: rgba(103,232,249,.12); border-color: #67e8f9; }
+.tg-buehne .btn { width: 100%; }
+.tg-buehne .btn.tg-gross-btn { font-size: 1.15rem; padding: 16px; background: linear-gradient(135deg, #67e8f9, #0ea5e9); color: #042033; box-shadow: 0 5px 0 #0b6f99, 0 12px 26px rgba(14,165,233,.35); }
+.tg-buehne .btn.tg-auf-btn { font-size: 1.15rem; padding: 16px; background: linear-gradient(135deg, #fde68a, #f59e0b); color: #2a1600; box-shadow: 0 5px 0 #a16207, 0 12px 26px rgba(245,158,11,.3); }
+.tg-buehne .btn:disabled { opacity: .4; }
+.tg-buehne .btn.secondary { background: rgba(255,255,255,0.12); color: inherit; box-shadow: none; }
+.tg-best { font-size: 0.85rem; color: #a5d8ea; }
+.tg-anzeige { display: flex; justify-content: space-between; align-items: center; }
+.tg-tiefe b { display: block; font-size: 3rem; font-weight: 800; line-height: 1; font-variant-numeric: tabular-nums; }
+.tg-tiefe small { color: #a5d8ea; }
+.tg-gefahren { display: flex; gap: 6px; }
+.tg-gefahren span { font-size: 1.6rem; width: 46px; height: 46px; display: grid; place-items: center; border-radius: 14px; background: rgba(4,22,38,.4); opacity: .35; filter: grayscale(1); transition: all .3s var(--ease-spring); }
+.tg-gefahren span.an { opacity: 1; filter: none; background: rgba(239,68,68,.35); box-shadow: 0 0 0 2px #f87171; transform: scale(1.08); }
+.tg-luft { display: flex; flex-wrap: wrap; gap: 5px; }
+.tg-luft i { width: 18px; height: 18px; border-radius: 50%; border: 2px solid rgba(224,247,255,.35); }
+.tg-luft i.voll { background: radial-gradient(circle at 35% 35%, #fff, #a5f3fc 50%, #38bdf8); border-color: #e0f7ff; }
+.tg-meldung { min-height: 3em; padding: 12px 14px; border-radius: 14px; background: rgba(4,22,38,.4); line-height: 1.4; }
+.tg-meldung.gut { background: rgba(16,185,129,.22); }
+.tg-meldung.warnung { background: rgba(245,158,11,.25); }
+.tg-meldung.schlecht { background: rgba(239,68,68,.32); animation: shake .4s; }
+.tg-risiko { text-align: center; font-weight: 700; color: #fde68a; }
+.tg-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+.tg-knoepfe #tgWeiter { grid-column: 1 / -1; }
+.tg-stand { display: flex; justify-content: space-between; gap: 10px; font-weight: 700; color: #bfe9f7; font-size: 0.9rem; }
+.tg-karten { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 8px; }
+.tg-karte { display: grid; justify-items: center; gap: 2px; padding: 10px 6px; border-radius: 14px; background: rgba(224,247,255,.1); text-align: center; animation: tgKarte .5s var(--ease-spring); }
+.tg-karte.gefahr { background: rgba(239,68,68,.25); }
+.tg-karte.tier { background: rgba(56,189,248,.22); }
+.tg-karte.fund { background: rgba(250,204,21,.18); }
+.tg-k-emoji { font-size: 1.9rem; }
+.tg-k-name { font-size: 0.72rem; font-weight: 700; line-height: 1.2; }
+.tg-k-wert { font-size: 0.72rem; opacity: .8; }
+@keyframes tgKarte { from { opacity: 0; transform: rotateY(90deg) scale(.7); } }
+.tg-liste li { cursor: default; background: rgba(4,22,38,.4); }
+.tg-buehne .farb-summe { color: #e0f7ff; }
+@media (prefers-reduced-motion: reduce) { .tg-blasen i, .tg-logo, .tg-mini b, .tg-mini i { animation: none; } }

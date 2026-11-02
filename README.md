@@ -74,6 +74,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `toene.js` – Ton-Gedächtnis
 - `takt.js` – Takt-Gefühl (Zeitgefühl, Tempo, Taktart)
 - `verlauf.js` – Verlauf & Statistik
+- `tiefgang.js` – Tiefgang
 - `punkte.js` – Punktwolke (Korrelation schätzen und sortieren)
 - `augen.js` – Augenmaß
 - `karte.js`, `karten-daten.js` – Karten-Gefühl (Kartendaten aus `werkzeuge/karten.py`)
@@ -240,6 +241,14 @@ Wo liegt das? Tippe den Ort auf einer leeren Karte an, Punkte nach Kilometern da
 - Kartendaten: [Natural Earth](https://www.naturalearthdata.com/) (gemeinfrei) über das npm-Paket `world-atlas` (ISC, © Mike Bostock),
   fest eingebaut in `karten-daten.js` (läuft offline). Neu erzeugen mit `werkzeuge/karten.py` (siehe Kopf des Skripts).
 
+## 🤿 Tiefgang (Push your luck)
+Eigenes Tauchspiel, angelehnt an das beliebte Push-your-luck-Genre: fünf Tauchgänge, mit jedem Schritt 10 m tiefer, jede Tiefe
+deckt einen Fund auf (Muschel 1 bis versunkene Krone 9 Punkte), eine Tier-Sichtung (Sonnen-, Dämmer-, Mitternachtszone) oder
+eine Gefahr (Qualle, Strömung, Druck). Zweimal dieselbe Gefahr im selben Tauchgang = Beute verloren; Auftauchen sichert sie.
+Luft begrenzt die Schritte, Luftblasen geben Luft zurück, jede neue Tierart im Logbuch +2. Stufen: Leicht zeigt das Risiko des
+nächsten Schritts in %, Profi hat weniger Luft und mehr Gefahren. Tagestauchgang und Challenge-Links (gleiche Karte an gleicher
+Stelle für alle). Balance per Simulation geprüft: Kluges Abwägen (Risiko < 20 %) schlägt Vorsicht und Gier.
+
 ## 📅 Verlauf & Statistik
 Jedes Spiel trägt beim Ende einen Eintrag in den Verlauf ein (Spiel, Punkte, Stufe, Uhrzeit), je Profil, die letzten 400 Tage.
 Die Karte „Dein Verlauf“ im Dashboard zeigt die Tagesserie 🔥 und die letzten 7 Tage. Der Verlaufs-Bildschirm zeigt Serie,
@@ -252,5 +261,5 @@ und je Spiel Anzahl, Bestwert, Schnitt der letzten 7 Runden und eine Verlaufskur
   laufende Tonwelle, schwingendes Metronom, Mini-Punktwolke, Winkel, Kompass, suchende Lupe, Porsche und Gretchen auf der Küstenstraße, Wal mit Fontäne und Haiflosse im Meer.
   Jede Figur ist ein Schnellstart in ihr Spiel (mit Flip und Emoji-Regen). Rechts oben: Profilbild zum Wechseln.
 - **Games** als Zeilen mit rundem Bild, Stand und ▶: **Quizzes** (im Kreis wechseln die Welten als Diashow), Farb-Gedächtnis,
-  Noten & Griffe (Cello, Klavier, Gitarre, Ukulele), Ton-Gedächtnis, Takt-Gefühl, Punktwolke, Augenmaß, Karten-Gefühl und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
+  Noten & Griffe (Cello, Klavier, Gitarre, Ukulele), Ton-Gedächtnis, Takt-Gefühl, Punktwolke, Augenmaß, Karten-Gefühl, Tiefgang und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
 - Akku: Farbflecken als Verlauf statt Weichzeichner, Bühne und Diashow pausieren außerhalb des Bildschirms; „Bewegung reduzieren“ wird beachtet.

@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=47">
+<link rel="stylesheet" href="fonts/fonts.css?v=48">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=47">
-<link rel="stylesheet" href="ansichten.css?v=47">
+<link rel="stylesheet" href="stil.css?v=48">
+<link rel="stylesheet" href="ansichten.css?v=48">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -521,6 +521,11 @@
     <button class="hub-game hub-karte" id="hubKarte" type="button" data-regen="🧭,🌍,📍,✈️">
       <span class="hg-av hg-av-karte" aria-hidden="true"><span class="hg-in"><svg class="kt-mini" viewBox="0 0 60 60" aria-hidden="true"><circle class="km-rand" cx="30" cy="30" r="25"/><path class="km-striche" d="M30 7v6M30 47v6M7 30h6M47 30h6"/><g class="km-nadel"><path class="km-nord" d="M30 10l6 20h-12z"/><path class="km-sued" d="M30 50l-6-20h12z"/></g><circle cx="30" cy="30" r="3" class="km-mitte"/></svg></span></span>
       <span class="hg-text"><span class="hg-titel">Karten-Gefühl</span><span class="hg-sub">Wo liegt das? Deutschland, Europa und die Welt.</span><span class="hg-best" id="hubKarteBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-tiefgang" id="hubTiefgang" type="button" data-regen="🤿,🫧,🐚,💰">
+      <span class="hg-av hg-av-tiefgang" aria-hidden="true"><span class="hg-in"><span class="tg-mini"><i></i><i></i><i></i><b>🤿</b></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Tiefgang</span><span class="hg-sub">Tauch tiefer für Schätze – aber zweimal dieselbe Gefahr, und alles ist weg.</span><span class="hg-best" id="hubTiefgangBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-krimi" id="hubKrimi" type="button" data-regen="🔎,🕵️,🗝️,🕯️">
@@ -838,6 +843,75 @@
   </section>
 
   <!-- Cello-Noten -->
+  <section class="screen" id="screen-tiefgang">
+    <div class="tg-buehne" id="tgSpielBuehne">
+      <div class="tg-blasen" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="farb-kopf">
+        <button class="icon-btn" id="tgZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="tgRunde"></span>
+      </div>
+
+      <div class="tg-teil" id="tg-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="tg-logo" aria-hidden="true">🤿</div>
+        <h2 class="tg-titel">Tiefgang</h2>
+        <p class="tg-lead">Fünf Tauchgänge. Mit jedem Schritt tauchst du 10 m tiefer und findest etwas: Muscheln, Perlen, Schätze – oder Tiere fürs Logbuch. Je tiefer, desto wertvoller.</p>
+        <div class="tg-regeln">
+          <div><span>🪼🌀💢</span>Kommt <b>dieselbe Gefahr zweimal</b> im selben Tauchgang, ist die Beute dieses Tauchgangs verloren.</div>
+          <div><span>⬆️</span><b>Auftauchen</b> sichert alles, was du dabeihast. Die Luft reicht nur für ein paar Schritte.</div>
+          <div><span>🐋</span>Jede <b>neue Tierart</b> im Logbuch gibt +2 Punkte am Ende.</div>
+        </div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge tg-challenge" id="tgChallenge" hidden></div>
+        <div class="farb-stufen" id="tgStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn tg-gross-btn" id="tgLos" type="button">Abtauchen 🤿</button>
+        <button class="btn secondary" id="tgTagBtn" type="button"></button>
+        <div class="tg-best" id="tgBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="tg-teil" id="tg-spiel" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="tg-anzeige">
+          <div class="tg-tiefe"><b id="tgTiefe">0 m</b><small id="tgZone"></small></div>
+          <div class="tg-gefahren" id="tgGefahren"></div>
+        </div>
+        <div class="tg-luft" id="tgLuft" aria-label="Luft"></div>
+        <div class="tg-meldung" id="tgMeldung"></div>
+        <div class="tg-risiko" id="tgRisiko" hidden></div>
+        <div class="tg-knoepfe">
+          <button class="btn tg-gross-btn" id="tgTiefer" type="button">Tiefer ⬇️</button>
+          <button class="btn tg-auf-btn" id="tgAuf" type="button">Auftauchen ⬆️</button>
+          <button class="btn tg-gross-btn" id="tgWeiter" type="button" hidden>Nächster Tauchgang</button>
+        </div>
+        <div class="tg-stand"><span id="tgBeute"></span><span id="tgGesichert"></span></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="tg-karten" id="tgKarten"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="tg-teil" id="tg-ende" hidden>
+        <div class="farb-summe" id="tgSumme"></div>
+        <div class="farb-rekord" id="tgRekord"></div>
+        <div class="farb-rekord" id="tgVergleich" hidden></div>
+        <ul class="ton-liste tg-liste" id="tgListe"></ul>
+        <button class="btn tg-gross-btn" id="tgTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="tgTeilenMsg"></div>
+        <button class="btn secondary" id="tgNochmal" type="button">Nochmal tauchen</button>
+      </div>
+    </div>
+  </section>
+
   <section class="screen" id="screen-verlauf">
     <div class="vl-buehne">
       <div class="farb-kopf">
@@ -1558,33 +1632,34 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=47"></script>
-<script src="haie.js?v=47"></script>
-<script src="porsche.js?v=47"></script>
-<script src="dackel.js?v=47"></script>
-<script src="groesse.js?v=47"></script>
-<script src="gretchen.js?v=47"></script>
-<script src="effekte.js?v=47"></script>
-<script src="app.js?v=47"></script>
-<script src="melden.js?v=47"></script>
-<script src="verlauf.js?v=47"></script>
-<script src="hub.js?v=47"></script>
-<script src="farben.js?v=47"></script>
-<script src="cello.js?v=47"></script>
-<script src="instrumente.js?v=47"></script>
-<script src="toene.js?v=47"></script>
-<script src="takt.js?v=47"></script>
-<script src="punkte.js?v=47"></script>
-<script src="augen.js?v=47"></script>
-<script src="karten-daten.js?v=47"></script>
-<script src="karte.js?v=47"></script>
-<script src="krimi-grafik.js?v=47"></script>
-<script src="krimi.js?v=47"></script>
-<script src="krimi-wachen.js?v=47"></script>
-<script src="krimi-verhoer.js?v=47"></script>
-<script src="krimi-alibi.js?v=47"></script>
-<script src="krimi-akte.js?v=47"></script>
-<script src="krimi-zentrale.js?v=47"></script>
-<script src="profile.js?v=47"></script>
+<script src="wale.js?v=48"></script>
+<script src="haie.js?v=48"></script>
+<script src="porsche.js?v=48"></script>
+<script src="dackel.js?v=48"></script>
+<script src="groesse.js?v=48"></script>
+<script src="gretchen.js?v=48"></script>
+<script src="effekte.js?v=48"></script>
+<script src="app.js?v=48"></script>
+<script src="melden.js?v=48"></script>
+<script src="verlauf.js?v=48"></script>
+<script src="hub.js?v=48"></script>
+<script src="farben.js?v=48"></script>
+<script src="cello.js?v=48"></script>
+<script src="instrumente.js?v=48"></script>
+<script src="toene.js?v=48"></script>
+<script src="takt.js?v=48"></script>
+<script src="punkte.js?v=48"></script>
+<script src="augen.js?v=48"></script>
+<script src="karten-daten.js?v=48"></script>
+<script src="karte.js?v=48"></script>
+<script src="tiefgang.js?v=48"></script>
+<script src="krimi-grafik.js?v=48"></script>
+<script src="krimi.js?v=48"></script>
+<script src="krimi-wachen.js?v=48"></script>
+<script src="krimi-verhoer.js?v=48"></script>
+<script src="krimi-alibi.js?v=48"></script>
+<script src="krimi-akte.js?v=48"></script>
+<script src="krimi-zentrale.js?v=48"></script>
+<script src="profile.js?v=48"></script>
 </body>
 </html>
