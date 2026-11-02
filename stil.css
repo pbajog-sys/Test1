@@ -2042,3 +2042,5 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .rf-wertung li { display: flex; justify-content: space-between; padding: 10px 14px; border-radius: 12px; background: rgba(7,42,51,.45); }
 .rf-buehne .farb-summe { color: #ecfeff; }
 @media (prefers-reduced-motion: reduce) { .rf-mini i { animation: none; background: var(--f); } }
+
+.tg-regeln p, .rf-regeln p { margin: 0; }
