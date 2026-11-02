@@ -5,7 +5,7 @@ const PHOTOS_PER_WAL = 2;
 const PHOTO_CANDIDATES = 8;     // so viele Fotos werden je Art gemerkt – als Ersatz, wenn eins aussortiert wird
 const SOUND_LVL = 2;           // „Wer ruft da?“ nutzt die Arten bis Bronze – von den seltenen gibt es kaum Aufnahmen
 const STORE_KEY = 'walquiz.v2';
-const PHOTO_KEY = 'walquiz.photos.v3';
+const PHOTO_KEY = 'walquiz.photos.v4';   // erhöht: alte Listen enthielten Bilder aus Navigationsleisten (Okapi, Doktorfisch, Grauer Riffhai)
 const BLOCK_KEY = 'walquiz.fotosperre.v1';
 const CHECK_KEY = 'walquiz.fotogeprueft.v1';
 const SOUND_KEY = 'walquiz.sounds.v1';
@@ -136,6 +136,18 @@ function filePhoto(f, leadName, art) {
 }
 const IMAGE_INFO = { prop: 'imageinfo', iiprop: 'url|mime|size|extmetadata|commonmetadata', iiextmetadatafilter: 'Categories', iiurlwidth: '960' };
 
+// Passt ein Dateiname zur Art? Wikipedia-Artikel enthalten auch Bilder aus Navigationsleisten und Vergleichen
+// (z. B. Okapi, Doktorfisch und Pottwal-Fluke in fast jedem Wal-Artikel, ein Grauer Riffhai in jedem Hai-Artikel).
+// Darum zählen Artikelbilder nur, wenn ihr Name den deutschen, englischen oder lateinischen Namen enthält – oder es das Titelbild ist.
+const ohneZeichen = (t) => String(t).toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+function passtZurArt(name, art) {
+  const n = ohneZeichen(name.replace(/\.[a-z]+$/i, ''));
+  const epithet = (art.latin || '').split(' ')[1] || '';
+  const schluessel = [art.latin, art.wiki, art.name, ...(art.auch || []), epithet.length >= 5 ? epithet : '']
+    .flatMap((x) => [ohneZeichen(x || ''), ohneZeichen((x || '').replace(/'s\b/g, ''))]).filter((x) => x.length >= 5);
+  return schluessel.some((k) => n.includes(k));
+}
+
 async function articlePhotos(host, title, art) {
   const [lead, list] = await Promise.all([
     wikiApi(host, { titles: title, prop: 'pageimages', piprop: 'name' }).catch(() => null),
@@ -143,7 +155,8 @@ async function articlePhotos(host, title, art) {
   ]);
   const page = lead && lead.query && lead.query.pages && lead.query.pages[0];
   const leadName = page && page.pageimage;
-  return ((list && list.query && list.query.pages) || []).map((f) => filePhoto(f, leadName, art)).filter(Boolean);
+  return ((list && list.query && list.query.pages) || []).map((f) => filePhoto(f, leadName, art))
+    .filter((p) => p && (art.quellen || p.name === leadName || passtZurArt(p.name, art)));
 }
 
 async function categoryPhotos(category, art) {
@@ -161,7 +174,9 @@ function photoSources(art) {
       return kind === 'commons' ? () => categoryPhotos(title, art) : () => articlePhotos(kind + '.wikipedia.org', title, art);
     });
   }
-  return [() => articlePhotos('en.wikipedia.org', art.wiki, art), () => articlePhotos('de.wikipedia.org', art.latin, art)];
+  // Tiere: englischer Artikel, dann die Commons-Kategorie der Art (dort liegen fast nur Fotos genau dieser Art), dann der deutsche Artikel
+  return [() => articlePhotos('en.wikipedia.org', art.wiki, art), () => categoryPhotos('Category:' + art.latin, art),
+    () => articlePhotos('de.wikipedia.org', art.latin, art)];
 }
 
 function loadPhotos(wal) {

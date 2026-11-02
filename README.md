@@ -98,6 +98,10 @@ Fotos, die einmal angezeigt wurden, sind danach auch offline verfügbar.
 Lokal testen: `python3 -m http.server` im Ordner starten und `http://localhost:8000` öffnen.
 
 ## Bildquellen
+**Fotoprüfung (2.11.2026):** Die Titelbilder aller 170 Wal- und Haiarten wurden einzeln angesehen und stehen als feste Wahl in
+`fotos.json`. Für Arten mit Karte, Briefmarke, Größengrafik oder unscharfem Titelbild wurden passende Fotos von Hand gewählt.
+Ursache der gemeldeten Fehlbilder (Okapi, Ambra …): Wikipedia-Artikel enthalten auch Bilder aus Navigationsleisten. Darum zählen
+Artikelbilder jetzt nur, wenn ihr Dateiname zur Art passt; zusätzlich wird die Commons-Kategorie der Art durchsucht.
 Alle Fotos stammen von Wikimedia Commons; jede Quelle ist in der App verlinkt.
 Vor einer öffentlichen Veröffentlichung sollten Urheber und Lizenz je Bild ergänzt werden
 (stehen auf der jeweiligen Commons-Seite).

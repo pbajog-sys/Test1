@@ -108,7 +108,7 @@ const WAL_DATEN = [
   ['Brillenschweinswal', 'Phocoena dioptrica', 'Spectacled porpoise', 3, 'schwein', '2,2 m', '115 kg', 'Subantarktische Meere', 'Oben schwarz, unten weiß, mit einem weißen Ring um das Auge wie eine Brille.'],
   ['Weißflankenschweinswal', 'Phocoenoides dalli', "Dall's porpoise", 2, 'schwein', '2,2 m', '200 kg', 'Nordpazifik', 'Schwarz mit großem weißen Fleck an der Flanke. Erzeugt beim schnellen Schwimmen eine Wasserfontäne wie ein Hahnenschwanz.', ['Dall-Hafenschweinswal', 'Dall-Schweinswal']],
   ['Indischer Glattschweinswal', 'Neophocaena phocaenoides', 'Indo-Pacific finless porpoise', 3, 'schwein', '1,9 m', '70 kg', 'Küsten vom Persischen Golf bis Südostasien', 'Keine Rückenflosse, runder Kopf ohne Schnabel, hellgrau.', ['Glattschweinswal', 'Indopazifischer Glattschweinswal']],
-  ['Schmalrücken-Glattschweinswal', 'Neophocaena asiaeorientalis', 'Narrow-ridged finless porpoise', 3, 'schwein', '1,9 m', '70 kg', 'Ostasiatische Küsten und Jangtse', 'Keine Rückenflosse, nur ein schmaler Grat auf dem Rücken. Eine Unterart lebt im Jangtse.', ['Jangtse-Glattschweinswal', 'Glattschweinswal']],
+  ['Schmalrücken-Glattschweinswal', 'Neophocaena asiaeorientalis', 'Yangtze finless porpoise', 3, 'schwein', '1,9 m', '70 kg', 'Ostasiatische Küsten und Jangtse', 'Keine Rückenflosse, nur ein schmaler Grat auf dem Rücken. Eine Unterart lebt im Jangtse.', ['Jangtse-Glattschweinswal', 'Glattschweinswal']],
 ];
 
 const GRUPPEN = {
