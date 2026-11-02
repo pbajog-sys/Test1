@@ -172,13 +172,19 @@ function tlAuswahl(box, mitNutz, mitWild) {
 // ---------- Spielablauf ----------
 let tl = null;
 let tlZaehler = null, tlStart = Date.now();
-const tlTeile = ['intro', 'los', 'leben', 'ende'];
+const tlTeile = ['intro', 'los', 'leben', 'pixel', 'ende'];
 const zeigeTlTeil = (t) => tlTeile.forEach((x) => { $('tl-' + x).hidden = x !== t; });
 const tlStore = () => loadJson(TL_KEY);
 const tlTageText = (t) => (t < 70 ? Math.round(t) + ' Tage' : t < 730 ? Math.round(t / 30.4) + ' Monate' : fmt((t / 365).toFixed(1)) + ' Jahre');
 
+function tlModusZeigen() {
+  const m = tlStore().modus || 'text';
+  $('tlModus').querySelectorAll('button').forEach((b) => b.classList.toggle('on', b.dataset.m === m));
+}
 function tierlebenIntro() {
+  if (typeof tpStopp === 'function') tpStopp();
   tl = null;
+  tlModusZeigen();
   zeigeTlTeil('intro');
   // Live-Zähler: rechnerisch aus den Schlachtzahlen 2025
   tlStart = Date.now();
@@ -225,6 +231,7 @@ function tlLotterie() {
 function tlLebenStart(id, wild) {
   const L = wild ? TL_WILD[id] : TL_LEBEN[id];
   tl = { id, wild, L, k: 0, tot: false, alter: 0 };
+  if (tlStore().modus === 'pixel' && typeof tpStart === 'function') { tpStart(); return; }
   zeigeTlTeil('leben');
   $('tlLebenKopf').innerHTML = '<span>' + L.emoji + '</span><b>' + L.name + '</b>';
   $('tlKapitel').innerHTML = '';
@@ -308,11 +315,12 @@ function tlEnde() {
 
 // ---------- Knöpfe ----------
 $('tlLotterieBtn').addEventListener('click', tlLotterie);
+$('tlModus').querySelectorAll('button').forEach((b) => b.addEventListener('click', () => { const st = tlStore(); st.modus = b.dataset.m; saveJson(TL_KEY, st); tlModusZeigen(); }));
 $('tlWeiter').addEventListener('click', tlWeiter);
 $('tlNochmal').addEventListener('click', () => (tl && tl.wild ? tlLebenStart(tl.id, true) : tlLotterie()));
 $('tlAndere').addEventListener('click', () => $('tlEndeWahlBox').scrollIntoView({ block: 'start', behavior: wenigBewegung() ? 'auto' : 'smooth' }));
 $('tlZurueck').addEventListener('click', () => {
-  if (!$('tl-intro').hidden) { clearInterval(tlZaehler); zeigeHub(); return; }
+  if (!$('tl-intro').hidden) { clearInterval(tlZaehler); if (typeof tpStopp === 'function') tpStopp(); zeigeHub(); return; }
   tierlebenIntro();
 });
 $('hubTierleben').addEventListener('click', () => { merkeZuletzt('tierleben'); zoomZu($('hubTierleben'), () => { show('tierleben', '🐾 Ein Tierleben'); tierlebenIntro(); }); });

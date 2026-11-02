@@ -81,6 +81,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `zufall.js` – Zufalls-Gefühl (Wahrscheinlichkeiten schätzen, live simulieren)
 - `zahlen.js` – Du in Zahlen (das eigene Leben in belegten Zahlen)
 - `tierleben.js` – Ein Tierleben (Nutztiere nach Schlachtzahlen, bedrohte Arten)
+- `tierpixel.js` – Ein Tierleben als Pixel-Abenteuer (eigene 16×16-Pixelgrafik, Kachelkarten, Steuerkreuz)
 - `fuehrung.js` – Hilfe für alle Spiele: Spickzettel (?), geführte Einführung mit Aufträgen, Übungsfälle für „Wer war’s?“
 - `augen.js` – Augenmaß
 - `karte.js`, `karten-daten.js` – Karten-Gefühl (Kartendaten aus `werkzeuge/karten.py`)
@@ -259,6 +260,10 @@ Ein Leben als Tier – gesellschaftskritisch, aber sachlich und mit Quellen:
   Ostsee-Schweinswal, Weißspitzen-Hochseehai. Entscheidungen beeinflussen das Überleben (als Spielregel gekennzeichnet),
   die Gefahren sind die echten: Schiffe, Netze, Palmöl, Lärm, Flossenhandel.
 - Live-Zähler der rechnerischen Schlachtungen seit Öffnen der Seite, Logbuch der gelebten Leben, Einträge im Verlauf.
+- **👾 Pixel-Abenteuer** (umschaltbar auf der Startseite): dieselben Leben und Fakten als kleines Retro-Spiel zum Herumlaufen –
+  eigene Pixelgrafik mit vier Farbtönen je Welt (Stall, Meer, Wald), Steuerkreuz/Pfeiltasten und A-Knopf, Textbox mit Entscheidungen.
+  Im Stall wird es von Kapitel zu Kapitel voller (am Ende quetscht man sich durch), die Tür nach draußen bleibt zu, das Kalb sieht
+  die Mutter nur hinter dem Gitter. Bei bedrohten Arten muss man Schiffen, Netzen, Lärm, Plantage und Feuer wirklich ausweichen.
 
 ## 🧑‍🏫 Führung in allen Spielen
 `fuehrung.js` gibt jedem Spiel (außer den Quizzes) Hilfe zum Lernen:
