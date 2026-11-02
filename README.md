@@ -271,19 +271,22 @@ Ein Leben als Tier – gesellschaftskritisch, aber sachlich und mit Quellen:
 
 ## 🐟 Piranha-Schwarm
 Eigenes Puzzle im Genre „Farben sortieren und Pixelbild abbauen“, mit Amazonas-Thema:
-- **Bild:** 19 eigene Szenen als Pixelbild mit Hintergrund – zuerst Meer und Cuxhaven (Buckelwal-Fluke, Kugelbake, Clownfisch,
-  Leuchtturm an der Elbe, Orca, Strandkörbe in Duhnen, Seehund im Watt, Containerschiff vor Cuxhaven, Blauwal), dann Amazonas
-  (Wassermelone, Sonnenuntergang am Fluss, Tukan, Frosch auf Seerose, Morphofalter, Ara, Piranha, Flussdelfin, Seerose bei Nacht,
-  Erdbeeren). Als kleine Vektorzeichnungen auf 36×36 gerastert, auf eine 15-Farben-Palette gerundet und von Kantenresten bereinigt
-  (1 296 Pixel, 6–13 Farben je Bild).
+- **Bild:** 25 eigene Szenen als Pixelbild mit Hintergrund – zuerst 15 maritime (Buckelwal-Fluke, Kugelbake, Clownfisch,
+  Leuchtturm an der Elbe, Orca, Strandkörbe in Duhnen, Seehund im Watt, Containerschiff vor Cuxhaven, Blauwal, Krabbenkutter im Hafen,
+  Feuerqualle, Meeresschildkröte, Korallenriff, Hai, Seestern am Strand), dann Amazonas (Wassermelone, Sonnenuntergang am Fluss,
+  Tukan, Frosch auf Seerose, Morphofalter, Ara, Piranha, Flussdelfin, Seerose bei Nacht, Erdbeeren). Als kleine Vektorzeichnungen
+  auf 36×36 gerastert, auf eine 15-Farben-Palette gerundet und von Kantenresten bereinigt (1 296 Pixel, 6–13 Farben je Bild).
+- **Steine und Algen** (ab Level 2, bis zu 4): sperren einen 4×4- bis 5×4-Block – nicht fressbar, kein Durchschwimmen. Ein Kreis
+  zeigt die Schlüsselfarbe und wie viele ihrer Pixel noch übrig sind; ist die Farbe ganz weg, bröckelt die Sperre weg.
+  Generator und Simulation berücksichtigen das, Levels bleiben lösbar.
 - **Satter Schwarm:** Fische sind halb durchsichtig. Wer gefressen hat, schwimmt danach unter dem Bild weiter und scheint durch die
   Lücken. Beim Lösen sammeln sich alle zu einem pulsierenden Herz über dem wieder eingeblendeten Bild.
-- **Höhlen-Raster** (6 Spalten, 24–31 Schwärme): antippbar sind nur Höhlen mit freiem Weg zum Fluss; ab Level 5 versteckte Höhlen ❓.
+- **Höhlen-Raster** (6 Spalten, 26–42 Schwärme): antippbar sind nur Höhlen mit freiem Weg zum Fluss; ab Level 3 versteckte Höhlen ❓ (bis 45 %).
 - **Fressen von unten:** Ein Schwarm frisst Pixel seiner Farbe, die von unten erreichbar sind (Flut durch schon Gefressenes).
-- **Buchten** (6 → 5 → 4): Was nicht gefressen werden kann, wartet und frisst automatisch nach, sobald seine Farbe frei liegt.
+- **Buchten** (5 → 4): Was nicht gefressen werden kann, wartet und frisst automatisch nach, sobald seine Farbe frei liegt.
   Alle voll → Fluss verstopft, mit ↶ rettbar. ⭐⭐⭐ = höchstens die Hälfte der Buchten gleichzeitig belegt.
 - **Levelbau:** rückwärts aus dem Bild (in welcher Reihenfolge Schwärme fressen könnten), dann gezielt gemischt, bis eine
-  Spieler-Simulation Schwärme parken muss (ab Level 3), aber noch gewinnt – garantiert lösbar.
+  Spieler-Simulation Schwärme parken muss (ab Level 1, ab Level 5 drei von vier Buchten), aber noch gewinnt – garantiert lösbar.
 - Alles passt auf einen Bildschirm (Bild so breit wie möglich, Höhlenreihen passen sich an). Tipp, Rückgängig, Tagesbild.
 
 ## 🧑‍🏫 Führung in allen Spielen

@@ -176,6 +176,96 @@ const PR_MOTIVE = [
     x.fillStyle = F(12); x.fillRect(6, 17, 2, 1);
     x.fillStyle = F(11); [[3, 14, 1], [4, 11, 1], [5, 8, 2]].forEach(([a, b, r]) => x.fillRect(a, b, r, r));
   } },
+  { name: 'Krabbenkutter im Hafen', emoji: '🦐', mal(x) {
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 20);
+    x.fillStyle = F(2); x.beginPath(); x.arc(5, 5, 3, 0, 7); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.ellipse(26, 4, 6, 1.8, 0, 0, 7); x.fill();
+    x.fillStyle = F(6); x.fillRect(0, 20, 36, 16);
+    x.fillStyle = F(7); for (let i = 0; i < 4; i++) x.fillRect((i * 7) % 10, 26 + i * 3, 26, 1);
+    x.strokeStyle = F(12); x.lineWidth = 1.4; x.beginPath(); x.moveTo(18, 7); x.lineTo(3, 16); x.moveTo(18, 7); x.lineTo(33, 16); x.stroke();
+    x.fillStyle = F(13); x.beginPath(); x.moveTo(3, 16); x.lineTo(1, 24); x.lineTo(6, 24); x.fill(); x.beginPath(); x.moveTo(33, 16); x.lineTo(30, 24); x.lineTo(35, 24); x.fill();
+    x.fillStyle = F(10); x.fillRect(17, 3, 2, 16);
+    x.fillStyle = F(0); x.fillRect(19, 3, 3, 2);
+    x.fillStyle = F(4); x.beginPath(); x.moveTo(5, 18); x.lineTo(32, 17); x.lineTo(29, 25); x.lineTo(9, 25); x.fill();
+    x.fillStyle = F(11); x.fillRect(7, 19, 23, 1);
+    x.fillStyle = F(0); x.fillRect(9, 24, 20, 1);
+    x.fillStyle = F(11); x.fillRect(21, 12, 7, 6);
+    x.fillStyle = F(12); x.fillRect(22, 13, 2, 2); x.fillRect(25, 13, 2, 2);
+    x.fillStyle = F(0); x.fillRect(20, 11, 9, 1);
+    x.fillStyle = F(1); [[7, 22], [12, 22]].forEach(([a, b]) => x.fillRect(a, b, 2, 2));
+    x.strokeStyle = F(11); x.lineWidth = 0.9; [[8, 10], [28, 8]].forEach(([a, b]) => { x.beginPath(); x.moveTo(a, b); x.quadraticCurveTo(a + 1.5, b - 1.5, a + 3, b); x.quadraticCurveTo(a + 4.5, b - 1.5, a + 6, b); x.stroke(); });
+  } },
+  { name: 'Feuerqualle', emoji: '🪼', mal(x) {
+    x.fillStyle = F(7); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(6); x.fillRect(0, 0, 36, 6); x.fillStyle = F(5); x.fillRect(0, 0, 36, 2);
+    x.lineWidth = 1.2; for (let i = 0; i < 7; i++) { x.strokeStyle = i % 2 ? F(9) : F(0); x.beginPath(); const a = 9 + i * 3; x.moveTo(a, 14); x.bezierCurveTo(a - 4, 21, a + 4, 27, a - 1 + (i % 3), 36); x.stroke(); }
+    x.fillStyle = F(9); x.beginPath(); x.ellipse(18, 20, 3, 7, 0, 0, 7); x.fill();
+    x.fillStyle = F(0); x.beginPath(); x.ellipse(18, 14, 12, 9, 0, Math.PI, 0); x.quadraticCurveTo(18, 18, 6, 14); x.fill();
+    x.fillStyle = F(1); x.beginPath(); x.ellipse(18, 13, 8.5, 6, 0, Math.PI, 0); x.fill();
+    x.fillStyle = F(2); x.beginPath(); x.ellipse(14.5, 9.5, 2.6, 1.5, -0.4, 0, 7); x.fill();
+    x.fillStyle = F(9); for (let i = 0; i < 6; i++) x.fillRect(8 + i * 4, 14, 2, 1);
+    x.fillStyle = F(11); [[4, 10], [5, 7], [31, 22], [30, 19], [3, 15]].forEach(([a, b]) => x.fillRect(a, b, 1, 1));
+    x.fillStyle = F(2); [[3, 28], [29, 31], [5, 32]].forEach(([a, b]) => { x.beginPath(); x.ellipse(a + 1.5, b, 1.8, 1, 0, 0, 7); x.fill(); x.beginPath(); x.moveTo(a, b); x.lineTo(a - 1.5, b - 1.2); x.lineTo(a - 1.5, b + 1.2); x.fill(); });
+  } },
+  { name: 'Meeresschildkröte', emoji: '🐢', mal(x) {
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(6); x.fillRect(0, 24, 36, 12);
+    x.fillStyle = F(14); x.beginPath(); x.moveTo(0, 32); x.quadraticCurveTo(18, 28, 36, 31); x.lineTo(36, 36); x.lineTo(0, 36); x.fill();
+    x.fillStyle = F(4); for (let i = 0; i < 5; i++) { const a = 2 + i * 8; x.beginPath(); x.moveTo(a, 33); x.quadraticCurveTo(a - 2, 28, a + 1, 24 + (i % 2) * 2); x.lineTo(a + 2, 25 + (i % 2) * 2); x.quadraticCurveTo(a, 28, a + 1.5, 33); x.fill(); }
+    x.fillStyle = F(3);
+    [[23, 9, -0.6, 7], [23, 25, 0.6, 7], [8, 12, 0.6, 3.5], [8, 22, -0.6, 3.5]].forEach(([a, b, w, l]) => { x.beginPath(); x.ellipse(a, b, l, 2.2, w, 0, 7); x.fill(); });
+    x.beginPath(); x.ellipse(29.5, 17, 4, 3, 0, 0, 7); x.fill();
+    x.fillStyle = F(10); x.beginPath(); x.ellipse(17, 17, 10.5, 8, 0, 0, 7); x.fill();
+    x.fillStyle = F(4); x.beginPath(); x.ellipse(17, 17, 9.5, 7, 0, 0, 7); x.fill();
+    x.fillStyle = F(3); [[17, 17, 2.8, 2.2], [11.5, 14.5, 2.2, 1.7], [11.5, 19.5, 2.2, 1.7], [22.5, 14.5, 2.2, 1.7], [22.5, 19.5, 2.2, 1.7], [17, 12, 2.2, 1.4], [17, 22, 2.2, 1.4]].forEach(([a, b, rx, ry]) => { x.beginPath(); x.ellipse(a, b, rx, ry, 0, 0, 7); x.fill(); });
+    x.fillStyle = F(12); x.fillRect(30, 15, 1, 1);
+    x.fillStyle = F(11); [[33, 10], [34, 7], [32, 4]].forEach(([a, b]) => x.fillRect(a, b, 1, 1));
+  } },
+  { name: 'Korallenriff', emoji: '🪸', mal(x) {
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(6); x.fillRect(0, 13, 36, 23);
+    x.fillStyle = F(14); x.beginPath(); x.moveTo(0, 31); x.quadraticCurveTo(18, 29, 36, 32); x.lineTo(36, 36); x.lineTo(0, 36); x.fill();
+    x.fillStyle = F(8); x.beginPath(); x.moveTo(7, 32); x.lineTo(0, 17); x.quadraticCurveTo(7, 9, 14, 17); x.fill();
+    x.strokeStyle = F(9); x.lineWidth = 0.8; for (let i = 0; i < 4; i++) { x.beginPath(); x.moveTo(7, 31); x.lineTo(2 + i * 3.3, 15); x.stroke(); }
+    x.fillStyle = F(1); x.beginPath(); x.ellipse(19, 31, 6.5, 4.5, 0, Math.PI, 0); x.fill();
+    x.fillStyle = F(0); for (let i = 0; i < 3; i++) x.fillRect(14 + i * 4, 28, 2, 1);
+    x.strokeStyle = F(9); x.lineWidth = 1.7; x.lineCap = 'round';
+    [[30, 32, 30, 22], [30, 26, 26, 20], [30, 24, 34, 18], [26, 20, 25, 15], [30, 22, 31, 15]].forEach(([a, b, c, d]) => { x.beginPath(); x.moveTo(a, b); x.lineTo(c, d); x.stroke(); });
+    x.fillStyle = F(3); for (let i = 0; i < 5; i++) { x.beginPath(); x.ellipse(11 + i * 1.6, 27, 0.7, 3, (i - 2) * 0.25, 0, 7); x.fill(); }
+    const fisch = (a, b, c, s) => { x.fillStyle = F(c); x.beginPath(); x.ellipse(a, b, 2.6 * s, 1.5 * s, 0, 0, 7); x.fill(); x.beginPath(); x.moveTo(a - 2 * s, b); x.lineTo(a - 3.8 * s, b - 1.4 * s); x.lineTo(a - 3.8 * s, b + 1.4 * s); x.fill(); x.fillStyle = F(12); x.fillRect(a + 1 * s, b - 0.6, 1, 1); };
+    fisch(14, 6, 2, 1.3); fisch(26, 10, 2, 1.1); fisch(30, 4, 0, 1.1);
+    x.fillStyle = F(11); [[6, 4], [7, 2], [33, 12]].forEach(([a, b]) => x.fillRect(a, b, 1, 1));
+  } },
+  { name: 'Hai', emoji: '🦈', mal(x) {
+    x.fillStyle = F(7); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(6); x.fillRect(0, 0, 36, 13);
+    x.fillStyle = F(5); x.fillRect(0, 0, 36, 4);
+    x.fillStyle = F(6); for (let i = 0; i < 3; i++) { x.beginPath(); x.moveTo(6 + i * 12, 13); x.lineTo(3 + i * 12, 36); x.lineTo(4 + i * 12, 36); x.lineTo(8 + i * 12, 13); x.fill(); }
+    x.fillStyle = F(13);
+    x.beginPath(); x.moveTo(34, 17); x.quadraticCurveTo(27, 11, 13, 14); x.quadraticCurveTo(7, 15, 4, 17); x.quadraticCurveTo(10, 21.5, 21, 22); x.quadraticCurveTo(29, 22, 34, 17); x.fill();
+    x.beginPath(); x.moveTo(6, 17); x.lineTo(0, 9); x.lineTo(2, 17); x.lineTo(0, 25); x.fill();
+    x.beginPath(); x.moveTo(15, 14); x.lineTo(19, 6); x.lineTo(23, 13.5); x.fill();
+    x.beginPath(); x.moveTo(20, 21); x.lineTo(16, 28); x.lineTo(25, 21.5); x.fill();
+    x.fillStyle = F(11); x.beginPath(); x.moveTo(34, 17.5); x.quadraticCurveTo(29, 21.5, 21, 21.6); x.quadraticCurveTo(12, 21.2, 7, 18.6); x.quadraticCurveTo(19, 20, 34, 17.5); x.fill();
+    x.fillStyle = F(12); x.fillRect(29, 15, 1, 1); [25, 26.5, 28].forEach((a) => x.fillRect(a, 16.5, 0.8, 2.5));
+    x.fillStyle = F(2); for (let i = 0; i < 14; i++) { const a = 3 + (i * 7) % 12, b = 27 + (i * 5) % 8; x.fillRect(a, b, 2, 1); }
+    x.fillStyle = F(11); [[31, 8], [32, 5], [30, 2]].forEach(([a, b]) => x.fillRect(a, b, 1, 1));
+  } },
+  { name: 'Seestern am Strand', emoji: '⭐', mal(x) {
+    x.fillStyle = F(14); x.fillRect(0, 0, 36, 36);
+    x.fillStyle = F(6); x.fillRect(0, 0, 36, 6);
+    x.fillStyle = F(5); x.beginPath(); x.moveTo(0, 5); for (let i = 0; i <= 6; i++) x.quadraticCurveTo(i * 6 + 3, 11, i * 6 + 6, 8); x.lineTo(36, 5); x.fill();
+    x.fillStyle = F(11); for (let i = 0; i < 6; i++) x.fillRect(i * 6 + 1, 9 + (i % 2), 4, 1);
+    x.fillStyle = F(1); x.beginPath();
+    for (let k = 0; k < 10; k++) { const w = -Math.PI / 2 - 0.2 + k * Math.PI / 5, r = k % 2 ? 4.2 : 10.5; x.lineTo(16 + Math.cos(w) * r, 21 + Math.sin(w) * r); }
+    x.fill();
+    x.fillStyle = F(0); for (let k = 0; k < 5; k++) { const w = -Math.PI / 2 - 0.2 + k * 2 * Math.PI / 5; for (let s = 2; s < 9; s += 2.5) x.fillRect(16 + Math.cos(w) * s - 0.5, 21 + Math.sin(w) * s - 0.5, 1, 1); }
+    x.fillStyle = F(9); x.beginPath(); x.ellipse(30, 30, 4, 3.4, 0, Math.PI, 0); x.fill();
+    x.fillStyle = F(11); for (let i = 0; i < 4; i++) x.fillRect(27 + i * 2, 27.5, 0.8, 2.5);
+    x.fillStyle = F(11); x.beginPath(); x.arc(5, 30, 2.4, 0, 7); x.fill(); x.fillStyle = F(13); x.beginPath(); x.arc(5.5, 30, 1, 0, 7); x.fill();
+    x.fillStyle = F(0); x.beginPath(); x.ellipse(30, 16, 2.6, 1.8, 0, 0, 7); x.fill(); x.fillRect(26, 14, 1, 1); x.fillRect(33, 14, 1, 1);
+    x.fillStyle = F(10); [[9, 33], [22, 34], [13, 12], [26, 23]].forEach(([a, b]) => x.fillRect(a, b, 2, 1));
+  } },
   { name: 'Wassermelone', emoji: '🍉', mal(x) {
     x.fillStyle = F(5); x.fillRect(0, 0, 36, 36);
     x.fillStyle = F(11); for (let i = 0; i < 6; i++) { x.beginPath(); x.arc(4 + i * 6, 4 + (i % 2) * 3, 1.3, 0, 7); x.fill(); }
@@ -379,13 +469,53 @@ function prZugaenglich(h) {
 // ---------- Level ----------
 function prLevelWerte(nr) {
   const s = Math.min(nr, 30);
-  return { buchten: nr <= 2 ? 6 : nr <= 8 ? 5 : 4, ziel: Math.min(30, 22 + Math.floor(s / 3)), verborgen: nr >= 5 ? Math.min(0.35, (nr - 4) * 0.04) : 0, mischen: 70, zielBuchten: nr <= 2 ? 0 : Math.min(nr <= 8 ? 3 : 3, 1 + Math.floor((nr - 1) / 3)) };
+  return { buchten: nr <= 2 ? 5 : 4, ziel: Math.min(36, 25 + Math.floor(s / 2)), verborgen: nr >= 3 ? Math.min(0.45, (nr - 2) * 0.05) : 0, mischen: 120,
+    zielBuchten: nr <= 1 ? 1 : nr <= 4 ? 2 : 3, steine: nr <= 1 ? 0 : nr <= 3 ? 1 : nr <= 6 ? 2 : nr <= 10 ? 3 : 4 };
+}
+// ---------- Steine & Algen ----------
+// Ein Stein (oder Algenbüschel) liegt auf einem Pixel-Block und sperrt ihn: nicht fressbar, kein Durchschwimmen.
+// Er löst sich, sobald alle Pixel seiner Schlüsselfarbe weggefressen sind (die Farbe steht im Kreis darauf).
+function prSteineWaehlen(echt, anzahl, r) {
+  const steine = [], belegt = new Uint8Array(PB * PB), zahl = new Array(PR_FARBEN.length).fill(0);
+  echt.forEach((c) => { zahl[c]++; });
+  for (let v = 0; v < 80 && steine.length < anzahl; v++) {
+    const w = 4 + Math.floor(r() * 2), h = 4, x0 = 1 + Math.floor(r() * (PB - w - 2)), y0 = 8 + Math.floor(r() * (PB - h - 10));
+    let frei = true;
+    for (let yy = y0 - 1; yy <= y0 + h; yy++) for (let xx = x0 - 1; xx <= x0 + w; xx++) if (belegt[yy * PB + xx]) frei = false;
+    if (!frei) continue;
+    const pix = [];
+    for (let yy = y0; yy < y0 + h; yy++) for (let xx = x0; xx < x0 + w; xx++) pix.push(yy * PB + xx);
+    const drunter = new Set(pix.map((i) => echt[i]));
+    if (steine.some((st) => drunter.has(st.key))) continue;
+    const kand = [];
+    zahl.forEach((n, f) => { if (n >= 12 && n <= 320 && !drunter.has(f) && !steine.some((st) => st.key === f || st.pix.some((i) => echt[i] === f))) kand.push(f); });
+    if (!kand.length) continue;
+    pix.forEach((i) => { belegt[i] = 1; });
+    steine.push({ pix, x0, y0, w, h, key: kand[Math.floor(r() * kand.length)], typ: r() < 0.5 ? 'stein' : 'alge' });
+  }
+  return steine;
+}
+function prSperrFarbe(echt, steine, offen) {
+  const a = Int8Array.from(echt);
+  steine.forEach((st, k) => { if (!offen || !offen[k]) st.pix.forEach((i) => { a[i] = -1; }); });
+  return a;
+}
+// öffnet Steine, deren Schlüsselfarbe ganz weg ist; liefert die neu geöffneten
+function prSteineAuf(arbeit, echt, weg, steine, offen) {
+  const neu = [];
+  steine.forEach((st, k) => {
+    if (offen[k]) return;
+    for (let i = 0; i < PB * PB; i++) if (arbeit[i] === st.key && !weg[i]) return;
+    offen[k] = 1; st.pix.forEach((i) => { arbeit[i] = echt[i]; }); neu.push(k);
+  });
+  return neu;
 }
 // Spieler-Simulation mit Buchten: liefert { ok, maxBuchten }
-function prSimulation(farbe, h0, buchten) {
+function prSimulation(echt, h0, buchten, steine = []) {
   const weg = new Uint8Array(PB * PB), h = h0.map((z) => (z ? { ...z } : null)), bucht = [];
+  const farbe = prSperrFarbe(echt, steine), offen = new Uint8Array(steine.length);
   let maxB = 0, sicher = 0;
-  const futtern = () => { let lief = true; while (lief) { lief = false; for (const b of bucht) { if (b.n <= 0) continue; const r = prFressen(farbe, weg, b.f, b.n, false).length; if (r) { b.n -= r; lief = true; } } } for (let i = bucht.length - 1; i >= 0; i--) if (bucht[i].n <= 0) bucht.splice(i, 1); };
+  const futtern = () => { let lief = true; while (lief) { lief = false; for (const b of bucht) { if (b.n <= 0) continue; const r = prFressen(farbe, weg, b.f, b.n, false).length; if (r) { b.n -= r; lief = true; } } if (prSteineAuf(farbe, echt, weg, steine, offen).length) lief = true; } for (let i = bucht.length - 1; i >= 0; i--) if (bucht[i].n <= 0) bucht.splice(i, 1); };
   // Tiefe je Farbe: wie weit (in Pixeln ab unten) liegt das nächste Pixel dieser Farbe?
   while (h.some(Boolean) && sicher++ < 500) {
     const offen = prZugaenglich(h);
@@ -393,7 +523,8 @@ function prSimulation(farbe, h0, buchten) {
     h.forEach((z, i) => { if (!z || !offen[i]) return; const e = Math.min(z.n, prErreichbar(farbe, weg, z.f, z.n)); const v = e === z.n ? 1e6 + e : e; if (v > bestWert) { bestWert = v; best = i; } });
     if (best < 0) return { ok: false, maxBuchten: maxB };
     const z = h[best]; h[best] = null;
-    const gefressen = prFressen(farbe, weg, z.f, z.n, false).length;
+    let gefressen = prFressen(farbe, weg, z.f, z.n, false).length;
+    while (gefressen < z.n && prSteineAuf(farbe, echt, weg, steine, offen).length) gefressen += prFressen(farbe, weg, z.f, z.n - gefressen, false).length;
     if (gefressen < z.n) { if (bucht.length >= buchten) return { ok: false, maxBuchten: maxB }; bucht.push({ f: z.f, n: z.n - gefressen }); }
     futtern();
     maxB = Math.max(maxB, bucht.length);
@@ -405,27 +536,30 @@ function prErzeugen(seed, nr) {
   const farbe = prMotivRaster(motiv), L = prLevelWerte(nr);
   for (let versuch = 0; versuch < 30; versuch++) {
     const r = zufallsGenerator(seed + '|' + nr + '|' + versuch);
+    const steine = prSteineWaehlen(farbe, versuch > 20 ? Math.max(0, L.steine - 1) : L.steine, r), arbeit = prSperrFarbe(farbe, steine), offen = new Uint8Array(steine.length);
     // 1) Rückwärts aus dem Bild: in welcher Reihenfolge können Schwärme das Bild fressen?
     const weg = new Uint8Array(PB * PB), folge = [];
     let rest = PB * PB, sicher = 0;
     while (rest > 0 && sicher++ < 2000) {
+      prSteineAuf(arbeit, farbe, weg, steine, offen);
       const kandidaten = [];
-      for (let f = 0; f < PR_FARBEN.length; f++) { const e = prErreichbar(farbe, weg, f, 400); if (e) kandidaten.push([f, e]); }
+      for (let f = 0; f < PR_FARBEN.length; f++) { const e = prErreichbar(arbeit, weg, f, 400); if (e) kandidaten.push([f, e]); }
+      if (!kandidaten.length) break;
       const gute = kandidaten.filter(([, e]) => e >= 6), wahl = gute.length ? gute : kandidaten;
       const [f, e] = wahl[Math.floor(r() * wahl.length)];
       const schnitt = PB * PB / L.ziel, groesse = Math.min(e, Math.max(8, Math.round(schnitt * (0.55 + r() * 0.9))));
-      const n = prFressen(farbe, weg, f, groesse, false).length;
+      const n = prFressen(arbeit, weg, f, groesse, false).length;
       folge.push({ f, n }); rest -= n;
     }
     // kleine Reste der gleichen Farbe zusammenlegen
     for (let i = folge.length - 1; i > 0; i--) if (folge[i].f === folge[i - 1].f && folge[i].n + folge[i - 1].n <= 2.2 * PB * PB / L.ziel) { folge[i - 1].n += folge[i].n; folge.splice(i, 1); }
-    if (folge.length > L.ziel + 8) continue;
+    if (rest > 0 || folge.length > L.ziel + 8) continue;
     // 2) ins Raster: Reihe für Reihe in Fressreihenfolge
     const R = Math.ceil(folge.length / PR_SPALTEN), h = new Array(R * PR_SPALTEN).fill(null);
     folge.forEach((z, i) => { h[i] = { ...z }; });
     for (let row = 0; row < R; row++) { const s = row * PR_SPALTEN; for (let i = PR_SPALTEN - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [h[s + i], h[s + j]] = [h[s + j], h[s + i]]; } }
     // 3) mischen: Tausche über Reihen hinweg, solange die Simulation es noch schafft
-    let sim = prSimulation(farbe, h, L.buchten);
+    let sim = prSimulation(farbe, h, L.buchten, steine);
     if (!sim.ok) continue;
     // Mischen mit Ziel: Das Level soll so schwer werden, dass man Schwärme parken muss (zielBuchten), aber lösbar bleiben
     const t0 = Date.now();
@@ -434,12 +568,12 @@ function prErzeugen(seed, nr) {
       const a = Math.floor(r() * Math.min(h.length, PR_SPALTEN * 2)), b = Math.min(h.length - 1, a + PR_SPALTEN * (1 + Math.floor(r() * 3)) + Math.floor(r() * 3) - 1);
       if (a === b || !h[a] || !h[b]) continue;
       [h[a], h[b]] = [h[b], h[a]];
-      const s = prSimulation(farbe, h, L.buchten);
+      const s = prSimulation(farbe, h, L.buchten, steine);
       if (s.ok && s.maxBuchten >= sim.maxBuchten && s.maxBuchten <= Math.min(L.buchten - 1, L.zielBuchten + 1)) sim = s; else [h[a], h[b]] = [h[b], h[a]];
     }
     if (sim.maxBuchten < L.zielBuchten && versuch < 8) continue;
     h.forEach((z, i) => { if (z && i >= PR_SPALTEN && r() < L.verborgen) z.verborgen = true; });
-    return { motiv, farbe, hoehlen: h, buchten: L.buchten, sim, pixel: PB * PB, fische: folge.reduce((a, z) => a + z.n, 0) };
+    return { motiv, farbe, steine, hoehlen: h, buchten: L.buchten, sim, pixel: PB * PB, fische: folge.reduce((a, z) => a + z.n, 0) };
   }
   return null;
 }
@@ -473,11 +607,11 @@ function piranhaBauen(opts) {
   const seed = opts.taeglich ? 'pr-' + heute() : 'piranha';
   const L = prErzeugen(seed, nr);
   if (!L) { $('prMeldung').textContent = 'Konnte kein Level bauen – bitte nochmal.'; return; }
-  pr = { nr, taeglich: !!opts.taeglich, motiv: L.motiv, farbe: L.farbe, weg: new Uint8Array(PB * PB), sichtbar: new Uint8Array(PB * PB).fill(1),
+  pr = { nr, taeglich: !!opts.taeglich, motiv: L.motiv, echt: L.farbe, farbe: prSperrFarbe(L.farbe, L.steine), steine: L.steine, steinOffen: new Uint8Array(L.steine.length), steinT: {}, weg: new Uint8Array(PB * PB), sichtbar: new Uint8Array(PB * PB).fill(1),
     hoehlen: L.hoehlen.map((z) => (z ? { ...z } : null)), start: L.hoehlen.map((z) => (z ? { ...z } : null)), buchtenMax: L.buchten, bucht: [],
     fische: [], schwarm: [], zuege: 0, verlauf: [], maxBuchten: 0, fertig: false, verloren: false, wackel: {}, fischeGesamt: L.fische };
   $('prKopf').textContent = (pr.taeglich ? '📅 Tagesbild' : 'Level ' + nr) + ' · ' + L.motiv.emoji + ' ' + L.motiv.name;
-  $('prMeldung').textContent = '';
+  $('prMeldung').textContent = L.steine.length ? '🪨 Steine und Algen sperren Pixel – sie lösen sich erst, wenn die Farbe im Kreis ganz weggefressen ist.' : '';
   prGroesse(); prEbeneNeu(); prStatus();
   const lauf = ++prLaufNr;
   const frame = (t) => { if (lauf !== prLaufNr || !pr) return; prUpdate(t); prZeichnen(t); requestAnimationFrame(frame); };
@@ -488,7 +622,7 @@ function prStatus() {
   $('prZuege').textContent = 'noch ' + rest.toLocaleString('de-DE') + ' Pixel · Buchten ' + pr.bucht.length + '/' + pr.buchtenMax;
   $('prRueck').disabled = !pr.verlauf.length || (pr.fische.length > 0 && !pr.verloren);
 }
-const prSnapshot = () => ({ weg: pr.weg.slice(), hoehlen: pr.hoehlen.map((z) => (z ? { ...z } : null)), bucht: pr.bucht.map((b) => ({ ...b })), maxBuchten: pr.maxBuchten });
+const prSnapshot = () => ({ weg: pr.weg.slice(), farbe: pr.farbe.slice(), steinOffen: pr.steinOffen.slice(), hoehlen: pr.hoehlen.map((z) => (z ? { ...z } : null)), bucht: pr.bucht.map((b) => ({ ...b })), maxBuchten: pr.maxBuchten });
 
 // ---------- Geometrie ----------
 let prG = { P: 9, W: 360, bx: 0, bildH: 324, flussY: 324, flussH: 64, rasterY: 388, zelleB: 60, zelleH: 48, hoehe: 700 };
@@ -498,7 +632,7 @@ function prGroesse() {
   const verfuegbar = Math.max(420, window.innerHeight - Math.max(80, Math.min(140, oben)) - 118);
   const zelleB = breite / PR_SPALTEN, flussH = 52;
   // Bild möglichst bildschirmbreit; die Höhlenreihen werden dafür flacher (mindestens 30 px, gut antippbar)
-  const zelleH = Math.min(50, Math.max(30, (verfuegbar - flussH - breite) / R));
+  const zelleH = Math.min(50, Math.max(27, (verfuegbar - flussH - breite) / R));
   const bildH = Math.max(breite * 0.6, Math.min(breite, verfuegbar - flussH - R * zelleH));
   const P = bildH / PB;
   prG = { P, W: breite, bx: (breite - PB * P) / 2, bildH, flussY: bildH, flussH, rasterY: bildH + flussH, zelleB, zelleH, hoehe: bildH + flussH + R * zelleH + 4 };
@@ -526,7 +660,8 @@ function prTipp(e) {
   pr.zuege++;
   pr.hoehlen[i] = null;
   const [sx, sy] = prHoehlePos(i);
-  const ziele = prFressen(pr.farbe, pr.weg, z.f, z.n, true);
+  let ziele = prFressen(pr.farbe, pr.weg, z.f, z.n, true);
+  while (ziele.length < z.n && prSteineCheck().length) ziele = ziele.concat(prFressen(pr.farbe, pr.weg, z.f, z.n - ziele.length, true));
   const jetzt = performance.now();
   ziele.forEach(([j, p], k) => prFischLos(z.f, [[sx, sy], [sx, prG.flussY + 8]], j, p, jetzt + k * 28));
   const rest = z.n - ziele.length;
@@ -534,14 +669,14 @@ function prTipp(e) {
     if (pr.bucht.length >= pr.buchtenMax) {
       // Fluss verstopft
       pr.verloren = true;
-      for (let k = 0; k < Math.min(rest, 40); k++) pr.fische.push({ f: z.f, pfad: [[sx, sy], [sx + (Math.random() - 0.5) * 60, prG.flussY + 20 + Math.random() * 30]], start: jetzt + k * 20, dauer: 700, ziel: -1 });
+      for (let k = 0; k < Math.min(rest, 40); k++) pr.fische.push({ f: z.f, pfad: [[sx, sy], [sx + (Math.random() - 0.5) * 60, prG.flussY + 20 + Math.random() * 30]], start: jetzt + k * 20, dauer: 1400, ziel: -1 });
       $('prMeldung').innerHTML = '🚫 <b>Der Fluss ist verstopft!</b> Alle Buchten sind voll. Nimm mit ↶ einen Zug zurück.';
       if (navigator.vibrate) navigator.vibrate([80, 60, 80]);
     } else {
       const k = pr.bucht.length, b = { f: z.f, n: rest, ankunft: jetzt + 300 + Math.min(rest, 40) * 15 };
       pr.bucht.push(b);
       const [bx, by] = prBuchtPos(k);
-      for (let m = 0; m < Math.min(rest, 30); m++) pr.fische.push({ f: z.f, pfad: [[sx, sy], [bx + (Math.random() - 0.5) * 20, by + (Math.random() - 0.5) * 12]], start: jetzt + m * 25, dauer: 600, ziel: -1 });
+      for (let m = 0; m < Math.min(rest, 30); m++) pr.fische.push({ f: z.f, pfad: [[sx, sy], [bx + (Math.random() - 0.5) * 20, by + (Math.random() - 0.5) * 12]], start: jetzt + m * 25, dauer: 1200, ziel: -1 });
       pr.maxBuchten = Math.max(pr.maxBuchten, pr.bucht.length);
     }
   }
@@ -562,8 +697,15 @@ function prBuchtenFuttern(ab) {
       const [bx, by] = prBuchtPos(k);
       ziele.forEach(([j, p], m) => prFischLos(b.f, [[bx, by]], j, p, ab + m * 28));
     });
+    if (prSteineCheck().length) lief = true;
   }
   pr.bucht = pr.bucht.filter((b) => b.n > 0);
+}
+function prSteineCheck() {
+  const neu = prSteineAuf(pr.farbe, pr.echt, pr.weg, pr.steine, pr.steinOffen), t = performance.now();
+  neu.forEach((k) => { pr.steinT[k] = t; });
+  if (neu.length) { $('prMeldung').textContent = (pr.steine[neu[0]].typ === 'stein' ? '🪨 Ein Stein bröckelt weg' : '🌿 Die Algen geben den Weg frei') + ' – dahinter geht’s weiter!'; if (navigator.vibrate) navigator.vibrate([20, 30, 20]); }
+  return neu;
 }
 // Fisch auf den Weg schicken: Startpunkte, dann von unten durch den gefressenen Gang zum Ziel
 function prFischLos(f, start, ziel, pfad, t0) {
@@ -572,12 +714,13 @@ function prFischLos(f, start, ziel, pfad, t0) {
   punkte.push([ersterX, prG.bildH + 4]);
   pfad.forEach((i) => punkte.push(prPixelPos(i)));
   let laenge = 0; for (let k = 1; k < punkte.length; k++) laenge += Math.hypot(punkte[k][0] - punkte[k - 1][0], punkte[k][1] - punkte[k - 1][1]);
-  pr.fische.push({ f, pfad: punkte, start: t0, dauer: Math.max(350, laenge / 0.42), ziel });
+  pr.fische.push({ f, pfad: punkte, start: t0, dauer: Math.max(700, laenge / 0.21), ziel });
 }
 function prRueckgaengig() {
   if (!pr || !pr.verlauf.length || (pr.fische.length && !pr.verloren)) return;
   const s = pr.verlauf.pop();
-  pr.weg = s.weg; pr.hoehlen = s.hoehlen; pr.bucht = s.bucht; pr.maxBuchten = s.maxBuchten;
+  pr.weg = s.weg; pr.hoehlen = s.hoehlen; pr.bucht = s.bucht; pr.maxBuchten = s.maxBuchten; pr.farbe = s.farbe; pr.steinOffen = s.steinOffen;
+  pr.steine.forEach((st, k) => { if (!pr.steinOffen[k]) delete pr.steinT[k]; });
   pr.fische = []; pr.verloren = false; pr.fertig = false;
   $('prMeldung').textContent = '↶ Zug zurückgenommen';
   pr.sichtbar = pr.weg.map((v) => (v ? 0 : 1));
@@ -585,6 +728,7 @@ function prRueckgaengig() {
 }
 function prNeu() {
   if (!pr) return;
+  pr.farbe = prSperrFarbe(pr.echt, pr.steine); pr.steinOffen = new Uint8Array(pr.steine.length); pr.steinT = {};
   pr.weg = new Uint8Array(PB * PB); pr.sichtbar = new Uint8Array(PB * PB).fill(1); pr.hoehlen = pr.start.map((z) => (z ? { ...z } : null));
   pr.bucht = []; pr.fische = []; pr.schwarm = []; pr.verlauf = []; pr.zuege = 0; pr.maxBuchten = 0; pr.fertig = false; pr.verloren = false;
   $('prMeldung').textContent = ''; prEbeneNeu(); prStatus();
@@ -605,7 +749,7 @@ const PR_SCHWARM_MAX = 520;
 function prSchwarmDazu(f) {
   // satte Fische schwimmen unter dem Bild weiter
   const p = f.pfad, [x1, y1] = p[p.length - 1], [x0, y0] = p[Math.max(0, p.length - 2)];
-  const w = Math.atan2(y1 - y0, x1 - x0) || Math.random() * 6.28, v = 0.04 + Math.random() * 0.04;
+  const w = Math.atan2(y1 - y0, x1 - x0) || Math.random() * 6.28, v = 0.02 + Math.random() * 0.02;
   const neu = { x: x1, y: y1, vx: Math.cos(w) * v, vy: Math.sin(w) * v, f: f.f, ph: Math.random() * 6.28 };
   if (pr.schwarm.length < PR_SCHWARM_MAX) pr.schwarm.push(neu);
   else pr.schwarm[Math.floor(Math.random() * PR_SCHWARM_MAX)] = neu;
@@ -686,7 +830,7 @@ function prPixelMalen(x, i, da) {
   const P = prG.P, gx = prG.bx + (i % PB) * P, gy = Math.floor(i / PB) * P;
   x.clearRect(gx - 0.5, gy - 0.5, P + 1, P + 1);
   if (!da) return;
-  x.fillStyle = PR_FARBEN[pr.farbe[i]].c; x.fillRect(gx, gy, P + 0.4, P + 0.4);
+  x.fillStyle = PR_FARBEN[pr.echt[i]].c; x.fillRect(gx, gy, P + 0.4, P + 0.4);
   x.fillStyle = 'rgba(255,255,255,.16)'; x.fillRect(gx, gy, P, P * 0.22);
   x.fillStyle = 'rgba(0,0,0,.14)'; x.fillRect(gx, gy + P * 0.8, P, P * 0.2);
 }
@@ -714,6 +858,7 @@ function prZeichnen(t) {
   if (!pr.fertig) prSchwarmMalen(x, t, 0.42);
   // Bild (nach dem Sieg blendet das fertige Bild wieder ein)
   x.drawImage(pr.ebene, 0, 0, W, bildH);
+  prSteineMalen(x, t);
   if (pr.fertig && pr.original) {
     x.globalAlpha = Math.min(1, (t - pr.fertigT) / 1400) * 0.55; x.drawImage(pr.original, 0, 0, W, bildH);
     x.globalAlpha = Math.min(1, (t - pr.fertigT) / 1400) * 0.3; x.fillStyle = '#0b2a24'; x.fillRect(0, 0, W, bildH); x.globalAlpha = 1;
@@ -769,6 +914,40 @@ function prZeichnen(t) {
     else prFisch(x, farbe, fx, fy, w, t, Math.max(8, prG.P * 1.2));
   });
   x.globalAlpha = 1;
+}
+function prSteineMalen(x, t) {
+  const P = prG.P;
+  pr.steine.forEach((st, k) => {
+    const auf = pr.steinOffen[k], seit = auf ? t - (pr.steinT[k] || 0) : 0;
+    if (auf && seit > 700) return;
+    const gx = prG.bx + st.x0 * P, gy = st.y0 * P, gw = st.w * P, gh = st.h * P, cx = gx + gw / 2, cy = gy + gh / 2;
+    x.save();
+    if (auf) { const a = seit / 700; x.globalAlpha = 1 - a; x.translate(cx, cy + a * gh * 0.6); x.scale(1 + a * 0.4, 1 - a * 0.5); x.translate(-cx, -cy); }
+    if (st.typ === 'stein') {
+      const gr = x.createLinearGradient(gx, gy, gx, gy + gh); gr.addColorStop(0, '#a3adb2'); gr.addColorStop(1, '#4f5b62');
+      x.fillStyle = gr; x.beginPath(); x.roundRect(gx + 1, gy + 1, gw - 2, gh - 2, P * 1.1); x.fill();
+      x.strokeStyle = 'rgba(0,0,0,.5)'; x.lineWidth = 1.5; x.stroke();
+      x.fillStyle = 'rgba(255,255,255,.22)'; x.beginPath(); x.ellipse(gx + gw * 0.32, gy + gh * 0.24, gw * 0.2, gh * 0.1, -0.3, 0, 7); x.fill();
+      x.strokeStyle = 'rgba(0,0,0,.35)'; x.lineWidth = 1.2; x.beginPath(); x.moveTo(gx + gw * 0.78, gy + gh * 0.12); x.lineTo(gx + gw * 0.68, gy + gh * 0.42); x.lineTo(gx + gw * 0.82, gy + gh * 0.7); x.stroke();
+    } else {
+      x.fillStyle = '#163f24'; x.beginPath(); x.roundRect(gx + 1, gy + 1, gw - 2, gh - 2, P * 0.7); x.fill();
+      x.lineCap = 'round';
+      for (let j = 0; j < 6; j++) {
+        x.strokeStyle = j % 2 ? '#66bb6a' : '#2e7d32'; x.lineWidth = Math.max(2, P * 0.42);
+        const sx = gx + gw * (j + 0.5) / 6; x.beginPath(); x.moveTo(sx, gy + gh - 1);
+        x.quadraticCurveTo(sx + Math.sin(t / 520 + j) * P, gy + gh * 0.5, sx + Math.sin(t / 430 + j * 2) * P * 0.6, gy + 2); x.stroke();
+      }
+    }
+    // Schlüsselfarbe mit Restzahl
+    let rest = 0; for (let i = 0; i < PB * PB; i++) if (pr.farbe[i] === st.key && !pr.weg[i]) rest++;
+    const R = Math.max(6.5, Math.min(gw, gh) * 0.27);
+    x.fillStyle = PR_FARBEN[st.key].c; x.beginPath(); x.arc(cx, cy, R, 0, 7); x.fill();
+    x.strokeStyle = '#fff'; x.lineWidth = 2; x.stroke();
+    x.font = '800 ' + Math.round(R * (rest > 99 ? 0.85 : 1.05)) + 'px Outfit, system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
+    x.fillStyle = [2, 3, 5, 9, 11, 13, 14].includes(st.key) ? '#1b1b1b' : '#fff';
+    x.fillText(auf ? '✓' : rest, cx, cy + 0.5);
+    x.restore();
+  });
 }
 function prSchwarmMalen(x, t, alpha) {
   if (!pr.schwarm.length) return;

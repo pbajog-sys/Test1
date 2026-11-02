@@ -495,6 +495,7 @@ fuehrung('piranha', {
     + '<div class="fh-regelzeile"><span>1</span><div><b>Von unten nach oben</b>Schwärme kommen von unten. Schau, welche Farben gerade am unteren Rand und an den Fressgängen liegen – die sind dran.</div></div>'
     + '<div class="fh-regelzeile"><span>2</span><div><b>Buchten sparen</b>Ein Schwarm, der nicht alles fressen kann, belegt eine Bucht. Schick lieber Schwärme los, deren Farbe gerade frei liegt.</div></div>'
     + '<div class="fh-regelzeile"><span>3</span><div><b>Höhlen freiräumen</b>Hintere Höhlen werden erst erreichbar, wenn ein Weg zum Fluss frei ist. Manchmal muss man einen Schwarm „parken“, um an den richtigen zu kommen.</div></div>'
+    + '<div class="fh-regelzeile"><span>4</span><div><b>Steine und Algen</b>Sie sperren Pixel, auch als Durchgang. Die Zahl im Kreis zeigt, wie viele Pixel der Kreisfarbe noch übrig sind – bei 0 bröckelt der Stein weg. Diese Farbe also früh abräumen!</div></div>'
     + '<div class="fh-kasten"><b>Sterne</b> ⭐⭐⭐ = höchstens die Hälfte der Buchten gleichzeitig belegt, ⭐⭐ = nie alle. 💡 Tipp zeigt den Schwarm, der gerade am meisten frisst. Volle Buchten + Schwarm ohne Futter = verstopft → ↶ Zurück.</div>',
   schritte: [
     { titel: 'Das Bild abknabbern', text: 'Oben schwimmt ein Pixelbild. Jede Höhle unten hat eine Farbe und eine Zahl: so viele Piranhas. Ein Schwarm frisst Pixel seiner Farbe – aber nur solche, die von unten erreichbar sind.' },
@@ -502,6 +503,10 @@ fuehrung('piranha', {
       auftrag: (box, ok) => fhQuiz(box, ok, 'Unten im Bild liegt gerade nur Blau frei. Welchen Schwarm schickst du?', [
         { t: 'Den blauen', richtig: true, warum: 'Genau: Er frisst sofort und braucht keine Bucht.' },
         { t: 'Den roten', warum: 'Rot liegt noch nicht frei – der Schwarm müsste in eine Bucht.' }]) },
+    { titel: 'Steine und Algen', text: 'Manche Pixel sind von Steinen oder Algen verdeckt. Darauf steht ein Kreis mit einer Farbe und einer Zahl: So viele Pixel dieser Farbe müssen erst weg. Dann löst sich die Sperre und die Fische kommen weiter.',
+      auftrag: (box, ok) => fhQuiz(box, ok, 'Auf einem Stein steht ein gelber Kreis mit „12“. Was öffnet ihn?', [
+        { t: 'Alle 12 übrigen gelben Pixel wegfressen', richtig: true, warum: 'Genau: Ist Gelb ganz weg, bröckelt der Stein.' },
+        { t: 'Einen gelben Schwarm in eine Bucht schicken', warum: 'Warten reicht nicht – die gelben Pixel müssen wirklich gefressen werden.' }]) },
     { titel: 'Planen', text: 'Gute Strategie: erst Schwärme, deren Farbe frei liegt. Ist keiner passend, park den Schwarm, der als Nächstes gebraucht wird – und räum dabei Wege zu hinteren Höhlen frei.' },
   ],
 });
