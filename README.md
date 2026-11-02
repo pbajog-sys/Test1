@@ -270,11 +270,12 @@ Ein Leben als Tier – gesellschaftskritisch, aber sachlich und mit Quellen:
   Elektro-Wasserbads: Ausstallen, Transport, Einhängen, Betäubung, Töten (ohne Blut), dann die Tageszahl laut Destatis.
 
 ## 🐟 Piranha-Schwarm
-Eigenes Fluss-Puzzle im Amazonas: Wurzelhöhlen mit Piranha-Schwärmen, Früchte in passenden Farben am Ufer. Höhle antippen –
-der Schwarm strömt (animiert, Fisch für Fisch) den kürzesten freien Weg zur Frucht. Volle Höhlen, Früchte und Felsen versperren
-Wege, die Reihenfolge ist das Rätsel. Levels werden erzeugt und per Breitensuche geprüft: garantiert lösbar, Ziel = kleinste
-Zugzahl (⭐⭐⭐), ab Level 3 ist am Anfang mindestens eine Höhle blockiert. Rückgängig, Neustart, Tipp vom Löser, Tagesfluss,
-Fortschritt und Sterne je Profil.
+Eigenes Fluss-Puzzle im Amazonas: Oben treibt ein **Pixelbild aus Früchten** (Kirschen, Wassermelone, Erdbeere, Ananas,
+Trauben, Sonnenblume, Banane, Blaubeeren, Orange, Paprika), unten warten Piranha-Schwärme in Wurzelhöhlen. Höhle antippen –
+jeder Fisch schwimmt (animiert) zum nächsten erreichbaren Pixel seiner Farbe und frisst es. Erreichbar sind nur Pixel am freien
+Wasser, das Bild wird also von außen nach innen abgebaut; gefressene Pixel bleiben als blasser Umriss stehen. Volle Höhlen,
+Pixel und Felsen versperren Wege – die Reihenfolge ist das Rätsel. Levels werden erzeugt und per Breitensuche geprüft:
+garantiert lösbar, Ziel = kleinste Zugzahl (⭐⭐⭐). Rückgängig, Neustart, Tipp vom Löser, Tagesfluss, Sterne je Profil.
 
 ## 🧑‍🏫 Führung in allen Spielen
 `fuehrung.js` gibt jedem Spiel (außer den Quizzes) Hilfe zum Lernen:

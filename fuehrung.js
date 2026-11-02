@@ -493,12 +493,12 @@ fuehrung('piranha', {
   titel: 'Piranha-Schwarm', emoji: '🐟', thema: 'karte', intro: 'pr-intro',
   spick: () => '<h3>So knackst du jeden Fluss</h3>'
     + '<div class="fh-regelzeile"><span>1</span><div><b>Erst die freien Höhlen</b>Leuchtet der Ring einer Höhle kräftig, hat ihr Schwarm einen freien Weg. Blasse Ringe sind (noch) blockiert.</div></div>'
-    + '<div class="fh-regelzeile"><span>2</span><div><b>Wer versperrt wen?</b>Volle Höhlen und Früchte sind Hindernisse. Such die Höhle, deren Auszug einen Weg für eine andere frei macht.</div></div>'
-    + '<div class="fh-regelzeile"><span>3</span><div><b>Früchte räumen den Weg</b>Ist eine Frucht ganz gefressen, verschwindet sie – oft öffnet das den Weg zum Ufer.</div></div>'
+    + '<div class="fh-regelzeile"><span>2</span><div><b>Wer versperrt wen?</b>Volle Höhlen und Bild-Pixel sind Hindernisse. Such die Höhle, deren Auszug einen Weg für eine andere frei macht.</div></div>'
+    + '<div class="fh-regelzeile"><span>3</span><div><b>Von außen nach innen</b>Fische fressen nur Pixel, die am freien Wasser liegen. Schau, welche Farbe gerade außen am Bild liegt – die ist dran.</div></div>'
     + '<div class="fh-kasten"><b>Sterne</b> ⭐⭐⭐ = so wenige Züge wie der beste Weg (oben angezeigt), ⭐⭐ = bis zu 2 mehr. „Zurück“ zählt als Zug. Steckst du fest, hilft 💡 Tipp.</div>',
   schritte: [
-    { titel: 'Der Schwarm will zur Frucht', text: 'Jede Höhle hat eine Farbe und eine Zahl: so viele Piranhas warten darin. Tippst du sie an, schwimmen sie den kürzesten freien Weg zu einer Frucht in ihrer Farbe.' },
-    { titel: 'Hindernisse', text: 'Felsen, volle Höhlen und noch nicht gefressene Früchte sind im Weg. Ist eine Höhle leer oder eine Frucht gefressen, wird ihr Feld zu freiem Wasser.',
+    { titel: 'Der Schwarm will zur Frucht', text: 'Oben treibt ein Bild aus Früchten. Jede Höhle hat eine Farbe und eine Zahl: so viele Piranhas warten darin. Tippst du sie an, frisst jeder Fisch ein erreichbares Pixel seiner Farbe.' },
+    { titel: 'Hindernisse', text: 'Felsen, volle Höhlen und noch nicht gefressene Pixel sind im Weg. Ist eine Höhle leer oder ein Pixel gefressen, wird das Feld zu freiem Wasser.',
       auftrag: (box, ok) => fhQuiz(box, ok, 'Eine rote Höhle steht direkt vor der gelben. Die gelbe hat keinen Weg. Was tust du zuerst?', [
         { t: 'Die rote Höhle', richtig: true, warum: 'Genau: Ist die rote leer, wird ihr Feld frei – und die gelbe kommt durch.' },
         { t: 'Die gelbe Höhle', warum: 'Die ist noch blockiert und wackelt nur.' }]) },

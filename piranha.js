@@ -10,6 +10,7 @@ const PR_FARBEN = [
   { id: 'blau', name: 'Blau', haupt: '#38bdf8', bauch: '#bae6fd', frucht: '#0284c7' },
   { id: 'lila', name: 'Lila', haupt: '#a78bfa', bauch: '#ddd6fe', frucht: '#7c3aed' },
   { id: 'orange', name: 'Orange', haupt: '#fb923c', bauch: '#fed7aa', frucht: '#ea580c' },
+  { id: 'gruen', name: 'Grün', haupt: '#4ade80', bauch: '#bbf7d0', frucht: '#16a34a' },
 ];
 
 // ---------- Level erzeugen und lösen ----------
@@ -88,50 +89,59 @@ function prLoesen(b, W, H, grenze = 40000) {
   }
   return null;
 }
+// Pixelbilder aus Früchten (8 breit): r rot, g gelb, b blau, l lila, o orange, n grün, . Wasser
+const PR_BILDER = [
+  { name: 'Kirschen', emoji: '🍒', zeilen: ['....nn..', '...n..n.', '..n....n', '.rr...rr', 'rrrr.rrr', '.rr...rr'] },
+  { name: 'Wassermelone', emoji: '🍉', zeilen: ['rrrrrrrr', 'rlrrrrlr', 'rrrlrrrr', '.rrrrrr.', '.nnnnnn.', '..nnnn..'] },
+  { name: 'Erdbeere', emoji: '🍓', zeilen: ['..nnnn..', '.rrnnrr.', 'rrgrrgrr', 'rrrrrrrr', '.rgrrgr.', '..rrrr..', '...rr...'] },
+  { name: 'Ananas', emoji: '🍍', zeilen: ['..n.n.n.', '...nnn..', '..goggo.', '.ggogggo', '.goggogg', '.ggogggo', '..goggo.'] },
+  { name: 'Weintrauben', emoji: '🍇', zeilen: ['....nn..', '.lllnll.', 'llllllll', '.llllll.', '..llll..', '...ll...'] },
+  { name: 'Sonnenblume', emoji: '🌻', zeilen: ['.gg..gg.', 'ggoooogg', '.goooog.', 'ggoooogg', '.gg..gg.', '...nn...', '..nnnn..'] },
+  { name: 'Banane', emoji: '🍌', zeilen: ['......no', '.....gg.', '....ggg.', '..gggg..', 'gggggg..', '.gggg...'] },
+  { name: 'Blaubeeren', emoji: '🫐', zeilen: ['..nn....', '.bbbb.n.', 'bbbbbbbn', 'bbllbbbb', '.bbbbbb.', '..bbbb..'] },
+  { name: 'Orange', emoji: '🍊', zeilen: ['...nn...', '..oonno.', '.oooooo.', 'oooogooo', 'oooooooo', '.oooooo.', '..oooo..'] },
+  { name: 'Paprika', emoji: '🫑', zeilen: ['...nn...', '..rnnr..', '.rrrrrr.', 'rrrgrrrr', 'rrrrrrrr', '.rrrrrr.', '..r..r..'] },
+];
+const PR_ZEICHEN = { r: 0, g: 1, b: 2, l: 3, o: 4, n: 5 };
 function prErzeugen(seed, nr) {
-  const D = prLevelDaten(nr);
-  for (let versuch = 0; versuch < 300; versuch++) {
+  const stufe = Math.min(nr, 40);
+  const hash = [...seed].reduce((h, c) => (h * 31 + c.charCodeAt(0)) >>> 0, 7), bild = PR_BILDER[(seed === 'piranha' ? nr - 1 : hash) % PR_BILDER.length];
+  const W = 8, bh = bild.zeilen.length, unten = 5 + Math.min(2, Math.floor(stufe / 10)), H = bh + 1 + unten;
+  const teile = Math.min(3, 1 + Math.floor(stufe / 4)), felsAnteil = Math.min(0.14, 0.03 + stufe * 0.005);
+  const t0 = Date.now();
+  let reserve = null;
+  for (let versuch = 0; versuch < 400; versuch++) {
+    if (reserve && Date.now() - t0 > 600) return reserve;
     const r = zufallsGenerator(seed + '|' + nr + '|' + versuch);
-    const { W, H } = D, b = Array.from({ length: W * H }, () => ({ t: 'w' }));
-    const freiIn = (y0, y1) => { const l = []; for (let y = y0; y <= y1; y++) for (let x = 0; x < W; x++) if (b[y * W + x].t === 'w') l.push(y * W + x); return l; };
+    const b = Array.from({ length: W * H }, () => ({ t: 'w' }));
+    const zaehl = {};
+    bild.zeilen.forEach((zeile, y) => [...zeile].forEach((ch, x) => {
+      if (ch in PR_ZEICHEN) { const f = PR_ZEICHEN[ch]; b[y * W + x] = { t: 'frucht', f, n: 1, px: true }; zaehl[f] = (zaehl[f] || 0) + 1; }
+    }));
+    const freiUnten = () => { const l = []; for (let y = bh + 1; y < H; y++) for (let x = 0; x < W; x++) if (b[y * W + x].t === 'w') l.push(y * W + x); return l; };
     const zieh = (l) => l.splice(Math.floor(r() * l.length), 1)[0];
-    // Früchte oben (Ufer), Höhlen unten, dazwischen Felsen
-    const farben = [...Array(D.farben).keys()];
-    for (const f of farben) {
-      const gesamt = 3 + Math.floor(r() * (3 + Math.min(4, nr / 3)));
-      const schon = b.filter((z) => z.t === 'hoehle').length, uebrig = farben.length - f;
-      const teile = Math.max(1, Math.min(gesamt, 1 + Math.floor(r() * D.hoehlenJeFarbe), D.maxHoehlen - schon - (uebrig - 1)));
-      // Höhlen
+    let ok = true;
+    Object.entries(zaehl).forEach(([f, gesamt]) => {
+      const n = Math.max(1, Math.min(gesamt, 1 + Math.floor(r() * teile) + (gesamt > 12 ? 1 : 0)));
       let rest = gesamt;
-      for (let i = 0; i < teile; i++) {
-        const n = i === teile - 1 ? rest : Math.max(1, Math.min(rest - (teile - 1 - i), Math.round(rest / (teile - i) + (r() - 0.5) * 2)));
-        rest -= n;
-        const l = freiIn(Math.floor(H * 0.45), H - 1); if (!l.length) break;
-        b[zieh(l)] = { t: 'hoehle', f, n };
+      for (let i = 0; i < n; i++) {
+        const k = i === n - 1 ? rest : Math.max(1, Math.min(rest - (n - 1 - i), Math.round(rest / (n - i) + (r() - 0.5) * 3)));
+        rest -= k;
+        const l = freiUnten(); if (!l.length) { ok = false; return; }
+        b[zieh(l)] = { t: 'hoehle', f: Number(f), n: k };
       }
-      // Früchte: 1–2 Stück, zusammen so viele wie Fische
-      const fr = nr > 4 && gesamt >= 4 && r() < 0.5 ? 2 : 1;
-      let rf = gesamt;
-      for (let i = 0; i < fr; i++) {
-        const n = i === fr - 1 ? rf : Math.ceil(rf / 2);
-        rf -= n;
-        const l = freiIn(0, Math.floor(H * 0.4)); if (!l.length) break;
-        b[zieh(l)] = { t: 'frucht', f, n };
-      }
-    }
-    const felsen = Math.round(W * H * D.fels);
-    for (let i = 0; i < felsen; i++) { const l = freiIn(0, H - 1); if (l.length) b[zieh(l)] = { t: 'fels' }; }
-    // Summen prüfen (falls Platz gefehlt hat)
-    const summe = (t, f) => b.filter((z) => z.t === t && z.f === f).reduce((s, z) => s + z.n, 0);
-    if (farben.some((f) => summe('hoehle', f) !== summe('frucht', f) || !summe('hoehle', f))) continue;
-    const loesung = prLoesen(b, W, H);
+    });
+    if (!ok) continue;
+    const felsen = Math.round(W * (H - bh) * felsAnteil);
+    for (let i = 0; i < felsen; i++) { const l = freiUnten(); if (l.length) b[zieh(l)] = { t: 'fels' }; }
+    const loesung = prLoesen(b, W, H, Date.now() - t0 > 400 ? 1500 : 4000);
     if (!loesung) continue;
-    // Spannend: ab Level 3 muss mindestens eine Höhle am Anfang blockiert sein
     const blockiert = b.filter((z, i) => z.t === 'hoehle' && !prWeg(b, W, H, i)).length;
-    if (nr >= 3 && blockiert === 0) continue;
-    return { W, H, brett: b, par: loesung.length, loesung };
+    const ergebnis = { W, H, brett: b, par: loesung.length, loesung, bild };
+    if (nr >= 2 && blockiert === 0) { reserve = reserve || ergebnis; continue; }
+    return ergebnis;
   }
-  return null;
+  return reserve;
 }
 
 // ---------- Zustand ----------
@@ -162,9 +172,9 @@ function piranhaBauen(opts) {
   const seed = opts.taeglich ? 'pr-' + heute() : 'piranha';
   const L = prErzeugen(seed, nr);
   if (!L) { $('prMeldung').textContent = 'Konnte kein Level bauen – bitte nochmal.'; return; }
-  pr = { nr, taeglich: !!opts.taeglich, W: L.W, H: L.H, brett: L.brett, start: L.brett.map((z) => ({ ...z })), par: L.par, zuege: 0, verlauf: [], fische: [], lauf: 0, wackel: {}, fertig: false };
+  pr = { nr, bild: L.bild, maske: L.brett.map((z) => (z.px ? z.f : -1)), taeglich: !!opts.taeglich, W: L.W, H: L.H, brett: L.brett, start: L.brett.map((z) => ({ ...z })), par: L.par, zuege: 0, verlauf: [], fische: [], lauf: 0, wackel: {}, fertig: false };
   zeigePrTeil('spiel');
-  $('prKopf').textContent = (pr.taeglich ? '📅 Tagesfluss' : 'Level ' + nr) + ' · Ziel: ' + pr.par + (pr.par === 1 ? ' Zug' : ' Züge');
+  $('prKopf').textContent = (pr.taeglich ? '📅 Tagesfluss' : 'Level ' + nr) + ' · ' + L.bild.emoji + ' ' + L.bild.name + ' · Ziel: ' + pr.par + (pr.par === 1 ? ' Zug' : ' Züge');
   $('prMeldung').textContent = '';
   prGroesse();
   prStatus();
@@ -195,8 +205,7 @@ function prTipp(e) {
   const jetzt = performance.now();
   let verzug = 0;
   zug.fahrten.forEach((f) => {
-    for (let k = 0; k < f.anzahl; k++) { pr.fische.push({ weg: f.weg, f: z.f, start: jetzt + verzug, ziel: f.ziel, quelle: i }); verzug += 110; }
-    verzug += 120;
+    for (let k = 0; k < f.anzahl; k++) { pr.fische.push({ weg: f.weg, f: z.f, start: jetzt + verzug, ziel: f.ziel, quelle: i }); verzug += 85; }
   });
   pr.zielBrett = zug.brett;
   pr.anzeige = pr.brett.map((q) => ({ ...q }));   // was während der Animation gezeigt wird (zählt live mit)
@@ -255,7 +264,7 @@ function prGeschafft() {
   if (typeof merkeVerlauf === 'function') merkeVerlauf('piranha', sterne, 3, pr.taeglich ? 'Tagesfluss' : 'Level ' + pr.nr);
   konfetti(28, ['🐟', '🍒', '✨', '🌿']);
   if (navigator.vibrate) navigator.vibrate([30, 40, 30, 40, 60]);
-  $('prMeldung').innerHTML = '<b>' + '⭐'.repeat(sterne) + '☆'.repeat(3 - sterne) + '</b> Geschafft in ' + pr.zuege + ' Zügen (bestes Ergebnis: ' + pr.par + ').';
+  $('prMeldung').innerHTML = '<b>' + '⭐'.repeat(sterne) + '☆'.repeat(3 - sterne) + '</b> ' + pr.bild.emoji + ' ' + pr.bild.name + ' weggefuttert – in ' + pr.zuege + ' Zügen (bestes Ergebnis: ' + pr.par + ').';
   $('prWeiterBtn').hidden = pr.taeglich;
 }
 
@@ -291,8 +300,12 @@ function prZeichnen(t) {
   x.fillStyle = g; x.fillRect(0, 0, W * P, H * P);
   x.strokeStyle = 'rgba(180,230,200,0.07)'; x.lineWidth = 2;
   for (let i = 0; i < 6; i++) { x.beginPath(); const y = ((i * 97 + t / 40) % (H * P + 40)) - 20; x.moveTo(0, y); x.bezierCurveTo(W * P * 0.3, y - 14, W * P * 0.6, y + 14, W * P, y); x.stroke(); }
-  // Ufer oben
-  x.fillStyle = 'rgba(60,120,60,0.25)'; x.fillRect(0, 0, W * P, P * 0.18);
+  // Umriss des Bildes: schon gefressene Pixel blass
+  if (pr.maske) pr.maske.forEach((f, i) => {
+    if (f < 0 || (b[i].t === 'frucht' && b[i].n > 0)) return;
+    x.strokeStyle = PR_FARBEN[f].haupt; x.globalAlpha = 0.22; x.lineWidth = 1.5;
+    x.strokeRect((i % W) * P + P * 0.12, Math.floor(i / W) * P + P * 0.12, P * 0.76, P * 0.76); x.globalAlpha = 1;
+  });
   b.forEach((z, i) => {
     const cx = (i % W + 0.5) * P, cy = (Math.floor(i / W) + 0.5) * P;
     let ox = 0;
@@ -312,6 +325,14 @@ function prZeichnen(t) {
       x.fillStyle = '#fff'; x.font = '800 ' + Math.round(P * 0.3) + 'px Outfit, system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle';
       x.fillText(z.n, cx + ox + P * 0.28, cy - P * 0.28);
       if (pr.tipp && pr.tipp.i === i && t < pr.tipp.bis) { x.strokeStyle = '#fff'; x.lineWidth = 3; x.setLineDash([6, 5]); x.beginPath(); x.arc(cx, cy, P * 0.5 + Math.sin(t / 120) * 3, 0, Math.PI * 2); x.stroke(); x.setLineDash([]); }
+    } else if (z.t === 'frucht' && z.n > 0 && z.px) {
+      const F = PR_FARBEN[z.f], gx = (i % W) * P, gy = Math.floor(i / W) * P, k = P * 0.06;
+      x.fillStyle = F.frucht; x.fillRect(gx + k, gy + k, P - 2 * k, P - 2 * k);
+      x.fillStyle = F.haupt; x.fillRect(gx + k, gy + k, P - 2 * k, P * 0.22);
+      x.fillStyle = 'rgba(255,255,255,.35)'; x.fillRect(gx + k * 2, gy + k * 2, P * 0.18, P * 0.18);
+      x.fillStyle = 'rgba(0,0,0,.18)'; x.fillRect(gx + k, gy + P - k - P * 0.12, P - 2 * k, P * 0.12);
+      // Pixel, die gerade erreichbar sind, glitzern leicht
+      if (prNachbarn(W, H, i).some((j) => b[j].t === 'w') && Math.floor(t / 600 + i) % 4 === 0) { x.fillStyle = 'rgba(255,255,255,.18)'; x.fillRect(gx + k, gy + k, P - 2 * k, P - 2 * k); }
     } else if (z.t === 'frucht' && z.n > 0) {
       const F = PR_FARBEN[z.f];
       x.fillStyle = '#2f6b2f'; x.beginPath(); x.ellipse(cx, cy + P * 0.1, P * 0.42, P * 0.3, 0, 0, Math.PI * 2); x.fill();
