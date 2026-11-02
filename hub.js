@@ -168,7 +168,9 @@ function renderHub() {
   const cello = loadJson('walquiz.cello.v1');
   // cello.js lädt erst nach dem Dashboard – darum die Abzeichen-Symbole hier direkt
   const celloAbz = ['🐴', '🥉', '🥈', '🥇'].map((e, i) => ((cello.badges || {})[i + 1] ? e : '·')).join(' ');
-  $('hubCelloBest').textContent = 'Lagen-Abzeichen: ' + celloAbz;
+  const instAbz = Object.values(loadJson('walquiz.instrumente.v1')).reduce((n, i) => n + Object.values((i && i.badges) || {}).filter(Boolean).length, 0);
+  const gesamtAbz = Object.values(cello.badges || {}).filter(Boolean).length + instAbz;
+  $('hubCelloBest').textContent = gesamtAbz ? '🎖️ ' + gesamtAbz + ' von 16 Abzeichen · Cello ' + celloAbz : 'Abzeichen: 🐴 🥉 🥈 🥇 je Instrument';
   const tonBest = Math.max(0, ...Object.values(loadJson('walquiz.toene.v1').best || {}));
   $('hubToeneBest').textContent = tonBest ? 'Rekord ' + fmt(tonBest) + ' / 50' : 'Noch kein Rekord';
   const taktSt = loadJson('walquiz.takt.v1');
@@ -232,7 +234,13 @@ function zoomZu(karte, weiter) {
   };
 }
 
-$('hubCello').addEventListener('click', () => { merkeZuletzt('cello'); zoomZu($('hubCello'), () => { show('cello', '🎻 Cello-Noten'); celloIntro(); }); });
+// Noten & Griffe: öffnet das zuletzt gewählte Instrument (Cello, Klavier, Gitarre, Ukulele)
+$('hubCello').addEventListener('click', () => {
+  merkeZuletzt('cello');
+  let inst = 'cello';
+  try { inst = localStorage.getItem('walquiz.instrument.v1') || 'cello'; } catch (e) { /* egal */ }
+  zoomZu($('hubCello'), () => instrumentWaehlen(inst));
+});
 $('hubFarben').addEventListener('click', () => { merkeZuletzt('farben'); zoomZu($('hubFarben'), () => { show('farben', '🎨 Farb-Gedächtnis'); farbenIntro(); }); });
 
 // Beim Start: Dashboard – außer ein Quiz-Challenge-Link wurde geöffnet, dann direkt in dessen Welt.

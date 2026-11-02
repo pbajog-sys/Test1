@@ -70,6 +70,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `farben.js` – Farb-Gedächtnis
 - `hub.js` – Dashboard „Spiele“ mit Zoom-Übergang
 - `cello.js` – Cello-Noten
+- `instrumente.js` – Noten & Griffe für Klavier, Gitarre, Ukulele
 - `toene.js` – Ton-Gedächtnis
 - `takt.js` – Takt-Gefühl (Zeitgefühl, Tempo, Taktart)
 - `punkte.js` – Punktwolke (Korrelation schätzen und sortieren)
@@ -144,6 +145,19 @@ Stufen: 🐴 Seepferdchen = 1. Lage · 🥉 Bronze = bis 4. Lage · 🥈 Silber 
 Übungen: **Griff finden** (Note → Saite und Finger in der Lage tippen), **Griff lesen** (Finger sehen → Ton nennen),
 **Noten lesen** (Bass-, Tenor-, Violinschlüssel je nach Stufe) und **Abzeichen-Test** (10 gemischte Aufgaben,
 8 richtig). Jeder Ton erklingt (Web Audio). Code in `cello.js`.
+
+## 🎹🎸🪕 Noten & Griffe: Klavier, Gitarre, Ukulele
+Die Dashboard-Zeile „Noten & Griffe“ öffnet das zuletzt gewählte Instrument; oben wechselt man per Chip zwischen
+🎻 Cello, 🎹 Klavier, 🎸 Gitarre und 🪕 Ukulele. Gleiche Bedienung wie beim Cello: Stufen 🐴 🥉 🥈 🥇 mit Abzeichen-Test
+(10 Aufgaben, 8 richtig), Vorzeichen-Schalter, 60-Sekunden-Runde. Jeder Ton erklingt (Klavier- bzw. Zupfklang per Web Audio).
+- **Klavier:** Violin- und Bassschlüssel, Klaviatur über zwei Oktaven mit Oktavnamen (c, c′, c″ …) – Taste finden heißt
+  auch die richtige Oktave finden. Stufen von c–g/c′–g′ bis C–c‴.
+- **Gitarre:** Noten im Violinschlüssel mit 8 (klingt eine Oktave tiefer), Stimmung E A D G H e, Griffbrett bis Bund 3/5/9/12.
+  Gleiche Töne an mehreren Stellen zählen alle als richtig und werden in der Auflösung gezeigt.
+- **Ukulele:** Stimmung G C E A (hohe G-Saite), Griffbrett bis Bund 3/5/7/12.
+- **Akkorde** (Gitarre und Ukulele): Griffbild erkennen oder zum Namen das Griffbild wählen; von C, G, D, Em, Am bis Barré-F,
+  Septakkorde und Hm. Deutsche Namen: H = B-Dur, B = B♭-Dur. Der Akkord erklingt angeschlagen.
+- Code: `instrumente.js` (nutzt Notensatz und Notennamen aus `cello.js`).
 
 ## 🎧 Ton-Gedächtnis (Game)
 Eigenes Spiel, angelehnt an das Prinzip „Ton hören und nachbauen“: Ein Sinuston erklingt (Leicht 3 s und einmal
@@ -227,5 +241,5 @@ Wo liegt das? Tippe den Ort auf einer leeren Karte an, Punkte nach Kilometern da
   laufende Tonwelle, schwingendes Metronom, Mini-Punktwolke, Winkel, Kompass, suchende Lupe, Porsche und Gretchen auf der Küstenstraße, Wal mit Fontäne und Haiflosse im Meer.
   Jede Figur ist ein Schnellstart in ihr Spiel (mit Flip und Emoji-Regen). Rechts oben: Profilbild zum Wechseln.
 - **Games** als Zeilen mit rundem Bild, Stand und ▶: **Quizzes** (im Kreis wechseln die Welten als Diashow), Farb-Gedächtnis,
-  Cello-Noten, Ton-Gedächtnis, Takt-Gefühl, Punktwolke, Augenmaß, Karten-Gefühl und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
+  Noten & Griffe (Cello, Klavier, Gitarre, Ukulele), Ton-Gedächtnis, Takt-Gefühl, Punktwolke, Augenmaß, Karten-Gefühl und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
 - Akku: Farbflecken als Verlauf statt Weichzeichner, Bühne und Diashow pausieren außerhalb des Bildschirms; „Bewegung reduzieren“ wird beachtet.

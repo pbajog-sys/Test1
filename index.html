@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=44">
+<link rel="stylesheet" href="fonts/fonts.css?v=45">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=44">
-<link rel="stylesheet" href="ansichten.css?v=44">
+<link rel="stylesheet" href="stil.css?v=45">
+<link rel="stylesheet" href="ansichten.css?v=45">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -453,7 +453,7 @@
       <span class="hub-knoepfe"><button class="vollbild-btn" id="vollbildBtn" type="button" aria-label="Vollbild" title="Vollbild" hidden>⛶</button><button class="profil-btn" id="profilBtn" type="button" hidden></button></span>
       <span class="bu-sterne" aria-hidden="true"></span>
       <button class="bu-ding bu-farben" type="button" data-ziel="hubFarben" aria-label="Farb-Gedächtnis"><i></i><i></i><i></i><i></i><i></i></button>
-      <button class="bu-ding bu-cello" type="button" data-ziel="hubCello" aria-label="Cello-Noten"><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span></button>
+      <button class="bu-ding bu-cello" type="button" data-ziel="hubCello" aria-label="Noten &amp; Griffe"><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span></button>
       <button class="bu-ding bu-toene" type="button" data-ziel="hubToene" aria-label="Ton-Gedächtnis"><span class="bu-ton"><svg viewBox="0 0 400 40" preserveAspectRatio="none"><path d="M0 20 Q 12.5 2 25 20 Q 37.5 38 50 20 Q 62.5 2 75 20 Q 87.5 38 100 20 Q 112.5 2 125 20 Q 137.5 38 150 20 Q 162.5 2 175 20 Q 187.5 38 200 20 Q 212.5 2 225 20 Q 237.5 38 250 20 Q 262.5 2 275 20 Q 287.5 38 300 20 Q 312.5 2 325 20 Q 337.5 38 350 20 Q 362.5 2 375 20 Q 387.5 38 400 20"/></svg></span></button>
       <button class="bu-ding bu-krimi" type="button" data-ziel="hubKrimi" aria-label="Wer war’s?"><span class="bu-licht"></span><img src="img/krimi/lupe.webp" alt=""></button>
       <button class="bu-ding bu-takt" type="button" data-ziel="hubTakt" aria-label="Takt-Gefühl"><svg class="metronom" viewBox="0 0 60 80" aria-hidden="true"><path class="mt-korpus" d="M17 76h26l-7-66q-6-6-12 0z"/><path class="mt-skala" d="M24 22h12M23 30h14M22 38h16M21 46h18"/><g class="mt-arm"><path d="M30 66V12"/><rect x="25" y="24" width="10" height="7" rx="2"/></g><path class="mt-fuss" d="M14 76h32"/></svg></button>
@@ -489,8 +489,8 @@
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-cello" id="hubCello" type="button" data-regen="🎵,🎶,🎻">
-      <span class="hg-av hg-av-cello" aria-hidden="true"><span class="hg-in"><span class="hc-cello-icon">🎻</span></span></span>
-      <span class="hg-text"><span class="hg-titel">Cello-Noten</span><span class="hg-sub">Lagen, Finger und Noten fürs Cello.</span><span class="hg-best" id="hubCelloBest"></span></span>
+      <span class="hg-av hg-av-cello" aria-hidden="true"><span class="hg-in"><span class="hc-cello-icon inst-wechsel"><i>🎻</i><i>🎹</i><i>🎸</i><i>🪕</i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Noten &amp; Griffe</span><span class="hg-sub">Cello, Klavier, Gitarre und Ukulele.</span><span class="hg-best" id="hubCelloBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-toene" id="hubToene" type="button" data-regen="🎧,🔊,🎵,〰️">
@@ -843,6 +843,7 @@
       <div class="cello-teil" id="cello-intro">
         <div class="spalten">
         <div class="spalte spalte-a">
+        <div class="inst-wahl" id="celloInstWahl"></div>
         <h2 class="cello-titel">Cello-Noten</h2>
         <p class="cello-lead">Lerne die Lagen auf dem Griffbrett – mit den Fingern, die man dort wirklich nimmt. Jeder Ton erklingt.</p>
         <div class="cello-stufen" id="celloStufen"></div>
@@ -888,6 +889,65 @@
         <div class="cello-best" id="celloErgebnisText"></div>
         <button class="btn cello-los" id="celloNochmal" type="button">Nochmal 🎵</button>
         <button class="btn secondary" id="celloMenue" type="button">Andere Übung</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-instrument">
+    <div class="cello-buehne inst-buehne" id="instBuehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="instZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="instKopf"></span>
+      </div>
+
+      <div class="cello-teil" id="inst-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="inst-wahl" id="instWahl"></div>
+        <h2 class="cello-titel" id="instTitel"></h2>
+        <p class="cello-lead" id="instLead"></p>
+        <div class="cello-stufen" id="instStufen"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="cello-modi" id="instModi">
+          <button type="button" data-modus="finden"><span></span><b></b><small></small></button>
+          <button type="button" data-modus="benennen"><span></span><b></b><small></small></button>
+          <button type="button" data-modus="lesen"><span></span><b></b><small></small></button>
+          <button type="button" data-modus="akkorde"><span></span><b></b><small></small></button>
+          <button type="button" data-modus="test"><span></span><b></b><small></small></button>
+        </div>
+        <div class="cello-optionen">
+          <label class="cello-schalter" id="instVzZeile"><input type="checkbox" id="instVz"><span></span>Vorzeichen (♯ ♭)</label>
+          <label class="cello-schalter" id="instSpeedZeile"><input type="checkbox" id="instSpeed"><span></span>60-Sekunden-Runde</label>
+        </div>
+        <button class="btn cello-los" id="instLos" type="button">Los geht’s 🎵</button>
+        <div class="cello-best" id="instBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="cello-teil" id="inst-spiel" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="cello-leiste"><span id="instModusTitel"></span><span id="instStand"></span></div>
+        <div class="cello-zeit" id="instZeitBox"><div class="cello-zeitbar"><i id="instZeitBar"></i></div><span id="instZeit"></span></div>
+        <div class="cello-papier"><div id="instNoten"></div><div class="cello-schluesselname" id="instSchluessel"></div></div>
+        <div class="cello-feedback" id="instFeedback"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="cello-griff inst-griff" id="instGriff"></div>
+        <div class="cello-legende" id="instLegende" hidden></div>
+        <div class="cello-tasten" id="instTasten"></div>
+        <button class="btn secondary" id="instStopp" type="button">Beenden</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="cello-teil" id="inst-ende" hidden>
+        <div class="cello-ergebnis" id="instErgebnis"></div>
+        <div class="cello-best" id="instErgebnisText"></div>
+        <button class="btn cello-los" id="instNochmal" type="button">Nochmal 🎵</button>
+        <button class="btn secondary" id="instMenue" type="button">Andere Übung</button>
       </div>
     </div>
   </section>
@@ -1458,31 +1518,32 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=44"></script>
-<script src="haie.js?v=44"></script>
-<script src="porsche.js?v=44"></script>
-<script src="dackel.js?v=44"></script>
-<script src="groesse.js?v=44"></script>
-<script src="gretchen.js?v=44"></script>
-<script src="effekte.js?v=44"></script>
-<script src="app.js?v=44"></script>
-<script src="melden.js?v=44"></script>
-<script src="hub.js?v=44"></script>
-<script src="farben.js?v=44"></script>
-<script src="cello.js?v=44"></script>
-<script src="toene.js?v=44"></script>
-<script src="takt.js?v=44"></script>
-<script src="punkte.js?v=44"></script>
-<script src="augen.js?v=44"></script>
-<script src="karten-daten.js?v=44"></script>
-<script src="karte.js?v=44"></script>
-<script src="krimi-grafik.js?v=44"></script>
-<script src="krimi.js?v=44"></script>
-<script src="krimi-wachen.js?v=44"></script>
-<script src="krimi-verhoer.js?v=44"></script>
-<script src="krimi-alibi.js?v=44"></script>
-<script src="krimi-akte.js?v=44"></script>
-<script src="krimi-zentrale.js?v=44"></script>
-<script src="profile.js?v=44"></script>
+<script src="wale.js?v=45"></script>
+<script src="haie.js?v=45"></script>
+<script src="porsche.js?v=45"></script>
+<script src="dackel.js?v=45"></script>
+<script src="groesse.js?v=45"></script>
+<script src="gretchen.js?v=45"></script>
+<script src="effekte.js?v=45"></script>
+<script src="app.js?v=45"></script>
+<script src="melden.js?v=45"></script>
+<script src="hub.js?v=45"></script>
+<script src="farben.js?v=45"></script>
+<script src="cello.js?v=45"></script>
+<script src="instrumente.js?v=45"></script>
+<script src="toene.js?v=45"></script>
+<script src="takt.js?v=45"></script>
+<script src="punkte.js?v=45"></script>
+<script src="augen.js?v=45"></script>
+<script src="karten-daten.js?v=45"></script>
+<script src="karte.js?v=45"></script>
+<script src="krimi-grafik.js?v=45"></script>
+<script src="krimi.js?v=45"></script>
+<script src="krimi-wachen.js?v=45"></script>
+<script src="krimi-verhoer.js?v=45"></script>
+<script src="krimi-alibi.js?v=45"></script>
+<script src="krimi-akte.js?v=45"></script>
+<script src="krimi-zentrale.js?v=45"></script>
+<script src="profile.js?v=45"></script>
 </body>
 </html>

@@ -89,7 +89,7 @@ header h1 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes einblenden { from { opacity: 0; } to { opacity: 1; } }
 /* Die Spiele haben eine eigene Vollbild-Bühne (position: fixed). Eine Animation mit transform auf dem
    Bildschirm würde Safari dazu bringen, die Bühne nur innerhalb des Bildschirms zu zeichnen („Fenster im Fenster“). */
-#screen-farben.active, #screen-cello.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-augen.active, #screen-karte.active, #screen-krimi.active { animation: none; }
+#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-augen.active, #screen-karte.active, #screen-krimi.active { animation: none; }
 @keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
@@ -1766,3 +1766,69 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .kt-gesamt { color: #a9b8b0; font-weight: 500; }
 .kt-liste li { cursor: default; background: rgba(243,233,210,.08); }
 @media (prefers-reduced-motion: reduce) { .ag-mini .am-arm, .kt-mini .km-nadel, .kt-ziel .welle { animation: none; } }
+
+/* ===================================================================
+   🎹🎸🪕 Noten & Griffe – gleiche Bühne wie das Cello, eigene Farbtöne je Instrument
+   =================================================================== */
+.inst-wahl { display: grid; grid-template-columns: repeat(4, 1fr); gap: 6px; margin-top: 4px; }
+.inst-wahl button {
+  display: grid; justify-items: center; gap: 1px; padding: 8px 2px; border-radius: 14px; border: 1.5px solid rgba(243,217,164,0.22);
+  background: rgba(0,0,0,0.18); color: inherit; font: inherit; cursor: pointer; transition: transform .2s var(--ease-spring), background .2s;
+}
+.inst-wahl button span { font-size: 1.5rem; line-height: 1.1; }
+.inst-wahl button small { font-size: 0.72rem; font-weight: 700; opacity: .85; }
+.inst-wahl button.on { border-color: #f3d9a4; background: rgba(243,217,164,0.18); transform: scale(1.05); }
+.inst-wahl button:active { transform: scale(.95); }
+/* Farbtöne: Klavier schwarz-elfenbein, Gitarre warmes Rotbraun, Ukulele Koa-Holz mit Türkis */
+.inst-buehne.inst-klavier { background: radial-gradient(120% 60% at 50% 0%, rgba(255,240,210,0.16), transparent 60%), linear-gradient(160deg, #1d1b22, #0c0b10 60%, #050407); }
+.inst-buehne.inst-gitarre { background: radial-gradient(120% 60% at 50% 0%, rgba(230,120,60,0.32), transparent 60%), repeating-linear-gradient(92deg, rgba(0,0,0,0.06) 0 3px, transparent 3px 11px), linear-gradient(160deg, #6b2a17, #2e120a 60%, #170805); }
+.inst-buehne.inst-ukulele { background: radial-gradient(120% 60% at 50% 0%, rgba(64,200,190,0.25), transparent 60%), repeating-linear-gradient(92deg, rgba(0,0,0,0.05) 0 3px, transparent 3px 11px), linear-gradient(160deg, #7a4a22, #3a210d 60%, #1b0f06); }
+
+/* Hub: die Instrumente wechseln sich im runden Bild ab */
+.inst-wechsel { position: relative; height: 54px; }
+.inst-wechsel i { position: absolute; inset: 0; display: grid; place-items: center; font-style: normal; opacity: 0; animation: instWechsel 8s infinite; }
+.inst-wechsel i:nth-child(2) { animation-delay: 2s; } .inst-wechsel i:nth-child(3) { animation-delay: 4s; } .inst-wechsel i:nth-child(4) { animation-delay: 6s; }
+@keyframes instWechsel { 0% { opacity: 0; transform: scale(.6) rotate(-12deg); } 5%, 22% { opacity: 1; transform: none; } 27%, 100% { opacity: 0; transform: scale(.6) rotate(12deg); } }
+
+/* Klaviatur */
+.klaviatur-svg { display: block; width: 100%; height: auto; max-height: 30dvh; filter: drop-shadow(0 12px 26px rgba(0,0,0,0.5)); }
+.klaviatur-svg .weiss rect { fill: #fbf7ee; stroke: #9b9283; stroke-width: 1.2; }
+.klaviatur-svg .schwarz rect { fill: #17141a; stroke: #000; }
+.klaviatur-svg .klick { cursor: pointer; }
+.klaviatur-svg .weiss.klick:active rect { fill: #eadfc6; }
+.klaviatur-svg .schwarz.klick:active rect { fill: #3b3540; }
+.klaviatur-svg .okt { font-size: 13px; font-weight: 800; fill: #8a7a62; text-anchor: middle; pointer-events: none; }
+.klaviatur-svg .okt.mitte { fill: #c8894f; }
+.klaviatur-svg .markiert rect { fill: #f3d9a4; animation: tastePuls 1.2s ease-in-out infinite; }
+.klaviatur-svg .schwarz.markiert rect { fill: #c8894f; }
+@keyframes tastePuls { 50% { opacity: .55; } }
+.klaviatur-svg .loesung rect { fill: #2fbf71; }
+.klaviatur-svg .falsch rect { fill: #e74c3c; }
+.inst-klavier .cello-griff { display: block; }
+
+/* Bundbrett */
+.bund-svg .bund { fill: rgba(243,217,164,0.6); font-size: 13px; font-weight: 700; text-anchor: middle; }
+.bund-svg .punkt circle { fill: rgba(243,217,164,0.08); stroke: rgba(243,217,164,0.3); }
+/* wie beim Cello: mit Griffbrett wird das Notenblatt kleiner */
+#inst-spiel.mit-griff { gap: 8px; }
+#inst-spiel.mit-griff .noten-svg { max-height: 17dvh; margin: 0 auto; }
+#inst-spiel.mit-griff .taste { padding: 12px 2px 8px; }
+#inst-spiel.mit-griff .cello-schluesselname { font-size: 0.72rem; }
+.inst-buehne #inst-spiel.mit-griff .griff-svg { max-height: 44dvh; }
+.inst-buehne #inst-spiel .akkord-frage { font-size: 2.6rem; padding: 4px 0 0; }
+
+/* Akkorde */
+.akkord-svg { display: block; width: 100%; height: auto; }
+.akkord-svg .ak-x { font-size: 15px; font-weight: 800; fill: #2b2118; text-anchor: middle; }
+.akkord-svg.gross { max-width: 200px; margin: 0 auto; padding: 10px; background: #fbf5e9; border-radius: 16px; box-shadow: 0 14px 34px rgba(0,0,0,0.45); animation: aufploppen .4s var(--ease-spring); }
+.akkord-frage { text-align: center; font-family: "Playfair Display", Georgia, serif; font-size: 3.4rem; font-weight: 700; color: #2b2118; padding: 10px 0 2px; }
+.akkord-frage.ok { color: #1f8a4c; } .akkord-frage.bad { color: #c0392b; }
+.cello-tasten.akkord-namen { grid-template-columns: repeat(2, 1fr); }
+.cello-tasten.akkord-namen .taste { border-radius: 14px; font-size: 1.4rem; padding: 14px 4px; }
+.cello-tasten.akkord-bilder { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.akkord-wahl { padding: 6px 4px; border: 2px solid transparent; border-radius: 14px; background: #fbf5e9; cursor: pointer; box-shadow: 0 6px 16px rgba(0,0,0,0.35); animation: aufploppen .3s var(--ease-spring) backwards; }
+.akkord-wahl:active { transform: scale(.95); }
+.akkord-wahl.richtig { border-color: #2fbf71; box-shadow: 0 0 0 3px #2fbf71, 0 6px 16px rgba(0,0,0,0.35); }
+.akkord-wahl.falsch { border-color: #e74c3c; animation: shake .35s; }
+.noten-svg .schluessel-8 { font-size: 15px; font-weight: 800; fill: #2b2118; font-family: Georgia, serif; }
+@media (prefers-reduced-motion: reduce) { .inst-wechsel i { animation: none; } .inst-wechsel i:first-child { opacity: 1; } }
