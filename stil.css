@@ -89,7 +89,7 @@ header h1 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes einblenden { from { opacity: 0; } to { opacity: 1; } }
 /* Die Spiele haben eine eigene Vollbild-Bühne (position: fixed). Eine Animation mit transform auf dem
    Bildschirm würde Safari dazu bringen, die Bühne nur innerhalb des Bildschirms zu zeichnen („Fenster im Fenster“). */
-#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-funktion.active, #screen-zufall.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-riff.active, #screen-krimi.active { animation: none; }
+#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-funktion.active, #screen-zufall.active, #screen-zahlen.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-riff.active, #screen-krimi.active { animation: none; }
 @keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
@@ -2495,3 +2495,74 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .btn.fh-intro-btn { width: 100%; border: 2px dashed rgba(255,255,255,.35); }
 .btn.fh-krimi-btn { width: 100%; }
 @media (prefers-reduced-motion: reduce) { .fh-puls i, .fh-takt i, .fh-knopf.neu { animation: none; } }
+
+/* ===================================================================
+   📊 Du in Zahlen – ruhige Infografik: Papierweiß, Petrol, Bernstein
+   =================================================================== */
+.zl-mini { display: grid; grid-template-columns: repeat(4, 1fr); gap: 3px; width: 100%; height: 100%; }
+.zl-mini i { border-radius: 2px; background: #0f766e; animation: zlMini 4s steps(1) infinite; }
+.zl-mini i:nth-child(n+8) { background: #d7dde5; }
+.zl-mini i:nth-child(8) { background: #f59e0b; animation: zlBlink 1.2s ease-in-out infinite; }
+@keyframes zlBlink { 50% { opacity: .35; } }
+.hub-zahlen { background: linear-gradient(#0d1b1e, #0d1b1e) padding-box, linear-gradient(90deg, #2dd4bf, #f59e0b, #e5e7eb, #2dd4bf) border-box; background-size: 100% 100%, 300% 100%; box-shadow: 0 16px 50px rgba(45,212,191,0.16); }
+.hub-zahlen .hg-titel { background: linear-gradient(90deg, #99f6e4, #fde68a); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hg-av-zahlen { --ring: conic-gradient(#2dd4bf, #f59e0b, #e5e7eb, #2dd4bf); }
+.hg-av-zahlen > .hg-in { background: #f7f8fa; border-color: #0d1b1e; padding: 12px; }
+
+.zl-buehne {
+  position: fixed; inset: 0; z-index: 20; overflow-y: auto; color: #14202b;
+  padding: calc(env(safe-area-inset-top) + 12px) 16px calc(env(safe-area-inset-bottom) + 32px);
+  background: #f7f8fa; font-family: "Outfit", system-ui, sans-serif;
+}
+.zl-buehne > * { max-width: 680px; margin-left: auto; margin-right: auto; }
+.zl-buehne .farb-kopf .icon-btn { background: #fff; color: #14202b; box-shadow: 0 2px 0 rgba(20,32,43,.12); }
+.zl-kopf { display: grid; gap: 12px; text-align: center; animation: aufploppen .4s var(--ease-spring); }
+.zl-titel { margin: 6px 0 0; font-size: 2.6rem; font-weight: 800; letter-spacing: -0.02em; }
+.zl-titel::after { content: ''; display: block; width: 64px; height: 5px; margin: 6px auto 0; border-radius: 3px; background: linear-gradient(90deg, #0f766e, #f59e0b); }
+.zl-lead { margin: 0 auto; max-width: 44ch; line-height: 1.5; color: #4b5563; }
+.zl-eingabe { display: grid; grid-template-columns: 1.4fr 1fr; gap: 10px; text-align: left; }
+.zl-eingabe label { display: grid; gap: 4px; font-size: 0.85rem; font-weight: 600; color: #4b5563; }
+.zl-eingabe input { font: inherit; font-size: 1.1rem; font-weight: 700; padding: 12px; border-radius: 14px; border: 2px solid #d7dde5; background: #fff; color: #14202b; min-width: 0; }
+.zl-eingabe input:focus { outline: none; border-color: #0f766e; }
+.zl-chips { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; font-size: 0.85rem; }
+.zl-chips span { color: #6b7280; }
+.zl-chips button { padding: 7px 12px; border-radius: 999px; border: 1.5px solid #d7dde5; background: #fff; color: #14202b; font: inherit; font-weight: 600; cursor: pointer; }
+.zl-chips button.on { background: #0f766e; border-color: #0f766e; color: #fff; }
+.zl-hinweis { color: #b91c1c; font-weight: 600; min-height: 1.2em; }
+.zl-ergebnis { display: grid; gap: 18px; margin-top: 10px; }
+.zl-abschnitt { display: grid; gap: 12px; background: #fff; border-radius: 22px; padding: 16px; box-shadow: 0 1px 0 rgba(20,32,43,.06), 0 10px 30px rgba(20,32,43,.06); animation: aufploppen .45s var(--ease-spring) backwards; }
+.zl-abschnitt:nth-child(2) { animation-delay: .06s; } .zl-abschnitt:nth-child(3) { animation-delay: .12s; } .zl-abschnitt:nth-child(4) { animation-delay: .18s; }
+.zl-abschnitt h3 { margin: 0; font-size: 1.15rem; display: flex; align-items: center; gap: 8px; }
+.zl-marke { display: inline-block; padding: 2px 8px; border-radius: 999px; background: #fef3c7; color: #92400e; font-size: 0.7rem; font-weight: 700; vertical-align: middle; }
+.zl-alter-gross { font-size: 2.6rem; font-weight: 800; line-height: 1.1; text-align: center; color: #0f766e; font-variant-numeric: tabular-nums; }
+.zl-alter-gross small { font-size: 1rem; color: #6b7280; font-weight: 600; }
+.zl-raster4 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.zl-raster4 > div { display: grid; gap: 2px; padding: 10px; border-radius: 14px; background: #f1f5f4; text-align: center; }
+.zl-raster4 b { font-size: 1.25rem; font-variant-numeric: tabular-nums; word-break: break-all; }
+.zl-raster4 small { color: #6b7280; font-size: 0.78rem; }
+.zl-meilen { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; font-size: 0.92rem; }
+.zl-meilen li { padding: 9px 12px; border-radius: 12px; background: #f7f8fa; }
+.zl-meilen li.zl-geb { background: #fef3c7; }
+.zl-meilen li.vorbei { color: #6b7280; background: none; padding: 2px 12px; font-size: 0.85rem; }
+.zl-wochen { display: block; width: 100%; height: auto; }
+.zl-text { margin: 0; line-height: 1.5; color: #374151; font-size: 0.92rem; }
+.zl-text small { display: block; margin-top: 6px; color: #6b7280; }
+.zl-karten { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 10px; }
+.zl-karte { display: grid; grid-template-columns: 40px 1fr; gap: 10px; align-items: start; padding: 12px; border-radius: 16px; background: #f7f8fa; border: 1.5px solid #eef1f5; }
+.zl-karte.schaetz { border-style: dashed; border-color: #f2d58a; background: #fffcf3; }
+.zl-k-emoji { font-size: 1.7rem; line-height: 1; }
+.zl-karte small { display: block; color: #6b7280; font-size: 0.78rem; font-weight: 600; }
+.zl-karte b { display: block; font-size: 1.3rem; color: #0f766e; line-height: 1.25; font-variant-numeric: tabular-nums; }
+.zl-karte.schaetz b { color: #b45309; }
+.zl-karte p { margin: 4px 0 0; font-size: 0.82rem; line-height: 1.4; color: #4b5563; }
+.zl-fuss { margin: 0; font-size: 0.8rem; color: #6b7280; line-height: 1.45; }
+.zl-land { display: grid; grid-template-columns: 112px 1fr 38px; align-items: center; gap: 8px; font-size: 0.85rem; padding: 3px 0; }
+.zl-land.de { font-weight: 800; }
+.zl-land b { text-align: right; font-variant-numeric: tabular-nums; }
+.zl-balken { position: relative; height: 14px; border-radius: 7px; background: #eef1f5; }
+.zl-balken i { position: absolute; left: 0; top: 0; bottom: 0; border-radius: 7px; background: linear-gradient(90deg, #5eead4, #0f766e); }
+.zl-land.de .zl-balken i { background: linear-gradient(90deg, #fcd34d, #f59e0b); }
+.zl-balken em { position: absolute; top: -3px; bottom: -3px; width: 3px; margin-left: -1.5px; border-radius: 2px; background: #14202b; }
+.zl-quellen ul { margin: 0; padding-left: 18px; display: grid; gap: 6px; font-size: 0.8rem; color: #4b5563; line-height: 1.45; }
+@media (prefers-reduced-motion: reduce) { .zl-mini i { animation: none; } }
+.zl-karte p b { display: inline; font-size: inherit; color: #14202b; line-height: inherit; }

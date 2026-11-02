@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=56">
+<link rel="stylesheet" href="fonts/fonts.css?v=57">
 <link rel="icon" href="icons/favicon-64.png" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=2">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=56">
-<link rel="stylesheet" href="ansichten.css?v=56">
+<link rel="stylesheet" href="stil.css?v=57">
+<link rel="stylesheet" href="ansichten.css?v=57">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -538,6 +538,11 @@
     <button class="hub-game hub-zufall" id="hubZufall" type="button" data-regen="🎲,🍀,🪙,🃏">
       <span class="hg-av hg-av-zufall" aria-hidden="true"><span class="hg-in"><span class="zf-mini" aria-hidden="true"><i>⚄</i><i>⚁</i></span></span></span>
       <span class="hg-text"><span class="hg-titel">Zufalls-Gefühl</span><span class="hg-sub">Wie wahrscheinlich ist das? Schätzen – dann 1000-mal live würfeln.</span><span class="hg-best" id="hubZufallBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-zahlen" id="hubZahlen" type="button" data-regen="📊,🎂,🌍,✨">
+      <span class="hg-av hg-av-zahlen" aria-hidden="true"><span class="hg-in"><span class="zl-mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Du in Zahlen</span><span class="hg-sub">Dein Leben in Wochen, Herzschlägen, Lichtjahren – mit echten Daten.</span><span class="hg-best">Kein Spiel, sondern Staunen</span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-riff" id="hubRiff" type="button" data-regen="🎲,🪸,🐠,🟥">
@@ -1748,6 +1753,34 @@
     </div>
   </section>
 
+  <section class="screen" id="screen-zahlen">
+    <div class="zl-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="zlZurueck" type="button" aria-label="Zurück">←</button>
+        <span>📊 Du in Zahlen</span>
+      </div>
+      <div class="zl-kopf">
+        <h2 class="zl-titel">Du in Zahlen</h2>
+        <p class="zl-lead">Wie viele Wochen, Herzschläge und Kilometer durchs All steckt in deinem Leben? Gib deinen Geburtstag ein – alles wird nur auf diesem Gerät gerechnet.</p>
+        <div class="zl-eingabe">
+          <label>Geburtstag<input type="date" id="zlDatum" min="1900-01-01"></label>
+          <label>Uhrzeit <small>(optional)</small><input type="time" id="zlZeit"></label>
+        </div>
+        <div class="zl-chips" id="zlGeschlecht"><span>Für die Lebenserwartung:</span><button type="button" data-g="w">weiblich</button><button type="button" data-g="m">männlich</button><button type="button" data-g="x">keine Angabe</button></div>
+        <div class="zl-hinweis" id="zlHinweis"></div>
+      </div>
+      <div class="zl-ergebnis" id="zlErgebnis" hidden>
+        <section class="zl-abschnitt"><h3>⏱️ So lange lebst du schon</h3><div id="zlAlter"></div><ul class="zl-meilen" id="zlMeilen"></ul></section>
+        <section class="zl-abschnitt"><h3>🗓️ Dein Leben in Wochen</h3><canvas class="zl-wochen" id="zlWochenBild"></canvas><p class="zl-text" id="zlWochenText"></p></section>
+        <section class="zl-abschnitt"><h3>🫀 Dein Körper <span class="zl-marke">Schätzung</span></h3><div class="zl-karten" id="zlKoerper"></div></section>
+        <section class="zl-abschnitt"><h3>🌌 Deine Reise durchs All</h3><div class="zl-karten" id="zlKosmos"></div></section>
+        <section class="zl-abschnitt"><h3>🌍 Die Welt seit deiner Geburt</h3><div class="zl-karten" id="zlWelt"></div></section>
+        <section class="zl-abschnitt"><h3>🗺️ Wärst du woanders geboren</h3><div id="zlLaender"></div></section>
+        <section class="zl-abschnitt zl-quellen"><h3>📚 Quellen &amp; Methode</h3><p class="zl-text">Exakt gerechnet: Alter, Tage, Meilensteine, Erdumlauf, Erddrehung, Licht. <span class="zl-marke">Schätzung</span> = Durchschnittswerte, du persönlich weichst davon ab. Weltzahlen sind amtliche Jahreswerte, dazwischen interpoliert und für 2025/26 mit den letzten Raten fortgeschrieben.</p><ul id="zlQuellen"></ul></section>
+      </div>
+    </div>
+  </section>
+
   <section class="screen" id="screen-augen">
     <div class="ag-buehne">
       <div class="farb-kopf">
@@ -1915,38 +1948,39 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=56"></script>
-<script src="haie.js?v=56"></script>
-<script src="porsche.js?v=56"></script>
-<script src="dackel.js?v=56"></script>
-<script src="groesse.js?v=56"></script>
-<script src="gretchen.js?v=56"></script>
-<script src="effekte.js?v=56"></script>
-<script src="app.js?v=56"></script>
-<script src="melden.js?v=56"></script>
-<script src="verlauf.js?v=56"></script>
-<script src="hub.js?v=56"></script>
-<script src="farben.js?v=56"></script>
-<script src="cello.js?v=56"></script>
-<script src="instrumente.js?v=56"></script>
-<script src="toene.js?v=56"></script>
-<script src="takt.js?v=56"></script>
-<script src="punkte.js?v=56"></script>
-<script src="funktion.js?v=56"></script>
-<script src="zufall.js?v=56"></script>
-<script src="augen.js?v=56"></script>
-<script src="karten-daten.js?v=56"></script>
-<script src="karte.js?v=56"></script>
-<script src="tiefgang.js?v=56"></script>
-<script src="riff.js?v=56"></script>
-<script src="krimi-grafik.js?v=56"></script>
-<script src="krimi.js?v=56"></script>
-<script src="krimi-wachen.js?v=56"></script>
-<script src="krimi-verhoer.js?v=56"></script>
-<script src="krimi-alibi.js?v=56"></script>
-<script src="krimi-akte.js?v=56"></script>
-<script src="krimi-zentrale.js?v=56"></script>
-<script src="profile.js?v=56"></script>
-<script src="fuehrung.js?v=56"></script>
+<script src="wale.js?v=57"></script>
+<script src="haie.js?v=57"></script>
+<script src="porsche.js?v=57"></script>
+<script src="dackel.js?v=57"></script>
+<script src="groesse.js?v=57"></script>
+<script src="gretchen.js?v=57"></script>
+<script src="effekte.js?v=57"></script>
+<script src="app.js?v=57"></script>
+<script src="melden.js?v=57"></script>
+<script src="verlauf.js?v=57"></script>
+<script src="hub.js?v=57"></script>
+<script src="farben.js?v=57"></script>
+<script src="cello.js?v=57"></script>
+<script src="instrumente.js?v=57"></script>
+<script src="toene.js?v=57"></script>
+<script src="takt.js?v=57"></script>
+<script src="punkte.js?v=57"></script>
+<script src="funktion.js?v=57"></script>
+<script src="zufall.js?v=57"></script>
+<script src="zahlen.js?v=57"></script>
+<script src="augen.js?v=57"></script>
+<script src="karten-daten.js?v=57"></script>
+<script src="karte.js?v=57"></script>
+<script src="tiefgang.js?v=57"></script>
+<script src="riff.js?v=57"></script>
+<script src="krimi-grafik.js?v=57"></script>
+<script src="krimi.js?v=57"></script>
+<script src="krimi-wachen.js?v=57"></script>
+<script src="krimi-verhoer.js?v=57"></script>
+<script src="krimi-alibi.js?v=57"></script>
+<script src="krimi-akte.js?v=57"></script>
+<script src="krimi-zentrale.js?v=57"></script>
+<script src="profile.js?v=57"></script>
+<script src="fuehrung.js?v=57"></script>
 </body>
 </html>

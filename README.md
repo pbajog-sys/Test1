@@ -79,6 +79,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `punkte.js` – Punktwolke (Korrelation schätzen und sortieren)
 - `funktion.js` – Funktions-Detektiv (Funktionsgraphen lesen und nachbauen)
 - `zufall.js` – Zufalls-Gefühl (Wahrscheinlichkeiten schätzen, live simulieren)
+- `zahlen.js` – Du in Zahlen (das eigene Leben in belegten Zahlen)
 - `fuehrung.js` – Hilfe für alle Spiele: Spickzettel (?), geführte Einführung mit Aufträgen, Übungsfälle für „Wer war’s?“
 - `augen.js` – Augenmaß
 - `karte.js`, `karten-daten.js` – Karten-Gefühl (Kartendaten aus `werkzeuge/karten.py`)
@@ -233,6 +234,18 @@ Wie stark hängt das zusammen? Ein Spiel zum Korrelationskoeffizienten r, fünf 
   Die **geführte Lernrunde** erklärt das Schätzen in Schritten mit Beispielwolken und endet mit drei Übungen, die Schritt für
   Schritt zum Ergebnis führen. In der Auflösung zeigt eine Ellipse die Form der Wolke mit der Faustregel r ≈ (1 − q²) / (1 + q²)
   für q = Breite : Länge (im Mittel etwa ±0,02 genau).
+
+## 📊 Du in Zahlen
+Geburtstag (optional Uhrzeit und Geschlecht) eingeben, alles wird nur auf dem Gerät gerechnet:
+- **Exakt:** Alter in Jahren/Monaten/Tagen, Tage, Wochen, Stunden, live tickende Sekunden, kommende Meilensteine
+  (10 000. Tag, 1 Milliarde Sekunden, 2000 Wochen …), Strecke um die Sonne, Erddrehung, Vollmonde, wie weit das Licht vom
+  Geburtstag gekommen ist und welche Sterne es schon erreicht hat.
+- **Lebenswochen-Raster** (90 × 52) mit der Lebenserwartung bei Geburt in Deutschland (Destatis 2025: Frauen 83,6, Männer 79,1),
+  mit Hinweis, dass das keine persönliche Vorhersage ist.
+- **Schätzungen** (deutlich markiert): Herzschläge, Atemzüge, Schlaf, Blinzeln, Haar- und Nagelwachstum nach Durchschnittswerten je Alter.
+- **Welt:** Weltbevölkerung bei Geburt und heute, Geburten und Sterbefälle seitdem, ungefähre „Mensch Nr.“ (PRB),
+  Lebenserwartung weltweit damals/heute, CO₂ damals/heute, Lebenserwartung in 12 Ländern im Vergleich.
+- **Quellen:** Weltbank/UN WPP (Stand 08.10.2026), Destatis PM 236/2026, NOAA Mauna Loa, PRB 2022 – alles auf der Seite aufgeführt.
 
 ## 🧑‍🏫 Führung in allen Spielen
 `fuehrung.js` gibt jedem Spiel (außer den Quizzes) Hilfe zum Lernen:
