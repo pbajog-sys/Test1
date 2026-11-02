@@ -366,8 +366,12 @@ und je Spiel Anzahl, Bestwert, Schnitt der letzten 7 Runden und eine Verlaufskur
 
 ## 🎮 Dashboard „Spiele“
 - Bunter Neon-Look: dunkler Hintergrund mit wandernden Farbflecken.
-- Oben eine **animierte Bühne**, die das ganze Dashboard als Bild zeigt: tanzende Farbbalken, aufsteigende Cello-Noten,
-  laufende Tonwelle, schwingendes Metronom, Mini-Punktwolke, Winkel, Kompass, suchende Lupe, Porsche und Gretchen auf der Küstenstraße, Wal mit Fontäne und Haiflosse im Meer.
+- Oben ein **Universum**: Nebel, funkelnde Sterne, Sternschnuppe und eine leuchtende Sonne. Alle Spiele kreisen auf drei
+  gekippten Umlaufbahnen um sie – tanzende Farbbalken, Cello-Noten, Tonwelle, Metronom, Mini-Punktwolke, Winkel, Kompass, Lupe,
+  Würfel, Funktionstafel, Porsche, Gretchen, ein Wal im All und Planeten für Hai-Quiz, Tiefgang, Piranha-Schwarm, Tierleben,
+  Du in Zahlen und Riffbau. Vorn auf der Bahn groß und hell, hinten klein und hinter der Sonne (nur `translate`/`scale`,
+  pausiert außerhalb des Bildschirms). Jedes Objekt startet sein Spiel.
+- **App-Symbol** und Startbilder: Ringplanet im Sternennebel mit drei bunten Monden (Home-Bildschirm, Manifest, Favicon).
   Jede Figur ist ein Schnellstart in ihr Spiel (mit Flip und Emoji-Regen). Rechts oben: Profilbild zum Wechseln.
 - **Games** als Zeilen mit rundem Bild, Stand und ▶: **Quizzes** (im Kreis wechseln die Welten als Diashow), Farb-Gedächtnis,
   Noten & Griffe (Cello, Klavier, Gitarre, Ukulele), Ton-Gedächtnis, Takt-Gefühl, Punktwolke, Augenmaß, Karten-Gefühl, Tiefgang, Riffbau und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.

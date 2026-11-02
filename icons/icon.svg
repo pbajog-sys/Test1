@@ -1,19 +1,62 @@
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
   <defs>
-    <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
-      <stop offset="0" stop-color="#1d5f99"/>
-      <stop offset="1" stop-color="#0b2a4a"/>
+    <radialGradient id="himmel" cx="0.3" cy="0.25" r="0.95">
+      <stop offset="0" stop-color="#3b1d6e"/>
+      <stop offset="0.45" stop-color="#16123a"/>
+      <stop offset="1" stop-color="#070814"/>
+    </radialGradient>
+    <radialGradient id="nebel1" cx="0.78" cy="0.8" r="0.5">
+      <stop offset="0" stop-color="#0ea5a4" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#0ea5a4" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="nebel2" cx="0.15" cy="0.7" r="0.4">
+      <stop offset="0" stop-color="#db2777" stop-opacity="0.4"/>
+      <stop offset="1" stop-color="#db2777" stop-opacity="0"/>
+    </radialGradient>
+    <radialGradient id="planet" cx="0.36" cy="0.32" r="0.75">
+      <stop offset="0" stop-color="#ffe29a"/>
+      <stop offset="0.35" stop-color="#ff8a4c"/>
+      <stop offset="0.7" stop-color="#e0407b"/>
+      <stop offset="1" stop-color="#5b21b6"/>
+    </radialGradient>
+    <radialGradient id="glow" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0.55" stop-color="#ff9a5c" stop-opacity="0.55"/>
+      <stop offset="1" stop-color="#ff9a5c" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="ring" x1="0" y1="0" x2="1" y2="0">
+      <stop offset="0" stop-color="#38bdf8"/>
+      <stop offset="0.35" stop-color="#a78bfa"/>
+      <stop offset="0.7" stop-color="#f472b6"/>
+      <stop offset="1" stop-color="#fbbf24"/>
     </linearGradient>
-    <clipPath id="r"><rect width="512" height="512" rx="112"/></clipPath>
+    <clipPath id="vorn"><rect x="0" y="256" width="512" height="256"/></clipPath>
   </defs>
-  <g clip-path="url(#r)">
-  <rect width="512" height="512" rx="112" fill="url(#sea)"/>
-  <!-- Walflosse -->
-  <path d="M256 330 C 250 270, 240 230, 200 190 C 160 150, 110 150, 80 160 C 120 175, 170 205, 205 250 C 225 278, 238 305, 244 340 Z" fill="#eaf4ff"/>
-  <path d="M256 330 C 262 270, 272 230, 312 190 C 352 150, 402 150, 432 160 C 392 175, 342 205, 307 250 C 287 278, 274 305, 268 340 Z" fill="#eaf4ff"/>
-  <rect x="240" y="320" width="32" height="70" rx="10" fill="#eaf4ff"/>
-  <!-- Wellen -->
-  <path d="M0 390 q 36 -26 72 0 t 72 0 t 72 0 t 72 0 t 72 0 t 72 0 t 72 0 V512 H0 Z" fill="#4fc3f7"/>
-  <path d="M0 430 q 36 -22 72 0 t 72 0 t 72 0 t 72 0 t 72 0 t 72 0 t 72 0 V512 H0 Z" fill="#2b9fd6"/>
+  <rect width="512" height="512" fill="url(#himmel)"/>
+  <rect width="512" height="512" fill="url(#nebel1)"/>
+  <rect width="512" height="512" fill="url(#nebel2)"/>
+  <g fill="#fff">
+    <circle cx="70" cy="80" r="4"/><circle cx="140" cy="44" r="2.5"/><circle cx="420" cy="70" r="3.5"/><circle cx="460" cy="150" r="2"/>
+    <circle cx="60" cy="330" r="2.5"/><circle cx="452" cy="420" r="3"/><circle cx="110" cy="452" r="2"/><circle cx="300" cy="40" r="2"/>
+    <circle cx="36" cy="210" r="2"/><circle cx="380" cy="470" r="2.2"/>
+    <path d="M404 106 l6 18 18 6 -18 6 -6 18 -6 -18 -18 -6 18 -6z" opacity="0.95"/>
+    <path d="M96 392 l4 12 12 4 -12 4 -4 12 -4 -12 -12 -4 12 -4z" opacity="0.8"/>
+  </g>
+  <g transform="rotate(-18 256 262)">
+    <!-- Ring hinten -->
+    <ellipse cx="256" cy="262" rx="196" ry="52" fill="none" stroke="url(#ring)" stroke-width="16" opacity="0.55"/>
+    <circle cx="256" cy="262" r="150" fill="url(#glow)"/>
+  </g>
+  <circle cx="256" cy="262" r="112" fill="url(#planet)"/>
+  <ellipse cx="222" cy="214" rx="40" ry="22" fill="#fff" opacity="0.28" transform="rotate(-30 222 214)"/>
+  <path d="M170 280 q 86 30 172 -6" stroke="#fff" stroke-opacity="0.16" stroke-width="12" fill="none" stroke-linecap="round"/>
+  <g transform="rotate(-18 256 262)">
+    <!-- Ring vorn -->
+    <g clip-path="url(#vorn)">
+      <ellipse cx="256" cy="262" rx="196" ry="52" fill="none" stroke="url(#ring)" stroke-width="16"/>
+    </g>
+    <!-- Monde auf dem Ring (die Spiele) -->
+    <circle cx="452" cy="262" r="17" fill="#4ade80"/>
+    <circle cx="94" cy="294" r="14" fill="#38bdf8"/>
+    <circle cx="330" cy="311" r="12" fill="#fde047"/>
   </g>
 </svg>

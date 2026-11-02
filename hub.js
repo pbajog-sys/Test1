@@ -309,3 +309,54 @@ if (pendingChallenge) {
   $('installZu').addEventListener('click', () => { karte.hidden = true; localStorage.setItem(KEY, 'weg'); });
   window.addEventListener('appinstalled', () => { karte.hidden = true; localStorage.setItem(KEY, 'installiert'); });
 })();
+
+// ---------- Universum: alle Spiele kreisen auf drei Bahnen um die Sonne ----------
+// Vorne (unten auf der Bahn) groß und hell, hinten klein, blass und hinter der Sonne. Bewegt wird nur über `translate`/`scale`.
+(function universum() {
+  const b = $('hubBuehne');
+  if (!b) return;
+  const q = (s) => b.querySelector(s);
+  const bahnen = [
+    ['.bu-punkte', '.bu-karte', '.bu-zufall', '.bu-augen'],
+    ['.bu-farben', '.bu-cello', '.bu-takt', '.bu-funktion', '.bu-dackel', '[data-ziel="hubTiefgang"]', '[data-ziel="hubPiranha"]'],
+    ['.bu-wal', '.bu-krimi', '[data-welt="haie"]', '.bu-toene', '[data-ziel="hubTierleben"]', '.bu-porsche', '[data-ziel="hubZahlen"]', '[data-ziel="hubRiff"]'],
+  ].map((l) => l.map(q).filter(Boolean));
+  const tempo = [0.00011, 0.00007, 0.000045], kipp = -0.16, c = Math.cos(kipp), s = Math.sin(kipp);
+  const ellipsen = b.querySelectorAll('.bu-bahnen ellipse'), masse = new Map();
+  let G = null;
+  function geo() {
+    const W = b.clientWidth, H = b.clientHeight;
+    if (!W) return null;
+    const schmal = W < 600, cx = W / 2, cy = H * 0.48, halb = Math.min(W / 2, 330), hoch = schmal ? 0.6 : 0.42;
+    const g = [0.34, 0.66, 0.97].map((k) => { const a = (halb - 30) * k; return [a, Math.min(H * 0.36, a * hoch)]; });
+    ellipsen.forEach((e, i) => {
+      e.setAttribute('cx', cx); e.setAttribute('cy', cy); e.setAttribute('rx', g[i][0]); e.setAttribute('ry', g[i][1]);
+      e.setAttribute('transform', 'rotate(' + (kipp * 180 / Math.PI).toFixed(2) + ' ' + cx + ' ' + cy + ')');
+    });
+    bahnen.flat().forEach((d) => masse.set(d, [d.offsetWidth || 40, d.offsetHeight || 40]));
+    return { cx, cy, g, W, gross: schmal ? 0.78 : 1 };
+  }
+  const versatz = Math.random() * 1e5;
+  function setzen(t) {
+    if (!G || G.W !== b.clientWidth) G = geo();
+    if (!G) return;
+    const { cx, cy, g, gross } = G;
+    bahnen.forEach((liste, r) => {
+      const [a, bb] = g[r];
+      liste.forEach((d, i) => {
+        const th = (t + versatz) * tempo[r] + (i / liste.length) * Math.PI * 2 + r * 0.7;
+        const ex = a * Math.cos(th), ey = bb * Math.sin(th), tiefe = (Math.sin(th) + 1) / 2;
+        const [w, h] = masse.get(d);
+        d.style.translate = (cx + ex * c - ey * s - w / 2).toFixed(1) + 'px ' + (cy + ex * s + ey * c - h / 2).toFixed(1) + 'px';
+        d.style.scale = ((0.68 + 0.4 * tiefe) * gross).toFixed(3);
+        d.style.opacity = (0.5 + 0.5 * tiefe).toFixed(2);
+        d.style.zIndex = tiefe > 0.45 ? 3 : 0;
+      });
+    });
+  }
+  window.addEventListener('resize', () => { G = null; });
+  setzen(0);
+  if (wenigBewegung()) return;
+  const lauf = (t) => { if (b.classList.contains('sichtbar') && !document.hidden) setzen(t); requestAnimationFrame(lauf); };
+  requestAnimationFrame(lauf);
+})();
