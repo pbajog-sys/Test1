@@ -597,7 +597,7 @@ function sloSprechenErkennung(text) {
     };
     rec.onerror = (e) => {
       const st = sloStore(); st.srFehler = { code: e.error, z: Date.now() }; saveJson(SLO_KEY, st);
-      if (SLO_HART.includes(e.error)) { st.srKaputt = true; saveJson(SLO_KEY, st); sloAufAufnahme(text, SLO_GRUND[e.error] + ' Kein Problem: Wir nehmen dich stattdessen auf, und du vergleichst selbst.'); return; }
+      if (SLO_HART.includes(e.error)) { st.srKaputt = true; saveJson(SLO_KEY, st); sloAufAufnahme(text, SLO_GRUND[e.error] + ' Kein Problem: Wir nehmen dich stattdessen auf, und die App prüft, ob du den ganzen Satz gesprochen hast.'); return; }
       $('sloGehoert').textContent = e.error === 'aborted' ? '' : SLO_GRUND[e.error] || 'Das hat nicht geklappt (' + e.error + ').';
     };
     rec.onend = () => { if ($('sloMikro')) { m.classList.remove('hoert'); m.querySelector('b').textContent = 'Noch einmal sprechen'; } };
@@ -613,56 +613,91 @@ function sloSprechenAufnahme(text, hinweis) {
   if (!box) return;
   const geht = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia && window.MediaRecorder);
   if (!geht) {
-    box.innerHTML = '<div class="slo-gehoert">Dieses Gerät kann hier nicht aufnehmen. Sprich den Satz laut und hör dir das Original an.</div>' + sloSelbst(text);
-    sloSelbstVerdrahten(text); return;
+    box.innerHTML = '<div class="slo-gehoert">Dieses Gerät kann hier nicht aufnehmen. Sprich den Satz laut, hör dir das Original an und mach dann weiter.</div><button type="button" class="btn secondary" id="sloTrotzdem">Gesagt – weiter ›</button>';
+    $('sloTrotzdem').addEventListener('click', () => sloBewerten({ ok: true, loesung: sloEsc(text), laut: text, hinweis: 'Ohne Mikrofon nicht geprüft.' }, slo.liste[slo.i]));
+    return;
   }
   box.innerHTML = (hinweis ? '<div class="slo-gehoert">' + sloEsc(hinweis) + '</div>' : '')
-    + '<button type="button" class="slo-mikro" id="sloAufnahme"><span>⏺️</span><b>Aufnehmen</b><small>Tippen, sprechen, nochmal tippen</small></button>'
-    + '<div class="slo-vergleich" id="sloVergleich" hidden><button type="button" class="btn secondary" id="sloMeine">▶️ Meine Aufnahme</button>' + (sloHatTon(text) ? '<button type="button" class="btn secondary" id="sloOriginal">🔊 Original</button>' : '') + '</div>'
-    + '<div id="sloSelbstBox" hidden>' + sloSelbst(text) + '</div>';
+    + '<button type="button" class="slo-mikro" id="sloAufnahme"><span>🎙️</span><b>Tippen und sprechen</b><small>Die Aufnahme stoppt, wenn du fertig bist</small></button>'
+    + '<div class="slo-pegel" id="sloPegel" aria-hidden="true"><i></i></div><div class="slo-gehoert" id="sloAufUrteil"></div>';
   const knopf = $('sloAufnahme');
+  let versuche = 0;
   knopf.addEventListener('click', async () => {
     if (sloAufn && sloAufn.rec && sloAufn.rec.state === 'recording') { sloAufn.rec.stop(); return; }
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     try {
-      const strom = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
       const teile = [], rec = new MediaRecorder(strom);
-      sloAufn = { rec, strom, url: sloAufn && sloAufn.url };
+      // Pegel live messen: Sprache erkennen und nach ~1,1 s Stille automatisch stoppen
+      const ac = new (window.AudioContext || window.webkitAudioContext)(), quelle = ac.createMediaStreamSource(strom), an = ac.createAnalyser();
+      an.fftSize = 1024; quelle.connect(an);
+      const puffer = new Float32Array(an.fftSize), pegel = [], start = performance.now();
+      let rausch = null, letzteSprache = 0, sprach = false;
+      sloAufn = { rec, strom, ac };
+      const messen = () => {
+        if (rec.state !== 'recording') return;
+        an.getFloatTimeDomainData(puffer);
+        let s = 0; for (let i = 0; i < puffer.length; i++) s += puffer[i] * puffer[i];
+        const rms = Math.sqrt(s / puffer.length), t = performance.now() - start;
+        pegel.push({ t, rms });
+        if (t < 250) rausch = rausch == null ? rms : Math.min(rausch, rms);
+        const schwelle = Math.max(0.012, (rausch || 0.005) * 3.2);
+        if (rms > schwelle) { sprach = true; letzteSprache = t; }
+        if ($('sloPegel')) $('sloPegel').firstChild.style.width = Math.min(100, (rms / 0.15) * 100) + '%';
+        if ((sprach && t - letzteSprache > 1100) || t > 8000) { rec.stop(); return; }
+        requestAnimationFrame(messen);
+      };
       rec.ondataavailable = (e) => { if (e.data && e.data.size) teile.push(e.data); };
       rec.onstop = () => {
         strom.getTracks().forEach((t) => t.stop());
-        clearTimeout(sloAufn.zeit);
-        if (sloAufn.url) URL.revokeObjectURL(sloAufn.url);
-        sloAufn.url = URL.createObjectURL(new Blob(teile, { type: rec.mimeType || 'audio/mp4' }));
+        try { ac.close(); } catch (e) { /* egal */ }
         if (!$('sloAufnahme')) return;
-        knopf.classList.remove('hoert'); knopf.querySelector('b').textContent = 'Nochmal aufnehmen';
-        $('sloVergleich').hidden = false; $('sloSelbstBox').hidden = false;
-        new Audio(sloAufn.url).play().catch(() => {});
-        if (sloHatTon(text)) setTimeout(() => sloSprich(text), 1800);
+        knopf.classList.remove('hoert'); knopf.querySelector('b').textContent = 'Noch einmal sprechen';
+        if ($('sloPegel')) $('sloPegel').firstChild.style.width = '0';
+        const url = URL.createObjectURL(new Blob(teile, { type: rec.mimeType || 'audio/mp4' }));
+        const urteil = sloSprachUrteil(pegel, rausch, text);
+        versuche++;
+        if (urteil.ok) {
+          sloBewerten({ ok: true, loesung: sloEsc(text), laut: text, hinweis: '🎙️ ' + urteil.text + ' <button type="button" class="slo-meine" data-url="' + url + '">▶️ Meine Aufnahme</button>' }, slo.liste[slo.i]);
+        } else {
+          $('sloAufUrteil').innerHTML = sloEsc(urteil.text) + (versuche >= 2 ? '<br><button type="button" class="btn secondary slo-ohne" id="sloTrotzdem">Trotzdem weiter ›</button>' : '');
+          if ($('sloTrotzdem')) $('sloTrotzdem').addEventListener('click', () => sloBewerten({ ok: true, loesung: sloEsc(text), laut: text, hinweis: 'Ohne Prüfung weiter.' }, slo.liste[slo.i]));
+        }
       };
       rec.start();
-      sloAufn.zeit = setTimeout(() => { if (rec.state === 'recording') rec.stop(); }, 6000);
-      knopf.classList.add('hoert'); knopf.querySelector('b').textContent = 'Ich nehme auf … (tippen = fertig)';
+      requestAnimationFrame(messen);
+      knopf.classList.add('hoert'); knopf.querySelector('b').textContent = 'Ich höre zu …';
+      $('sloAufUrteil').textContent = '';
     } catch (e) {
       const st = sloStore(); st.micFehler = { code: e.name, z: Date.now() }; saveJson(SLO_KEY, st);
-      box.innerHTML = '<div class="slo-gehoert">' + (e.name === 'NotAllowedError' ? 'Das Mikrofon ist für diese Seite nicht erlaubt.' : 'Das Mikrofon lässt sich nicht öffnen (' + sloEsc(e.name || 'Fehler') + ').') + ' Sprich den Satz einfach laut und vergleich mit dem Original.</div>' + sloSelbst(text);
-      sloSelbstVerdrahten(text);
+      box.innerHTML = '<div class="slo-gehoert">' + (e.name === 'NotAllowedError' ? 'Das Mikrofon ist für diese Seite nicht erlaubt (iPhone: Einstellungen › Safari › Mikrofon).' : 'Das Mikrofon lässt sich nicht öffnen (' + sloEsc(e.name || 'Fehler') + ').') + '</div><button type="button" class="btn secondary" id="sloTrotzdem">Gesagt – weiter ›</button>';
+      $('sloTrotzdem').addEventListener('click', () => sloBewerten({ ok: true, loesung: sloEsc(text), laut: text, hinweis: 'Ohne Mikrofon nicht geprüft.' }, slo.liste[slo.i]));
     }
   });
-  box.addEventListener('click', (e) => {
-    if (e.target.closest('#sloMeine') && sloAufn && sloAufn.url) new Audio(sloAufn.url).play().catch(() => {});
-    if (e.target.closest('#sloOriginal')) sloSprich(text);
-  });
-  sloSelbstVerdrahten(text);
 }
-// Selbsteinschätzung: zählt als geübt (nicht als falsch), „Nochmal“ lässt die Aufgabe am Ende wiederkommen
-const sloSelbst = () => '<div class="slo-selbst"><span>Wie klang es?</span><button type="button" class="btn secondary" data-selbst="nein">🔁 Noch nicht</button><button type="button" class="btn" data-selbst="ja">👍 Klang gut</button></div>';
-function sloSelbstVerdrahten(text) {
-  $('sloAufgabe').querySelectorAll('[data-selbst]').forEach((b) => b.addEventListener('click', () => {
-    if (slo.zustand !== 'antwort') return;
-    const gut = b.dataset.selbst === 'ja';
-    sloBewerten({ ok: gut, loesung: sloEsc(text), laut: text, hinweis: gut ? 'Selbst eingeschätzt – die App hört hier nicht mit.' : 'Kommt am Ende noch einmal.' }, slo.liste[slo.i]);
-  }));
+// Ohne Spracherkennung prüft die App, ob überhaupt gesprochen wurde und ob Länge und Silben ungefähr zum Satz passen.
+// Silben ≈ Vokale (das slowenische silbische r zählt mit); Silbenkerne ≈ Lautstärke-Gipfel in der Aufnahme.
+function sloSilben(text) {
+  const t = sloOhneZeichen(text);
+  const vokale = (t.match(/[aeiou]/g) || []).length;
+  const silbischesR = (t.match(/(^|[^aeiou\s])r(?=[^aeiou]|$)/g) || []).length;
+  return Math.max(1, vokale + silbischesR);
+}
+function sloSprachUrteil(pegel, rausch, text) {
+  if (pegel.length < 5) return { ok: false, text: 'Die Aufnahme war zu kurz – noch einmal?' };
+  const schwelle = Math.max(0.012, (rausch || 0.005) * 3.2);
+  const laut = pegel.filter((p) => p.rms > schwelle);
+  if (!laut.length) return { ok: false, text: 'Ich habe nichts gehört. Sprich etwas lauter oder näher am Mikrofon.' };
+  const dauer = (laut[laut.length - 1].t - laut[0].t) / 1000, sprechzeit = laut.length / pegel.length * (pegel[pegel.length - 1].t / 1000);
+  // Gipfel zählen: geglätteter Pegel, Maximum über der Schwelle, mindestens 120 ms Abstand
+  const glatt = pegel.map((p, i) => { const a = pegel.slice(Math.max(0, i - 2), i + 3); return { t: p.t, v: a.reduce((s, q) => s + q.rms, 0) / a.length }; });
+  let gipfel = 0, letzter = -1e9;
+  for (let i = 1; i < glatt.length - 1; i++) if (glatt[i].v > schwelle * 1.3 && glatt[i].v >= glatt[i - 1].v && glatt[i].v > glatt[i + 1].v && glatt[i].t - letzter > 120) { gipfel++; letzter = glatt[i].t; }
+  const silben = sloSilben(text), erwartet = silben * 0.2;
+  if (dauer < Math.max(0.25, erwartet * 0.35)) return { ok: false, text: 'Das war kürzer als der Satz – sprich ihn ganz.' };
+  if (dauer > erwartet * 3.5 + 2) return { ok: false, text: 'Das war deutlich länger als der Satz – nur den Satz sprechen, dann kurz still sein.' };
+  if (silben >= 4 && gipfel < silben * 0.3) return { ok: false, text: 'Ich habe weniger Silben gehört als der Satz hat – sprich ihn deutlich und ganz.' };
+  return { ok: true, text: 'Gut gesprochen! (etwa ' + Math.min(silben, Math.max(1, gipfel)) + ' von ' + silben + ' Silben gehört)', dauer, gipfel, silben, sprechzeit };
 }
 // Mikrofon-Check: zeigt, was auf diesem Gerät geht
 async function sloMikroCheck() {
@@ -677,7 +712,7 @@ async function sloMikroCheck() {
     + zeile(!!SLO_SR, 'Spracherkennung vorhanden', SLO_SR ? 'Ob sie Slowenisch kann, entscheidet das Gerät.' : 'Dieser Browser hat keine Spracherkennung.')
     + (st.srFehler ? zeile(false, 'Letzter Fehler der Spracherkennung: ' + sloEsc(st.srFehler.code), SLO_GRUND[st.srFehler.code] || '') : '')
     + zeile(null, standalone ? 'Läuft als App vom Home-Bildschirm' : 'Läuft im Browser', standalone ? 'iOS erlaubt hier oft keine Spracherkennung. Aufnehmen geht trotzdem.' : '')
-    + '</ul><p class="slo-fein">Ohne Spracherkennung nimmt die App dich auf; du vergleichst deine Aufnahme mit dem Original und schätzt selbst ein. Die Aufnahme bleibt auf dem Gerät und wird nicht gespeichert.</p>'
+    + '</ul><p class="slo-fein">Ohne Spracherkennung nimmt die App dich auf und prüft, ob du den ganzen Satz gesprochen hast (Länge und Silben). Die Aussprache selbst kann sie so nicht beurteilen. Die Aufnahme bleibt auf dem Gerät und wird nicht gespeichert.</p>'
     + '<div class="sk-knopfreihe">' + (st.srKaputt && SLO_SR ? '<button type="button" class="btn secondary" id="sloSrNochmal">Spracherkennung noch einmal versuchen</button>' : '') + '<button type="button" class="btn" id="sloCheckOk">Alles klar</button></div>';
   const d = typeof skDialog === 'function' ? skDialog(html) : null;
   if (!d) return;
@@ -867,6 +902,7 @@ $('sloPfad').addEventListener('click', (e) => {
 });
 $('sloPruefen').addEventListener('click', sloPruefen);
 $('sloWeissNicht').addEventListener('click', sloWeissNicht);
+$('sloUrteil').addEventListener('click', (e) => { const b = e.target.closest('.slo-meine'); if (b) new Audio(b.dataset.url).play().catch(() => {}); });
 $('sloAufgabe').addEventListener('click', (e) => { if (e.target.closest('[data-nicht="hoeren"]')) sloUeberspringen(['hoeren', 'diktat'], '🔇 Hör-Aufgaben sind für eine Stunde aus.', 'hoerenAus', 1); });
 $('sloAbbruch').addEventListener('click', () => { if (!slo || slo.i === 0 || confirm('Lektion abbrechen? Der Fortschritt dieser Lektion geht verloren.')) sloKarte(); });
 $('sloUeben').addEventListener('click', () => sloStart(null, 'ueben'));

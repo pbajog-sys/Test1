@@ -394,7 +394,7 @@ Eigenes Sprachlernspiel (`slo.js`): Mit Zmajček, dem kleinen Drachen aus dem Wa
   - Er fliegt auf der Karte zur aktuellen Station und dreht einen Looping, wenn man ihn antippt (mit neuem Spruch).
   - In der Lektion sitzt er neben dem Fortschrittsbalken und hüpft oder ist traurig.
   - Am Ende kreist er über der Landschaft der Station.
-- **Reise-Karte** auf einer gemalten Landschaft mit leuchtendem Pfad (`img/slo/reise.webp`, 720 px breit, 270 KB).
+- **Reise-Karte** auf einer gemalten Landschaft mit leuchtendem Pfad (`img/slo/reise-slowenien.webp`, 720 px breit, 94 KB: Berge, Bled, Piran, Postojna-Höhle, Weinberge, Brücke, Fahne).
 - **Landschaften neben jeder Station** (SVG, sanft animiert):
   - Burgen: Ljubljana, Bled über dem See mit Kircheninsel, Predjama im Felsen, Celje als Ruine, Ptuj, Škofja Loka.
   - Natur und Orte: Triglav und Berge, Planica mit Skispringer, Piran mit Turm und Boot, Meer bei Sonnenuntergang, Soča als
@@ -404,8 +404,10 @@ Eigenes Sprachlernspiel (`slo.js`): Mit Zmajček, dem kleinen Drachen aus dem Wa
   „🙊 Ich kann gerade nicht sprechen“ und „🔇 Ich kann gerade nicht hören“ schalten die jeweiligen Aufgaben für eine Stunde ab.
   Auf der Karte kann man sie mit einem Schalter wieder einschalten.
 - **Sprechen geht immer:** Kann das Gerät kein Slowenisch erkennen (auf dem iPhone der Normalfall: `service-not-allowed`), nimmt
-  die App dich auf (MediaRecorder, bis 6 Sekunden). Du hörst deine Aufnahme und das Original und schätzt selbst ein
-  („👍 Klang gut“ zählt als richtig, „🔁 Noch nicht“ lässt die Aufgabe wiederkommen). Die Aufnahme bleibt auf dem Gerät.
+  die App dich auf. Die Aufnahme stoppt selbst nach gut einer Sekunde Stille. Danach prüft die App ohne Nachfrage, ob du
+  gesprochen hast und ob Länge und Silbenzahl ungefähr zum Satz passen: Lautstärke-Gipfel gegen Vokale, das silbische r zählt
+  mit. Passt es, geht es direkt weiter. Sonst kommt ein Hinweis („zu kurz“, „nichts gehört“ …), und ab dem zweiten Versuch
+  gibt es „Trotzdem weiter“. Die Aussprache selbst kann die App so nicht prüfen. Die Aufnahme bleibt auf dem Gerät.
   **🩺 Mikrofon-Check** auf der Karte: Mikrofon, Aufnahme, Spracherkennung, letzter Fehler, Browser oder Home-Bildschirm-App.
 - **Fehler der Spracherkennung** werden erklärt: `service-not-allowed` (iPhone: Diktierfunktion aktivieren; in der App vom
   Home-Bildschirm blockiert iOS die Erkennung oft – dann in Safari öffnen), fehlender Mikrofon-Zugriff, kein Mikrofon,

@@ -5,7 +5,7 @@ const ordner = process.argv[2] || '.';
 let ok = 0, fail = 0;
 const pruefe = (n, b, i = '') => { b ? ok++ : fail++; console.log((b ? '✓ ' : '✗ ') + n + (i ? ' – ' + i : '')); };
 (async () => {
-  const b = await chromium.launch({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] }); const ctx = await b.newContext({ ...devices['iPhone 13'], serviceWorkers: 'block' });
+  const b = await chromium.launch({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--use-file-for-fake-audio-capture=' + __dirname + '/sprechprobe.wav'] }); const ctx = await b.newContext({ ...devices['iPhone 13'], serviceWorkers: 'block' });
   await ctx.addInitScript(() => {
     localStorage.setItem('walquiz.profile.v1', JSON.stringify({ aktiv: 't', liste: [{ id: 't', name: 'P', avatar: '🐸', farbe: '#22c55e' }] }));
     localStorage.setItem('walquiz.fuehrung.v1', JSON.stringify({ gesehen: { slo: true } })); localStorage.setItem('walquiz.installhinweis.v1', 'weg');
@@ -16,6 +16,18 @@ const pruefe = (n, b, i = '') => { b ? ok++ : fail++; console.log((b ? '✓ ' : 
   await p.goto('http://localhost:8765/'); await p.waitForTimeout(900);
   await p.evaluate(() => { sloAudio = {}; show('slo', '🐉 Slowenisch'); sloKarte(); }); await p.waitForTimeout(1600);
   await p.screenshot({ path: ordner + '/slo-karte.png', fullPage: true });
+  const urteile = await p.evaluate(() => {
+    const P = (folge) => { const out = []; let t = 0; folge.forEach(([dauer, rms]) => { for (let k = 0; k < dauer / 16; k++) { out.push({ t, rms: rms * (rms > 0.02 ? 0.6 + 0.4 * Math.abs(Math.sin(t / 60)) : 1) }); t += 16; } }); return out; };
+    const satz = 'Dober dan, kako ste?';   // 7 Silben
+    return {
+      stille: sloSprachUrteil(P([[3000, 0.004]]), 0.004, satz).ok,
+      kurz: sloSprachUrteil(P([[300, 0.004], [180, 0.1], [1200, 0.004]]), 0.004, satz).ok,
+      passend: sloSprachUrteil(P([[300, 0.004], [1500, 0.1], [1200, 0.004]]), 0.004, satz).ok,
+      lang: sloSprachUrteil(P([[300, 0.004], [8000, 0.1], [600, 0.004]]), 0.004, satz).ok,
+      silbenR: sloSilben('Prst') + '/' + sloSilben('Dober dan'),
+    };
+  });
+  pruefe('Sprach-Urteil: Stille ✗, zu kurz ✗, passend ✓, viel zu lang ✗', !urteile.stille && !urteile.kurz && urteile.passend && !urteile.lang, JSON.stringify(urteile));
   pruefe('Landschaften an allen Stationen', await p.evaluate(() => document.querySelectorAll('.slo-deko svg').length === SLO_EINHEITEN.length));
   pruefe('Drache mit Flügeln auf der Karte', await p.evaluate(() => !!document.querySelector('#sloMaskottchen .slo-fl-l')));
   await p.click('#sloMaskottchen', { force: true }); await p.waitForTimeout(300);
@@ -31,7 +43,7 @@ const pruefe = (n, b, i = '') => { b ? ok++ : fail++; console.log((b ? '✓ ' : 
     else if (a.typ === 'luecke') { const t2 = box.querySelector('.slo-frage').textContent.split(/\s+/); const z = sloNorm(sloTeile(a.s.sl)[t2.indexOf('____')]); opt((x) => txt(x) === z); }
     else if (a.typ === 'tippen') { const i = $('sloEingabe'); i.value = a.w.sl; i.dispatchEvent(new Event('input')); }
     else if (a.typ === 'bauen' || a.typ === 'diktat') { sloTeile(a.typ === 'diktat' || a.nach === 'sl' ? a.s.sl : a.s.de).forEach((t) => { const k = [...box.querySelectorAll('.slo-bank .slo-kachel:not(.weg)')].find((x) => x.textContent === t); if (k) k.click(); }); }
-    else if (a.typ === 'sprechen') { if ($('sloMikro')) $('sloMikro').click(); else document.querySelector('[data-selbst="ja"]').click(); }
+    else if (a.typ === 'sprechen') { if ($('sloMikro')) $('sloMikro').click(); else sloBewerten({ ok: true, loesung: '' }, a); }
     else if (a.typ === 'paare') a.liste.forEach((w) => { box.querySelector('.slo-paar[data-s="l"][data-sl="' + w.sl + '"]').click(); box.querySelector('.slo-paar[data-s="r"][data-sl="' + w.sl + '"]').click(); });
     return a.typ;
   }, falsch);
@@ -49,11 +61,10 @@ const pruefe = (n, b, i = '') => { b ? ok++ : fail++; console.log((b ? '✓ ' : 
       if (opts.srFehler && typ === 'sprechen') {
         await p.evaluate((e) => { window.__srFehler = e; $('sloMikro').click(); }, opts.srFehler); await p.waitForTimeout(300);
         pruefe('Fehler „' + opts.srFehler + '“ → Aufnehmen statt Erkennung', await p.evaluate(() => !!$('sloAufnahme') && /stattdessen auf/.test($('sloSprechBox').innerText)));
-        await p.click('#sloAufnahme'); await p.waitForTimeout(900); await p.click('#sloAufnahme'); await p.waitForTimeout(600);
+        await p.click('#sloAufnahme');
+        await p.waitForFunction(() => slo.zustand === 'weiter' || /\S/.test(($('sloAufUrteil') || {}).textContent || ''), null, { timeout: 15000 });
         await p.screenshot({ path: ordner + '/slo-aufnahme.png' });
-        pruefe('Aufnahme fertig, Vergleich und Selbsteinschätzung da', await p.evaluate(() => !$('sloVergleich').hidden && !!(sloAufn && sloAufn.url) && !$('sloSelbstBox').hidden));
-        await p.click('[data-selbst="ja"]'); await p.waitForTimeout(150);
-        pruefe('„Klang gut“ zählt als richtig', await p.evaluate(() => slo.zustand === 'weiter' && /gut/.test($('sloFuss').className)));
+        pruefe('Aufnahme stoppt selbst und lässt durch (ohne Nachfrage)', await p.evaluate(() => slo.zustand === 'weiter' && /gut/.test($('sloFuss').className) && /Silben/.test($('sloUrteil').innerText)), await p.evaluate(() => ($('sloAufUrteil') || {}).textContent || $('sloUrteil').innerText));
         await p.click('#sloPruefen');
         await p.evaluate(() => { window.__srFehler = null; });
         pruefe('Nächste Sprech-Aufgabe nimmt direkt auf', await p.evaluate(() => sloStore().srKaputt === true && sloSprechenMoeglich()));
