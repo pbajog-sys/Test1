@@ -185,7 +185,10 @@ function farbenAus(seed, art = 'merken', werkzeug = 'rgb', stufe = 'leicht') {
     return zufall();
   });
 }
-const heute = () => new Date().toISOString().slice(0, 10);
+// Ein Kalendertag für alle: Tageswechsel um 00:00 Uhr deutscher Zeit (Europe/Berlin), egal wo das Gerät steht
+const SK_ZONE = 'Europe/Berlin';
+const skDatum = (d = new Date()) => { try { return new Intl.DateTimeFormat('en-CA', { timeZone: SK_ZONE, year: 'numeric', month: '2-digit', day: '2-digit' }).format(d); } catch (e) { return d.toISOString().slice(0, 10); } };
+const heute = () => skDatum();
 
 // ---------- Spielablauf ----------
 let fs = null;   // Farbspiel-Zustand

@@ -62,8 +62,9 @@ function krimiSpeichern(modus, stufe, sek, hilfen, tag) {
 // ---------- Auflösung (für alle Spiele) ----------
 function krimiGeschafft(e) {
   const sek = krimiUhrStopp();
-  if (typeof merkeVerlauf === 'function') merkeVerlauf('krimi', 1, null, (kAktiv.akte ? 'Ermittlungsakte' : ((KRIMI_MODI[e.modus] && KRIMI_MODI[e.modus].titel) || e.modus || 'Fall')) + ' · ' + zeitText(sek));
   const neu = kAktiv.akte ? false : krimiSpeichern(e.modus, e.stufe, sek, e.hilfen, e.tag);
+  if (typeof merkeVerlauf === 'function') merkeVerlauf('krimi', 1, null, (kAktiv.akte ? 'Ermittlungsakte' : ((KRIMI_MODI[e.modus] && KRIMI_MODI[e.modus].titel) || e.modus || 'Fall')) + (e.tag ? ' · Tagesrätsel' : '') + ' · ' + zeitText(sek),
+    { sek, hilfen: e.hilfen || 0, stufe: e.stufe, modus: e.modus, tag: !!e.tag, rekord: !!neu });
   if (kAktiv.akte && typeof akteKapitelFertig === 'function') akteKapitelFertig(e);
   $('krimiStempelText').textContent = e.stempel || (kAktiv.akte ? 'Kapitel gelöst' : 'Fall gelöst');
   $('krimiTaeter').replaceChildren(e.figur || krimiIcon('geloest', 'krimi-taeter-icon'));

@@ -19,19 +19,21 @@ const VERLAUF_SPIELE = {
   riff: { name: 'Riffbau', emoji: '🎲', farbe: '#fb7185' },
   krimi: { name: 'Wer war’s?', emoji: '🔎', farbe: '#ef4444' },
 };
-const tagSchluessel = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+const tagSchluessel = (d = new Date()) => (typeof skDatum === 'function' ? skDatum(d) : d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'));
 
 // Ein Spiel ist zu Ende: spiel (Schlüssel aus VERLAUF_SPIELE), punkte/max (z. B. 38,2 von 50) und eine kurze Beschreibung
-function merkeVerlauf(spiel, punkte, max, info) {
+// extra (optional): { sek, hilfen, stufe, tag, rekord } – für Ergebnis-Karten und Tagesaufgaben
+function merkeVerlauf(spiel, punkte, max, info, extra) {
   try {
     const v = loadJson(VERLAUF_KEY);
     v.tage = v.tage || {};
     const t = tagSchluessel();
-    (v.tage[t] = v.tage[t] || []).push({ s: spiel, p: Math.round(Number(punkte) * 10) / 10, m: max, i: String(info || '').slice(0, 60), z: Date.now() });
+    (v.tage[t] = v.tage[t] || []).push({ s: spiel, p: Math.round(Number(punkte) * 10) / 10, m: max, i: String(info || '').slice(0, 60), z: Date.now(), ...(extra ? { x: extra } : {}) });
     if (v.tage[t].length > 80) v.tage[t] = v.tage[t].slice(-80);
     const alle = Object.keys(v.tage).sort();
     alle.slice(0, Math.max(0, alle.length - 400)).forEach((k) => delete v.tage[k]);
     saveJson(VERLAUF_KEY, v);
+    if (typeof skNachSpiel === 'function') skNachSpiel(spiel, punkte, max, info, extra);
   } catch (e) { /* Verlauf ist nur Zugabe */ }
 }
 

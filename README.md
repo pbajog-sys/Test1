@@ -5,6 +5,47 @@ Die App startet mit dem **Dashboard „Spiele“**: oben eine animierte Bühne, 
 Antippen auf den ganzen Bildschirm und wird zur Welt; ← führt zurück zum Dashboard. Es gibt fünf Welten: 🐋 Wale, 🦈 Haie, 🌊 Beide (Wale und Haie gemischt),
 🏎️ Porsche und 🐕 Dackel. Jede Welt hat eigene Abzeichen; Lernstand und Lexikon funktionieren überall.
 
+## 🧬 Spielekiste 2.0: eine Plattform statt einer Sammlung
+Die Schicht über allen Spielen steckt in `plattform.js` und `experimente.js`. Sie liest den Verlauf und die vorhandenen
+Spielstände, alte Stände zählen also sofort mit und werden nicht verändert.
+- **Ein Kalendertag für alle:** `heute()` rechnet in **Europe/Berlin**. Tagesrätsel, Tagesaufgaben und Experiment der Woche
+  wechseln um 0:00 Uhr deutscher Zeit, auch auf Geräten in anderen Zeitzonen.
+- **Tagesaufgaben 🧠 Daily Brain · 👁️ Daily Sense · 🎲 Daily Chaos:** Aus dem Datum wird per Seed ausgewählt, welches Spiel dran
+  ist (Brain: Tatort, Wachen, Alibi-Raster, Verhör, Funktions-Detektiv, Piranha; Sense: Farben, Töne, Augenmaß, Takt; Chaos:
+  Karte, Punktwolke, Riff, Tiefgang, Zufall, Piranha, Verhör, Funktion – nie dasselbe Spiel wie Brain). Gestartet wird der
+  **vorhandene Tagesmodus** des Spiels, der für alle dieselben Aufgaben erzeugt. Krimi-Stufe nach Wochentag (Mo leicht, Di–Do
+  mittel, Fr–So schwer). Erkannt wird der Abschluss am Verlaufseintrag; normale Runden zählen nicht. Serie, längste Serie,
+  perfekte Tage, Wochenübersicht, Teilen als Text und als Ergebnis-Karte.
+- **Fortschritt:** XP und Level werden aus dem Verlauf berechnet (nichts Neues zu speichern). Jede Runde 10 XP + bis zu 20 XP für
+  Leistung × Schwierigkeit; pro Spiel und Tag zählen die ersten zwei Runden voll, dann 60 %, 35 %, 20 %, 10 %, danach nichts mehr.
+  Tagesaufgabe 40 XP (+40 für alle drei), Experiment 40 XP (einmal je Experiment), Erfolge mit eigenen XP.
+  Level n braucht 50·(n−1)·(n+2) XP; Titel von „Frischling“ bis „Universalgenie“.
+- **12 spielübergreifende Erfolge**, darunter Meisterdetektiv, Absolutes Gehör?, Universalgenie und Experimentierfreudig. Sie
+  nutzen die vorhandenen Stände: Krimi-Lösungen, Piranha-Sterne, Slowenisch-Stationen, Quiz-Abzeichen und Tierleben.
+  Das Datum, an dem ein Erfolg erreicht wurde, wird gespeichert.
+- **Fähigkeitenprofil:** Sieben Werte (Logik, Gehör, Sehen, Raum, Zahlen, Timing, Gedächtnis) von 0 bis 100 im Radar. Antippen
+  zeigt die Rechnung. Je Spiel zählen die letzten 30 Runden als Ergebnis × Schwierigkeit (Leicht ×0,8, Schwer ×1,15, höchstens
+  100 %), daraus der Schnitt der besseren 60 %. Beim Krimi zählt das Tempo im Verhältnis zur Stufe, jeder Hinweis kostet 12 %.
+  Wenig Erfahrung senkt den Wert (bis auf 50 %), pro Tag zählen höchstens drei Runden als Erfahrung. Mit nur leichten Runden
+  bleibt man unter 80. Dazu Stärke und Schwäche, der Vergleich mit dem eigenen Stand vor 30 Tagen und ein Titel nach der
+  stärksten Fähigkeit. Ausdrücklich gilt: spielinterne Leistungsanzeige, kein Intelligenz- oder Persönlichkeitstest.
+- **Vergleichen:** Andere Profile auf demselben Gerät sind per Knopf vergleichbar. Für andere Geräte gibt es einen
+  **Vergleichscode** (`SK1.…`, enthält nur Name, Avatar, Level und die sieben Werte). Es gibt keinen Server; nichts wird gespeichert.
+- **Ergebnis-Karten:** Spielkarten-Design 1080×1350 als PNG, mit Rekord-Erkennung. Sie lassen sich teilen (Teilen-Menü des
+  Geräts) oder herunterladen: für Tagesaufgaben, jede der letzten Runden und Experimente.
+- **🧪 Das Experiment der Woche:** ein eigenes Labor mit Archiv der letzten acht Wochen. Experimente sind Module
+  (`LAB_EXPERIMENTE`): eigene Versuchsanordnung oder ein vorhandenes Spiel. Bisher gibt es drei Experimente:
+  - *Das Grau, das lügt* (Simultankontrast, mit Kontrollrunde)
+  - *Der Anker im Kopf* (Ankereffekt nach Tversky & Kahneman, mit zufällig verteilten hohen und niedrigen Ankern)
+  - *Ein Leben in 42 Tagen* (nutzt „Ein Tierleben“)
+
+  Überraschungen entstehen nur aus der Versuchsanordnung, nie aus vorgetäuschten Fehlern.
+- **Dashboard 2.0:** Oben stehen Begrüßung, Level-Ring, XP und Mini-Radar (öffnet das Profil), darunter die drei
+  Tageskarten und das Experiment. Die Spiele sind nach Kategorien gruppiert (Denken & Logik, Sinne & Wahrnehmung, Zahlen & Welt,
+  Wissen & Sprache, Perspektivwechsel). Unten folgen Zuletzt gespielt (mit Karte), nächste Erfolge, Bestenliste und Verlauf.
+- **Tests** (`tests/`, Ergebnisse in `tests/BERICHT.md`): Generator-Tests mit 1000 Fällen je Generator, Plattform-Integrationstest
+  und ein Rauchtest, der alle Spiele öffnet.
+
 ## Dackel
 Ein Wissensquiz statt Foto-Raten: 40 Fragen in `dackel.js` (Herkunft, Aussehen, Gesundheit, Jagd, Charakter,
 Kultur) mit je vier Antworten und einer Erklärung. Auch im Test wird angeklickt. Statt Tipps gibt es einen
@@ -62,6 +103,9 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 ## Dateien
 - `index.html` – Aufbau und Aussehen
 - `app.js` – Quiz-Logik, Fotos, Töne, Karteikasten, Challenge
+- `plattform.js` – Spielekiste 2.0: Fortschritt, Erfolge, Tagesaufgaben, Fähigkeitenprofil, Ergebnis-Karten, Vergleich, Dashboard-Kopf
+- `experimente.js` – Das Experiment der Woche (Labor, Archiv, Experimente)
+- `tests/` – automatisierte Tests (Playwright gegen die echte App) und Testbericht
 - `wale.js`, `haie.js`, `porsche.js` – Listen mit Steckbriefen
 - `dackel.js` – Fragen fürs Dackel-Quiz
 - `gretchen.js`, `img/gretchen/` – Gretchen als Maskottchen

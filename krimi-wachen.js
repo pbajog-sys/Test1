@@ -195,7 +195,8 @@ function erzeugeWachen(stufe, rnd) {
     fall.bewertung = { s2, s3, denkschritte: e.schritte.length, sterne: s3 >= 1 || s2 >= 8 ? 3 : s2 >= 4 ? 2 : 1 };
     if (WACHEN_ZIEL[stufe](fall.bewertung)) return fall;
     if (!notfall || (stufe === 'schwer' ? fall.bewertung.s2 > notfall.bewertung.s2 : fall.bewertung.s2 < notfall.bewertung.s2)) notfall = fall;
-    if (versuch > 600 && notfall) return notfall;
+    // „Schwer“ ist selten: länger suchen, bevor der beste Kandidat genommen wird (Test: vorher 30 % zu leicht)
+    if (versuch > (stufe === 'schwer' ? 2900 : 600) && notfall) return notfall;
   }
   return notfall;
 }
