@@ -7,6 +7,8 @@ const TP_PALETTEN = {
   stall: ['#f8f0d8', '#d8b878', '#8a6038', '#2a1808'],
   meer: ['#e8f8f8', '#78c0d8', '#2c6080', '#081828'],
   wald: ['#e0f8d0', '#88c070', '#346856', '#081820'],
+  bruet: ['#f0f0e8', '#b8c0c8', '#606870', '#202428'],
+  wiese: ['#e8f8b0', '#98d060', '#3c8a3a', '#183018'],
 };
 
 // ---------- Pixelgrafik: '.' durchsichtig, 0–3 = Farbton hell → dunkel ----------
@@ -31,11 +33,31 @@ const TP_SPRITES = {
     '.32222222222223.', '3222322222232223', '322.322222232.23', '33..32222223..33', '....32222223....', '....3223322 3....', '....333..333....', '................'],
   schild: ['................', '................', '..333333333333..', '..300000000003..', '..302222222203..', '..300000000003..', '..302222220003..', '..300000000003..',
     '..333333333333..', '.......33.......', '.......33.......', '.......33.......', '.......33.......', '......3333......', '................', '................'],
+  kueken: ['................', '................', '................', '................', '.........333....', '........30003...', '........300303..', '........3000022.',
+    '...3333.300003..', '..300003300003..', '..300000000003..', '..300010000003..', '...30000000003..', '....333333333...', '.....3....3.....', '....33...33.....'],
+  ei: ['................', '................', '......3333......', '.....300003.....', '....30000003....', '....30000003....', '...3000000003...', '...3000000003...',
+    '...3000001003...', '...3000001003...', '...3000000003...', '....30000003....', '.....300003.....', '......3333......', '................', '................'],
+  eiriss: ['................', '................', '......3..3......', '.....30..03.....', '....3003.003....', '....33033033....', '...3000000003...', '...3000000003...',
+    '...3000001003...', '...3000001003...', '...3000000003...', '....30000003....', '.....300003.....', '......3333......', '................', '................'],
+  lampe: ['.......33.......', '.......33.......', '.......33.......', '.....333333.....', '....32222223....', '...3222222223...', '..333333333333..', '....00000000....',
+    '................', '................', '................', '................', '................', '................', '................', '................'],
   boje: ['................', '................', '.......33.......', '......3003......', '.......33.......', '......3223......', '.....322223.....', '.....300003.....',
     '.....322223.....', '....33333333....', '...3111111113...', '....33333333....', '................', '................', '................', '................'],
 };
 // Kacheln
 const TP_KACHELN = {
+  horde: ['3333333333333333', '3101101101101103', '3111111111111113', '3333333333333333', '3101101101101103', '3111111111111113', '3333333333333333', '3101101101101103',
+    '3111111111111113', '3333333333333333', '3101101101101103', '3111111111111113', '3333333333333333', '3113111111113113', '3113111111113113', '3333333333333333'],
+  nest: ['3333333333333333', '3222222222222223', '3211111111111123', '3212112121121123', '3211211212112123', '3212121121212123', '3211111111111123', '3222222222222223',
+    '3333333333333333', '1111111111111111', '1121111111111211', '1111111211111111', '1111111111111111', '1111211111121111', '1111111111111111', '1211111111111111'],
+  traenke: ['3333333333333333', '2222222222222222', '3333333333333333', '1113111111131111', '1110111111101111', '1111111111111111', '1111111111111111', '1111111211111111',
+    '1111111111111111', '1111211111121111', '1111111111111111', '1211111111111111', '1111111121111111', '1111111111111121', '1111211111111111', '1111111111211111'],
+  nass: ['1111111111111111', '1122221111111211', '1222222211111111', '1222332221111111', '1122332222111111', '1112222221111111', '1211122211111111', '1111111112222111',
+    '1111111122332211', '1111211122222211', '1111111111222111', '1111111111111111', '1222111112111111', '1223221111111111', '1122211111111211', '1111111111111111'],
+  blume: ['0000000000000000', '0010000000001000', '0131000000010100', '0010000000000000', '0000000100000000', '0000001310000000', '0000000100000010', '0100000000000131',
+    '1010000000000010', '0000000001000000', '0000000013100000', '0000000001000000', '0000310000000000', '0003130000001000', '0000310000010100', '0000000000000000'],
+  sand: ['1111111111111111', '1121111111121111', '1111112111111111', '1111111111111211', '1211111111111111', '1111111121111111', '1111211111111111', '1111111111112111',
+    '1121111111111111', '1111111211111111', '1111111111121111', '1211111111111111', '1111121111111111', '1111111111111121', '1121111111211111', '1111111111111111'],
   stroh: ['1111111111111111', '1121111111111211', '1111111211111111', '1111111111111111', '1111211111121111', '1111111111111111', '1211111111111111', '1111111121111111',
     '1111111111111121', '1111211111111111', '1111111111211111', '1111111111111111', '1211111112111111', '1111111111111111', '1111121111111211', '1111111111111111'],
   wand: ['3333333333333333', '2222222322222223', '2222222322222223', '3333333333333333', '2223222222232222', '2223222222232222', '3333333333333333', '2222222322222223',
@@ -66,6 +88,16 @@ const TP_KACHELN = {
     '0311100000111300', '3111000000011130', '3110000000001130', '3110000000001130', '0311000000011300', '0031110001113000', '0003333333330000', '0000000000000000'],
 };
 
+for (let f = 0; f < 4; f++) {
+  TP_KACHELN['band' + f] = Array.from({ length: 16 }, (_, r) => {
+    if (r === 0 || r === 15) return '3333333333333333';
+    if (r === 1 || r === 14) return '1111111111111111';
+    let z = '2222222222222222'.split('');
+    if (r >= 3 && r <= 12) { const d = r <= 7 ? r - 3 : 12 - r; [0, 8].forEach((c) => { z[(c + d + f * 2) % 16] = '3'; }); }
+    return z.join('');
+  });
+}
+TP_KACHELN.band = TP_KACHELN.band0;
 // Sprite in Pixel umrechnen (zwischengespeichert je Palette und Spiegelung)
 const tpCache = {};
 function tpBild(name, pal, spiegeln) {
@@ -98,6 +130,13 @@ const TP_TUER_TEXT = {
   milchkuh: 'Draußen wäre die Weide. Heute bleibt die Tür zu.',
   mastbulle: 'Die Tür bleibt zu. In der Bucht ist kein Platz zum Rennen.',
 };
+// Hinter der Klappe: die Wiese, die fast keines dieser Tiere je sieht
+const TP_WIESE = {
+  masthuhn: { text: '🌿 <b>Draußen!</b> Gras, Sonne, Erde zum Scharren. Diese Wiese erleben nur gut <b>2 von 100 Masthühnern</b> in Deutschland – fast nur die aus Bio-Haltung (1,8 %). Freilandmast ist selten.',
+    quelle: 'nutztierhaltung.de (BLE): Anteil ökologisch erzeugter Masthühner 1,8 %; BMEL-Statistik Geflügelhaltung: Freilandmast selten, freilaufende Masttiere vorwiegend in Bio-Betrieben' },
+  legehenne: { text: '🌿 <b>Draußen!</b> Gras, Sonne, ein Sandbad. Ins Freie dürfen nur rund <b>38 von 100 Legehennen</b> in Deutschland: Freiland 24,3 %, Bio 14,1 %. Du lebst in Bodenhaltung – wie 58 von 100.',
+    quelle: 'BMEL-Statistik Geflügelhaltung: Anteile der Legehennen-Haltungsplätze 2025 (Boden 58,1 %, Freiland 24,3 %, ökologisch 14,1 %, Kleingruppe 3,5 %)' },
+};
 // Gefahrenart eines Kapitels aus dem Todestext ableiten
 function tpGefahr(id, K) {
   const t = (K.tod || '') + ' ' + (K.text || '');
@@ -117,7 +156,23 @@ function tpKarte(id, k, K, n) {
   const set = (x, y, t) => { if (x >= 0 && y >= 0 && x < W && y < H) kacheln[y * W + x] = t; };
   const m = { W, H, kacheln, welt, npcs: [], gefahren: [], objekte: [], start: [5, H - 2], ausgang: [5, 0], offen: false, gefahr: tpGefahr(id, K), feuerZeile: H, feuerTakt: 0 };
   const frei = (x, y) => !['wand', 'trog', 'tuer', 'land', 'baum', 'gitter'].includes(kacheln[y * W + x]);
-  if (welt === 'stall') {
+  const gefl = ['huhn', 'pute', 'ente'].includes(TP_TIER[id]);
+  m.phase = gefl ? (k === 0 ? 'bruet' : k === n - 1 ? 'ende' : /^(Tag|Woche [1-3]$)/.test(K.zeit || '') ? 'kueken' : 'eng') : null;
+  m.pal = m.phase === 'bruet' ? 'bruet' : welt;
+  if (m.phase === 'bruet') {
+    // Brüterei: Hordenwagen mit Eiern, Förderbänder, oben die Kiste zum Maststall
+    for (let x = 0; x < W; x++) { set(x, 0, 'wand'); set(x, H - 1, 'wand'); }
+    for (let y = 0; y < H; y++) { set(0, y, 'wand'); set(W - 1, y, 'wand'); }
+    [[1, 2], [2, 2], [9, 2], [10, 2], [1, 10], [2, 10], [9, 10], [10, 10], [1, 6], [10, 6]].forEach(([x, y]) => set(x, y, 'horde'));
+    m.baender = [{ y: 4, von: 1, bis: 10, d: 1 }, { y: 8, von: 1, bis: 10, d: -1 }];
+    m.baender.forEach((b) => { for (let x = b.von; x <= b.bis; x++) set(x, b.y, 'band'); });
+    set(5, 0, 'gitter'); m.ausgang = [5, 0];
+    m.bandKueken = [];
+    m.baender.forEach((b, bi) => { for (let i = 0; i < 4; i++) m.bandKueken.push({ b: bi, x: b.von + i * 2.6 + bi }); });
+    m.npcs.push({ x: 3, y: 11, sprite: 'kueken' }, { x: 8, y: 11, sprite: 'kueken', spiegeln: true }, { x: 7, y: 6, sprite: 'kueken' }, { x: 3, y: 6, sprite: 'kueken', spiegeln: true });
+    m.objekte.push({ x: 4, y: H - 4, art: 'schild' });
+    m.voll = 0.1; m.deko = [];
+  } else if (welt === 'stall') {
     for (let x = 0; x < W; x++) { set(x, 0, 'wand'); set(x, H - 1, 'wand'); }
     for (let y = 0; y < H; y++) { set(0, y, 'wand'); set(W - 1, y, 'wand'); }
     for (let x = 2; x < W - 2; x += 3) set(x, 3, 'trog');
@@ -132,21 +187,28 @@ function tpKarte(id, k, K, n) {
       m.npcs.push({ x: 2, y: 2, sprite: 'kuh', fest: true, mutter: true });
       m.mutter = true;
     }
-    // Enge: Zahl der Artgenossen wächst bis fast alles voll ist
-    const voll = n > 1 ? k / (n - 1) : 1, gefluegel = ['huhn', 'pute', 'ente'].includes(TP_TIER[id]);
+    // Geflügel: Tränkelinie, Wärmelampen (Küken), nasse Einstreu (später), Legenester (Legehenne)
+    if (gefl) {
+      for (let x = 2; x <= 9; x++) set(x, 6, 'traenke');
+      if (m.phase === 'kueken') m.lampen = [[2 + Math.floor(Math.random() * 2), 9], [7 + Math.floor(Math.random() * 2), 9], [5, 11]];
+      if (m.phase !== 'kueken') for (let i = 0; i < (m.phase === 'ende' ? 9 : 6); i++) { const x = 1 + Math.floor(Math.random() * (W - 2)), y = 7 + Math.floor(Math.random() * 5); if (kacheln[y * W + x] === 'stroh') set(x, y, 'nass'); }
+      if (id === 'legehenne' && k === 1) for (let y = 8; y <= 11; y++) set(W - 2, y, 'nest');
+    }
+    // Enge: Zahl der Artgenossen wächst – aber nicht bis zum Bildchaos, dein Tier bleibt auffindbar
+    const voll = n > 1 ? k / (n - 1) : 1, gefluegel = gefl;
     let freieFelder = 0; for (let yy = 1; yy < H - 1; yy++) for (let xx = 1; xx < W - 1; xx++) if (frei(xx, yy)) freieFelder++;
-    const anzahl = Math.round(freieFelder * (gefluegel ? 0.06 + voll * 0.88 : 0.05 + voll * 0.55));
-    const sprite = TP_TIER[id];
+    const anzahl = Math.round(freieFelder * (gefluegel ? 0.08 + voll * 0.3 : 0.05 + voll * 0.55));
+    const sprite = m.phase === 'kueken' ? 'kueken' : TP_TIER[id];
     m.voll = voll;
     // Zusätzliche Tiere zwischen den Kacheln: nur Bild, kein Hindernis – zeigt die echte Dichte
     m.deko = [];
-    const dekoAnzahl = gefluegel ? Math.round(voll * voll * 170) : Math.round(voll * 25);
+    const dekoAnzahl = gefluegel ? Math.round(voll * voll * 20) : Math.round(voll * 25);
     for (let i = 0; i < dekoAnzahl; i++) m.deko.push({ x: 1 + Math.random() * (W - 2.6), y: 1 + Math.random() * (H - 2.8), spiegeln: Math.random() < 0.5, p: Math.random() * 1000 });
     m.deko.sort((a, b) => a.y - b.y);
     let versuche = 0;
     while (m.npcs.filter((p) => !p.fest).length < anzahl && versuche++ < 3000) {
       const x = 1 + Math.floor(Math.random() * (W - 2)), y = 1 + Math.floor(Math.random() * (H - 2));
-      if (!frei(x, y) || (x === m.start[0] && y === m.start[1]) || (x === 5 && y <= 1) || (x === 4 && y === H - 3) || (x === 1 && y === 7)) continue;
+      if (!frei(x, y) || (x === m.start[0] && y === m.start[1]) || (x === 5 && y <= 1) || (x === 4 && y === H - 3) || (x === 1 && y === 7) || (x === 2 && y === 7) || kacheln[y * W + x] === 'nest') continue;
       if (m.npcs.some((p) => p.x === x && p.y === y)) continue;
       m.npcs.push({ x, y, sprite, spiegeln: Math.random() < 0.5 });
     }
@@ -176,6 +238,17 @@ function tpKarte(id, k, K, n) {
   set(m.start[0], m.start[1], welt === 'stall' ? 'stroh' : welt === 'meer' ? 'wasser' : 'gras');
   return m;
 }
+// Die Wiese hinter der Klappe (nur Masthuhn und Legehenne)
+function tpWieseKarte() {
+  const W = 12, H = 14, kacheln = Array(W * H).fill('gras');
+  for (let i = 0; i < 26; i++) kacheln[Math.floor(Math.random() * W * H)] = 'blume';
+  for (let y = 0; y < H; y++) kacheln[y * W] = 'wand';
+  kacheln[7 * W] = 'tuer';
+  [[6, 9], [7, 9], [6, 10], [7, 10], [8, 10]].forEach(([x, y]) => { kacheln[y * W + x] = 'sand'; });
+  [[9, 3], [3, 2], [10, 11]].forEach(([x, y]) => { kacheln[y * W + x] = 'baum'; });
+  kacheln[7 * W + 1] = 'gras'; kacheln[7 * W + 2] = 'gras';
+  return { W, H, kacheln, welt: 'stall', pal: 'wiese', wiese: true, npcs: [], gefahren: [], objekte: [{ x: 1, y: 7, art: 'zurueck', unsichtbar: true }], start: [2, 7], ausgang: [-9, -9], offen: false, voll: 0, deko: [] };
+}
 
 // ---------- Spielzustand ----------
 let tp = null;
@@ -198,8 +271,10 @@ function tpKapitel() {
   tp.gelesen = false; tp.gedraengelt = false;
   const s = tp.spieler;
   [s.x, s.y] = tp.karte.start; s.px = s.x * TP_T; s.py = s.y * TP_T;
-  tp.uebergang = 1;
+  tp.uebergang = 1; tp.puls = 2600; tp.rast = 0;
+  tp.schlupf = tp.karte.phase === 'bruet' ? 2600 : 0;
   $('tpKapitel').textContent = (tp.k + 1) + ' / ' + L.kapitel.length + ' · ' + K.zeit;
+  if (tp.schlupf) { tp.dialog = null; tpDialogZeigen(); return; }
   tpDialog([{ html: '<b>' + K.zeit + ' – ' + K.titel + '</b><br>' + (tp.k === 0 ? 'Lauf zum ' + (tp.karte.welt === 'meer' ? 'Bojen-Zeichen' : 'Schild') + ' und lies es.' : (tp.karte.gefahr ? 'Lies das Schild – dann schaffe es zum Ausgang oben. Vorsicht!' : 'Lies das Schild.')) }]);
 }
 
@@ -266,7 +341,7 @@ function tpBlockiert(x, y) {
 }
 function tpVersuche(dir) {
   const s = tp.spieler;
-  if (tp.dialog || tp.tot || s.px !== s.x * TP_T || s.py !== s.y * TP_T) return;
+  if (tp.dialog || tp.tot || tp.schlupf > 0 || tp.rast > 0 || s.px !== s.x * TP_T || s.py !== s.y * TP_T) return;
   const [dx, dy] = tpRichtung[dir];
   if (dx) s.spiegeln = dx < 0;
   s.blick = [dx, dy];
@@ -285,9 +360,40 @@ function tpVersuche(dir) {
   if (m.welt === 'stall' && nx === m.ausgang[0] && ny === m.ausgang[1] && !m.offen) { tpDialog([{ html: 'Das Gitter ist zu. Lies zuerst das Schild.' }]); return; }
   if (tpBlockiert(nx, ny)) return;
   s.x = nx; s.y = ny; s.schritt++;
+  tpFeld(m.kacheln[ny * m.W + nx], nx, ny);
+}
+// Was beim Betreten eines Feldes passiert (einmalige Hinweise, Tempo)
+function tpEinmal(key, html) { tp.gesehen = tp.gesehen || {}; if (tp.gesehen[key]) return; tp.gesehen[key] = true; tpDialog([{ html }]); }
+function tpFeld(k, x, y) {
+  const m = tp.karte, s = tp.spieler;
+  if (k === 'nass') { tp.langsam = 420; tpEinmal('nass', 'Die Einstreu ist hier nass und riecht scharf nach Ammoniak. Das brennt an den Füßen und in den Augen.'); }
+  if (k === 'traenke') tpEinmal('traenke', 'Wasser gibt es aus kleinen Nippeln an einer Leitung – Tropfen für Tropfen.');
+  if (k === 'band') tpEinmal('band', 'Ein Förderband trägt dich weiter – zusammen mit Tausenden anderen Küken.');
+  if (k === 'sand') tpEinmal('sand', 'Du nimmst ein Staubbad und plusterst dich auf. So halten Hühner ihr Gefieder sauber – im Stall geht das kaum.');
+  if (k === 'blume' && m.wiese) tpEinmal('blume', 'Du pickst nach Samen und kleinen Käfern. Hühner sind den halben Tag mit Futtersuche beschäftigt – wenn sie dürfen.');
+  if (k === 'nest' && !tp.eiGelegt) { tp.eiGelegt = { x, y, t: 0 }; tpDialog([{ html: 'Du legst ein Ei. Es rollt sofort über das schräge Gitter weg aufs Sammelband – brüten ist nicht vorgesehen.' }]); }
+  if (m.lampen && m.lampen.some(([lx, ly]) => lx === x && ly === y)) tpEinmal('lampe', 'Unter der Wärmelampe ist es warm. Eine Glucke, unter deren Flügeln du dich verkriechen könntest, gibt es nicht.');
+  if (m.phase === 'ende' && s.schritt % 6 === 5) { tp.rast = 1100; tpEinmal('rast', 'Deine Beine tragen dein Gewicht kaum noch. Du musst dich immer wieder hinlegen.'); }
+}
+function tpZurWiese() {
+  const W = TP_WIESE[tl.id];
+  tp.stall = { karte: tp.karte, x: tp.spieler.x, y: tp.spieler.y };
+  tp.karte = tpWieseKarte();
+  const s = tp.spieler; [s.x, s.y] = tp.karte.start; s.px = s.x * TP_T; s.py = s.y * TP_T; tp.uebergang = 1; tp.tasten = {};
+  tpDialog([{ html: W.text }, { html: '<small>Quelle: ' + W.quelle + '</small>' }, { html: 'In Wirklichkeit gäbe es diese Klappe für dich nicht. Wenn du genug hast: Die Tür links führt zurück in den Stall.' }]);
+}
+function tpZumStall() {
+  const st = tp.stall; tp.karte = st.karte; tp.stall = null;
+  const s = tp.spieler; s.x = 2; s.y = 7; s.px = s.x * TP_T; s.py = s.y * TP_T; tp.uebergang = 1; tp.tasten = {};
+  if (tpBlockiert(2, 7)) { const p = tp.karte.npcs.find((q) => q.x === 2 && q.y === 7); if (p) { p.x = st.x; p.y = st.y; } }
+  tpDialog([{ html: 'Zurück im Stall. Für fast alle Tiere hier ist das die ganze Welt.' }]);
 }
 function tpAnsehen(obj) {
-  if (obj.art === 'tuer') { tpDialog([{ html: TP_TUER_TEXT[tl.id] || 'Die Tür bleibt zu.' }]); return; }
+  if (obj.art === 'zurueck') { tpZumStall(); return; }
+  if (obj.art === 'tuer') {
+    if (TP_WIESE[tl.id] && tp.karte.phase !== 'bruet') { tpDialog([{ html: 'Du drückst gegen die Klappe – sie gibt nach …' }], tpZurWiese); return; }
+    tpDialog([{ html: TP_TUER_TEXT[tl.id] || 'Die Tür bleibt zu.' }]); return;
+  }
   tpSchild();
 }
 function tpAnstossen(npc) {
@@ -302,7 +408,7 @@ function tpA() {
   if (tp.dialog) { tpDialogWeiter(); return; }
   const s = tp.spieler, b = s.blick || [0, -1], m = tp.karte;
   const obj = m.objekte.find((o) => o.x === s.x + b[0] && o.y === s.y + b[1]) || m.objekte.find((o) => Math.abs(o.x - s.x) + Math.abs(o.y - s.y) <= 1);
-  if (obj) tpAnsehen(obj);
+  if (obj) tpAnsehen(obj); else tp.puls = 1300;   // A ohne Schild: „Wo bin ich?“
 }
 
 // ---------- Spiellogik pro Frame ----------
@@ -314,8 +420,27 @@ function tpUpdate(t) {
     return;
   }
   const s = tp.spieler, m = tp.karte;
-  // gleitende Bewegung
-  const v = dt * (tp.langsam ? 0.045 : 0.11);
+  if (tp.schlupf > 0) {
+    tp.schlupf -= dt; tp.uebergang = Math.max(0, tp.uebergang - dt / 400);
+    if (tp.schlupf <= 0) { const K = tl.L.kapitel[tp.k]; tpDialog([{ html: '<b>Piep!</b> Du bist geschlüpft.' }, { html: '<b>' + K.zeit + ' – ' + K.titel + '</b><br>Lauf zum Schild und lies es. Vorsicht, die Bänder ziehen dich mit.' }]); }
+    return;
+  }
+  if (tp.rast > 0) tp.rast -= dt;
+  if (tp.puls > 0) tp.puls -= dt;
+  if (tp.eiGelegt) tp.eiGelegt.t += dt;
+  // Förderbänder schieben
+  if (m.baender) {
+    m.bandTakt = (m.bandTakt || 0) + dt;
+    m.bandKueken.forEach((c) => { const b = m.baender[c.b]; c.x += b.d * dt * 0.0016; if (c.x > b.bis + 0.5) c.x = b.von - 0.5; if (c.x < b.von - 0.5) c.x = b.bis + 0.5; });
+    const b = m.baender.find((q) => q.y === s.y);
+    if (b && m.bandTakt > 420 && s.px === s.x * TP_T && s.py === s.y * TP_T && !tp.dialog) {
+      m.bandTakt = 0;
+      const nx = s.x + b.d;
+      if (nx >= b.von && nx <= b.bis && !tpBlockiert(nx, s.y)) s.x = nx;
+    }
+  }
+  // gleitende Bewegung (am Ende tragen die Beine kaum noch)
+  const v = dt * (tp.langsam ? 0.045 : m.phase === 'ende' ? 0.055 : 0.11);
   if (tp.langsam) tp.langsam = Math.max(0, tp.langsam - dt);
   s.px += Math.sign(s.x * TP_T - s.px) * Math.min(v, Math.abs(s.x * TP_T - s.px));
   s.py += Math.sign(s.y * TP_T - s.py) * Math.min(v, Math.abs(s.y * TP_T - s.py));
@@ -380,7 +505,7 @@ const TP_SCHLACHT_TIERE = ['masthuhn', 'legehenne', 'pute', 'ente'];
 const TP_PRO_TAG = { masthuhn: 640.3, legehenne: 20.7, pute: 27.6, ente: 8.3 };
 function tpSchlachtFrage() {
   const s = tp.spieler; s.px = s.x * TP_T; s.py = s.y * TP_T; tp.tasten = {};
-  tpDialog([{ html: '<b>Inhaltshinweis</b><br>Als Nächstes folgt die Schlachtung – als Pixel-Animation, ohne Blut, aber ohne Beschönigung. Gezeigt wird das Elektro-Wasserbad, eine der üblichen Methoden für Geflügel in Deutschland.',
+  tpDialog([{ html: '<b>Inhaltshinweis</b><br>Als Nächstes folgt die Schlachtung – als Pixel-Animation, mit Blut und ohne Beschönigung. Gezeigt wird das Elektro-Wasserbad, eine der üblichen Methoden für Geflügel in Deutschland.',
     optionen: [['Ansehen'], ['Überspringen']], wahl: (i) => { tp.dialog = null; tpDialogZeigen(); if (i === 0) tpSchlachtStart(); else { tpStopp(); tlEnde(); } } }]);
 }
 const TP_SZENEN = [
@@ -475,9 +600,27 @@ function tpSzeneZeichnen(x, t) {
     if (dunkel) {
       const f = Math.min(1, st / 4000);
       const g = x.createLinearGradient(0, 0, TP_W, 0);
-      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.55, 'rgba(0,0,0,' + (0.4 + f * 0.5) + ')'); g.addColorStop(1, 'rgba(0,0,0,1)');
+      g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(0.75, 'rgba(0,0,0,' + (0.15 + f * 0.35) + ')'); g.addColorStop(1, 'rgba(0,0,0,.8)');
       x.fillStyle = g; x.fillRect(0, 0, TP_W, TP_H);
-      x.fillStyle = '#5a1a14'; x.fillRect(118, 100, 42, 2);
+    }
+    if (dunkel) {
+      // Halsschnitt: Messer, Blut tropft in die Blutrinne
+      x.fillStyle = '#9aa4ac'; x.fillRect(96, 46, 10, 2); x.fillRect(104, 44, 2, 6); x.fillStyle = '#5a5248'; x.fillRect(106, 40, 3, 14);
+      const fuell = Math.min(1, st / 5000);
+      x.fillStyle = '#3a0a08'; x.fillRect(90, 126, 70, 10);
+      x.fillStyle = '#8a0f0f'; x.fillRect(90, 126 + Math.round((1 - fuell) * 8), 70, Math.round(fuell * 8) + 2);
+      for (let i = -1; i < 8; i++) {
+        const hx = i * abstand + versatz - 10;
+        if (hx < 100) continue;
+        const seit2 = (hx - 100) / tempo;
+        for (let d = 0; d < 4; d++) {
+          const fy = 49 + ((seit2 * 0.09 + d * 19 + i * 7) % 78);
+          x.fillStyle = d % 2 ? '#b01818' : '#7a0e0e';
+          x.fillRect(Math.round(hx) + 6 + (d % 3), Math.round(fy), 2, 3);
+        }
+        x.fillStyle = '#b01818'; x.fillRect(Math.round(hx) + 5, 46, 5, 3);
+      }
+      x.fillStyle = '#6a0c0c'; [[94, 118], [120, 112], [138, 120], [150, 108], [108, 104]].forEach(([a, b]) => x.fillRect(a, b, 3, 2));
     }
   }
   if (sz.nr === 5) {
@@ -493,7 +636,7 @@ function tpZeichnen(t) {
   const cv = $('tpBild'), x = cv.getContext('2d');
   x.imageSmoothingEnabled = false;
   if (tp.szene) { tpSzeneZeichnen(x, t); return; }
-  const m = tp.karte, pal = m.welt, s = tp.spieler;
+  const m = tp.karte, pal = m.pal || m.welt, s = tp.spieler;
   const camX = Math.max(0, Math.min(m.W * TP_T - TP_W, s.px + 8 - TP_W / 2)), camY = Math.max(0, Math.min(m.H * TP_T - TP_H, s.py + 8 - TP_H / 2));
   x.fillStyle = TP_PALETTEN[pal][3]; x.fillRect(0, 0, TP_W, TP_H);
   const welle = Math.floor(t / 500) % 2;
@@ -504,7 +647,8 @@ function tpZeichnen(t) {
     if (k === 'netz' || k === 'wasser') x.drawImage(tpBild('wasser', pal), px + (welle && k === 'wasser' ? 1 : 0), py);
     if (k === 'palme' || k === 'baum' || k === 'feuer') x.drawImage(tpBild('gras', pal), px, py);
     if (k === 'feuer' && Math.floor(t / 180) % 2) x.drawImage(tpBild('feuer', pal, true), px, py);
-    else x.drawImage(tpBild(k, pal), px, py);
+    else if (k === 'band') { const b = m.baender.find((q) => q.y === ty); const f = Math.floor(t / 110) % 4; x.drawImage(tpBild('band' + f, pal, b && b.d < 0), px, py); }
+    else x.drawImage(tpBild(k, k === 'sand' ? 'stall' : pal), px, py);
     if (k === 'gitter' && m.offen && tx === m.ausgang[0] && ty === m.ausgang[1]) x.drawImage(tpBild('auf', pal), px, py);
   }
   // Ausgang im Meer/Wald markieren
@@ -531,8 +675,14 @@ function tpZeichnen(t) {
     x.fillStyle = c[3]; x.fillRect(gx + (g.d > 0 ? g.len * TP_T : -3), gy + 6, 3, 5);
     if (g.netz) { for (let i = -2; i < g.len; i++) x.drawImage(tpBild('netz', pal), gx + i * TP_T, gy + TP_T); }
   });
+  // Küken auf den Bändern
+  if (m.bandKueken) m.bandKueken.forEach((c) => { const b = m.baender[c.b]; x.drawImage(tpBild('kueken', pal, b.d < 0), Math.round(c.x * TP_T - camX), b.y * TP_T - camY - 2); });
+  // Sonne über der Wiese
+  if (m.wiese) { x.fillStyle = '#fff6a0'; x.beginPath(); x.arc(150 - camX * 0.2, 10, 9, 0, 7); x.fill(); }
+  // gelegtes Ei rollt weg
+  if (tp.eiGelegt && tp.eiGelegt.t < 2400) { const e = tp.eiGelegt; x.drawImage(tpBild('ei', pal), Math.round((e.x + 0.2) * TP_T - camX), Math.round((e.y + 0.3 + e.t / 700) * TP_T - camY), 10, 10); }
   // Tiere (Artgenossen, dann du)
-  const sprite = TP_TIER[tl.id];
+  const sprite = m.phase === 'bruet' || m.phase === 'kueken' ? 'kueken' : TP_TIER[tl.id];
   (m.deko || []).forEach((d) => {
     const wackel = Math.floor((t + d.p) / 260) % 2;
     x.drawImage(tpBild(sprite, pal, d.spiegeln), Math.round(d.x * TP_T - camX), Math.round(d.y * TP_T - camY) - wackel);
@@ -542,11 +692,25 @@ function tpZeichnen(t) {
     x.drawImage(tpBild(p.sprite, pal, p.spiegeln), p.x * TP_T - camX, p.y * TP_T - camY - wackel);
   });
   const bob = (s.px !== s.x * TP_T || s.py !== s.y * TP_T) ? Math.floor(t / 90) % 2 : 0;
-  x.drawImage(tpBild(sprite, pal, s.spiegeln), Math.round(s.px - camX), Math.round(s.py - camY) - bob);
-  // Markierung „du“
-  x.fillStyle = TP_PALETTEN[pal][3];
-  x.fillRect(Math.round(s.px - camX) + 6, Math.round(s.py - camY) - 5 - bob, 4, 2);
-  if (m.welt === 'stall' && m.voll > 0.3) { x.globalAlpha = (m.voll - 0.3) * 0.32; x.fillStyle = TP_PALETTEN.stall[3]; x.fillRect(0, 0, TP_W, TP_H); x.globalAlpha = 1; }
+  const sx = Math.round(s.px - camX), sy = Math.round(s.py - camY);
+  // Wärmelampen (über allem, mit Lichtkegel)
+  (m.lampen || []).forEach(([lx, ly]) => {
+    const gx = lx * TP_T - camX + 8, gy = ly * TP_T - camY + 8;
+    const g = x.createRadialGradient(gx, gy, 2, gx, gy, 22); g.addColorStop(0, 'rgba(255,190,90,.45)'); g.addColorStop(1, 'rgba(255,190,90,0)');
+    x.fillStyle = g; x.fillRect(gx - 24, gy - 24, 48, 48);
+  });
+  // Dein Tier: Lichtfleck darunter, roter Pfeil darüber, zu Beginn ein Suchring
+  x.globalAlpha = 0.5; x.fillStyle = '#fff6b0'; x.beginPath(); x.ellipse(sx + 8, sy + 14, 8, 3, 0, 0, 7); x.fill(); x.globalAlpha = 1;
+  if (tp.schlupf > 0) {
+    const riss = tp.schlupf < 1500, wack = riss ? Math.round(Math.sin(t / 50) * 1) : 0;
+    x.drawImage(tpBild(riss ? 'eiriss' : 'ei', pal), sx + wack, sy);
+  } else x.drawImage(tpBild(sprite, m.wiese ? 'stall' : pal, s.spiegeln), sx, sy - bob);
+  const pf = Math.floor(t / 250) % 2;
+  x.fillStyle = '#e53935'; x.beginPath(); x.moveTo(sx + 4, sy - 9 - pf); x.lineTo(sx + 12, sy - 9 - pf); x.lineTo(sx + 8, sy - 4 - pf); x.fill();
+  x.fillStyle = '#fff'; x.fillRect(sx + 7, sy - 8 - pf, 2, 1);
+  if (tp.puls > 0) { const r = 10 + (1 - (tp.puls % 1300) / 1300) * 22; x.strokeStyle = 'rgba(229,57,53,' + Math.min(1, tp.puls / 800) + ')'; x.lineWidth = 2; x.beginPath(); x.arc(sx + 8, sy + 8, r, 0, 7); x.stroke(); }
+  (m.lampen || []).forEach(([lx, ly]) => x.drawImage(tpBild('lampe', pal), lx * TP_T - camX, ly * TP_T - camY - 12));
+  if (m.welt === 'stall' && !m.wiese && m.voll > 0.3) { x.globalAlpha = (m.voll - 0.3) * 0.32; x.fillStyle = TP_PALETTEN.stall[3]; x.fillRect(0, 0, TP_W, TP_H); x.globalAlpha = 1; }
   // Überblendung
   if (tp.uebergang > 0) { x.globalAlpha = tp.uebergang; x.fillStyle = TP_PALETTEN[pal][3]; x.fillRect(0, 0, TP_W, TP_H); x.globalAlpha = 1; }
 }

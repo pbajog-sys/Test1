@@ -265,9 +265,17 @@ Ein Leben als Tier – gesellschaftskritisch, aber sachlich und mit Quellen:
   eigene Pixelgrafik mit vier Farbtönen je Welt (Stall, Meer, Wald), Steuerkreuz/Pfeiltasten und A-Knopf, Textbox mit Entscheidungen.
   Im Stall wird es von Kapitel zu Kapitel voller (am Ende quetscht man sich durch), die Tür nach draußen bleibt zu, das Kalb sieht
   die Mutter nur hinter dem Gitter. Bei bedrohten Arten muss man Schiffen, Netzen, Lärm, Plantage und Feuer wirklich ausweichen.
-  Bei Geflügel wird der Stall bis zum letzten Kapitel fast lückenlos voll (Hunderte Tiere, dunkler und enger).
+  **Geflügel hat eigene Stationen:** Schlupf aus dem Ei im Brutschrank → Brüterei mit Hordenwagen und Förderbändern, die einen
+  mitziehen → Kükenstall mit Wärmelampen („eine Glucke gibt es nicht“) und Nippeltränken → enger Stall mit nasser, stinkender Einstreu,
+  die bremst → am Ende schwere Beine (langsam, man muss sich immer wieder hinlegen). Legehennen legen im Nest ein Ei, das sofort
+  wegrollt. Der Stall wird enger, bleibt aber übersichtlich; dein Tier hat einen Lichtfleck und einen roten Pfeil, zu Beginn jeder
+  Karte (und mit A ohne Schild) zeigt ein Suchring, wo du bist.
+  **Die Klappe zur Wiese** (Masthuhn, Legehenne): Dahinter liegt eine Wiese mit Sandbad – mit dem Hinweis, wie wenige Tiere das
+  erleben: gut 2 von 100 Masthühnern (1,8 % Bio, Freilandmast selten; BLE/BMEL-Statistik) bzw. rund 38 von 100 Legehennen
+  (Freiland 24,3 % + Bio 14,1 % der Haltungsplätze 2025, BMEL-Statistik). Danach geht es zurück in den Stall.
   Am Ende folgt – nach einem Inhaltshinweis, überspringbar – die Schlachtung als Pixel-Animation am Beispiel des
-  Elektro-Wasserbads: Ausstallen, Transport, Einhängen, Betäubung, Töten (ohne Blut), dann die Tageszahl laut Destatis.
+  Elektro-Wasserbads: Ausstallen, Transport, Einhängen, Betäubung, Halsschnitt mit Blut, das in die Blutrinne tropft, dann die
+  Tageszahl laut Destatis.
 
 ## 🐟 Piranha-Schwarm
 Eigenes Puzzle im Genre „Farben sortieren und Pixelbild abbauen“, mit Amazonas-Thema:
