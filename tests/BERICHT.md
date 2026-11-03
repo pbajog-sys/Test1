@@ -79,3 +79,15 @@ Alle 17 Spielkarten öffnen ihr Spiel, auf Handy (iPhone-13-Profil) und Desktop 
 - Die Spiele selbst wurden nicht alle bis zum Ende automatisch durchgespielt. Für Piranha, Slowenisch und Tierleben gibt es
   eigene Durchspiel-Skripte, die bei früheren Änderungen gelaufen sind; für die übrigen meldet der Rauchtest nur, dass sie
   starten.
+
+## 4. Gehörbildung – `node tests/gehoer.test.js`
+Alle drei Übungen (Intervalle, Töne benennen, Ton einstellen) wurden auf allen drei Stufen je einmal fehlerfrei und einmal
+absichtlich daneben durchgespielt:
+- fehlerfrei: 50 / 50 (beim Einstellen 49,9 / 50 wegen der Schieber-Rundung)
+- daneben: 0 / 50
+- 18 Verlaufseinträge, keine Seitenfehler; 20 von 20 Prüfungen bestanden.
+
+**Behobener Fehler:** Wer schneller antwortete, als der Ton verzögert abgespielt wurde (250 ms), löste einen Fehler aus,
+weil die Runde schon vorbei war. Jetzt spielt der verzögerte Ton nur, wenn die Runde noch offen ist.
+
+Den Klang selbst (Lautstärke, Tonhöhe am Gerät) prüft der Test nicht; er nutzt die Web-Audio-Schnittstelle ohne Lautsprecher.

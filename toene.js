@@ -106,7 +106,7 @@ function zeigeWelle(el, f, aktiv) {
 // ---------- Spielablauf ----------
 let ts = null;   // Ton-Spiel-Zustand
 const tonStore = () => loadJson(TON_KEY);
-const tonTeile = ['intro', 'hoeren', 'treffen', 'aufloesung', 'ende'];
+const tonTeile = ['intro', 'hoeren', 'treffen', 'aufloesung', 'ende', 'gb'];
 const zeigeTonTeil = (t) => tonTeile.forEach((x) => { $('ton-' + x).hidden = x !== t; });
 
 function toeneIntro() {
@@ -283,7 +283,7 @@ $('tonFertig').addEventListener('click', () => tonPhase('aufloesung'));
 $('tonWeiter').addEventListener('click', () => { ts.runde++; if (ts.runde >= TON_RUNDEN) toeneEnde(); else tonPhase('hoeren'); });
 $('tonNochmalSpiel').addEventListener('click', () => toeneStart({ stufe: ts.stufe }));
 $('tonTeilen').addEventListener('click', toeneTeilen);
-$('tonZurueck').addEventListener('click', () => { clearInterval(tonTimer); liveStopp(); cancelAnimationFrame(welleAnim); ts = null; zeigeHub(); });
+$('tonZurueck').addEventListener('click', () => { if (!$('ton-gb').hidden) { liveStopp(); if (typeof gb !== 'undefined') gb = null; toeneIntro(); return; } clearInterval(tonTimer); liveStopp(); cancelAnimationFrame(welleAnim); ts = null; zeigeHub(); });
 $('hubToene').addEventListener('click', () => { merkeZuletzt('toene'); zoomZu($('hubToene'), () => { show('toene', '🎧 Ton-Gedächtnis'); toeneIntro(); }); });
 
 // Challenge-Link: ?toene=<seed>&stufe=…&n=…&p=…

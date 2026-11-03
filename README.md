@@ -225,6 +225,33 @@ Abstand in Cent (100 Cent = ein Halbton; 10 − Cent/50, ab einer Quarte 0). Aus
 (z. B. „A4 +20 ct“) für Original und eigenen Ton, Differenz in Hz und Cent, Tipp („1,2 Halbtöne zu hoch“),
 Position auf der Skala, beide Töne zum Vergleichen. Tagestöne, Bestwerte, Challenge-Links. Code in `toene.js`.
 
+## 🎼 Gehörbildung (im Ton-Gedächtnis)
+Unter dem normalen Ton-Gedächtnis liegen drei Übungen (`gehoer.js`), mit deutschen Notennamen (… A, B, H) und weichem
+Klavierklang:
+- **↕️ Intervalle (relatives Hören):** Zwei Töne erklingen – welcher Abstand ist das?
+  - Leicht: große Sekunde, große Terz, Quinte und Oktave, aufwärts.
+  - Mittel: dazu kleine Terz, Quarte und große Sexte, auf- und abwärts.
+  - Profi: alle 12 Intervalle, auch gleichzeitig angeschlagen.
+
+  Nach jeder Antwort gibt es eine Eselsbrücke, zum Beispiel „Alle meine Entchen“ für die Sekunde, „O Tannenbaum“ für die
+  Quarte oder „Morgen kommt der Weihnachtsmann“ für die Quinte.
+- **🏷️ Töne benennen:** Auf einer Klaviatur tippt man, welcher Ton das war.
+  - Leicht: nur weiße Tasten, vorher erklingt ein C.
+  - Mittel: alle 12 Töne, vorher ein C.
+  - Profi: ohne Referenz, in drei Oktaven – das ist absolutes Gehör.
+
+  Liegt man einen Halbton daneben, gibt es einen Punkt.
+- **🎯 Ton einstellen:** „Stell ein G ein“ – mit dem Schieber über drei Oktaven, festhalten lässt den Ton hören.
+  - Leicht: vorher erklingt ein C.
+  - Mittel: nur am Anfang einmal ein A (440 Hz).
+  - Profi: ganz ohne Referenz.
+
+  Gezählt wird der Abstand in Cent zum nächsten Ton dieses Namens, die Oktave ist egal: 10 Punkte minus 1 pro 30 Cent. Danach
+  kann man den eigenen Ton und den echten nacheinander anhören.
+
+Jede Übung bringt bis zu 50 Punkte, die Bestwerte werden je Übung und Stufe gespeichert. Die Ergebnisse landen als
+„Ton-Gedächtnis“ im Verlauf und zählen damit fürs Gehör im Fähigkeitenprofil, Profi als schwer. Test: `tests/gehoer.test.js`.
+
 ## 👤 Profile („Wer spielt?“)
 Wie bei Netflix: Beim ersten Start fragt die App nach deinem Namen und einem Bild. Jedes Profil hat eigene Abzeichen, Lernstand und Rekorde. Die App merkt sich, wer zuletzt gespielt hat. Mit dem Knopf oben rechts im Dashboard wechselst du das Profil oder legst ein neues an (bis zu 8).
 - Ab zwei Profilen zeigt das Dashboard eine **Bestenliste** (🏅 Abzeichen, 📚 gelernt, 🎨 Farb- und 🎧 Ton-Rekord).

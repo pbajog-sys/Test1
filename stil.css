@@ -3083,3 +3083,31 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .lab-tabelle { width: 100%; border-collapse: collapse; font-size: .78rem; } .lab-tabelle th { text-align: left; color: #5eead4; font: 700 .66rem ui-monospace, Menlo, monospace; letter-spacing: .08em; padding: 4px; }
 .lab-tabelle td { padding: 6px 4px; border-top: 1px solid rgba(94,234,212,.15); font-variant-numeric: tabular-nums; } .lab-tabelle tr.hoch td:nth-child(2) { color: #fca5a5; } .lab-tabelle tr.tief td:nth-child(2) { color: #93c5fd; }
 @media (prefers-reduced-motion: reduce) { .lab-weg { animation-duration: .01s; } .sk-toast { animation: none; } }
+
+/* 🎼 Gehörbildung im Ton-Gedächtnis */
+.gb-einstieg { display: grid; gap: 8px; margin-top: 6px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.1); }
+.gb-einstieg h3 { margin: 0; font-size: 1.1rem; }
+.gb-einstieg-knoepfe { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.gb-einstieg-knoepfe button, .gb-modus { display: grid; justify-items: center; gap: 2px; padding: 12px 6px; border: 0; border-radius: 16px; background: rgba(34,211,238,.08); box-shadow: inset 0 0 0 1px rgba(34,211,238,.3); color: inherit; font: inherit; font-weight: 800; font-size: .88rem; cursor: pointer; text-align: center; }
+.gb-einstieg-knoepfe span, .gb-modus span { font-size: 1.5rem; } .gb-einstieg-knoepfe small, .gb-modus small { font-weight: 400; font-size: .7rem; color: #8fb5b0; }
+.gb-modi { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.gb-modus.on { background: rgba(34,211,238,.22); box-shadow: inset 0 0 0 2px #22d3ee; }
+.gb-kopf { display: flex; justify-content: space-between; font-size: .85rem; color: #8fb5b0; font-variant-numeric: tabular-nums; }
+.gb-balken { height: 8px; border-radius: 4px; background: rgba(255,255,255,.1); overflow: hidden; } .gb-balken i { display: block; height: 100%; background: linear-gradient(90deg, #22d3ee, #a3e635); transition: width .4s; }
+.gb-info { margin: 0; color: #b7d6d2; text-align: center; } .gb-fein { margin: 0; font-size: .8rem; color: #8fb5b0; text-align: center; }
+.gb-ziel { color: #a3e635; font-size: 1.3em; }
+.gb-hoeren { justify-self: center; padding: 14px 26px; border: 0; border-radius: 999px; background: #22d3ee; color: #04201c; font: inherit; font-size: 1.1rem; font-weight: 800; cursor: pointer; box-shadow: 0 5px 0 #0e7490; }
+.gb-hoeren:active { transform: translateY(3px); box-shadow: 0 2px 0 #0e7490; }
+.gb-optionen { display: grid; grid-template-columns: repeat(2, 1fr); gap: 8px; }
+.gb-opt { display: grid; gap: 1px; padding: 12px 8px; border: 2px solid rgba(255,255,255,.14); border-radius: 14px; background: rgba(255,255,255,.04); color: inherit; font: inherit; font-weight: 800; cursor: pointer; }
+.gb-opt small { font-weight: 400; font-size: .72rem; color: #8fb5b0; }
+.gb-opt.richtig, .gb-taste.richtig { border-color: #4ade80 !important; background: rgba(74,222,128,.25) !important; }
+.gb-opt.falsch, .gb-taste.falsch { border-color: #f87171 !important; background: rgba(248,113,113,.25) !important; }
+.gb-tasten { position: relative; display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; height: 170px; max-width: 420px; width: 100%; justify-self: center; }
+.gb-taste { position: relative; border: 2px solid transparent; font: inherit; font-weight: 800; cursor: pointer; display: flex; align-items: flex-end; justify-content: center; padding-bottom: 8px; }
+.gb-taste.weiss { background: #f4f1ea; color: #222; border-radius: 0 0 10px 10px; box-shadow: inset 0 -6px 0 #d6d0c3; }
+.gb-taste.schwarz { position: absolute; top: 0; height: 60%; width: calc(100% / 7 * 0.62); left: calc(100% / 7 * var(--pos) - 100% / 7 * 0.31); background: #1b1b22; color: #ddd; border-radius: 0 0 8px 8px; z-index: 2; font-size: .72rem; box-shadow: inset 0 -5px 0 #000; }
+.gb-taste:disabled { cursor: default; } .gb-taste.weiss:disabled:not(.richtig):not(.falsch) { color: #bbb; } .gb-taste.schwarz:disabled:not(.richtig):not(.falsch) { color: #555; }
+.gb-urteil { display: grid; gap: 10px; } .gb-urteil:empty { display: none; }
+.gb-text { padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.06); line-height: 1.45; } .gb-text small { color: #b7d6d2; }
+.gb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
