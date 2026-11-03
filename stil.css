@@ -3173,3 +3173,12 @@ button.slo-maskottchen.looping { animation: sloLooping 1.1s var(--ease-out); }
 #slo-karte .slo-pfad::before { opacity: .25; }
 #slo-karte .slo-info { background: rgba(8,17,26,.82); backdrop-filter: none; }
 #slo-karte .slo-deko { opacity: .8; }
+.slo-mikro small { font-size: .72rem; font-weight: 400; color: #bfdbfe; }
+.slo-vergleich { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; } .slo-vergleich[hidden] { display: none; }
+.slo-selbst { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; align-items: center; margin-top: 4px; }
+.slo-selbst span { grid-column: 1 / -1; text-align: center; color: #a7c4b5; font-size: .9rem; }
+.slo-check { margin: 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.slo-check li { display: grid; gap: 2px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.05); }
+.slo-check li.gut { box-shadow: inset 3px 0 0 #4ade80; } .slo-check li.schlecht { box-shadow: inset 3px 0 0 #f87171; }
+.slo-check small { color: #a3a3bf; font-size: .78rem; line-height: 1.4; }
+#sloSprechBox { display: grid; gap: 10px; } #sloSprechBox .slo-mikro { width: 100%; }

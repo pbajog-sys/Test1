@@ -403,6 +403,10 @@ Eigenes Sprachlernspiel (`slo.js`): Mit Zmajček, dem kleinen Drachen aus dem Wa
 - **Wie bei Duolingo:** „Ich weiß es nicht“ zeigt die Lösung (sie zählt als falsch und kommt am Ende der Lektion wieder),
   „🙊 Ich kann gerade nicht sprechen“ und „🔇 Ich kann gerade nicht hören“ schalten die jeweiligen Aufgaben für eine Stunde ab.
   Auf der Karte kann man sie mit einem Schalter wieder einschalten.
+- **Sprechen geht immer:** Kann das Gerät kein Slowenisch erkennen (auf dem iPhone der Normalfall: `service-not-allowed`), nimmt
+  die App dich auf (MediaRecorder, bis 6 Sekunden). Du hörst deine Aufnahme und das Original und schätzt selbst ein
+  („👍 Klang gut“ zählt als richtig, „🔁 Noch nicht“ lässt die Aufgabe wiederkommen). Die Aufnahme bleibt auf dem Gerät.
+  **🩺 Mikrofon-Check** auf der Karte: Mikrofon, Aufnahme, Spracherkennung, letzter Fehler, Browser oder Home-Bildschirm-App.
 - **Fehler der Spracherkennung** werden erklärt: `service-not-allowed` (iPhone: Diktierfunktion aktivieren; in der App vom
   Home-Bildschirm blockiert iOS die Erkennung oft – dann in Safari öffnen), fehlender Mikrofon-Zugriff, kein Mikrofon,
   Sprache nicht unterstützt. Danach geht es mit „Weiter ohne Sprechen“ weiter, Nachsprechen ist dann einen Tag aus.

@@ -5,7 +5,7 @@ const ordner = process.argv[2] || '.';
 let ok = 0, fail = 0;
 const pruefe = (n, b, i = '') => { b ? ok++ : fail++; console.log((b ? '✓ ' : '✗ ') + n + (i ? ' – ' + i : '')); };
 (async () => {
-  const b = await chromium.launch(); const ctx = await b.newContext({ ...devices['iPhone 13'], serviceWorkers: 'block' });
+  const b = await chromium.launch({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] }); const ctx = await b.newContext({ ...devices['iPhone 13'], serviceWorkers: 'block' });
   await ctx.addInitScript(() => {
     localStorage.setItem('walquiz.profile.v1', JSON.stringify({ aktiv: 't', liste: [{ id: 't', name: 'P', avatar: '🐸', farbe: '#22c55e' }] }));
     localStorage.setItem('walquiz.fuehrung.v1', JSON.stringify({ gesehen: { slo: true } })); localStorage.setItem('walquiz.installhinweis.v1', 'weg');
@@ -31,7 +31,7 @@ const pruefe = (n, b, i = '') => { b ? ok++ : fail++; console.log((b ? '✓ ' : 
     else if (a.typ === 'luecke') { const t2 = box.querySelector('.slo-frage').textContent.split(/\s+/); const z = sloNorm(sloTeile(a.s.sl)[t2.indexOf('____')]); opt((x) => txt(x) === z); }
     else if (a.typ === 'tippen') { const i = $('sloEingabe'); i.value = a.w.sl; i.dispatchEvent(new Event('input')); }
     else if (a.typ === 'bauen' || a.typ === 'diktat') { sloTeile(a.typ === 'diktat' || a.nach === 'sl' ? a.s.sl : a.s.de).forEach((t) => { const k = [...box.querySelectorAll('.slo-bank .slo-kachel:not(.weg)')].find((x) => x.textContent === t); if (k) k.click(); }); }
-    else if (a.typ === 'sprechen') $('sloMikro').click();
+    else if (a.typ === 'sprechen') { if ($('sloMikro')) $('sloMikro').click(); else document.querySelector('[data-selbst="ja"]').click(); }
     else if (a.typ === 'paare') a.liste.forEach((w) => { box.querySelector('.slo-paar[data-s="l"][data-sl="' + w.sl + '"]').click(); box.querySelector('.slo-paar[data-s="r"][data-sl="' + w.sl + '"]').click(); });
     return a.typ;
   }, falsch);
@@ -47,12 +47,17 @@ const pruefe = (n, b, i = '') => { b ? ok++ : fail++; console.log((b ? '✓ ' : 
         await p.click('#sloPruefen'); continue;
       }
       if (opts.srFehler && typ === 'sprechen') {
-        await p.evaluate((e) => { window.__srFehler = e; $('sloMikro').click(); }, opts.srFehler); await p.waitForTimeout(250);
-        await p.screenshot({ path: ordner + '/slo-srfehler.png' });
-        pruefe('Fehler „' + opts.srFehler + '“ erklärt, Weiter-Knopf da', await p.evaluate(() => /Diktierfunktion/.test($('sloGehoert').innerText) && !!$('sloOhne')));
-        await p.click('#sloOhne'); await p.waitForTimeout(100);
-        pruefe('Sprechen danach aus und übersprungen', await p.evaluate(() => !sloSprechenMoeglich() && !slo.liste.slice(slo.i).some((x) => x.typ === 'sprechen')));
-        opts.srFehler = null; await p.evaluate(() => { window.__srFehler = null; }); continue;
+        await p.evaluate((e) => { window.__srFehler = e; $('sloMikro').click(); }, opts.srFehler); await p.waitForTimeout(300);
+        pruefe('Fehler „' + opts.srFehler + '“ → Aufnehmen statt Erkennung', await p.evaluate(() => !!$('sloAufnahme') && /stattdessen auf/.test($('sloSprechBox').innerText)));
+        await p.click('#sloAufnahme'); await p.waitForTimeout(900); await p.click('#sloAufnahme'); await p.waitForTimeout(600);
+        await p.screenshot({ path: ordner + '/slo-aufnahme.png' });
+        pruefe('Aufnahme fertig, Vergleich und Selbsteinschätzung da', await p.evaluate(() => !$('sloVergleich').hidden && !!(sloAufn && sloAufn.url) && !$('sloSelbstBox').hidden));
+        await p.click('[data-selbst="ja"]'); await p.waitForTimeout(150);
+        pruefe('„Klang gut“ zählt als richtig', await p.evaluate(() => slo.zustand === 'weiter' && /gut/.test($('sloFuss').className)));
+        await p.click('#sloPruefen');
+        await p.evaluate(() => { window.__srFehler = null; });
+        pruefe('Nächste Sprech-Aufgabe nimmt direkt auf', await p.evaluate(() => sloStore().srKaputt === true && sloSprechenMoeglich()));
+        opts.srFehler = null; continue;
       }
       if (opts.nichtHoeren && (typ === 'hoeren' || typ === 'diktat')) {
         await p.click('[data-nicht="hoeren"]'); await p.waitForTimeout(150);
@@ -72,7 +77,10 @@ const pruefe = (n, b, i = '') => { b ? ok++ : fail++; console.log((b ? '✓ ' : 
   };
   pruefe('Stufe 1 mit „Ich weiß es nicht“', await (async () => { await p.evaluate(() => sloStart(SLO_EINHEITEN[0])); return lektion({ weissNicht: true }); })());
   pruefe('Stufe 2 mit Sprech-Fehler', await (async () => { await p.evaluate(() => sloStart(SLO_EINHEITEN[0])); return lektion({ srFehler: 'service-not-allowed' }); })());
-  await p.evaluate(() => { const st = sloStore(); delete st.sprechenAus; saveJson(SLO_KEY, st); });
+  await p.evaluate(() => sloMikroCheck()); await p.waitForTimeout(600);
+  await p.screenshot({ path: ordner + '/slo-check.png' });
+  pruefe('Mikrofon-Check zeigt Ergebnis', await p.evaluate(() => /Mikrofon/.test($('skDlg').innerText) && /service-not-allowed/.test($('skDlg').innerText)));
+  await p.evaluate(() => { $('skDlg').close(); const st = sloStore(); delete st.sprechenAus; saveJson(SLO_KEY, st); });
   pruefe('Stufe 3 mit „nicht hören“', await (async () => { await p.evaluate(() => sloStart(SLO_EINHEITEN[0])); return lektion({ nichtHoeren: true }); })());
   await p.evaluate(() => sloKarte()); await p.waitForTimeout(300);
   pruefe('Schalter „Hör-Aufgaben wieder einschalten“', await p.evaluate(() => !!document.querySelector('[data-an="hoerenAus"]')));
