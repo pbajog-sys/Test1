@@ -24,8 +24,20 @@ Seitenfehler: keine.
 Stufe ergab: Leicht 0, Mittel 0, **Schwer 90 von 300 (30 %) zu leicht**, weil der Generator schon nach 600 Versuchen den
 besten Kandidaten nahm. Jetzt sucht er bei „Schwer“ bis zu 2900 Versuche.
 - Nachmessung mit 300 Fällen: Schwer 4 von 300 (1,3 %), Ø 51,5 ms statt 36,1 ms.
-- Zweiter 1000er-Lauf nach dem Fix: Wachen 0 Fehler, **2 von 1000** Stufenziel verfehlt, Ø 22,4 ms, max 301 ms.
-  Die übrigen Generatoren dieses zweiten Laufs werden nachgetragen, sobald er fertig ist.
+- Zweiter vollständiger 1000er-Lauf nach dem Fix:
+
+| Generator | Fälle | Fehler | Ø Dauer | Max | Auffälligkeit |
+|---|---:|---:|---:|---:|---|
+| Krimi · Tatort | 1000 | 0 | 11,2 ms | 244 ms | – |
+| Krimi · Wachen | 1000 | 0 | 22,4 ms | 301 ms | 2× Stufenziel verfehlt (0,2 %) |
+| Krimi · Alibi-Raster | 1000 | 0 | 46,3 ms | 533 ms | – |
+| Krimi · Verhör | 1000 | 0 | 0,2 ms | 4 ms | – |
+| Piranha · Level 1–25 | 1000 | 0 | 424,5 ms | 4162 ms | – |
+| Slowenisch · Lektionen | 1000 | 0 | <0,1 ms | 1 ms | – |
+| Tagesmodi · Reproduzierbarkeit | 1000 | 0 | 1,7 ms | 8 ms | – |
+| Zufallsgenerator · Verteilung | 1000 | 0 | 0,3 ms | 4 ms | Chi² Ø 9,21 |
+
+  Seitenfehler: keine.
 
 **Behobener Fehler (Zeitzone):** `heute()` nutzte die UTC-Zeit. Dadurch wechselten Tagesrätsel in Deutschland erst um 1 bzw.
 2 Uhr nachts. Jetzt gilt Europe/Berlin; geprüft mit 2026-06-30T22:30Z → 1. Juli und 2026-12-31T22:59Z → 31. Dezember.
