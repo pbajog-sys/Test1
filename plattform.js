@@ -27,10 +27,11 @@ const SK_SPIELE = {
 };
 const SK_KRIMI = { mord: { name: 'Tatort', emoji: '🔎' }, wachen: { name: 'Wachen der Villa', emoji: '🛡️' }, alibi: { name: 'Alibi-Raster', emoji: '📋' }, verhoer: { name: 'Verhör', emoji: '🗣️' } };
 const SK_KATEGORIEN = [
+  { id: 'original', name: 'Das Original', emoji: '🐋', karten: ['hubQuizzes'] },
   { id: 'denken', name: 'Denken & Logik', emoji: '🧠', karten: ['hubKrimi', 'hubPiranha', 'hubFunktion', 'hubRiff'] },
   { id: 'sinne', name: 'Sinne & Wahrnehmung', emoji: '👁️', karten: ['hubFarben', 'hubToene', 'hubTakt', 'hubAugen'] },
   { id: 'zahlen', name: 'Zahlen & Welt', emoji: '🔢', karten: ['hubPunkte', 'hubZufall', 'hubKarte', 'hubTiefgang', 'hubZahlen'] },
-  { id: 'wissen', name: 'Wissen & Sprache', emoji: '📚', karten: ['hubQuizzes', 'hubCello', 'hubSlo'] },
+  { id: 'wissen', name: 'Wissen & Sprache', emoji: '📚', karten: ['hubCello', 'hubSlo'] },
   { id: 'perspektive', name: 'Perspektivwechsel', emoji: '🪞', karten: ['hubTierleben'] },
 ];
 

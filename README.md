@@ -41,7 +41,7 @@ Spielstände, alte Stände zählen also sofort mit und werden nicht verändert.
 
   Überraschungen entstehen nur aus der Versuchsanordnung, nie aus vorgetäuschten Fehlern.
 - **Dashboard 2.0:** Oben stehen Begrüßung, Level-Ring, XP und Mini-Radar (öffnet das Profil), darunter die drei
-  Tageskarten und das Experiment. Die Spiele sind nach Kategorien gruppiert (Denken & Logik, Sinne & Wahrnehmung, Zahlen & Welt,
+  Tageskarten und das Experiment. Ganz oben steht „Das Original“ (die Quizzes), danach die Spiele nach Kategorien (Denken & Logik, Sinne & Wahrnehmung, Zahlen & Welt,
   Wissen & Sprache, Perspektivwechsel). Unten folgen Zuletzt gespielt (mit Karte), nächste Erfolge, Bestenliste und Verlauf.
 - **Tests** (`tests/`, Ergebnisse in `tests/BERICHT.md`): Generator-Tests mit 1000 Fällen je Generator, Plattform-Integrationstest
   und ein Rauchtest, der alle Spiele öffnet.
