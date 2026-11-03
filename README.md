@@ -394,7 +394,7 @@ Eigenes Sprachlernspiel (`slo.js`): Mit Zmajček, dem kleinen Drachen aus dem Wa
   - Er fliegt auf der Karte zur aktuellen Station und dreht einen Looping, wenn man ihn antippt (mit neuem Spruch).
   - In der Lektion sitzt er neben dem Fortschrittsbalken und hüpft oder ist traurig.
   - Am Ende kreist er über der Landschaft der Station.
-- **Reise-Karte** auf einer gemalten Landschaft mit leuchtendem Pfad (`img/slo/reise-slowenien.webp`, 720 px breit, 94 KB: Berge, Bled, Piran, Postojna-Höhle, Weinberge, Brücke, Fahne).
+- **Hintergrund der ganzen Slowenisch-App** (fest stehend, in Lektionen und im Wörterbuch stärker abgedunkelt): eine gemalte Landschaft mit leuchtendem Pfad (`img/slo/reise-slowenien.webp`, 720 px breit, 94 KB: Berge, Bled, Piran, Postojna-Höhle, Weinberge, Brücke, Fahne).
 - **Landschaften neben jeder Station** (SVG, sanft animiert):
   - Burgen: Ljubljana, Bled über dem See mit Kircheninsel, Predjama im Felsen, Celje als Ruine, Ptuj, Škofja Loka.
   - Natur und Orte: Triglav und Berge, Planica mit Skispringer, Piran mit Turm und Boot, Meer bei Sonnenuntergang, Soča als
