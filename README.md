@@ -389,6 +389,23 @@ Eigenes Sprachlernspiel (`slo.js`): Mit Zmajček, dem kleinen Drachen aus dem Wa
   vorgelesen. Falsches kommt am Ende der Lektion noch einmal, Serien richtiger Antworten zeigen eine 🔥-Combo.
 - **Ton:** Liegen Aufnahmen in `audio/slo/` (mit `index.json`: normierter Text → Datei), spielt die App diese ab; sonst nutzt sie
   eine slowenische Systemstimme, falls das Gerät eine hat. Ohne beides sind Hören und Diktat ausgeblendet.
+- **Zmajček lebt:**
+  - Der Drache schlägt mit den Flügeln, blinzelt, pustet Rauchwölkchen aus den Nüstern und sprüht Funken, wenn du richtig liegst.
+  - Er fliegt auf der Karte zur aktuellen Station und dreht einen Looping, wenn man ihn antippt (mit neuem Spruch).
+  - In der Lektion sitzt er neben dem Fortschrittsbalken und hüpft oder ist traurig.
+  - Am Ende kreist er über der Landschaft der Station.
+- **Landschaften neben jeder Station** (SVG, sanft animiert):
+  - Burgen: Ljubljana, Bled über dem See mit Kircheninsel, Predjama im Felsen, Celje als Ruine, Ptuj, Škofja Loka.
+  - Natur und Orte: Triglav und Berge, Planica mit Skispringer, Piran mit Turm und Boot, Meer bei Sonnenuntergang, Soča als
+    Fluss, Weinberge in Maribor und im Karst, Hirtenhütten auf der Velika planina, Lipizzaner in Lipica.
+  - Fahnen wehen, Wolken ziehen, Fenster flackern.
+- **Wie bei Duolingo:** „Ich weiß es nicht“ zeigt die Lösung (sie zählt als falsch und kommt am Ende der Lektion wieder),
+  „🙊 Ich kann gerade nicht sprechen“ und „🔇 Ich kann gerade nicht hören“ schalten die jeweiligen Aufgaben für eine Stunde ab.
+  Auf der Karte kann man sie mit einem Schalter wieder einschalten.
+- **Fehler der Spracherkennung** werden erklärt: `service-not-allowed` (iPhone: Diktierfunktion aktivieren; in der App vom
+  Home-Bildschirm blockiert iOS die Erkennung oft – dann in Safari öffnen), fehlender Mikrofon-Zugriff, kein Mikrofon,
+  Sprache nicht unterstützt. Danach geht es mit „Weiter ohne Sprechen“ weiter, Nachsprechen ist dann einen Tag aus.
+  Test: `tests/slo.test.js`.
 - **XP & Tagesziel:** 10 XP je Lektion, +5 ohne Fehler, +5 in Stufe 3; Ring fürs Tagesziel (30 XP), Serie 🔥, Wortstärke je Wort,
   „💪 Üben“ mit den schwächsten Wörtern, „📖 Wörter“ als Wörterbuch. Ergebnisse landen im Verlauf.
 

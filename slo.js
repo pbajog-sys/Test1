@@ -201,13 +201,20 @@ function sloStimmeSuchen() {
   const el = $('sloStimme');
   if (el) el.textContent = (sloAudio ? '🔊 Mit Sprachaufnahmen – tippe auf 🔊 zum Anhören.' : sloStimme ? '🔊 Slowenische Stimme: ' + sloStimme.name + ' – tippe auf 🔊 zum Anhören.' : '🔇 Auf diesem Gerät gibt es keine slowenische Stimme – Hör-Aufgaben sind ausgeblendet. Die Aussprache steht im 💡 Tipp jeder Station.')
     + (sloSprechenMoeglich() ? ' 🎙️ Nachsprechen ist an.' : '');
+  const st = loadJson(SLO_KEY), schalter = [];
+  if (SLO_SR && st.sprechenAus > Date.now()) schalter.push('<button type="button" class="slo-schalter" data-an="sprechenAus">🎙️ Nachsprechen wieder einschalten</button>');
+  if ((sloStimme || sloAudio) && st.hoerenAus > Date.now()) schalter.push('<button type="button" class="slo-schalter" data-an="hoerenAus">🎧 Hör-Aufgaben wieder einschalten</button>');
+  if (el && schalter.length) {
+    el.innerHTML = sloEsc(el.textContent) + '<br>' + schalter.join(' ');
+    el.querySelectorAll('[data-an]').forEach((b) => b.addEventListener('click', () => { const s2 = sloStore(); delete s2[b.dataset.an]; saveJson(SLO_KEY, s2); sloStimmeSuchen(); }));
+  }
 }
 if ('speechSynthesis' in window) { sloStimmeSuchen(); speechSynthesis.addEventListener && speechSynthesis.addEventListener('voiceschanged', sloStimmeSuchen); }
 // Fertige Aufnahmen (audio/slo/index.json: normierter Text → Datei) haben Vorrang vor der Gerätestimme
 fetch('audio/slo/index.json').then((r) => (r.ok ? r.json() : null)).then((j) => { if (j && typeof j === 'object') { sloAudio = j; sloStimmeSuchen(); } }).catch(() => {});
 const sloDatei = (text) => sloAudio && sloAudio[sloNorm(text)];
 const sloHatTon = (text) => !!(sloDatei(text) || sloStimme);
-const sloTonDa = () => !!(sloStimme || sloAudio);
+const sloTonDa = () => !!(sloStimme || sloAudio) && !(loadJson(SLO_KEY).hoerenAus > Date.now());
 function sloSprich(text, langsam) {
   const datei = sloDatei(text);
   if (datei) {
@@ -257,7 +264,8 @@ function sloDrache(stimmung = 'froh') {
   const arme = stimmung === 'jubel' ? '<path d="M30 62l-10-12M70 62l10-12" stroke="#2f9e63" stroke-width="6" stroke-linecap="round"/>' : '<path d="M32 66l-6 6M68 66l6 6" stroke="#2f9e63" stroke-width="6" stroke-linecap="round"/>';
   return '<svg class="slo-drache slo-' + stimmung + '" viewBox="0 0 100 100" aria-hidden="true">'
     + '<path d="M70 82q22 2 20-16q-1-8-8-6q5 6-2 11q-6 4-14 1z" fill="#2f9e63"/><path d="M88 60l4-6 1 8z" fill="#f5c542"/>'
-    + '<path d="M34 58q-22-14-26 6q12-6 16 2q4-8 10-2z" fill="#1f7a4a"/><path d="M66 58q22-14 26 6q-12-6-16 2q-4-8-10-2z" fill="#1f7a4a"/>'
+    + '<g class="slo-fl slo-fl-l"><path d="M34 58q-22-14-26 6q12-6 16 2q4-8 10-2z" fill="#1f7a4a"/><path d="M30 57q-12-6-18 2" stroke="#3fb67a" stroke-width="1.4" fill="none"/></g>'
+    + '<g class="slo-fl slo-fl-r"><path d="M66 58q22-14 26 6q-12-6-16 2q-4-8-10-2z" fill="#1f7a4a"/><path d="M70 57q12-6 18 2" stroke="#3fb67a" stroke-width="1.4" fill="none"/></g>'
     + '<ellipse cx="50" cy="70" rx="22" ry="20" fill="#3fb67a"/><ellipse cx="50" cy="74" rx="13" ry="13" fill="#d6f5b0"/>'
     + '<path d="M44 66h12M43 72h14M44 78h12" stroke="#a7d98a" stroke-width="1.5"/>'
     + arme
@@ -268,10 +276,60 @@ function sloDrache(stimmung = 'froh') {
     + '<circle cx="46" cy="44" r="1.3" fill="#14532d"/><circle cx="54" cy="44" r="1.3" fill="#14532d"/>'
     + '<circle cx="41" cy="31" r="6" fill="#fff"/><circle cx="59" cy="31" r="6" fill="#fff"/>'
     + (stimmung === 'jubel' ? '<path d="M37 32q4-5 8 0M55 32q4-5 8 0" stroke="#111" stroke-width="2.4" fill="none" stroke-linecap="round"/>'
-      : '<circle cx="42" cy="32" r="3" fill="#111"/><circle cx="60" cy="32" r="3" fill="#111"/><circle cx="43" cy="31" r="1" fill="#fff"/><circle cx="61" cy="31" r="1" fill="#fff"/>')
+      : '<g class="slo-augen"><circle cx="42" cy="32" r="3" fill="#111"/><circle cx="60" cy="32" r="3" fill="#111"/><circle cx="43" cy="31" r="1" fill="#fff"/><circle cx="61" cy="31" r="1" fill="#fff"/></g>')
+    + '<g class="slo-rauch"><circle cx="45" cy="40" r="2.2"/><circle cx="55" cy="40" r="2.2"/></g>'
+    + (stimmung === 'jubel' ? '<g class="slo-funken"><path d="M14 20l2 5 5 2-5 2-2 5-2-5-5-2 5-2z"/><path d="M86 16l1.5 4 4 1.5-4 1.5-1.5 4-1.5-4-4-1.5 4-1.5z"/><path d="M82 40l1 3 3 1-3 1-1 3-1-3-3-1 3-1z"/></g>' : '')
     + (stimmung === 'traurig' ? '<path d="M35 24l10 3M65 24l-10 3" stroke="#14532d" stroke-width="2" stroke-linecap="round"/>' : '')
     + '<circle cx="33" cy="41" r="3.5" fill="#fb7185" opacity=".55"/><circle cx="67" cy="41" r="3.5" fill="#fb7185" opacity=".55"/>'
     + mund + '</svg>';
+}
+
+// ---------- Landschaften neben den Stationen: Burgen, Berge, Meer … (SVG, Fahnen und Wolken bewegen sich) ----------
+const SLO_SZENE = { pozdravi: 'burg-huegel', jaz: 'burg-see', stevilke: 'meer-turm', barve: 'burg-fels', hrana: 'weinberg', druzina: 'burg-huegel2', zivali: 'fluss',
+  mesto: 'burg-ruine', dnevi: 'berg-schnee', narava: 'berg', pogovor: 'wiese', telo: 'schanze', oblacila: 'wald', doma: 'burg-huegel2', sola: 'fluss', prosti: 'fluss',
+  nakup: 'weinberg', cas: 'huetten', potovanje: 'meer', custva: 'meer-abend' };
+function sloBurg(x, y, gross, f) {
+  const t = (tx, ty, w, h, dach) => '<rect x="' + tx + '" y="' + ty + '" width="' + w + '" height="' + h + '" fill="#d9d2c3"/><rect x="' + tx + '" y="' + ty + '" width="' + w + '" height="3" fill="#bfb6a3"/>'
+    + (dach ? '<path d="M' + (tx - 2) + ' ' + ty + 'L' + (tx + w / 2) + ' ' + (ty - h * 0.55) + 'L' + (tx + w + 2) + ' ' + ty + 'z" fill="#c2410c"/>' : '<path d="M' + tx + ' ' + ty + 'h' + w + 'v-3h-' + (w / 5) + 'v2h-' + (w / 5) + 'v-2h-' + (w / 5) + 'v2h-' + (w / 5) + 'v-2h-' + (w / 5) + 'z" fill="#d9d2c3"/>')
+    + '<rect x="' + (tx + w / 2 - 1.5) + '" y="' + (ty + h * 0.35) + '" width="3" height="5" rx="1.5" fill="#fde68a" class="slo-fenster"/>';
+  const k = gross ? 1.2 : 1;
+  return '<g transform="translate(' + x + ' ' + y + ') scale(' + k + ')">' + t(-26, -18, 52, 18) + t(-34, -34, 14, 34, true) + t(18, -40, 16, 40, true) + t(-8, -30, 14, 12)
+    + '<rect x="-5" y="-9" width="10" height="9" rx="5" fill="#57534e"/>'
+    + '<path d="M26 -62v-12" stroke="#57534e" stroke-width="1.2"/><path class="slo-fahne" d="M26 -74h10l-3 3 3 3h-10z" fill="' + f + '"/></g>';
+}
+function sloSzene(id, farbe) {
+  const art = SLO_SZENE[id] || 'wald', wolke = '<g class="slo-wolke"><ellipse cx="30" cy="16" rx="12" ry="5" fill="#fff" opacity=".7"/><ellipse cx="38" cy="13" rx="8" ry="5" fill="#fff" opacity=".7"/></g>';
+  const huegel = (c) => '<path d="M0 100Q30 54 64 62T130 58V100z" fill="' + c + '"/>';
+  let g = '';
+  if (art.startsWith('burg')) {
+    if (art === 'burg-see') g = '<rect y="70" width="130" height="30" fill="#38bdf8"/><path class="slo-welle" d="M0 78q8-3 16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0" stroke="#e0f2fe" fill="none"/>'
+      + '<path d="M78 72 L88 40 L108 36 L118 72z" fill="#78716c"/>' + sloBurg(98, 40, false, farbe) + '<ellipse cx="34" cy="74" rx="14" ry="4" fill="#15803d"/><path d="M34 70v-8M30 66l4-6 4 6" stroke="#fef3c7" stroke-width="2" fill="none"/>';
+    else if (art === 'burg-fels') g = '<path d="M0 100V20Q30 6 70 14T130 10V100z" fill="#57534e"/><path d="M30 76q10-28 40-30q20 2 30 30z" fill="#1c1917"/>' + sloBurg(66, 60, false, farbe);
+    else if (art === 'burg-ruine') g = huegel('#4d7c0f') + '<path d="M44 62h44v-14h-6v-6h-6v6h-6v-10h-8v10h-6v-6h-6v6h-6z" fill="#a8a29e"/><path d="M60 38v-26h12v26" fill="#a8a29e"/><path class="slo-fahne" d="M66 12v-10h10l-3 3 3 3h-10" fill="' + farbe + '"/>';
+    else g = huegel(art === 'burg-huegel2' ? '#3f6212' : '#4d7c0f') + sloBurg(66, 62, true, farbe) + '<path d="M0 100Q40 86 130 92V100z" fill="#166534"/>';
+  } else if (art === 'berg' || art === 'berg-schnee' || art === 'schanze') {
+    g = '<path d="M-4 100L34 30L54 58L78 18L120 100z" fill="#64748b"/><path d="M78 18L68 38L76 34L82 42L90 36z" fill="#f8fafc"/><path d="M34 30L26 46L34 42L40 48z" fill="#f8fafc"/>'
+      + (art === 'berg-schnee' ? '<path d="M0 100Q40 80 130 88V100z" fill="#f1f5f9"/>' : '<path d="M0 100Q40 80 130 88V100z" fill="#15803d"/>')
+      + (art === 'schanze' ? '<path d="M96 52Q104 80 128 96" stroke="#e2e8f0" stroke-width="5" fill="none"/><circle class="slo-springer" cx="96" cy="52" r="2.5" fill="#ef4444"/>' : '');
+  } else if (art.startsWith('meer')) {
+    const abend = art === 'meer-abend';
+    g = (abend ? '<rect width="130" height="70" fill="#fb923c" opacity=".35"/><circle cx="96" cy="64" r="14" fill="#fdba74"/>' : '<circle cx="104" cy="22" r="9" fill="#fde047"/>')
+      + '<rect y="64" width="130" height="36" fill="#0284c7"/><path class="slo-welle" d="M0 72q8-3 16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0M0 84q8-3 16 0t16 0t16 0t16 0t16 0t16 0t16 0t16 0" stroke="#bae6fd" fill="none"/>'
+      + (art === 'meer-turm' ? '<path d="M8 64V24h10v40" fill="#e7e5e4"/><path d="M6 24L13 10L20 24z" fill="#b45309"/><rect x="10" y="30" width="6" height="6" fill="#57534e"/>' : '')
+      + '<g class="slo-boot"><path d="M40 66h26l-4 6h-18z" fill="#f8fafc"/><path d="M52 64V44l12 18z" fill="#fef3c7"/><path d="M52 44v20" stroke="#78350f"/></g>';
+  } else if (art === 'fluss') {
+    g = huegel('#15803d') + '<path d="M60 100Q50 84 70 74T84 62" stroke="#14b8a6" stroke-width="12" fill="none"/><path d="M60 100Q50 84 70 74T84 62" stroke="#5eead4" stroke-width="2" stroke-dasharray="4 6" fill="none" class="slo-strom"/>'
+      + '<path d="M16 80l6-16 6 16zM100 74l6-16 6 16z" fill="#166534"/>';
+  } else if (art === 'weinberg') {
+    g = huegel('#65a30d') + Array.from({ length: 5 }, (_, i) => '<path d="M' + (18 + i * 18) + ' ' + (92 - i * 3) + 'v-14" stroke="#713f12" stroke-width="2"/><circle cx="' + (18 + i * 18) + '" cy="' + (76 - i * 3) + '" r="5" fill="#16a34a"/><circle cx="' + (21 + i * 18) + '" cy="' + (81 - i * 3) + '" r="2.4" fill="#7c3aed"/>').join('');
+  } else if (art === 'huetten') {
+    g = huegel('#4d7c0f') + [[30, 70], [62, 64], [94, 70]].map(([x, y]) => '<ellipse cx="' + x + '" cy="' + y + '" rx="13" ry="5" fill="#1c1917"/><path d="M' + (x - 13) + ' ' + y + 'Q' + x + ' ' + (y - 22) + ' ' + (x + 13) + ' ' + y + 'z" fill="#78716c"/><rect x="' + (x - 3) + '" y="' + (y - 4) + '" width="6" height="5" fill="#fde68a"/>').join('') + '<ellipse cx="80" cy="88" rx="7" ry="4" fill="#f5f5f4"/><circle cx="74" cy="86" r="3" fill="#f5f5f4"/>';
+  } else if (art === 'wiese') {
+    g = huegel('#65a30d') + '<g class="slo-pferd"><ellipse cx="64" cy="76" rx="12" ry="6" fill="#f5f5f4"/><path d="M74 74l6-10 4 2-4 10z" fill="#f5f5f4"/><path d="M56 80v8M60 80v8M68 80v8M72 80v8" stroke="#f5f5f4" stroke-width="2.4"/></g><path d="M0 70h130" stroke="#a16207" stroke-dasharray="2 4"/>';
+  } else {
+    g = huegel('#166534') + [16, 38, 60, 84, 106].map((x, i) => '<path d="M' + x + ' ' + (84 - (i % 2) * 6) + 'l9-26 9 26z" fill="' + (i % 2 ? '#14532d' : '#15803d') + '"/>').join('');
+  }
+  return '<svg class="slo-szene" viewBox="0 0 130 100" preserveAspectRatio="xMidYMax meet" aria-hidden="true">' + wolke + g + '</svg>';
 }
 
 // ---------- Lektionen zusammenstellen ----------
@@ -345,7 +403,8 @@ function sloKarte() {
   $('sloPfad').innerHTML = SLO_EINHEITEN.map((u, i) => {
     const s = st.stufe[u.id] || 0, offen = sloOffen(st, i), seite = ['links', 'mitte', 'rechts', 'mitte'][i % 4];
     return '<div class="slo-station slo-' + seite + (offen ? '' : ' zu') + (s >= 3 ? ' fertig' : '') + (i === jetzt ? ' jetzt' : '') + '" style="--f:' + u.farbe + '">'
-      + (i === jetzt ? '<div class="slo-maskottchen">' + sloDrache('froh') + '<span class="slo-blase"><b>' + spruch[0] + '</b><small>' + spruch[1] + '</small></span></div>' : '')
+      + '<div class="slo-deko">' + sloSzene(u.id, u.farbe) + '</div>'
+      + (i === jetzt ? '<button type="button" class="slo-maskottchen" id="sloMaskottchen" aria-label="Zmajček">' + sloDrache('froh') + '<span class="slo-blase"><b>' + spruch[0] + '</b><small>' + spruch[1] + '</small></span></button>' : '')
       + '<button type="button" class="slo-knoten" data-u="' + u.id + '"' + (offen ? '' : ' aria-disabled="true"') + ' aria-label="' + u.ort + ': ' + u.de + '">'
       + '<span class="slo-ort-emoji">' + (offen ? u.ortEmoji : '🔒') + '</span>'
       + '<span class="slo-kronen">' + [1, 2, 3].map((k) => '<i class="' + (s >= k ? 'voll' : '') + '"></i>').join('') + '</span></button>'
@@ -356,6 +415,14 @@ function sloKarte() {
   $('sloUeben').disabled = !sloUebung(st);
   sloStimmeSuchen();
   zeigeSloTeil('karte');
+  // Zmajček antippen: ein Looping und ein neuer Spruch
+  const m = $('sloMaskottchen');
+  if (m) m.addEventListener('click', () => {
+    const sp = SLO_SPRUECHE[Math.floor(Math.random() * SLO_SPRUECHE.length)];
+    m.querySelector('.slo-blase').innerHTML = '<b>' + sp[0] + '</b><small>' + sp[1] + '</small>';
+    m.classList.remove('looping'); void m.offsetWidth; m.classList.add('looping');
+    sloSprich(sp[0]);
+  });
 }
 function sloStart(u, art) {
   const st = sloStore();
@@ -383,6 +450,11 @@ function sloZeigen() {
   $('sloPruefen').hidden = false;
   sloBereit(false, 'Prüfen');
   box.className = 'slo-aufgabe slo-a-' + a.typ;
+  const kd = $('sloKopfDrache');
+  if (kd && !kd.firstChild) kd.innerHTML = sloDrache('froh');
+  if (kd) kd.className = 'slo-kopfdrache';
+  // „Ich weiß es nicht“ – bei allen bewerteten Aufgaben außer Paaren
+  $('sloWeissNicht').hidden = ['neu', 'tipp', 'paare'].includes(a.typ);
   const R = SLO_RENDER[a.typ];
   R(a, box);
   box.querySelectorAll('[data-sprich]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); sloSprich(b.dataset.sprich, b.classList.contains('langsam')); }));
@@ -394,6 +466,30 @@ function sloPruefen() {
   if (a.typ === 'neu' || a.typ === 'tipp') { if (a.w) sloWortStaerke(a.w, 0); slo.i++; sloZeigen(); return; }
   const r = slo.pruefe();
   if (!r) return;
+  sloBewerten(r, a);
+}
+// Musterlösung einer Aufgabe (für „Ich weiß es nicht“)
+function sloMusterloesung(a) {
+  if (a.w) return { loesung: (a.typ === 'bild' ? a.w.e + ' ' : '') + sloEsc(a.w.sl) + ' = ' + sloEsc(a.w.de), laut: a.w.sl };
+  if (a.s) return { loesung: sloEsc(a.s.sl) + ' = ' + sloEsc(a.s.de), laut: a.s.sl };
+  return { loesung: '' };
+}
+function sloWeissNicht() {
+  if (!slo || slo.zustand !== 'antwort') return;
+  const a = slo.liste[slo.i];
+  if (['neu', 'tipp', 'paare'].includes(a.typ)) return;
+  if (a.typ === 'sprechen') try { if (slo.rec) slo.rec.abort(); } catch (e) { /* egal */ }
+  sloBewerten({ ok: false, aufgegeben: true, ...sloMusterloesung(a), hinweis: 'Kein Problem – merk es dir, es kommt am Ende noch einmal.' }, a);
+}
+// Aufgabe überspringen, ohne Wertung (Mikrofon oder Ton gerade nicht möglich)
+function sloUeberspringen(typen, aus, schluessel, stunden) {
+  const st = sloStore(); st[schluessel] = Date.now() + stunden * 36e5; saveJson(SLO_KEY, st);
+  slo.liste = slo.liste.filter((x, i) => i <= slo.i || !typen.includes(x.typ));
+  slo.i++; sloZeigen();
+  if (typeof skToast === 'function') skToast(aus);
+}
+function sloBewerten(r, a) {
+  $('sloWeissNicht').hidden = true;
   slo.zustand = 'weiter'; slo.bewertet++;
   if (r.ok) { slo.richtig++; slo.combo = (slo.combo || 0) + 1; sloKlang(true); if (navigator.vibrate) navigator.vibrate(12); }
   else {
@@ -405,14 +501,16 @@ function sloPruefen() {
   if (a.w) sloWortStaerke(a.w, r.ok ? 1 : -1);
   const lob = ['Pravilno!', 'Odlično!', 'Bravo!', 'Super!', 'Točno!'];
   $('sloFuss').className = 'slo-fuss ' + (r.ok ? 'gut' : 'schlecht');
-  $('sloUrteil').innerHTML = '<div class="slo-urteil-kopf">' + sloDrache(r.ok ? 'jubel' : 'traurig') + '<b>' + (r.ok ? lob[Math.floor(Math.random() * lob.length)] + ' <small>(richtig!)</small>' : 'Ni čisto prav <small>(nicht ganz)</small>') + '</b></div>'
-    + (r.loesung ? '<div class="slo-loesung">' + (r.ok ? '' : 'Richtig: ') + r.loesung + (r.laut ? ' ' + sloLaut(r.laut) : '') + '</div>' : '')
+  $('sloUrteil').innerHTML = '<div class="slo-urteil-kopf">' + sloDrache(r.ok ? 'jubel' : 'traurig') + '<b>' + (r.ok ? lob[Math.floor(Math.random() * lob.length)] + ' <small>(richtig!)</small>' : r.aufgegeben ? 'Tako se reče <small>(so sagt man das)</small>' : 'Ni čisto prav <small>(nicht ganz)</small>') + '</b></div>'
+    + (r.loesung ? '<div class="slo-loesung">' + (r.ok || r.aufgegeben ? '' : 'Richtig: ') + r.loesung + (r.laut ? ' ' + sloLaut(r.laut) : '') + '</div>' : '')
     + (r.hinweis ? '<div class="slo-hinweis">' + r.hinweis + '</div>' : '')
     + (r.ok && slo.combo >= 3 && slo.combo % (slo.combo >= 10 ? 5 : 3) === 0 ? '<div class="slo-combo">🔥 ' + slo.combo + ' richtig in Folge!</div>' : '');
   $('sloUrteil').querySelectorAll('[data-sprich]').forEach((b) => b.addEventListener('click', () => sloSprich(b.dataset.sprich)));
   sloBereit(true, 'Weiter');
   $('sloAufgabe').querySelectorAll('button, input').forEach((b) => { if (!b.classList.contains('slo-laut')) b.disabled = true; });
-  if (r.laut && r.ok) sloSprich(r.laut);
+  if (r.laut && (r.ok || r.aufgegeben)) sloSprich(r.laut);
+  const kd = $('sloKopfDrache');
+  if (kd) { kd.innerHTML = sloDrache(r.ok ? 'jubel' : 'traurig'); kd.className = 'slo-kopfdrache ' + (r.ok ? 'hops' : 'wackeln'); }
 }
 function sloWortStaerke(w, d) {
   const st = sloStore();
@@ -430,7 +528,7 @@ function sloEnde() {
   if (typeof merkeVerlauf === 'function') merkeVerlauf('slo', Math.round(quote * 100), 100, was);
   const sek = Math.round((Date.now() - slo.start) / 1000), heute = st.tage[tagSchluessel()], ziel = heute >= SLO_TAGESZIEL && heute - xp < SLO_TAGESZIEL;
   const fertigU = neueStufe && slo.stufe === 3;
-  $('slo-ende').innerHTML = '<div class="slo-ende-drache">' + sloDrache('jubel') + '</div>'
+  $('slo-ende').innerHTML = '<div class="slo-ende-szene">' + (slo.u ? sloSzene(slo.u.id, slo.u.farbe) : sloSzene('pozdravi', '#22c55e')) + '<div class="slo-ende-drache">' + sloDrache('jubel') + '</div></div>'
     + '<h2 class="slo-ende-titel">' + (fehlerfrei ? 'Brez napake!' : quote >= 0.8 ? 'Odlično!' : 'Dobro opravljeno!') + '</h2>'
     + '<p class="slo-ende-sub">' + (fehlerfrei ? 'Ohne einen Fehler!' : quote >= 0.8 ? 'Ausgezeichnet!' : 'Gut gemacht!') + ' · ' + sloEsc(was) + '</p>'
     + '<div class="slo-ende-werte"><div><b>+' + xp + '</b>XP</div><div><b>' + Math.round(quote * 100) + ' %</b>richtig</div><div><b>' + Math.floor(sek / 60) + ':' + String(sek % 60).padStart(2, '0') + '</b>Zeit</div></div>'
@@ -468,6 +566,7 @@ function sloKacheln(box, ziel, vorrat, pruefen, vorlesen) {
   zeichnen();
   slo.pruefe = () => (gewaehlt.length ? pruefen(gewaehlt.map((k) => k.t).join(' ')) : null);
 }
+const sloNichtHoeren = () => '<button type="button" class="slo-nicht oben" data-nicht="hoeren">🔇 Ich kann gerade nicht hören</button>';
 const SLO_RENDER = {
   tipp(a, box) {
     box.innerHTML = '<div class="slo-tippkarte" style="--f:' + slo.u.farbe + '"><div class="slo-tk-kopf">' + sloDrache('froh') + '<div><small>Station ' + (SLO_EINHEITEN.indexOf(slo.u) + 1) + ' · ' + slo.u.ortEmoji + ' ' + slo.u.ort + '</small><b>' + slo.u.titel + '</b><span>' + slo.u.de + '</span></div></div>' + slo.u.tipp + '</div>';
@@ -498,7 +597,7 @@ const SLO_RENDER = {
   },
   hoeren(a, box) {
     const opt = sloMisch([a.w, ...sloAndere(sloPool(a.w), a.w, 3, 'sl')]);
-    box.innerHTML = '<div class="slo-titel">Was hörst du?</div><div class="slo-hoer"><button type="button" class="slo-laut gross" data-sprich="' + sloEsc(a.w.sl) + '">🔊</button><button type="button" class="slo-laut langsam" data-sprich="' + sloEsc(a.w.sl) + '">🐢</button></div><div class="slo-optionen"></div>';
+    box.innerHTML = sloNichtHoeren() + '<div class="slo-titel">Was hörst du?</div><div class="slo-hoer"><button type="button" class="slo-laut gross" data-sprich="' + sloEsc(a.w.sl) + '">🔊</button><button type="button" class="slo-laut langsam" data-sprich="' + sloEsc(a.w.sl) + '">🐢</button></div><div class="slo-optionen"></div>';
     sloOptionen(box, opt, (o) => o.sl === a.w.sl, (o) => sloEsc(o.sl));
     const p = slo.pruefe; slo.pruefe = () => { const r = p(); return r && { ...r, loesung: sloEsc(a.w.sl) + ' = ' + sloEsc(a.w.de) }; };
     setTimeout(() => sloSprich(a.w.sl), 250);
@@ -577,7 +676,7 @@ const SLO_RENDER = {
     const teile = sloTeile(a.s.sl), schon = new Set(teile.map(sloNorm)), passt = [a.s.sl].concat(a.s.slAlt).map(sloNorm);
     const pool = (slo.u ? slo.u.S : sloSatzPool()).filter((s) => s !== a.s).flatMap((s) => sloTeile(s.sl)).filter((t) => { const k = sloNorm(t); if (schon.has(k)) return false; schon.add(k); return true; });
     const vorrat = sloMisch(teile.concat(sloMisch(pool).slice(0, Math.max(2, Math.round(teile.length / 2)))));
-    box.innerHTML = '<div class="slo-titel">Tippe, was du hörst</div><div class="slo-hoer"><button type="button" class="slo-laut gross" data-sprich="' + sloEsc(a.s.sl) + '">🔊</button><button type="button" class="slo-laut langsam" data-sprich="' + sloEsc(a.s.sl) + '">🐢</button></div>'
+    box.innerHTML = sloNichtHoeren() + '<div class="slo-titel">Tippe, was du hörst</div><div class="slo-hoer"><button type="button" class="slo-laut gross" data-sprich="' + sloEsc(a.s.sl) + '">🔊</button><button type="button" class="slo-laut langsam" data-sprich="' + sloEsc(a.s.sl) + '">🐢</button></div>'
       + '<div class="slo-zeile"></div><div class="slo-bank"></div>';
     sloKacheln(box, a.s.sl, vorrat, (txt) => ({ ok: passt.includes(sloNorm(txt)), loesung: sloEsc(a.s.sl) + ' = ' + sloEsc(a.s.de), laut: a.s.sl }));
     setTimeout(() => sloSprich(a.s.sl), 250);
@@ -586,14 +685,14 @@ const SLO_RENDER = {
     const text = a.s ? a.s.sl : a.w.sl, de = a.s ? a.s.de : a.w.de;
     box.innerHTML = '<div class="slo-titel">Sprich nach</div><div class="slo-frage satz">' + (a.w ? a.w.e + ' ' : '') + '„' + sloEsc(text) + '“ ' + sloLaut(text) + '</div><div class="slo-uebersetzung">' + sloEsc(de) + '</div>'
       + '<button type="button" class="slo-mikro" id="sloMikro"><span>🎙️</span><b>Tippen und sprechen</b></button><div class="slo-gehoert" id="sloGehoert"></div>'
-      + '<button type="button" class="slo-nicht" id="sloNicht">Gerade nicht sprechen</button>';
+      + '<button type="button" class="slo-nicht" id="sloNicht">🙊 Ich kann gerade nicht sprechen</button>';
     let bester = 0, gehoert = '';
     $('sloMikro').addEventListener('click', () => {
       const m = $('sloMikro');
       if (m.classList.contains('hoert')) return;
       if ('speechSynthesis' in window) speechSynthesis.cancel();
       let rec;
-      try { rec = new SLO_SR(); } catch (e) { $('sloGehoert').textContent = 'Spracherkennung startet nicht.'; return; }
+      try { rec = new SLO_SR(); slo.rec = rec; } catch (e) { $('sloGehoert').textContent = 'Spracherkennung startet nicht.'; return; }
       rec.lang = 'sl-SI'; rec.interimResults = false; rec.maxAlternatives = 4;
       m.classList.add('hoert'); m.querySelector('b').textContent = 'Ich höre zu …';
       rec.onresult = (e) => {
@@ -604,18 +703,24 @@ const SLO_RENDER = {
         if (bester >= 0.6) sloPruefen();
       };
       rec.onerror = (e) => {
-        const grund = { 'not-allowed': 'Kein Zugriff aufs Mikrofon – bitte in den Einstellungen erlauben.', 'language-not-supported': 'Slowenisch wird von der Spracherkennung dieses Geräts nicht unterstützt.', 'no-speech': 'Nichts gehört – noch einmal?', network: 'Die Spracherkennung braucht Internet.' }[e.error] || 'Das hat nicht geklappt (' + e.error + ').';
-        $('sloGehoert').textContent = grund;
-        if (e.error === 'language-not-supported' || e.error === 'not-allowed') { const st = sloStore(); st.sprechenAus = Date.now() + 864e5; saveJson(SLO_KEY, st); }
+        const grund = {
+          'not-allowed': 'Kein Zugriff aufs Mikrofon. Erlaube das Mikrofon für diese Seite (iPhone: Einstellungen › Safari › Mikrofon) und versuch es noch einmal.',
+          'service-not-allowed': 'Die Spracherkennung ist auf diesem Gerät gesperrt. Auf dem iPhone hilft meist: Einstellungen › Allgemein › Tastatur › „Diktierfunktion aktivieren“. In der App vom Home-Bildschirm lässt iOS die Spracherkennung oft gar nicht zu – dann klappt Nachsprechen nur, wenn du die Spielekiste in Safari öffnest.',
+          'language-not-supported': 'Slowenisch wird von der Spracherkennung dieses Geräts nicht unterstützt.',
+          'audio-capture': 'Kein Mikrofon gefunden.',
+          'no-speech': 'Nichts gehört – noch einmal?', network: 'Die Spracherkennung braucht Internet.', aborted: '',
+        }[e.error] ?? 'Das hat nicht geklappt (' + e.error + ').';
+        $('sloGehoert').innerHTML = sloEsc(grund);
+        if (['language-not-supported', 'not-allowed', 'service-not-allowed', 'audio-capture'].includes(e.error)) {
+          const st = sloStore(); st.sprechenAus = Date.now() + 864e5; saveJson(SLO_KEY, st);
+          $('sloGehoert').innerHTML += '<br><button type="button" class="btn secondary slo-ohne" id="sloOhne">Weiter ohne Sprechen ›</button><small class="slo-fein">Nachsprechen ist jetzt für einen Tag aus – auf der Karte kannst du es wieder einschalten.</small>';
+          $('sloOhne').addEventListener('click', () => { slo.liste = slo.liste.filter((x, i) => i <= slo.i || x.typ !== 'sprechen'); slo.i++; sloZeigen(); });
+        }
       };
       rec.onend = () => { m.classList.remove('hoert'); m.querySelector('b').textContent = 'Noch einmal sprechen'; };
       try { rec.start(); } catch (e) { m.classList.remove('hoert'); }
     });
-    $('sloNicht').addEventListener('click', () => {
-      const st = sloStore(); st.sprechenAus = Date.now() + 36e5; saveJson(SLO_KEY, st);
-      slo.liste = slo.liste.filter((x, i) => i <= slo.i || x.typ !== 'sprechen');
-      slo.i++; sloZeigen();
-    });
+    $('sloNicht').addEventListener('click', () => sloUeberspringen(['sprechen'], '🙊 Sprech-Aufgaben sind für eine Stunde aus.', 'sprechenAus', 1));
     slo.pruefe = () => (gehoert ? { ok: bester >= 0.6, loesung: sloEsc(text), laut: text, hinweis: 'Verstanden wurde: „' + sloEsc(gehoert) + '“ (' + Math.round(bester * 100) + ' % der Wörter)' } : null);
   },
   luecke(a, box) {
@@ -675,6 +780,8 @@ $('sloPfad').addEventListener('click', (e) => {
   sloStart(SLO_EINHEITEN[i]);
 });
 $('sloPruefen').addEventListener('click', sloPruefen);
+$('sloWeissNicht').addEventListener('click', sloWeissNicht);
+$('sloAufgabe').addEventListener('click', (e) => { if (e.target.closest('[data-nicht="hoeren"]')) sloUeberspringen(['hoeren', 'diktat'], '🔇 Hör-Aufgaben sind für eine Stunde aus.', 'hoerenAus', 1); });
 $('sloAbbruch').addEventListener('click', () => { if (!slo || slo.i === 0 || confirm('Lektion abbrechen? Der Fortschritt dieser Lektion geht verloren.')) sloKarte(); });
 $('sloUeben').addEventListener('click', () => sloStart(null, 'ueben'));
 $('sloWoerterBtn').addEventListener('click', sloWoerter);

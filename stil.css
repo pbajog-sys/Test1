@@ -3111,3 +3111,57 @@ button, .cover { -webkit-user-select: none; user-select: none; }
 .gb-urteil { display: grid; gap: 10px; } .gb-urteil:empty { display: none; }
 .gb-text { padding: 12px 14px; border-radius: 14px; background: rgba(255,255,255,.06); line-height: 1.45; } .gb-text small { color: #b7d6d2; }
 .gb-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 6px; }
+
+/* 🐉 Zmajček lebt: Flügelschlag, Blinzeln, Rauch, Funken; Landschaften mit Burgen neben den Stationen */
+.slo-fl { transform-box: fill-box; animation: sloFlattern 0.9s ease-in-out infinite; }
+.slo-fl-l { transform-origin: 100% 60%; } .slo-fl-r { transform-origin: 0% 60%; animation-delay: -0.45s; animation-name: sloFlatternR; }
+@keyframes sloFlattern { 50% { transform: rotate(-16deg) scaleY(1.08); } }
+@keyframes sloFlatternR { 50% { transform: rotate(16deg) scaleY(1.08); } }
+.slo-jubel .slo-fl { animation-duration: .35s; }
+.slo-augen { transform-box: fill-box; transform-origin: center; animation: sloBlinzeln 4.5s infinite; }
+@keyframes sloBlinzeln { 0%, 94%, 100% { transform: scaleY(1); } 96% { transform: scaleY(.1); } }
+.slo-rauch circle { fill: rgba(255,255,255,.55); opacity: 0; animation: sloRauch 3.2s ease-out infinite; transform-box: fill-box; transform-origin: center; }
+.slo-rauch circle:nth-child(2) { animation-delay: 1.6s; }
+@keyframes sloRauch { 0% { opacity: 0; transform: translateY(0) scale(.6); } 15% { opacity: .8; } 100% { opacity: 0; transform: translateY(-26px) scale(2.2); } }
+.slo-traurig .slo-rauch { display: none; }
+.slo-funken path { fill: #fde047; transform-box: fill-box; transform-origin: center; animation: sloFunkeln .7s ease-in-out infinite alternate; }
+.slo-funken path:nth-child(2) { animation-delay: .2s; } .slo-funken path:nth-child(3) { animation-delay: .4s; }
+@keyframes sloFunkeln { from { transform: scale(.4) rotate(0); opacity: .3; } to { transform: scale(1.2) rotate(40deg); opacity: 1; } }
+.slo-traurig { animation: sloSeufzen 2.4s ease-in-out infinite; } @keyframes sloSeufzen { 50% { transform: translateY(2px) rotate(-3deg); } }
+
+/* Maskottchen auf der Karte: fliegt herein, Looping beim Antippen */
+button.slo-maskottchen { border: 0; background: none; padding: 0; cursor: pointer; pointer-events: auto; z-index: 3; animation: sloEinflug 1.4s var(--ease-out) both, sloWippen 2.6s ease-in-out 1.4s infinite; }
+@keyframes sloEinflug { from { transform: translate(-60px, -120px) rotate(-20deg) scale(.6); opacity: 0; } 60% { opacity: 1; } to { transform: none; } }
+button.slo-maskottchen.looping { animation: sloLooping 1.1s var(--ease-out); }
+@keyframes sloLooping { 0% { transform: none; } 40% { transform: translateY(-40px) rotate(-200deg) scale(1.1); } 70% { transform: translateY(-14px) rotate(-340deg); } 100% { transform: rotate(-360deg); } }
+.slo-station { isolation: isolate; }
+.slo-deko { position: absolute; z-index: -1; bottom: 0; width: 38%; max-width: 190px; pointer-events: none; opacity: .92; }
+.slo-links .slo-deko { right: 0; } .slo-rechts .slo-deko { left: 0; } .slo-mitte .slo-deko { left: 0; width: 22%; opacity: .7; }
+.slo-station.zu .slo-deko { filter: grayscale(.85) brightness(.6); }
+.slo-szene { display: block; width: 100%; height: auto; border-radius: 0 0 14px 14px; }
+.slo-fahne { transform-box: fill-box; transform-origin: 0 50%; animation: sloFahne 1.2s ease-in-out infinite; }
+@keyframes sloFahne { 50% { transform: skewY(8deg) scaleX(.85); } }
+.slo-wolke { animation: sloWolke 14s linear infinite alternate; } @keyframes sloWolke { to { transform: translateX(60px); } }
+.slo-welle { animation: sloWelle 3s ease-in-out infinite alternate; } @keyframes sloWelle { to { transform: translateX(-8px); } }
+.slo-boot { animation: sloBoot 3.4s ease-in-out infinite; transform-box: fill-box; transform-origin: center bottom; } @keyframes sloBoot { 50% { transform: translate(6px, 2px) rotate(3deg); } }
+.slo-strom { animation: sloStrom 1.6s linear infinite; } @keyframes sloStrom { to { stroke-dashoffset: -20; } }
+.slo-fenster { animation: sloFenster 3s ease-in-out infinite; } @keyframes sloFenster { 50% { opacity: .55; } }
+.slo-springer { animation: sloSprung 3.5s ease-in infinite; } @keyframes sloSprung { 0%, 20% { transform: none; opacity: 1; } 80% { transform: translate(28px, 40px); opacity: 1; } 100% { transform: translate(30px, 44px); opacity: 0; } }
+.slo-pferd { animation: sloPferd 2s ease-in-out infinite; transform-box: fill-box; } @keyframes sloPferd { 50% { transform: translateX(4px) translateY(-1px); } }
+
+/* Lektion: Drache neben dem Fortschritt */
+.slo-kopfdrache { flex: none; width: 46px; height: 46px; }
+.slo-kopfdrache .slo-drache { width: 100%; }
+.slo-kopfdrache.hops { animation: sloHops .6s var(--ease-spring); } @keyframes sloHops { 40% { transform: translateY(-14px) rotate(-8deg); } }
+.slo-fuss-knoepfe { display: grid; grid-template-columns: auto 1fr; gap: 8px; }
+.slo-fuss-knoepfe .slo-weissnicht[hidden] { display: none; }
+.slo-fuss-knoepfe:has(.slo-weissnicht[hidden]) { grid-template-columns: 1fr; }
+.slo-buehne .btn.slo-weissnicht { width: auto; padding: 0 16px; font-size: .92rem; border-radius: 16px; box-shadow: 0 5px 0 rgba(255,255,255,.08); }
+.slo-nicht.oben { justify-self: end; margin-bottom: -6px; text-decoration: none; padding: 4px 10px; border-radius: 10px; background: rgba(255,255,255,.06); }
+.slo-ohne { margin-top: 8px; width: auto !important; }
+.slo-schalter { margin: 4px 4px 0 0; padding: 4px 10px; border: 0; border-radius: 10px; background: rgba(74,222,128,.15); color: #bbf7d0; font: inherit; font-size: .78rem; cursor: pointer; }
+.slo-ende-szene { position: relative; width: 100%; max-width: 230px; justify-self: center; margin-top: 30px; }
+.slo-ende-szene .slo-szene { border-radius: 20px; }
+.slo-ende-szene .slo-ende-drache { position: absolute; left: 50%; top: -40px; width: 84px; margin-left: -42px; animation: sloKreis 5s ease-in-out infinite; }
+@keyframes sloKreis { 0%, 100% { transform: translate(-40px, 0) rotate(-6deg); } 50% { transform: translate(40px, -10px) rotate(6deg); } }
+@media (prefers-reduced-motion: reduce) { .slo-fl, .slo-augen, .slo-rauch circle, .slo-funken path, .slo-fahne, .slo-wolke, .slo-welle, .slo-boot, .slo-strom, .slo-fenster, .slo-springer, .slo-pferd, button.slo-maskottchen, .slo-ende-szene .slo-ende-drache, .slo-traurig { animation: none !important; } }
