@@ -218,6 +218,7 @@ $('quizzeZurueck').addEventListener('click', zeigeHub);
 
 function zeigeHub() {
   if (typeof srStopp === 'function') srStopp();
+  if (typeof sp !== 'undefined' && sp) { spPause(); sp = null; }
   setHubTheme();
   renderHub();
   show('hub');

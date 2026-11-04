@@ -361,8 +361,9 @@ function srEnde() {
 // ---------- Menü ----------
 async function srMenue(modus) {
   srStopp();
+  if (typeof sp !== 'undefined' && sp) { spPause(); sp = null; }
   const alt = sr || {};
-  sr = { modus: modus || alt.modus || 'weiter', stufe: alt.stufe || 'leicht', quelle: alt.quelle || 'lieder' };
+  sr = { modus: modus || alt.modus || 'weiter', stufe: alt.stufe || 'leicht', quelle: alt.quelle === 'eigen' ? 'eigen' : 'lieder' };
   zeigeTonTeil('song');
   const songs = await srSongs(), best = srKey(), box = $('ton-song');
   if (sr.quelle === 'eigen' && !songs.length) sr.quelle = 'lieder';
@@ -376,13 +377,15 @@ async function srMenue(modus) {
     + '<div class="sr-eigen"><h3>📁 Meine Songs</h3><p class="gb-fein">MP3, M4A, WAV … von deinem Gerät (z. B. aus der Dateien-App). Die Songs bleiben nur auf diesem Gerät – nichts wird hochgeladen. Gekaufte/gestreamte Titel aus Apple Music oder Spotify sind kopiergeschützt und lassen sich nicht auswählen.</p>'
     + '<label class="btn secondary sr-datei">➕ Songs hinzufügen<input type="file" id="srDatei" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.flac" multiple hidden></label><div class="gb-fein" id="srStatus"></div>'
     + '<ul class="sr-liste">' + songs.map((s) => '<li><span>🎵 ' + s.name.replace(/</g, '&lt;') + '</span><small>' + fmt(Math.round(s.groesse / 1e5) / 10) + ' MB</small><button type="button" data-weg="' + s.id + '" aria-label="Entfernen">✕</button></li>').join('') + '</ul></div>'
-    + '<details class="sr-warum"><summary>Warum nicht direkt Spotify oder YouTube?</summary><p>Spotify gibt Apps seit November 2024 keine Hörproben mehr heraus; Abspielen geht nur mit Premium-Konto, Entwickler-Anmeldung und kopiergeschütztem Ton – den darf eine App weder rückwärts abspielen noch nach Tönen untersuchen. YouTube-Videos laufen nur in einem fremden Fenster, auf dessen Ton eine Web-App keinen Zugriff hat. Mit eigenen Dateien klappt beides.</p></details>'
+    + (typeof spMenueHtml === 'function' ? spMenueHtml() : '')
+    + '<details class="sr-warum"><summary>Warum geht mit Spotify oder YouTube nicht alles?</summary><p>Spotify spielt den Ton in der Spotify-App ab – die Spielekiste bekommt ihn nie zu sehen. Deshalb gehen „Song erkennen“ (Ausschnitt anspielen, raten) mit Spotify, aber nicht Rückwärts oder die Tonerkennung bei „Wie geht’s weiter?“. Hörproben und die Tonanalyse gibt Spotify neuen Apps seit November 2024 nicht mehr frei. YouTube-Videos laufen nur in einem fremden Fenster, auf dessen Ton eine Web-App keinen Zugriff hat. Mit eigenen Dateien klappt alles.</p></details>'
     + '<button type="button" class="btn secondary" id="srZurueckIntro">← Zurück</button>';
   box.querySelectorAll('[data-m]').forEach((b) => b.addEventListener('click', () => srMenue(b.dataset.m)));
   box.querySelectorAll('[data-q]').forEach((b) => b.addEventListener('click', () => { sr.quelle = b.dataset.q; srMenue(); }));
   box.querySelectorAll('[data-s]').forEach((b) => b.addEventListener('click', () => { sr.stufe = b.dataset.s; box.querySelectorAll('[data-s]').forEach((x) => x.classList.toggle('on', x === b)); }));
   box.querySelectorAll('[data-weg]').forEach((b) => b.addEventListener('click', async () => { await srSongWeg(b.dataset.weg); delete srPuffer[b.dataset.weg]; srMenue(); }));
   $('srLos').addEventListener('click', () => srStart(sr.modus, sr.stufe, sr.quelle));
+  if (typeof spMenueVerdrahten === 'function') spMenueVerdrahten();
   $('srZurueckIntro').addEventListener('click', () => { srStopp(); sr = null; toeneIntro(); });
   $('srDatei').addEventListener('change', async (e) => {
     const dateien = [...e.target.files], status = $('srStatus');

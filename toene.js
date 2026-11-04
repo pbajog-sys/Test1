@@ -283,7 +283,7 @@ $('tonFertig').addEventListener('click', () => tonPhase('aufloesung'));
 $('tonWeiter').addEventListener('click', () => { ts.runde++; if (ts.runde >= TON_RUNDEN) toeneEnde(); else tonPhase('hoeren'); });
 $('tonNochmalSpiel').addEventListener('click', () => toeneStart({ stufe: ts.stufe }));
 $('tonTeilen').addEventListener('click', toeneTeilen);
-$('tonZurueck').addEventListener('click', () => { if (!$('ton-song').hidden) { if (typeof srStopp === 'function') srStopp(); if (typeof sr !== 'undefined') sr = null; toeneIntro(); return; } if (!$('ton-gb').hidden) { liveStopp(); if (typeof gb !== 'undefined') gb = null; toeneIntro(); return; } clearInterval(tonTimer); liveStopp(); cancelAnimationFrame(welleAnim); ts = null; zeigeHub(); });
+$('tonZurueck').addEventListener('click', () => { if (!$('ton-song').hidden) { if (typeof srStopp === 'function') srStopp(); if (typeof sp !== 'undefined' && sp) { spPause(); sp = null; } if (typeof sr !== 'undefined') sr = null; toeneIntro(); return; } if (!$('ton-gb').hidden) { liveStopp(); if (typeof gb !== 'undefined') gb = null; toeneIntro(); return; } clearInterval(tonTimer); liveStopp(); cancelAnimationFrame(welleAnim); ts = null; zeigeHub(); });
 $('hubToene').addEventListener('click', () => { merkeZuletzt('toene'); zoomZu($('hubToene'), () => { show('toene', '🎧 Ton-Gedächtnis'); toeneIntro(); }); });
 
 // Challenge-Link: ?toene=<seed>&stufe=…&n=…&p=…

@@ -116,6 +116,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `cello.js` – Cello-Noten
 - `instrumente.js` – Noten & Griffe für Klavier, Gitarre, Ukulele
 - `toene.js` – Ton-Gedächtnis
+- `spotify.js` – Spotify-Anbindung fürs Song-Rätsel („Song erkennen“, PKCE-Anmeldung, Wiedergabe über Spotify Connect)
 - `songs.js` – Song-Rätsel im Ton-Gedächtnis (Wie geht’s weiter? / Rückwärts, eigene Songs)
 - `takt.js` – Takt-Gefühl (Zeitgefühl, Tempo, Taktart)
 - `verlauf.js` – Verlauf & Statistik
@@ -238,10 +239,17 @@ Zwei Modi (`songs.js`), je 5 Runden, bis zu 50 Punkte, Bestwerte und Verlauf wie
   (IndexedDB), nichts wird hochgeladen. Bei eigenen Songs erkennt ein YIN-Tonhöhendetektor eine Stelle, an der ein neuer,
   klar gehaltener Ton beginnt; dort stoppt das Lied. Volle Mischungen können falsch erkannt werden – dann lässt sich die
   Runde streichen.
-- **Warum nicht Spotify/YouTube:** Spotify liefert seit November 2024 keine Hörproben mehr, Abspielen braucht Premium,
-  Login und Entwicklerzugang, der Ton ist kopiergeschützt. YouTube läuft nur im fremden iframe, dessen Ton eine Web-App
-  weder umdrehen noch analysieren kann.
-- Test: `tests/songs.test.js` (erzeugt zwei WAV-Testsongs mit bekannten Tönen, prüft Erkennung, Speichern, beide Modi).
+- **🟢 Spotify (Premium):** Modus „Song erkennen“ – Ausschnitte aus deinen Lieblingssongs und Meistgehörten
+  (Leicht 4 s vom Anfang, Mittel 2 s, Profi 1 s irgendwo im Song, 4–6 Antworten). Abgespielt wird über Spotify Connect
+  in deiner Spotify-App; die Länge wird an Spotifys eigenem Fortschritt gemessen, Netzverzögerung zählt nicht mit.
+  Einmalig einrichten: auf developer.spotify.com/dashboard eine App anlegen (kostenlos, Development Mode, max. 5 Nutzer),
+  die im Menü angezeigte Redirect-URI (muss HTTPS sein) eintragen und die Client ID einfügen. Anmeldung per PKCE ohne
+  Server. Rechte: nur Bibliothek lesen und Wiedergabe steuern. Token bleiben im Browser (`walquiz.spotify.v1`).
+- **Was mit Spotify/YouTube nicht geht:** Rückwärts und Tonerkennung – der Ton läuft in der Spotify-App bzw. im fremden
+  YouTube-iframe, eine Web-App kommt nicht an die Audiodaten; Hörproben und Tonanalyse gibt Spotify neuen Apps seit
+  November 2024 nicht mehr frei. Dafür gibt es eigene Dateien.
+- Tests: `tests/songs.test.js` (erzeugt zwei WAV-Testsongs mit bekannten Tönen, prüft Erkennung, Speichern, beide Modi),
+  `tests/spotify.test.js` (gegen ein nachgebautes Spotify: PKCE, Token, Titel, Ausschnittlänge, Fehlerfälle).
 
 ## 🎼 Gehörbildung (im Ton-Gedächtnis)
 Unter dem normalen Ton-Gedächtnis liegen drei Übungen (`gehoer.js`), mit deutschen Notennamen (… A, B, H) und weichem
