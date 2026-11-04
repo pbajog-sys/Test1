@@ -1,4 +1,4 @@
-// Dopamin-Maschine: 25 Sekunden automatisch spielen (Blasen treffen, stapeln, drehen), Auflösung prüfen, Blitz-Rate messen.
+// Dopamin-Maschine: 25 Sekunden automatisch spielen (Blasen, Slot, Roulette), Auflösung prüfen, Blitz-Rate messen.
 // Aufruf: python3 -m http.server 8765, dann  node tests/dopamin.test.js [Bilderordner]
 const { chromium, devices } = require('playwright');
 const ordner = process.argv[2] || '.';
@@ -16,8 +16,8 @@ const ordner = process.argv[2] || '.';
     const ziel = await p.evaluate(() => {
       const F = dpFelder(), z = [];
       const bl = dp.blasen[0]; if (bl) z.push([F[0].x + bl.x * F[0].w, F[0].y + bl.y * F[0].h]);
-      const S = dp.stapel, o = S.turm[S.turm.length - 1]; if (Math.abs(S.block.x - o.x) < 0.06) z.push([F[1].x + F[1].w / 2, F[1].y + F[1].h / 2]);
-      if (dp.rad.energie >= 1 && !dp.rad.dreht) z.push([F[2].x + F[2].w / 2, F[2].y + F[2].h / 2]);
+      if (!dp.rad.dreht) z.push([F[1].x + F[1].w / 2, F[1].y + F[1].h / 2]);
+      if (!dp.roul.dreht) z.push([F[2].x + F[2].w * (Math.random() < 0.5 ? 0.25 : 0.75), F[2].y + F[2].h * 0.88]);
       return z;
     });
     for (const [x, y] of ziel) await p.mouse.click(r.x + x, r.y + y);
@@ -29,9 +29,9 @@ const ordner = process.argv[2] || '.';
   const blitzRate = (st.blitze || 0) / 25;
   await p.click('#dpEnde'); await p.waitForTimeout(400);
   await p.screenshot({ path: ordner + '/dp-ende.png', fullPage: true });
-  const ende = await p.evaluate(() => /Was gerade passiert ist/.test($('dpInhalt').innerText) && /Beinahe-Gewinne/.test($('dpInhalt').innerText));
+  const ende = await p.evaluate(() => /Was gerade passiert ist/.test($('dpInhalt').innerText) && /Beinahe-Gewinne/.test($('dpInhalt').innerText) && /Roulette/.test($('dpInhalt').innerText));
   const vl = await p.evaluate(() => (loadJson(VERLAUF_KEY).tage[skDatum()] || []).some((e) => e.s === 'dopamin'));
-  const checks = [['Punkte gesammelt', st.punkte > 200], ['Level-up', st.level >= 2], ['Auflösung mit Tricks', ende], ['Verlaufseintrag', vl], ['Aufhellen < 3/s', blitzRate < 3], ['Keine Seitenfehler', !fehler.length]];
+  const checks = [['Punkte gesammelt', st.punkte > 200], ['Level-up', st.level >= 2], ['Auflösung mit Tricks', ende], ['Verlaufseintrag', vl], ['Slot-Beinahe-Gewinne', st.knapp > 0], ['Roulette gespielt', st.roulette > 0], ['Feuerwerk gezündet', st.feuerwerke > 0], ['Aufhellen < 3/s', blitzRate < 3], ['Keine Seitenfehler', !fehler.length]];
   checks.forEach(([n, ok]) => console.log((ok ? '✓ ' : '✗ ') + n + (n.startsWith('Aufhellen') ? ' (' + blitzRate.toFixed(2) + '/s)' : '') + (n === 'Keine Seitenfehler' && fehler.length ? ' – ' + fehler.join(' | ') : '')));
   console.log(checks.filter((c) => c[1]).length + ' bestanden, ' + checks.filter((c) => !c[1]).length + ' fehlgeschlagen');
   await b.close(); process.exit(checks.every((c) => c[1]) ? 0 : 1);

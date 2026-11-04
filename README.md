@@ -376,16 +376,18 @@ Eigenes Puzzle im Genre „Farben sortieren und Pixelbild abbauen“, mit Amazon
 
 ## 🧠💥 Dopamin-Maschine
 Ein absichtlich überladenes Spiel (`dopamin.js`) und zugleich ein Experiment im Labor:
-- **Drei Spiele gleichzeitig:** 🫧 Blasen antippen (goldene geben Bonus), 🧱 Blöcke im richtigen Moment stapeln („PERFEKT“ macht
-  den Block wieder breiter), 🎰 Glücksrad (Punkte füllen die Energie).
+- **Drei Spiele gleichzeitig:** 🫧 Blasen platzen lassen (goldene geben Bonus, jede platzt mit Funkenregen),
+  🎰 Slot-Maschine (antippen = drehen; 💎💎💎 = Jackpot mit großem Feuerwerk) und 🎡 Roulette (unten ROT oder SCHWARZ
+  setzen, Tippen aufs Rad wiederholt den letzten Einsatz; europäischer Kessel mit 37 Fächern, die 0 gewinnt die Bank).
+- **Feuerwerk:** jeder Gewinn und jede geplatzte Blase gibt Funken, große Gewinne schießen Raketen über den ganzen Bildschirm.
 - **Darunter** läuft ein selbstgezeichnetes Block-Parkour als endloses „Video“ (Block-Fuchs, Lava, Lücken, Respawn).
-- **Mechaniken:** Combo und Multiplikator bis ×10, Level mit immer etwas längerem Balken, Zufallsgewinne, Jackpot (4 %),
-  eingebaute Beinahe-Gewinne (35 % der Drehungen), Konfetti, Wackeln, Töne, die mit der Combo höher werden, pulsierende Farben.
+- **Mechaniken:** Combo und Multiplikator bis ×10, Level mit immer etwas längerem Balken, Zufallsgewinne, Slot-Jackpot (3 %),
+  eingebaute Beinahe-Gewinne (35 % der Slot-Drehungen; das Roulette dagegen ist ehrlich zufällig, Hausvorteil 2,7 %), Konfetti, Wackeln, Töne, die mit der Combo höher werden, pulsierende Farben.
 - **Sicherheit:** kein Stroboskop. Farbwechsel sind weich, kurzes Aufhellen höchstens alle 500 ms (gemessen im Test: 0,3 pro
   Sekunde). Vorher gibt es einen Hinweis und einen „Ruhig“-Modus. Alle 5 Minuten kommt ein Pausen-Hinweis, die Spielzeit ist immer sichtbar.
 - **Auflösung am Ende:** Punkte (wert: 0 €), Spielzeit, Belohnungen pro Minute und jeder Trick mit der Zahl, wie oft er
-  benutzt wurde: Zufallsbelohnungen, Beinahe-Gewinne, Fortschritt ohne Ende, Verlustangst, Aufmerksamkeitswechsel, Töne
-  und Farben. Test: `tests/dopamin.test.js`.
+  benutzt wurde: Zufallsbelohnungen, Beinahe-Gewinne, Fortschritt ohne Ende, Verlustangst, Aufmerksamkeitswechsel, Roulette-Hausvorteil,
+  Feuerwerk für Kleinigkeiten, Töne und Farben. Test: `tests/dopamin.test.js`.
 
 ## 🐉 Slowenisch mit Zmajček
 Eigenes Sprachlernspiel (`slo.js`): Mit Zmajček, dem kleinen Drachen aus dem Wappen von Ljubljana, reist man durch Slowenien.
