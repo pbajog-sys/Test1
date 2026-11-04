@@ -116,6 +116,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `cello.js` – Cello-Noten
 - `instrumente.js` – Noten & Griffe für Klavier, Gitarre, Ukulele
 - `toene.js` – Ton-Gedächtnis
+- `deezer.js` – Deezer-Hörproben im Song-Rätsel (JSONP, Abspielen im Browser)
 - `spotify.js` – Spotify im Song-Rätsel (Titel erkennen / Jahr schätzen, Kategorien, PKCE, Spotify Connect)
 - `songs.js` – Song-Rätsel als eigene App (Wie geht’s weiter? / Rückwärts, eigene Songs, Startseite)
 - `takt.js` – Takt-Gefühl (Zeitgefühl, Tempo, Taktart)
@@ -242,7 +243,16 @@ Verweis zur App. Je 5 Runden, bis zu 50 Punkte:
   (IndexedDB), nichts wird hochgeladen. Bei eigenen Songs erkennt ein YIN-Tonhöhendetektor eine Stelle, an der ein neuer,
   klar gehaltener Ton beginnt; dort stoppt das Lied. Volle Mischungen können falsch erkannt werden – dann lässt sich die
   Runde streichen.
-- **🟢 Spotify (Premium):** zwei Modi – **🎵 Titel erkennen** (Leicht 4 s vom Anfang, Mittel 2 s, Profi 1 s irgendwo im
+- **🌐 Deezer (Standard, `deezer.js`):** spielt 30-Sekunden-Hörproben direkt im Browser in einem `<audio>`-Element –
+  ohne Konto, ohne App, ohne Anmeldung. Die Deezer-API hat kein CORS, deshalb JSONP (`output=jsonp`). Kategorien suchen
+  redaktionelle Playlists („80s pop hits“, „rock classics“ …; Listen der „Deezer … Editor“ werden bevorzugt, Fan-Listen nur
+  als Ersatz), „Aktuelle Hits“ nimmt die Deezer-Charts. „Große Hits“ = bekanntere Hälfte nach Deezer-`rank`. Beim Jahr-Modus
+  kommt das Jahr aus dem Album (`/album/{id}`), Sampler (`record_type: compile`, „Greatest Hits“ …) werden übersprungen.
+  Am iPhone wird der Ton beim Tipp auf „Los“ einmal entsperrt; blockiert der Browser trotzdem, zählt das Anhören nicht.
+  Deezer-Bedingungen: nur nicht-kommerziell und privat im Familienkreis – darauf weist das Menü hin; der Ton wird nur
+  abgespielt, nicht verändert oder gespeichert.
+- **🟢 Spotify (Premium, optional):** ⚠️ Spotifys Developer Policy verbietet Spiele inkl. Quizze („Do not create a game,
+  including trivia quizzes“); das Menü warnt davor, Deezer ist Standard. Zwei Modi – **🎵 Titel erkennen** (Leicht 4 s vom Anfang, Mittel 2 s, Profi 1 s irgendwo im
   Song, 4–6 Antworten aus derselben Kategorie) und **📅 Jahr schätzen** (8/5/3 s anhören, Jahr mit Schieber und ±,
   pro Jahr daneben −0,7/−1/−1,5 Punkte). **Zufallssongs nach Kategorie:** Querbeet, 70er Disco & Funk, 80er/90er/2000er/
   2010er Pop, Aktuelle Hits, Rock-Klassiker, Hip-Hop, Deutschpop, Schlager, Filmmusik – über die Spotify-Suche mit Genre-
@@ -259,6 +269,7 @@ Verweis zur App. Je 5 Runden, bis zu 50 Punkte:
   YouTube-iframe, eine Web-App kommt nicht an die Audiodaten; Hörproben und Tonanalyse gibt Spotify neuen Apps seit
   November 2024 nicht mehr frei. Dafür gibt es eigene Dateien.
 - Tests: `tests/songs.test.js` (erzeugt zwei WAV-Testsongs mit bekannten Tönen, prüft Erkennung, Speichern, beide Modi),
+  `tests/deezer.test.js` (nachgebautes Deezer: JSONP, Playlist-Auswahl, echte Wiedergabe mit gemessener Länge, Sampler-Filter),
   `tests/spotify.test.js` (gegen ein nachgebautes Spotify: PKCE, Kategorie-Suche, Hits/Unbekanntes, beide Modi,
   Favoriten, Ausschnittlänge, Fehlerfälle – das echte Spotify ist damit nicht getestet).
 

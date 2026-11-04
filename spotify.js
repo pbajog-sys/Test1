@@ -157,7 +157,13 @@ async function spAusschnitt(geraet, uri, pos, dauer, wennStart) {
   await new Promise((r) => setTimeout(r, Math.max(0, rest)));
   if (meins === spLauf) await spPause();
 }
-async function spPause() { spLauf++; try { await spApi('/me/player/pause', { method: 'PUT' }); } catch (e) { /* schon pausiert */ } }
+async function spPause() {
+  spLauf++;
+  if (typeof dzStopp === 'function') dzStopp();
+  if (sp && sp.netz === 'deezer') return;
+  if (!spAngemeldet()) return;
+  try { await spApi('/me/player/pause', { method: 'PUT' }); } catch (e) { /* schon pausiert */ }
+}
 
 // ---------- Partie: „Titel erkennen“ oder „Jahr schätzen“ ----------
 const SP_STUFEN = {
@@ -167,33 +173,38 @@ const SP_STUFEN = {
 };
 const SP_JAHR_STUFEN = { leicht: { dauer: 8000, intro: true, hoeren: 3, je: 0.7, text: '8 Sekunden · pro Jahr daneben −0,7 Punkte' }, mittel: { dauer: 5000, intro: false, hoeren: 2, je: 1, text: '5 Sekunden · pro Jahr daneben −1 Punkt' }, profi: { dauer: 3000, intro: false, hoeren: 1, je: 1.5, text: '3 Sekunden · pro Jahr daneben −1,5 Punkte' } };
 const SP_MODI = { titel: { name: 'Titel erkennen', emoji: '🎵', text: 'Welcher Song ist das?' }, jahr: { name: 'Jahr schätzen', emoji: '📅', text: 'Aus welchem Jahr?' } };
-const spWahl = () => ({ modus: 'titel', kat: '80er', hits: true, ...(spStore().wahl || {}) });
+const spWahl = () => ({ modus: 'titel', kat: '80er', hits: true, netz: 'deezer', ...(spStore().wahl || {}) });
+const spDz = () => spWahl().netz !== 'spotify';
+const spNetzName = (n) => (n === 'spotify' ? '🟢 Spotify' : '🎧 Deezer');
 let sp = null;
 async function spStart(stufe) {
-  const box = $('ton-song'), W = spWahl(), K = spKat(W.kat), jahr = W.modus === 'jahr';
+  const box = $('ton-song'), W = spWahl(), dz = W.netz !== 'spotify', K = spKat(dz && (W.kat === 'fav' || W.kat === 'bib') ? '80er' : W.kat), jahr = W.modus === 'jahr';
   const S = jahr ? SP_JAHR_STUFEN[stufe] : SP_STUFEN[stufe];
   srZeigen(); if (typeof srAufStart !== 'undefined') srAufStart = false;
   box.innerHTML = '<div class="ton-merk">' + K.emoji + ' Suche Songs: ' + K.name + ' …</div><div class="sr-platte sp dreht" aria-hidden="true"><i></i></div>';
   try {
-    const geraet = await spGeraet();
-    if (!geraet) { spHinweis('📱 Kein Spotify-Gerät gefunden. Öffne die Spotify-App (Handy oder Computer), spiel kurz irgendeinen Song an und tippe dann nochmal.'); return; }
-    let pool = (await spPool(K.id, W.hits)).slice().sort(() => Math.random() - 0.5);
-    if (jahr) pool = pool.filter((t) => t.jahr);
-    if (pool.length < (jahr ? SR_RUNDEN : 6)) throw new Error(K.id === 'bib' ? 'Zu wenige Songs: Speichere in Spotify mindestens 6 Lieblingssongs (♥).' : 'Spotify hat für „' + K.name + '“ zu wenige Songs geliefert. Probier eine andere Kategorie.');
+    const geraet = dz ? null : await spGeraet();
+    if (!dz && !geraet) { spHinweis('📱 Kein Spotify-Gerät gefunden. Öffne die Spotify-App (Handy oder Computer), spiel kurz irgendeinen Song an und tippe dann nochmal – oder nimm Deezer, das spielt direkt im Browser.'); return; }
+    let pool = (dz ? await dzPool(K.id, W.hits) : await spPool(K.id, W.hits)).slice().sort(() => Math.random() - 0.5);
+    if (jahr) pool = dz ? await dzJahre(pool, SR_RUNDEN + 3) : pool.filter((t) => t.jahr);
+    if (pool.length < (jahr ? SR_RUNDEN : 6)) throw new Error(K.id === 'bib' ? 'Zu wenige Songs: Speichere in Spotify mindestens 6 Lieblingssongs (♥).' : (dz ? 'Deezer' : 'Spotify') + ' hat für „' + K.name + '“ zu wenige Songs geliefert. Probier eine andere Kategorie.');
     const r = Math.random, runden = [];
     for (let i = 0; i < SR_RUNDEN; i++) {
       const T = pool[i];
-      const pos = S.intro ? 0 : (T.dauer || 180000) * (0.25 + r() * 0.45);
+      const pos = S.intro ? 0 : dz ? r() * Math.max(0, 28000 - S.dauer) : (T.dauer || 180000) * (0.25 + r() * 0.45);
       const andere = pool.filter((x) => x !== T && x.name.toLowerCase() !== T.name.toLowerCase()).sort(() => r() - 0.5).slice(0, (S.opt || 1) - 1);
       runden.push({ T, pos, optionen: jahr ? [] : [T, ...andere].sort(() => r() - 0.5), gehoert: 0, antwort: null });
     }
     const jahre = pool.map((t) => t.jahr).filter(Boolean);
     const von = Math.max(1950, Math.min(K.von || 1960, ...jahre) - 3), bis = Math.min(SP_JETZT, Math.max(K.bis || SP_JETZT, ...jahre) + 3);
-    sp = { stufe, modus: W.modus, kat: K, geraet, runden, i: 0, punkte: [], von, bis };
+    sp = { stufe, modus: W.modus, kat: K, geraet, netz: dz ? 'deezer' : 'spotify', runden, i: 0, punkte: [], von, bis };
     spRunde();
   } catch (e) { spHinweis(spFehlerText(e)); }
 }
+// Ausschnitt abspielen – je nach Quelle im Browser (Deezer) oder über die Spotify-App
+function spSpielen(R, dauer, wennStart) { return sp.netz === 'deezer' ? dzAusschnitt(R.T, R.pos, dauer, wennStart) : spAusschnitt(sp.geraet, R.T.uri, R.pos, dauer, wennStart); }
 function spFehlerText(e) {
+  if (sp && sp.netz === 'deezer' || !e.status && spDz()) return '⚠️ ' + e.message;
   if (e.status === 401 || /nicht angemeldet/.test(e.message)) { spAbmelden(); return '🔑 Die Spotify-Anmeldung ist abgelaufen. Bitte neu verbinden.'; }
   if (e.status === 403 && e.grund === 'PREMIUM_REQUIRED') return '💳 Spotify erlaubt das Steuern der Wiedergabe nur mit Premium.';
   if (e.status === 403) return '⛔ Spotify verweigert den Zugriff. Steht deine Spotify-E-Mail in deinem Entwickler-Dashboard unter „User Management“?';
@@ -202,8 +213,8 @@ function spFehlerText(e) {
   return '⚠️ ' + e.message;
 }
 function spHinweis(text) {
-  $('ton-song').innerHTML = '<div class="ton-merk">🟢 Spotify</div><div class="gb-text">' + text + '</div><button type="button" class="btn ton-gross" id="spNochmal">Nochmal versuchen</button><button type="button" class="btn secondary" id="spMenue">← Zum Song-Rätsel</button>';
-  $('spNochmal').addEventListener('click', () => spStart((sp && sp.stufe) || (sr && sr.stufe) || 'leicht'));
+  $('ton-song').innerHTML = '<div class="ton-merk">' + spNetzName(spWahl().netz) + '</div><div class="gb-text">' + text + '</div><button type="button" class="btn ton-gross" id="spNochmal">Nochmal versuchen</button><button type="button" class="btn secondary" id="spMenue">← Zum Song-Rätsel</button>';
+  $('spNochmal').addEventListener('click', () => (spDz() && dzEntsperren(), spStart((sp && sp.stufe) || (sr && sr.stufe) || 'leicht')));
   $('spMenue').addEventListener('click', () => srMenue());
 }
 const spEsc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
@@ -220,12 +231,15 @@ function spRunde() {
       + '<button type="button" class="btn ton-gross" id="spJahrOk">✓ ' + start + '</button>'
       : '<div class="gb-optionen sr-optionen sp-optionen">' + R.optionen.map((T, i) => '<button type="button" class="gb-opt" data-o="' + i + '">' + spTitelText(T) + '</button>').join('') + '</div>')
     + '<div class="gb-urteil" id="srUrteil"></div>';
-  const rest = () => { $('spRest').textContent = R.gehoert >= S.hoeren ? 'Nicht mehr anhörbar – jetzt raten!' : 'Noch ' + (S.hoeren - R.gehoert) + '× anhören · läuft über „' + sp.geraet.name + '“'; $('spHoeren').disabled = R.gehoert >= S.hoeren; };
+  const rest = () => { $('spRest').textContent = R.gehoert >= S.hoeren ? 'Nicht mehr anhörbar – jetzt raten!' : 'Noch ' + (S.hoeren - R.gehoert) + '× anhören · ' + (sp.netz === 'deezer' ? 'Hörprobe von Deezer' : 'läuft über „' + sp.geraet.name + '“'); $('spHoeren').disabled = R.gehoert >= S.hoeren; };
   const spiel = async () => {
     if (R.gehoert >= S.hoeren || R.antwort !== null) return;
     R.gehoert++; rest(); $('spHoeren').disabled = true;
-    try { await spAusschnitt(sp.geraet, R.T.uri, R.pos, S.dauer, () => { const p = $('srPlatte'); if (p) p.classList.add('dreht'); }); }
-    catch (e) { spHinweis(spFehlerText(e)); return; }
+    try { await spSpielen(R, S.dauer, () => { const p = $('srPlatte'); if (p) p.classList.add('dreht'); }); }
+    catch (e) {
+      if (e.blockiert) { R.gehoert--; rest(); $('spRest').textContent = '👆 Tippe auf „Anspielen“ – der Browser startet Ton nur nach einem Tipp.'; return; }
+      spHinweis(spFehlerText(e)); return;
+    }
     const p = $('srPlatte'); if (p) p.classList.remove('dreht');
     if ($('spHoeren')) rest();
   };
@@ -245,7 +259,7 @@ function spAuswerten(R, p, text) {
   $('srUrteil').innerHTML = '<div class="gb-text sp-aufloesung">' + (R.T.bild ? '<img src="' + spEsc(R.T.bild) + '" alt="" width="56" height="56">' : '') + '<div>' + text + '</div></div>'
     + '<div class="gb-knoepfe"><button type="button" class="btn secondary" id="spWeiterhoeren">🔊 15 Sek. weiterhören</button></div>'
     + '<button type="button" class="btn ton-gross" id="srWeiter">' + (sp.i + 1 < sp.runden.length ? 'Weiter →' : 'Auswertung') + '</button>';
-  $('spWeiterhoeren').addEventListener('click', () => spAusschnitt(sp.geraet, R.T.uri, R.pos, 15000).catch((e) => spHinweis(spFehlerText(e))));
+  $('spWeiterhoeren').addEventListener('click', () => spSpielen(R, 15000).catch((e) => { if (!e.blockiert) spHinweis(spFehlerText(e)); }));
   $('srWeiter').addEventListener('click', () => { spPause(); sp.i++; if (sp.i < sp.runden.length) spRunde(); else spEnde(); });
 }
 function spAntwort(R, wahl, knopf) {
@@ -265,49 +279,56 @@ function spJahrAntwort(R, jahr) {
 }
 function spEnde() {
   const max = sp.runden.length * 10, summe = Math.round((sp.punkte.reduce((a, b) => a + b, 0) / max) * 50 * 10) / 10;
-  const k = sp.modus === 'jahr' ? 'spotify-jahr-' + sp.stufe : 'spotify-' + sp.stufe;
+  const k = spBestKey(sp.netz, sp.modus, sp.stufe);
   const st = tonStore(); st.song = st.song || {}; const alt = st.song[k] != null ? st.song[k] : null; st.song[k] = Math.max(alt || 0, summe); saveJson(TON_KEY, st);
   const stufeName = { leicht: 'Leicht', mittel: 'Mittel', profi: 'Profi' }[sp.stufe], M = SP_MODI[sp.modus];
-  if (typeof merkeVerlauf === 'function') merkeVerlauf('songs', summe, 50, 'Spotify · ' + M.name + ' · ' + sp.kat.name + ' · ' + stufeName, { stufe: sp.stufe === 'profi' ? 'schwer' : sp.stufe, modus: 'spotify-' + sp.modus, kat: sp.kat.id, rekord: alt != null && summe > alt });
+  if (typeof merkeVerlauf === 'function') merkeVerlauf('songs', summe, 50, (sp.netz === 'deezer' ? 'Deezer' : 'Spotify') + ' · ' + M.name + ' · ' + sp.kat.name + ' · ' + stufeName, { stufe: sp.stufe === 'profi' ? 'schwer' : sp.stufe, modus: sp.netz + '-' + sp.modus, kat: sp.kat.id, rekord: alt != null && summe > alt });
   $('ton-song').innerHTML = '<div class="ton-merk">' + M.emoji + ' ' + M.name + ' · ' + sp.kat.emoji + ' ' + sp.kat.name + '</div><div class="farb-summe">' + fmt(summe) + ' / 50</div>'
     + '<p class="gb-info">' + (summe >= 45 ? 'Du kennst deine Musik!' : summe >= 30 ? 'Gut gehört.' : 'Gar nicht so leicht, oder?') + (alt != null && summe > alt ? ' 🏆 Neuer Bestwert!' : alt != null ? ' Bestwert: ' + fmt(alt) : '') + '</p>'
     + '<ul class="sp-rueckblick">' + sp.runden.map((R, i) => '<li>' + (R.T.bild ? '<img src="' + spEsc(R.T.bild) + '" alt="" width="40" height="40">' : '<span>🎵</span>') + '<span><b>' + spEsc(R.T.name) + '</b><small>' + spEsc(R.T.kuenstler) + (R.T.jahr ? ' · ' + R.T.jahr : '') + '</small></span><em>' + fmt(sp.punkte[i] || 0) + '</em></li>').join('') + '</ul>'
     + '<div class="gb-knoepfe"><button type="button" class="btn ton-gross" id="spNochmalSpiel">Nochmal</button><button type="button" class="btn secondary" id="srZurMenue">Zum Song-Rätsel</button></div>';
-  $('spNochmalSpiel').addEventListener('click', () => spStart(sp.stufe));
+  $('spNochmalSpiel').addEventListener('click', () => { if (sp.netz === 'deezer') dzEntsperren(); spStart(sp.stufe); });
   $('srZurMenue').addEventListener('click', () => srMenue());
 }
 
 // ---------- Einrichtung / Verbindung (im Song-Rätsel-Menü) ----------
+const spBestKey = (netz, modus, stufe) => (netz === 'deezer' ? 'deezer-' + modus + '-' + stufe : modus === 'jahr' ? 'spotify-jahr-' + stufe : 'spotify-' + stufe);
 function spMenueHtml() {
-  const st = spStore(), an = spAngemeldet(), fehler = st.fehler;
+  const st = spStore(), W = spWahl(), dz = W.netz !== 'spotify', fehler = st.fehler;
   if (fehler) { delete st.fehler; spSave(st); }
-  return '<div class="sr-eigen sp-box"><h3>🟢 Spotify</h3>'
+  return '<div class="sr-eigen sp-box' + (dz ? ' dz' : '') + '"><h3>🎧 Echte Songs</h3>'
+    + '<div class="sr-quelle sp-netz"><button type="button" data-netz="deezer" class="' + (dz ? 'on' : '') + '">🌐 Deezer<small>im Browser · ohne Anmeldung</small></button><button type="button" data-netz="spotify" class="' + (dz ? '' : 'on') + '">🟢 Spotify<small>über die Spotify-App</small></button></div>'
     + (fehler ? '<div class="gb-text sp-fehler">' + fehler.replace(/</g, '&lt;') + '</div>' : '')
-    + (an ? spSpielwahlHtml()
-      : '<p class="gb-fein">Zufällige Songs nach Kategorie (80er Pop, Rock-Klassiker, Aktuelle Hits …) oder aus deiner Bibliothek – Titel erkennen oder Jahr schätzen. Läuft über deine Spotify-App (Premium nötig).</p>'
-      + '<details class="sr-warum sp-anleitung"' + (st.clientId ? '' : ' open') + '><summary>Einmalig einrichten (kostenlos, ca. 3 Minuten)</summary><ol>'
-      + '<li>Am Computer oder Handy <b>developer.spotify.com/dashboard</b> öffnen und mit deinem Spotify-Konto anmelden.</li>'
-      + '<li><b>Create app</b>: Name z. B. „Spielekiste“, Beschreibung egal, bei „Which API/SDKs“ <b>Web API</b> ankreuzen.</li>'
-      + '<li>Als <b>Redirect URI</b> genau diese Adresse eintragen:<br><code id="spUri">' + spRedirect().replace(/</g, '&lt;') + '</code> <button type="button" class="sp-kopier" id="spKopier">Kopieren</button></li>'
-      + '<li>Speichern, dann die <b>Client ID</b> kopieren und hier einfügen.</li></ol>'
-      + (/^https:/.test(location.protocol) ? '' : '<p class="gb-fein">⚠️ Spotify verlangt eine HTTPS-Adresse. Über diese Adresse hier klappt die Anmeldung nicht.</p>') + '</details>'
-      + '<input class="sp-id" id="spId" type="text" inputmode="latin" autocomplete="off" spellcheck="false" placeholder="Client ID (32 Zeichen)" value="' + (st.clientId || '') + '">'
-      + '<button type="button" class="btn ton-gross" id="spVerbinden">🟢 Mit Spotify verbinden</button>')
+    + (dz ? spSpielwahlHtml('deezer') + '<p class="gb-fein">Spielt 30-Sekunden-Hörproben von Deezer direkt hier – keine App, kein Konto. Nur für die private Nutzung im Familienkreis (Deezer-Bedingungen).</p>'
+      : '<div class="gb-text sp-warnung">⚠️ <b>Spotify erlaubt keine Quiz-Spiele.</b> In Spotifys Entwickler-Regeln steht: „Do not create a game, including trivia quizzes“ – ein „Name that tune“-Quiz wird dort ausdrücklich als Beispiel genannt. Spotify kann deshalb deinen Entwickler-Zugang sperren. Deezer erlaubt private Nutzung und braucht keine App.</div>'
+      + (spAngemeldet() ? spSpielwahlHtml('spotify')
+        : '<details class="sr-warum sp-anleitung"' + (st.clientId ? '' : ' open') + '><summary>Spotify einrichten (kostenlos, ca. 3 Minuten)</summary><ol>'
+        + '<li>Am Computer oder Handy <b>developer.spotify.com/dashboard</b> öffnen und mit deinem Spotify-Konto anmelden.</li>'
+        + '<li><b>Create app</b>: Name z. B. „Spielekiste“, Beschreibung egal, bei „Which API/SDKs“ <b>Web API</b> ankreuzen.</li>'
+        + '<li>Als <b>Redirect URI</b> genau diese Adresse eintragen:<br><code id="spUri">' + spRedirect().replace(/</g, '&lt;') + '</code> <button type="button" class="sp-kopier" id="spKopier">Kopieren</button></li>'
+        + '<li>Speichern, dann die <b>Client ID</b> kopieren und hier einfügen.</li></ol>'
+        + (/^https:/.test(location.protocol) ? '' : '<p class="gb-fein">⚠️ Spotify verlangt eine HTTPS-Adresse. Über diese Adresse hier klappt die Anmeldung nicht.</p>') + '</details>'
+        + '<input class="sp-id" id="spId" type="text" inputmode="latin" autocomplete="off" spellcheck="false" placeholder="Client ID (32 Zeichen)" value="' + (st.clientId || '') + '">'
+        + '<button type="button" class="btn ton-gross" id="spVerbinden">🟢 Mit Spotify verbinden</button>'))
     + '</div>';
 }
-function spSpielwahlHtml() {
-  const W = spWahl(), best = tonStore().song || {}, stufe = (sr && sr.stufe) || 'leicht', K = spKat(W.kat);
-  const b = best[W.modus === 'jahr' ? 'spotify-jahr-' + stufe : 'spotify-' + stufe];
+function spSpielwahlHtml(netz) {
+  const W = spWahl(), best = tonStore().song || {}, stufe = (sr && sr.stufe) || 'leicht', dz = netz === 'deezer';
+  const kats = SP_KATEGORIEN.filter((k) => !dz || (k.id !== 'fav' && k.id !== 'bib'));
+  const K = kats.find((k) => k.id === W.kat) || spKat('80er');
+  const b = best[spBestKey(netz, W.modus, stufe)];
+  const S = (W.modus === 'jahr' ? SP_JAHR_STUFEN : SP_STUFEN)[stufe];
   return '<div class="gb-modi sr-modi">' + Object.entries(SP_MODI).map(([k, m]) => '<button type="button" class="gb-modus' + (k === W.modus ? ' on' : '') + '" data-spm="' + k + '"><span>' + m.emoji + '</span><b>' + m.name + '</b><small>' + m.text + '</small></button>').join('') + '</div>'
-    + '<div class="sp-kats">' + SP_KATEGORIEN.map((k) => '<button type="button" data-kat="' + k.id + '" class="' + (k.id === W.kat ? 'on' : '') + '"><span>' + k.emoji + '</span>' + k.name + '</button>').join('') + '</div>'
+    + '<div class="sp-kats">' + kats.map((k) => '<button type="button" data-kat="' + k.id + '" class="' + (k.id === K.id ? 'on' : '') + '"><span>' + k.emoji + '</span>' + k.name + '</button>').join('') + '</div>'
     + (K.id === 'bib' ? '<p class="gb-fein">' + K.text + '</p>' : '<div class="sr-quelle sp-hits"><button type="button" data-hits="1" class="' + (W.hits ? 'on' : '') + '">⭐ Große Hits<small>bekannte Songs</small></button><button type="button" data-hits="0" class="' + (W.hits ? '' : 'on') + '">🔍 Auch Unbekanntes<small>tiefer in den Katalog</small></button></div>')
-    + '<p class="gb-fein">' + SR_STUFE_NAMEN[stufe] + ': ' + (W.modus === 'jahr' ? SP_JAHR_STUFEN : SP_STUFEN)[stufe].text + (b != null ? ' · Bestwert ' + fmt(b) + ' / 50' : '') + '</p>'
+    + '<p class="gb-fein">' + SR_STUFE_NAMEN[stufe] + ': ' + (dz ? S.text.replace('vom Anfang', 'vom Anfang der Hörprobe').replace('irgendwo im Song', 'irgendwo in der Hörprobe') : S.text) + (b != null ? ' · Bestwert ' + fmt(b) + ' / 50' : '') + '</p>'
     + '<button type="button" class="btn ton-gross" id="spLos">▶︎ ' + K.emoji + ' ' + K.name + ' – los!</button>'
-    + '<p class="gb-fein">Läuft über deine Spotify-App – vorher einmal öffnen. <button type="button" class="sp-kopier" id="spAb">Spotify trennen</button></p>';
+    + (dz ? '' : '<p class="gb-fein">Läuft über deine Spotify-App – vorher einmal öffnen. <button type="button" class="sp-kopier" id="spAb">Spotify trennen</button></p>');
 }
 function spWahlSetzen(x) { const st = spStore(); st.wahl = { ...spWahl(), ...x }; spSave(st); srMenue(); }
 function spMenueVerdrahten() {
-  if ($('spLos')) $('spLos').addEventListener('click', () => spStart(sr.stufe || 'leicht'));
+  if ($('spLos')) $('spLos').addEventListener('click', () => { if (spDz()) dzEntsperren(); spStart(sr.stufe || 'leicht'); });
+  document.querySelectorAll('[data-netz]').forEach((b) => b.addEventListener('click', () => spWahlSetzen({ netz: b.dataset.netz })));
   document.querySelectorAll('[data-spm]').forEach((b) => b.addEventListener('click', () => spWahlSetzen({ modus: b.dataset.spm })));
   document.querySelectorAll('[data-kat]').forEach((b) => b.addEventListener('click', () => spWahlSetzen({ kat: b.dataset.kat })));
   document.querySelectorAll('[data-hits]').forEach((b) => b.addEventListener('click', () => spWahlSetzen({ hits: b.dataset.hits === '1' })));

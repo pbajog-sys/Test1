@@ -57,6 +57,8 @@ function suchTreffer(q, off) {
   };
   await p.goto('http://localhost:8765/'); await p.waitForTimeout(900);
   await p.click('#hubSongs'); await p.waitForTimeout(900);
+  await p.click('[data-netz="spotify"]'); await p.waitForTimeout(400);
+  ck('Spotify-Reiter warnt vor Spotifys Quiz-Verbot', /Spotify erlaubt keine Quiz-Spiele/.test(await p.evaluate(() => document.querySelector('.sp-box').innerText)));
   await p.evaluate(() => document.querySelector('.sp-box').scrollIntoView());
   await p.screenshot({ path: ordner + '/sp-einrichten.png' });
   ck('Redirect-URI wird angezeigt', (await p.textContent('#spUri')) === 'http://localhost:8765/');
