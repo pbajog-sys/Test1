@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=100">
+<link rel="stylesheet" href="fonts/fonts.css?v=101">
 <link rel="icon" href="icons/favicon-64.png?v=3" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=100">
-<link rel="stylesheet" href="ansichten.css?v=100">
+<link rel="stylesheet" href="stil.css?v=101">
+<link rel="stylesheet" href="ansichten.css?v=101">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -476,6 +476,7 @@
       <button class="bu-ding bu-planet" type="button" data-ziel="hubTierleben" aria-label="Tierleben" style="--p1:#86efac;--p2:#14532d"><span>🐔</span></button>
       <button class="bu-ding bu-planet bu-ring" type="button" data-ziel="hubZahlen" aria-label="Du in Zahlen" style="--p1:#fde68a;--p2:#92400e"><span>🎂</span></button>
       <button class="bu-ding bu-planet" type="button" data-ziel="hubSlo" aria-label="Slowenisch" style="--p1:#4ade80;--p2:#1e3a8a"><span>🐉</span></button>
+      <button class="bu-ding bu-planet bu-songs" type="button" data-ziel="hubSongs" aria-label="Song-Rätsel" style="--p1:#4ade80;--p2:#3b0764"><span>💿</span></button>
       <button class="bu-ding bu-planet" type="button" data-ziel="hubRiff" aria-label="Riffbau" style="--p1:#f9a8d4;--p2:#831843"><span>🪸</span></button>
     </div>
     <div class="install-karte" id="installKarte" hidden>
@@ -511,6 +512,11 @@
     <button class="hub-game hub-toene" id="hubToene" type="button" data-regen="🎧,🔊,🎵,〰️">
       <span class="hg-av hg-av-toene" aria-hidden="true"><span class="hg-in"><span class="hc-toene-icon"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
       <span class="hg-text"><span class="hg-titel">Ton-Gedächtnis</span><span class="hg-sub">Ton hören. Nachbauen. Wie gut ist dein Gehör?</span><span class="hg-best" id="hubToeneBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-songs" id="hubSongs" type="button" data-regen="🎵,💿,📼,🎤">
+      <span class="hg-av hg-av-songs" aria-hidden="true"><span class="hg-in"><span class="sr-mini"><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Song-Rätsel</span><span class="hg-sub">80er Pop, Rock, Hits: Song erkennen, Jahr schätzen – mit Spotify oder ohne.</span><span class="hg-best" id="hubSongsBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-takt" id="hubTakt" type="button" data-regen="⏱️,🥁,🎼,⏳">
@@ -1382,14 +1388,7 @@
         <button class="btn ton-gross" id="tonLos" type="button">Los geht’s 🎧</button>
         <button class="btn secondary" id="tonTagBtn" type="button">📅 Tagestöne</button>
         <div class="ton-best" id="tonBest"></div>
-        <div class="gb-einstieg sr-einstieg">
-          <h3>🎵 Song-Rätsel</h3>
-          <div class="gb-einstieg-knoepfe sr-zwei">
-            <button type="button" data-song="weiter"><span>⏸️</span>Wie geht’s weiter?<small>Lied stoppt – welcher Ton kommt?</small></button>
-            <button type="button" data-song="rueck"><span>⏪</span>Rückwärts<small>Welches Lied ist das?</small></button>
-          </div>
-          <p class="gb-fein">Mit bekannten Liedern – oder mit deinen eigenen Songs vom Handy.</p>
-        </div>
+        <button type="button" class="btn secondary sr-verweis" data-zu-songs>🎵 Song-Rätsel – jetzt als eigene App →</button>
         <div class="gb-einstieg">
           <h3>🎼 Gehörbildung</h3>
           <div class="gb-einstieg-knoepfe">
@@ -1403,7 +1402,6 @@
       </div>
 
       <div class="ton-teil" id="ton-gb" hidden></div>
-      <div class="ton-teil" id="ton-song" hidden></div>
 
       <div class="ton-teil ton-mitte" id="ton-hoeren" hidden>
         <div class="ton-merk">Hör gut zu …</div>
@@ -1881,6 +1879,14 @@
     </div>
   </section>
 
+  <!-- Song-Rätsel -->
+  <section class="screen" id="screen-songs">
+    <div class="ton-buehne sr-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="srAppZurueck" type="button" aria-label="Zurück">←</button><span>🎵 Song-Rätsel</span></div>
+      <div class="ton-teil" id="ton-song"></div>
+    </div>
+  </section>
+
   <section class="screen" id="screen-dopamin">
     <div class="dp-buehne">
       <div class="farb-kopf"><button class="icon-btn" id="dpZurueck" type="button" aria-label="Zurück">←</button><span>🧠 Dopamin-Maschine</span></div>
@@ -2135,49 +2141,49 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=100"></script>
-<script src="haie.js?v=100"></script>
-<script src="porsche.js?v=100"></script>
-<script src="dackel.js?v=100"></script>
-<script src="groesse.js?v=100"></script>
-<script src="gretchen.js?v=100"></script>
-<script src="effekte.js?v=100"></script>
-<script src="app.js?v=100"></script>
-<script src="melden.js?v=100"></script>
-<script src="verlauf.js?v=100"></script>
-<script src="hub.js?v=100"></script>
-<script src="farben.js?v=100"></script>
-<script src="cello.js?v=100"></script>
-<script src="instrumente.js?v=100"></script>
-<script src="toene.js?v=100"></script>
-<script src="gehoer.js?v=100"></script>
-<script src="songs.js?v=100"></script>
-<script src="spotify.js?v=100"></script>
-<script src="takt.js?v=100"></script>
-<script src="punkte.js?v=100"></script>
-<script src="funktion.js?v=100"></script>
-<script src="zufall.js?v=100"></script>
-<script src="zahlen.js?v=100"></script>
-<script src="tierleben.js?v=100"></script>
-<script src="tierpixel.js?v=100"></script>
-<script src="piranha.js?v=100"></script>
-<script src="slo.js?v=100"></script>
-<script src="augen.js?v=100"></script>
-<script src="karten-daten.js?v=100"></script>
-<script src="karte.js?v=100"></script>
-<script src="tiefgang.js?v=100"></script>
-<script src="riff.js?v=100"></script>
-<script src="krimi-grafik.js?v=100"></script>
-<script src="krimi.js?v=100"></script>
-<script src="krimi-wachen.js?v=100"></script>
-<script src="krimi-verhoer.js?v=100"></script>
-<script src="krimi-alibi.js?v=100"></script>
-<script src="krimi-akte.js?v=100"></script>
-<script src="krimi-zentrale.js?v=100"></script>
-<script src="profile.js?v=100"></script>
-<script src="fuehrung.js?v=100"></script>
-<script src="dopamin.js?v=100"></script>
-<script src="experimente.js?v=100"></script>
-<script src="plattform.js?v=100"></script>
+<script src="wale.js?v=101"></script>
+<script src="haie.js?v=101"></script>
+<script src="porsche.js?v=101"></script>
+<script src="dackel.js?v=101"></script>
+<script src="groesse.js?v=101"></script>
+<script src="gretchen.js?v=101"></script>
+<script src="effekte.js?v=101"></script>
+<script src="app.js?v=101"></script>
+<script src="melden.js?v=101"></script>
+<script src="verlauf.js?v=101"></script>
+<script src="hub.js?v=101"></script>
+<script src="farben.js?v=101"></script>
+<script src="cello.js?v=101"></script>
+<script src="instrumente.js?v=101"></script>
+<script src="toene.js?v=101"></script>
+<script src="gehoer.js?v=101"></script>
+<script src="songs.js?v=101"></script>
+<script src="spotify.js?v=101"></script>
+<script src="takt.js?v=101"></script>
+<script src="punkte.js?v=101"></script>
+<script src="funktion.js?v=101"></script>
+<script src="zufall.js?v=101"></script>
+<script src="zahlen.js?v=101"></script>
+<script src="tierleben.js?v=101"></script>
+<script src="tierpixel.js?v=101"></script>
+<script src="piranha.js?v=101"></script>
+<script src="slo.js?v=101"></script>
+<script src="augen.js?v=101"></script>
+<script src="karten-daten.js?v=101"></script>
+<script src="karte.js?v=101"></script>
+<script src="tiefgang.js?v=101"></script>
+<script src="riff.js?v=101"></script>
+<script src="krimi-grafik.js?v=101"></script>
+<script src="krimi.js?v=101"></script>
+<script src="krimi-wachen.js?v=101"></script>
+<script src="krimi-verhoer.js?v=101"></script>
+<script src="krimi-alibi.js?v=101"></script>
+<script src="krimi-akte.js?v=101"></script>
+<script src="krimi-zentrale.js?v=101"></script>
+<script src="profile.js?v=101"></script>
+<script src="fuehrung.js?v=101"></script>
+<script src="dopamin.js?v=101"></script>
+<script src="experimente.js?v=101"></script>
+<script src="plattform.js?v=101"></script>
 </body>
 </html>

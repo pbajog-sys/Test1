@@ -116,8 +116,8 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `cello.js` – Cello-Noten
 - `instrumente.js` – Noten & Griffe für Klavier, Gitarre, Ukulele
 - `toene.js` – Ton-Gedächtnis
-- `spotify.js` – Spotify-Anbindung fürs Song-Rätsel („Song erkennen“, PKCE-Anmeldung, Wiedergabe über Spotify Connect)
-- `songs.js` – Song-Rätsel im Ton-Gedächtnis (Wie geht’s weiter? / Rückwärts, eigene Songs)
+- `spotify.js` – Spotify im Song-Rätsel (Titel erkennen / Jahr schätzen, Kategorien, PKCE, Spotify Connect)
+- `songs.js` – Song-Rätsel als eigene App (Wie geht’s weiter? / Rückwärts, eigene Songs, Startseite)
 - `takt.js` – Takt-Gefühl (Zeitgefühl, Tempo, Taktart)
 - `verlauf.js` – Verlauf & Statistik
 - `tiefgang.js` – Tiefgang
@@ -227,8 +227,11 @@ Abstand in Cent (100 Cent = ein Halbton; 10 − Cent/50, ab einer Quarte 0). Aus
 (z. B. „A4 +20 ct“) für Original und eigenen Ton, Differenz in Hz und Cent, Tipp („1,2 Halbtöne zu hoch“),
 Position auf der Skala, beide Töne zum Vergleichen. Tagestöne, Bestwerte, Challenge-Links. Code in `toene.js`.
 
-## 🎵 Song-Rätsel (im Ton-Gedächtnis)
-Zwei Modi (`songs.js`), je 5 Runden, bis zu 50 Punkte, Bestwerte und Verlauf wie die anderen Ton-Übungen:
+## 🎵 Song-Rätsel (eigene App)
+Eigene Karte im Hub (Kategorie „Sinne“) und eigener Planet 💿 im Universum, Verlauf unter „Song-Rätsel“ (`songs`),
+zählt fürs Gehör im Fähigkeitenprofil. Bestwerte bleiben wie bisher in `walquiz.toene.v1` (Feld `song`) – keine
+Migration nötig; die letzte Auswahl (Modus, Stufe, Quelle) liegt in `walquiz.songs.v1`. Im Ton-Gedächtnis führt ein
+Verweis zur App. Je 5 Runden, bis zu 50 Punkte:
 - **⏸️ Wie geht’s weiter?** Ein Lied läuft und stoppt – auf der Klaviertastatur den nächsten Ton suchen (Tasten zum
   Ausprobieren antippen, dann bestätigen; Oktave egal). Leicht: von vorn, Titel sichtbar, nur Töne aus dem Lied. Mittel:
   mitten im Lied, Titel geheim. Profi: kurzer Ausschnitt in zufälliger anderer Tonart. Richtig 10, ein Halbton daneben 3.
@@ -239,17 +242,25 @@ Zwei Modi (`songs.js`), je 5 Runden, bis zu 50 Punkte, Bestwerte und Verlauf wie
   (IndexedDB), nichts wird hochgeladen. Bei eigenen Songs erkennt ein YIN-Tonhöhendetektor eine Stelle, an der ein neuer,
   klar gehaltener Ton beginnt; dort stoppt das Lied. Volle Mischungen können falsch erkannt werden – dann lässt sich die
   Runde streichen.
-- **🟢 Spotify (Premium):** Modus „Song erkennen“ – Ausschnitte aus deinen Lieblingssongs und Meistgehörten
-  (Leicht 4 s vom Anfang, Mittel 2 s, Profi 1 s irgendwo im Song, 4–6 Antworten). Abgespielt wird über Spotify Connect
-  in deiner Spotify-App; die Länge wird an Spotifys eigenem Fortschritt gemessen, Netzverzögerung zählt nicht mit.
-  Einmalig einrichten: auf developer.spotify.com/dashboard eine App anlegen (kostenlos, Development Mode, max. 5 Nutzer),
-  die im Menü angezeigte Redirect-URI (muss HTTPS sein) eintragen und die Client ID einfügen. Anmeldung per PKCE ohne
-  Server. Rechte: nur Bibliothek lesen und Wiedergabe steuern. Token bleiben im Browser (`walquiz.spotify.v1`).
+- **🟢 Spotify (Premium):** zwei Modi – **🎵 Titel erkennen** (Leicht 4 s vom Anfang, Mittel 2 s, Profi 1 s irgendwo im
+  Song, 4–6 Antworten aus derselben Kategorie) und **📅 Jahr schätzen** (8/5/3 s anhören, Jahr mit Schieber und ±,
+  pro Jahr daneben −0,7/−1/−1,5 Punkte). **Zufallssongs nach Kategorie:** Querbeet, 70er Disco & Funk, 80er/90er/2000er/
+  2010er Pop, Aktuelle Hits, Rock-Klassiker, Hip-Hop, Deutschpop, Schlager, Filmmusik – über die Spotify-Suche mit Genre-
+  und Jahr-Filter (`genre:pop year:1980-1989`, `market=from_token`, 6 Suchen à 10 Treffer mit zufälligem Offset).
+  „⭐ Große Hits“ nimmt nur die vorderen Treffer (Offset ≤ 90, Spotify sortiert grob nach Beliebtheit), „🔍 Auch
+  Unbekanntes“ geht bis Offset 600. Dazu **✨ Wie meine Favoriten** (Songs deiner meistgehörten Künstler) und **💚 Meine
+  Musik** (Lieblingssongs + Meistgehörtes). Titel werden von „Remastered 2011“ & Co. befreit, Doppelte und mehr als 2 Songs
+  je Künstler fliegen raus. Spotifys eigene Empfehlungen („Algorithmus“) gibt es für neue Apps seit Nov. 2024 nicht mehr.
+  Abgespielt wird über Spotify Connect in deiner Spotify-App; die Ausschnittlänge wird an Spotifys eigenem Fortschritt
+  gemessen. Einmalig einrichten: auf developer.spotify.com/dashboard eine App anlegen (kostenlos, Development Mode, max.
+  5 Nutzer), die im Menü angezeigte Redirect-URI (HTTPS) eintragen, Client ID einfügen. Anmeldung per PKCE ohne Server;
+  Rechte: nur Bibliothek lesen und Wiedergabe steuern. Token bleiben im Browser (`walquiz.spotify.v1`).
 - **Was mit Spotify/YouTube nicht geht:** Rückwärts und Tonerkennung – der Ton läuft in der Spotify-App bzw. im fremden
   YouTube-iframe, eine Web-App kommt nicht an die Audiodaten; Hörproben und Tonanalyse gibt Spotify neuen Apps seit
   November 2024 nicht mehr frei. Dafür gibt es eigene Dateien.
 - Tests: `tests/songs.test.js` (erzeugt zwei WAV-Testsongs mit bekannten Tönen, prüft Erkennung, Speichern, beide Modi),
-  `tests/spotify.test.js` (gegen ein nachgebautes Spotify: PKCE, Token, Titel, Ausschnittlänge, Fehlerfälle).
+  `tests/spotify.test.js` (gegen ein nachgebautes Spotify: PKCE, Kategorie-Suche, Hits/Unbekanntes, beide Modi,
+  Favoriten, Ausschnittlänge, Fehlerfälle – das echte Spotify ist damit nicht getestet).
 
 ## 🎼 Gehörbildung (im Ton-Gedächtnis)
 Unter dem normalen Ton-Gedächtnis liegen drei Übungen (`gehoer.js`), mit deutschen Notennamen (… A, B, H) und weichem

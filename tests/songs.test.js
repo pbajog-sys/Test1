@@ -40,11 +40,11 @@ const wahr = { 'Testsong klar': wav(dKlar, false, 7), 'Testsong Mix': wav(dMix, 
   const checks = [];
   const ck = (n, ok, info = '') => { checks.push([n, ok]); console.log((ok ? '✓ ' : '✗ ') + n + (info ? ' – ' + info : '')); };
   await p.goto('http://localhost:8765/'); await p.waitForTimeout(900);
-  await p.click('#hubToene'); await p.waitForTimeout(500);
-  await p.screenshot({ path: ordner + '/sr-intro.png', fullPage: true });
+  await p.screenshot({ path: ordner + '/sr-hub.png' });
+  await p.click('#hubSongs'); await p.waitForTimeout(900);
+  ck('Song-Rätsel ist eine eigene App', await p.evaluate(() => $('screen-songs').classList.contains('active') && !$('ton-song').hidden));
 
   // 1) Wie geht's weiter? – eingebaute Lieder, Leicht, immer richtig
-  await p.click('[data-song="weiter"]'); await p.waitForTimeout(400);
   await p.screenshot({ path: ordner + '/sr-menue.png', fullPage: true });
   await p.click('#srLos');
   for (let i = 0; i < 5; i++) {
@@ -120,14 +120,19 @@ const wahr = { 'Testsong klar': wav(dKlar, false, 7), 'Testsong Mix': wav(dMix, 
   ck('Rückwärts mit eigenen Songs: Antworten = Songnamen', ro === 'Testsong Mix,Testsong klar', ro);
 
   // 6) Verlauf + bleibt nach Neuladen
-  const vl = await p.evaluate(() => (loadJson(VERLAUF_KEY).tage[skDatum()] || []).filter((e) => e.s === 'toene' && /^song-/.test((e.x || e.extra || {}).modus || e.modus || '') || (e.s === 'toene' && /Song-Rätsel/.test(e.i || e.info || ''))).length);
+  const vl = await p.evaluate(() => (loadJson(VERLAUF_KEY).tage[skDatum()] || []).filter((e) => e.s === 'songs').length);
   ck('Verlaufseinträge Song-Rätsel', vl >= 5, vl + ' Einträge');
   await p.reload(); await p.waitForTimeout(900);
-  await p.click('#hubToene'); await p.waitForTimeout(300); await p.click('[data-song="weiter"]'); await p.waitForTimeout(500);
+  await p.click('#hubSongs'); await p.waitForTimeout(900);
   const nach = await p.evaluate(() => document.querySelectorAll('.sr-liste li').length);
   ck('Songs bleiben nach Neuladen gespeichert', nach === 2);
   await p.click('[data-weg]'); await p.waitForTimeout(400);
   ck('Song entfernen', (await p.evaluate(() => document.querySelectorAll('.sr-liste li').length)) === 1);
+  // Verweis im Ton-Gedächtnis führt zur App, Zurück-Knopf zum Hub
+  await p.click('#srAppZurueck'); await p.waitForTimeout(600);
+  ck('Zurück führt zur Startseite', await p.evaluate(() => $('screen-hub').classList.contains('active')));
+  await p.click('#hubToene'); await p.waitForTimeout(900); await p.click('[data-zu-songs]'); await p.waitForTimeout(600);
+  ck('Verweis im Ton-Gedächtnis öffnet die App', await p.evaluate(() => $('screen-songs').classList.contains('active')));
   ck('Keine Seitenfehler', !fehler.length, fehler.join(' | '));
   console.log(checks.filter((c) => c[1]).length + ' bestanden, ' + checks.filter((c) => !c[1]).length + ' fehlgeschlagen');
   fs.rmSync(tmp, { recursive: true, force: true });

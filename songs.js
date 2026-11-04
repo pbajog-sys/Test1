@@ -1,4 +1,4 @@
-// 🎵 Song-Rätsel im Ton-Gedächtnis
+// 🎵 Song-Rätsel (eigene App)
 //  • „Wie geht’s weiter?“: Ein Lied läuft und stoppt – welcher Ton kommt als Nächstes?
 //  • „Rückwärts“: Ein Lied läuft rückwärts – welches ist es?
 // Quellen: eingebaute, gemeinfreie Lieder (selbst synthetisiert) oder eigene Audiodateien vom Gerät.
@@ -213,7 +213,7 @@ async function srStart(modus, stufe, quelle) {
   audio();
   const r = zufallsGenerator('sr-' + Date.now() + Math.random());
   sr = { modus, stufe, quelle, i: 0, punkte: [], lauf: {} };
-  zeigeTonTeil('song');
+  srZeigen(); srAufStart = false;
   if (quelle === 'eigen') {
     const songs = await srSongs();
     if (songs.length < (modus === 'rueck' ? 2 : 1)) { srMenue(); return; }
@@ -348,7 +348,7 @@ function srEnde() {
   let alt = null;
   if (max) {
     const st = tonStore(); st.song = st.song || {}; alt = st.song[k] != null ? st.song[k] : null; st.song[k] = Math.max(alt || 0, summe); saveJson(TON_KEY, st);
-    if (typeof merkeVerlauf === 'function') merkeVerlauf('toene', summe, 50, 'Song-Rätsel: ' + M.name + ' · ' + stufeName + (sr.quelle === 'eigen' ? ' · eigene Songs' : ''), { stufe: sr.stufe === 'profi' ? 'schwer' : sr.stufe, modus: 'song-' + sr.modus, rekord: alt != null && summe > alt });
+    if (typeof merkeVerlauf === 'function') merkeVerlauf('songs', summe, 50, M.name + ' · ' + stufeName + (sr.quelle === 'eigen' ? ' · eigene Songs' : ''), { stufe: sr.stufe === 'profi' ? 'schwer' : sr.stufe, modus: 'song-' + sr.modus, rekord: alt != null && summe > alt });
   }
   const urteil = !max ? 'Keine Runde konnte gewertet werden.' : summe >= 45 ? 'Super Gehör!' : summe >= 30 ? 'Gut gehört.' : 'Das ist schwer – nochmal?';
   $('ton-song').innerHTML = '<div class="ton-merk">' + M.emoji + ' Song-Rätsel · ' + M.name + '</div><div class="farb-summe">' + fmt(summe) + ' / 50</div>'
@@ -358,35 +358,43 @@ function srEnde() {
   $('srZurMenue').addEventListener('click', () => srMenue());
 }
 
-// ---------- Menü ----------
+// ---------- App-Startseite ----------
+const SR_STUFE_NAMEN = { leicht: 'Leicht', mittel: 'Mittel', profi: 'Profi' };
+function srZeigen() {
+  const sc = $('screen-songs');
+  if (sc && !sc.classList.contains('active')) show('songs', '🎵 Song-Rätsel');
+}
+let srAufStart = true;
 async function srMenue(modus) {
   srStopp();
   if (typeof sp !== 'undefined' && sp) { spPause(); sp = null; }
-  const alt = sr || {};
-  sr = { modus: modus || alt.modus || 'weiter', stufe: alt.stufe || 'leicht', quelle: alt.quelle === 'eigen' ? 'eigen' : 'lieder' };
-  zeigeTonTeil('song');
+  const alt = sr || {}, gemerkt = loadJson(SR_WAHL_KEY);
+  sr = { modus: modus || alt.modus || gemerkt.modus || 'weiter', stufe: alt.stufe || gemerkt.stufe || 'leicht', quelle: (alt.quelle || gemerkt.quelle) === 'eigen' ? 'eigen' : 'lieder' };
+  saveJson(SR_WAHL_KEY, { ...gemerkt, modus: sr.modus, stufe: sr.stufe, quelle: sr.quelle });
+  srZeigen(); srAufStart = true;
   const songs = await srSongs(), best = srKey(), box = $('ton-song');
   if (sr.quelle === 'eigen' && !songs.length) sr.quelle = 'lieder';
   const stufenText = SR_STUFEN[sr.quelle === 'eigen' ? (sr.modus === 'weiter' ? 'eigenWeiter' : 'eigenRueck') : sr.modus];
   const zuWenig = sr.quelle === 'eigen' && sr.modus === 'rueck' && songs.length < 2;
-  box.innerHTML = '<div class="ton-merk">🎵 Song-Rätsel</div><div class="gb-modi sr-modi">' + Object.entries(SR_MODI).map(([k, m]) => '<button type="button" class="gb-modus' + (k === sr.modus ? ' on' : '') + '" data-m="' + k + '"><span>' + m.emoji + '</span><b>' + m.name + '</b><small>' + m.text + '</small></button>').join('') + '</div>'
+  const b = best[sr.modus + '-' + sr.stufe + (sr.quelle === 'eigen' ? '-eigen' : '')];
+  box.innerHTML = '<div class="sr-held"><div class="sr-platte gross dreht-langsam" aria-hidden="true"><i></i></div><div><h2 class="sr-titel">Song-Rätsel</h2><p class="gb-fein">Songs erkennen, Jahre schätzen, Töne erraten – mit Spotify, bekannten Liedern oder deinen eigenen Dateien.</p></div></div>'
+    + '<div class="farb-stufen ton-stufen sr-stufen">' + ['leicht', 'mittel', 'profi'].map((x) => '<button type="button" data-s="' + x + '" class="' + (x === sr.stufe ? 'on' : '') + '">' + SR_STUFE_NAMEN[x] + '<small>' + { leicht: 'länger hören · weniger Antworten', mittel: 'kürzer · mehr Auswahl', profi: 'kaum hören · viel Auswahl' }[x] + '</small></button>').join('') + '</div>'
+    + (typeof spMenueHtml === 'function' ? spMenueHtml() : '')
+    + '<div class="sr-eigen sr-ohne"><h3>🎼 Ohne Spotify</h3><div class="gb-modi sr-modi">' + Object.entries(SR_MODI).map(([k, m]) => '<button type="button" class="gb-modus' + (k === sr.modus ? ' on' : '') + '" data-m="' + k + '"><span>' + m.emoji + '</span><b>' + m.name + '</b><small>' + m.text + '</small></button>').join('') + '</div>'
     + '<div class="sr-quelle"><button type="button" data-q="lieder" class="' + (sr.quelle === 'lieder' ? 'on' : '') + '">🎼 Bekannte Lieder<small>' + SR_LIEDER.length + ' Lieder, Klavier</small></button><button type="button" data-q="eigen" class="' + (sr.quelle === 'eigen' ? 'on' : '') + '"' + (songs.length ? '' : ' disabled') + '>📁 Meine Songs<small>' + (songs.length ? songs.length + ' Song' + (songs.length === 1 ? '' : 's') : 'erst hinzufügen ↓') + '</small></button></div>'
-    + '<div class="farb-stufen ton-stufen">' + ['leicht', 'mittel', 'profi'].map((s) => { const b = best[sr.modus + '-' + s + (sr.quelle === 'eigen' ? '-eigen' : '')]; return '<button type="button" data-s="' + s + '" class="' + (s === sr.stufe ? 'on' : '') + '">' + { leicht: 'Leicht', mittel: 'Mittel', profi: 'Profi' }[s] + '<small>' + stufenText[s] + '</small><small>' + (b != null ? 'Bestwert ' + fmt(b) + ' / 50' : '') + '</small></button>'; }).join('') + '</div>'
+    + '<p class="gb-fein" id="srStufeText">' + SR_STUFE_NAMEN[sr.stufe] + ': ' + stufenText[sr.stufe] + (b != null ? ' · Bestwert ' + fmt(b) + ' / 50' : '') + '</p>'
     + (zuWenig ? '<p class="gb-fein">Für „Rückwärts“ mit eigenen Songs brauchst du mindestens 2 Songs.</p>' : '')
-    + '<button type="button" class="btn ton-gross" id="srLos"' + (zuWenig ? ' disabled' : '') + '>Los geht’s 🎵</button>'
+    + '<button type="button" class="btn ton-gross" id="srLos"' + (zuWenig ? ' disabled' : '') + '>Los geht’s 🎵</button></div>'
     + '<div class="sr-eigen"><h3>📁 Meine Songs</h3><p class="gb-fein">MP3, M4A, WAV … von deinem Gerät (z. B. aus der Dateien-App). Die Songs bleiben nur auf diesem Gerät – nichts wird hochgeladen. Gekaufte/gestreamte Titel aus Apple Music oder Spotify sind kopiergeschützt und lassen sich nicht auswählen.</p>'
     + '<label class="btn secondary sr-datei">➕ Songs hinzufügen<input type="file" id="srDatei" accept="audio/*,.mp3,.m4a,.wav,.ogg,.aac,.flac" multiple hidden></label><div class="gb-fein" id="srStatus"></div>'
-    + '<ul class="sr-liste">' + songs.map((s) => '<li><span>🎵 ' + s.name.replace(/</g, '&lt;') + '</span><small>' + fmt(Math.round(s.groesse / 1e5) / 10) + ' MB</small><button type="button" data-weg="' + s.id + '" aria-label="Entfernen">✕</button></li>').join('') + '</ul></div>'
-    + (typeof spMenueHtml === 'function' ? spMenueHtml() : '')
-    + '<details class="sr-warum"><summary>Warum geht mit Spotify oder YouTube nicht alles?</summary><p>Spotify spielt den Ton in der Spotify-App ab – die Spielekiste bekommt ihn nie zu sehen. Deshalb gehen „Song erkennen“ (Ausschnitt anspielen, raten) mit Spotify, aber nicht Rückwärts oder die Tonerkennung bei „Wie geht’s weiter?“. Hörproben und die Tonanalyse gibt Spotify neuen Apps seit November 2024 nicht mehr frei. YouTube-Videos laufen nur in einem fremden Fenster, auf dessen Ton eine Web-App keinen Zugriff hat. Mit eigenen Dateien klappt alles.</p></details>'
-    + '<button type="button" class="btn secondary" id="srZurueckIntro">← Zurück</button>';
-  box.querySelectorAll('[data-m]').forEach((b) => b.addEventListener('click', () => srMenue(b.dataset.m)));
-  box.querySelectorAll('[data-q]').forEach((b) => b.addEventListener('click', () => { sr.quelle = b.dataset.q; srMenue(); }));
-  box.querySelectorAll('[data-s]').forEach((b) => b.addEventListener('click', () => { sr.stufe = b.dataset.s; box.querySelectorAll('[data-s]').forEach((x) => x.classList.toggle('on', x === b)); }));
-  box.querySelectorAll('[data-weg]').forEach((b) => b.addEventListener('click', async () => { await srSongWeg(b.dataset.weg); delete srPuffer[b.dataset.weg]; srMenue(); }));
+    + '<ul class="sr-liste">' + songs.map((x) => '<li><span>🎵 ' + x.name.replace(/</g, '&lt;') + '</span><small>' + fmt(Math.round(x.groesse / 1e5) / 10) + ' MB</small><button type="button" data-weg="' + x.id + '" aria-label="Entfernen">✕</button></li>').join('') + '</ul></div>'
+    + '<details class="sr-warum"><summary>Warum geht mit Spotify nicht alles?</summary><p>Spotify spielt den Ton in der Spotify-App ab – die Spielekiste bekommt ihn nie zu sehen. Deshalb gehen „Titel erkennen“ und „Jahr schätzen“ mit Spotify, aber nicht Rückwärts oder die Tonerkennung bei „Wie geht’s weiter?“. Spotifys eigene Empfehlungen („der Algorithmus“) gibt es für neue Apps seit November 2024 nicht mehr – die Zufallssongs kommen deshalb aus der Spotify-Suche (Genre + Jahrzehnt) oder von Künstlern, die du oft hörst. YouTube-Videos laufen nur in einem fremden Fenster, auf dessen Ton eine Web-App keinen Zugriff hat.</p></details>';
+  box.querySelectorAll('[data-m]').forEach((x) => x.addEventListener('click', () => srMenue(x.dataset.m)));
+  box.querySelectorAll('[data-q]').forEach((x) => x.addEventListener('click', () => { sr.quelle = x.dataset.q; srMenue(); }));
+  box.querySelectorAll('[data-s]').forEach((x) => x.addEventListener('click', () => { sr.stufe = x.dataset.s; srMenue(); }));
+  box.querySelectorAll('[data-weg]').forEach((x) => x.addEventListener('click', async () => { await srSongWeg(x.dataset.weg); delete srPuffer[x.dataset.weg]; srMenue(); }));
   $('srLos').addEventListener('click', () => srStart(sr.modus, sr.stufe, sr.quelle));
   if (typeof spMenueVerdrahten === 'function') spMenueVerdrahten();
-  $('srZurueckIntro').addEventListener('click', () => { srStopp(); sr = null; toeneIntro(); });
   $('srDatei').addEventListener('change', async (e) => {
     const dateien = [...e.target.files], status = $('srStatus');
     let ok = 0, fehl = [];
@@ -399,4 +407,13 @@ async function srMenue(modus) {
     $('srStatus').textContent = (ok ? '✅ ' + ok + ' Song' + (ok === 1 ? '' : 's') + ' hinzugefügt. ' : '') + (fehl.length ? '⚠️ Nicht abspielbar: ' + fehl.join(', ') : '');
   });
 }
-document.querySelectorAll('#ton-intro [data-song]').forEach((b) => b.addEventListener('click', () => { audio(); sr = null; srMenue(b.dataset.song); }));
+const SR_WAHL_KEY = 'walquiz.songs.v1';
+function srBest() { const v = Object.values(srKey()); return v.length ? Math.max(...v) : null; }
+$('hubSongs').addEventListener('click', () => { merkeZuletzt('songs'); zoomZu($('hubSongs'), () => { audio(); sr = null; srMenue(); }); });
+$('srAppZurueck').addEventListener('click', () => {
+  srStopp();
+  if (typeof sp !== 'undefined' && sp) { spPause(); sp = null; }
+  if (!srAufStart) { srMenue(); return; }
+  sr = null; zeigeHub();
+});
+document.querySelectorAll('[data-zu-songs]').forEach((x) => x.addEventListener('click', () => { audio(); sr = null; srMenue(); }));

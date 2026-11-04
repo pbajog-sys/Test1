@@ -14,6 +14,7 @@ const SK_EXP_KEY = 'walquiz.experiment.v1';
 const SK_SPIELE = {
   farben: { name: 'Farb-Gedächtnis', emoji: '🎨', hub: 'hubFarben', tag: 'farbTagBtn', kat: 'sinne' },
   toene: { name: 'Ton-Gedächtnis', emoji: '🎧', hub: 'hubToene', tag: 'tonTagBtn', kat: 'sinne', ton: true },
+  songs: { name: 'Song-Rätsel', emoji: '🎵', hub: 'hubSongs', kat: 'sinne', ton: true },
   takt: { name: 'Takt-Gefühl', emoji: '⏱️', hub: 'hubTakt', tag: 'taktTagBtn', kat: 'sinne', ton: true },
   augen: { name: 'Augenmaß', emoji: '📐', hub: 'hubAugen', tag: 'agTagBtn', kat: 'sinne' },
   funktion: { name: 'Funktions-Detektiv', emoji: '🕵️', hub: 'hubFunktion', tag: 'fdTagBtn', kat: 'denken' },
@@ -29,7 +30,7 @@ const SK_KRIMI = { mord: { name: 'Tatort', emoji: '🔎' }, wachen: { name: 'Wac
 const SK_KATEGORIEN = [
   { id: 'original', name: 'Das Original', emoji: '🐋', karten: ['hubQuizzes'] },
   { id: 'denken', name: 'Denken & Logik', emoji: '🧠', karten: ['hubKrimi', 'hubPiranha', 'hubFunktion', 'hubRiff'] },
-  { id: 'sinne', name: 'Sinne & Wahrnehmung', emoji: '👁️', karten: ['hubFarben', 'hubToene', 'hubTakt', 'hubAugen'] },
+  { id: 'sinne', name: 'Sinne & Wahrnehmung', emoji: '👁️', karten: ['hubFarben', 'hubToene', 'hubSongs', 'hubTakt', 'hubAugen'] },
   { id: 'zahlen', name: 'Zahlen & Welt', emoji: '🔢', karten: ['hubPunkte', 'hubZufall', 'hubKarte', 'hubTiefgang', 'hubZahlen'] },
   { id: 'wissen', name: 'Wissen & Sprache', emoji: '📚', karten: ['hubCello', 'hubSlo'] },
   { id: 'perspektive', name: 'Perspektivwechsel', emoji: '🪞', karten: ['hubTierleben', 'hubDopamin'] },
@@ -92,7 +93,7 @@ const skTitel = (L) => SK_TITEL.filter(([l]) => L >= l).pop()[1];
 // Gewicht, mit dem ein Spiel in eine Fähigkeit eingeht
 const SK_FAEHIGKEITEN = [
   { id: 'logik', name: 'Logisches Denken', kurz: 'Logik', emoji: '🧠', titel: 'Kopfnuss-Knacker', spiele: { krimi: 1, piranha: 0.6, funktion: 0.5 } },
-  { id: 'gehoer', name: 'Musikalisches Gehör', kurz: 'Gehör', emoji: '🎵', titel: 'Goldohr', spiele: { toene: 1, cello: 0.6, takt: 0.5 } },
+  { id: 'gehoer', name: 'Musikalisches Gehör', kurz: 'Gehör', emoji: '🎵', titel: 'Goldohr', spiele: { toene: 1, songs: 0.8, cello: 0.6, takt: 0.5 } },
   { id: 'visuell', name: 'Visuelle Wahrnehmung', kurz: 'Sehen', emoji: '👁️', titel: 'Adlerauge', spiele: { farben: 1, augen: 0.6, punkte: 0.5 } },
   { id: 'raum', name: 'Räumliches Denken', kurz: 'Raum', emoji: '📐', titel: 'Kartenkopf', spiele: { karte: 1, augen: 0.8, piranha: 0.4 } },
   { id: 'zahlen', name: 'Zahlenverständnis', kurz: 'Zahlen', emoji: '🔢', titel: 'Zahlenflüsterer', spiele: { zufall: 1, funktion: 0.8, punkte: 0.7 } },

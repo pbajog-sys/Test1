@@ -1,4 +1,4 @@
-// 🟢 Spotify im Song-Rätsel: „Song erkennen“ mit Songs aus deiner Spotify-Bibliothek.
+// 🟢 Spotify im Song-Rätsel: „Titel erkennen“ / „Jahr schätzen“ mit Zufallssongs nach Kategorie oder aus deiner Bibliothek.
 // Abgespielt wird über Spotify Connect auf deinem Gerät (Spotify-App am Handy/Computer muss offen sein) – dafür
 // braucht Spotify Premium. Anmeldung: Authorization Code mit PKCE, ohne Server und ohne Geheimschlüssel.
 // Was mit Spotify NICHT geht: Rückwärts abspielen und Töne erkennen – die App bekommt den Ton nie zu sehen
@@ -61,16 +61,79 @@ async function spApi(pfad, opt = {}) {
 const spAngemeldet = () => { const st = spStore(); return !!(st.clientId && (st.refresh || (st.token && st.ablauf > Date.now()))); };
 function spAbmelden() { const st = spStore(); delete st.token; delete st.refresh; delete st.ablauf; delete st.titel; spSave(st); }
 
+// Spotify-Track → schlankes Objekt (Titel ohne „Remastered 2011“ & Co., Jahr aus dem Album)
+function spSauber(name) {
+  return String(name || '').replace(/\s+-\s+[^-]*(remaster|version|edit|mix|live|mono|stereo|bonus|single|demo|anniversary|deluxe)[^-]*$/i, '')
+    .replace(/\s*[\(\[][^\)\]]*(remaster|version|edit|live|mono|stereo|bonus|single|deluxe|anniversary)[^\)\]]*[\)\]]/ig, '').trim() || String(name || '');
+}
+function spTrack(t) {
+  if (!t || !t.uri || t.type !== 'track' || t.is_local || t.is_playable === false) return null;
+  const jahr = t.album && t.album.release_date ? parseInt(t.album.release_date, 10) : null;
+  return { uri: t.uri, name: spSauber(t.name), kuenstler: (t.artists || []).map((a) => a.name).join(', '), erster: ((t.artists || [])[0] || {}).name || '', dauer: t.duration_ms, jahr: jahr > 1900 ? jahr : null, bild: t.album && t.album.images && t.album.images.length ? t.album.images[t.album.images.length - 1].url : '' };
+}
+// doppelte Songs (gleicher Titel + Künstler) raus, höchstens 2 Songs je Künstler
+function spEntdoppeln(liste) {
+  const gesehen = new Set(), proK = {}, out = [];
+  for (const t of liste) {
+    if (!t) continue;
+    const k = t.name.toLowerCase() + '|' + t.erster.toLowerCase();
+    if (gesehen.has(k) || (proK[t.erster] || 0) >= 2) continue;
+    gesehen.add(k); proK[t.erster] = (proK[t.erster] || 0) + 1; out.push(t);
+  }
+  return out;
+}
 // Titel aus „Lieblingssongs“ und „Meistgehört“ (max. 300, für eine Stunde zwischengespeichert)
 async function spTitel(neu) {
   const st = spStore();
-  if (!neu && st.titel && st.titel.z > Date.now() - 3600000 && st.titel.liste.length >= 4) return st.titel.liste;
-  const liste = [], gesehen = new Set();
-  const dazu = (t) => { if (t && t.uri && !gesehen.has(t.uri) && t.type === 'track' && !t.is_local) { gesehen.add(t.uri); liste.push({ uri: t.uri, name: t.name, kuenstler: (t.artists || []).map((a) => a.name).join(', '), dauer: t.duration_ms, bild: t.album && t.album.images && t.album.images.length ? t.album.images[t.album.images.length - 1].url : '' }); } };
-  for (const zeit of ['short_term', 'medium_term']) { try { const j = await spApi('/me/top/tracks?limit=50&time_range=' + zeit); (j.items || []).forEach(dazu); } catch (e) { if (e.status === 401) throw e; } }
-  for (let off = 0; off < 200; off += 50) { const j = await spApi('/me/tracks?limit=50&offset=' + off); (j.items || []).forEach((x) => dazu(x.track)); if (!j.next) break; }
-  const s = spStore(); s.titel = { z: Date.now(), liste: liste.slice(0, 300) }; spSave(s);
+  if (!neu && st.titel && st.titel.z > Date.now() - 3600000 && st.titel.liste.length >= 4 && st.titel.v === 2) return st.titel.liste;
+  const roh = [];
+  for (const zeit of ['short_term', 'medium_term']) { try { const j = await spApi('/me/top/tracks?limit=50&time_range=' + zeit); (j.items || []).forEach((t) => roh.push(spTrack(t))); } catch (e) { if (e.status === 401) throw e; } }
+  for (let off = 0; off < 200; off += 50) { const j = await spApi('/me/tracks?limit=50&offset=' + off); (j.items || []).forEach((x) => roh.push(spTrack(x.track))); if (!j.next) break; }
+  const s = spStore(); s.titel = { v: 2, z: Date.now(), liste: spEntdoppeln(roh).slice(0, 300) }; spSave(s);
   return s.titel.liste;
+}
+// Kategorien: Spotify-Suche mit Genre/Jahr-Filter (Spotifys eigene Empfehlungen gibt es für neue Apps nicht mehr)
+const SP_JETZT = new Date().getFullYear();
+const SP_KATEGORIEN = [
+  { id: 'mix', name: 'Querbeet', emoji: '🎲', q: 'year:1960-' + SP_JETZT, von: 1960 },
+  { id: '70er', name: '70er Disco & Funk', emoji: '🕺', q: 'genre:disco year:1970-1981', von: 1970, bis: 1981 },
+  { id: '80er', name: '80er Pop', emoji: '📼', q: 'genre:pop year:1980-1989', von: 1980, bis: 1989 },
+  { id: '90er', name: '90er Pop', emoji: '💿', q: 'genre:pop year:1990-1999', von: 1990, bis: 1999 },
+  { id: '00er', name: '2000er Pop', emoji: '📀', q: 'genre:pop year:2000-2009', von: 2000, bis: 2009 },
+  { id: '10er', name: '2010er Pop', emoji: '📱', q: 'genre:pop year:2010-2019', von: 2010, bis: 2019 },
+  { id: 'neu', name: 'Aktuelle Hits', emoji: '🔥', q: 'year:' + (SP_JETZT - 2) + '-' + SP_JETZT, von: SP_JETZT - 2 },
+  { id: 'rock', name: 'Rock-Klassiker', emoji: '🎸', q: 'genre:rock year:1965-1995', von: 1965, bis: 1995 },
+  { id: 'hiphop', name: 'Hip-Hop', emoji: '🎤', q: 'genre:hip-hop year:1990-' + SP_JETZT, von: 1990 },
+  { id: 'deutsch', name: 'Deutschpop', emoji: '🇩🇪', q: 'genre:"german pop"' },
+  { id: 'schlager', name: 'Schlager', emoji: '🎺', q: 'genre:schlager' },
+  { id: 'film', name: 'Filmmusik', emoji: '🎬', q: 'genre:soundtrack' },
+  { id: 'fav', name: 'Wie meine Favoriten', emoji: '✨', text: 'Songs deiner meistgehörten Künstler' },
+  { id: 'bib', name: 'Meine Musik', emoji: '💚', text: 'Lieblingssongs & Meistgehörtes' },
+];
+const spKat = (id) => SP_KATEGORIEN.find((k) => k.id === id) || SP_KATEGORIEN[2];
+async function spSuche(q, offset) {
+  const j = await spApi('/search?type=track&market=from_token&limit=10&offset=' + offset + '&q=' + encodeURIComponent(q));
+  return ((j && j.tracks && j.tracks.items) || []).map(spTrack);
+}
+// Bekanntheit: Spotify sortiert Suchtreffer grob nach Beliebtheit – vorne stehen die Hits
+async function spPool(katId, hits) {
+  const K = spKat(katId), r = Math.random;
+  if (K.id === 'bib') return spTitel();
+  let roh = [];
+  if (K.id === 'fav') {
+    const j = await spApi('/me/top/artists?limit=20&time_range=medium_term').catch((e) => { if (e.status === 401) throw e; return null; });
+    const kuenstler = ((j && j.items) || []).map((a) => a.name).sort(() => r() - 0.5).slice(0, 8);
+    if (kuenstler.length < 2) return spTitel();
+    const teile = await Promise.all(kuenstler.map((n) => spSuche('artist:"' + n.replace(/"/g, '') + '"', hits ? 0 : 10 * Math.floor(r() * 3)).catch(() => [])));
+    roh = teile.flat();
+  } else {
+    const max = hits ? 90 : 600, offs = new Set();
+    while (offs.size < 6) offs.add(10 * Math.floor(r() * (max / 10 + 1)));
+    const teile = await Promise.all([...offs].map((o) => spSuche(K.q, o).catch((e) => { if (e.status === 401) throw e; return []; })));
+    roh = teile.flat();
+    if (roh.filter(Boolean).length < 12) roh = roh.concat(...(await Promise.all([0, 10, 20].map((o) => spSuche(K.q, o).catch(() => [])))));
+  }
+  return spEntdoppeln(roh.sort(() => r() - 0.5));
 }
 async function spGeraet() {
   const j = await spApi('/me/player/devices'), d = (j && j.devices || []).filter((x) => !x.is_restricted);
@@ -96,24 +159,37 @@ async function spAusschnitt(geraet, uri, pos, dauer, wennStart) {
 }
 async function spPause() { spLauf++; try { await spApi('/me/player/pause', { method: 'PUT' }); } catch (e) { /* schon pausiert */ } }
 
-// ---------- Partie „Song erkennen“ ----------
-const SP_STUFEN = { leicht: { dauer: 4000, intro: true, opt: 4, hoeren: 3, text: '4 Sekunden vom Anfang · 4 Antworten' }, mittel: { dauer: 2000, intro: false, opt: 4, hoeren: 2, text: '2 Sekunden irgendwo im Song · 4 Antworten' }, profi: { dauer: 1000, intro: false, opt: 6, hoeren: 1, text: '1 Sekunde irgendwo im Song · 6 Antworten' } };
+// ---------- Partie: „Titel erkennen“ oder „Jahr schätzen“ ----------
+const SP_STUFEN = {
+  leicht: { dauer: 4000, intro: true, opt: 4, hoeren: 3, text: '4 Sekunden vom Anfang · 4 Antworten · 3× hören' },
+  mittel: { dauer: 2000, intro: false, opt: 4, hoeren: 2, text: '2 Sekunden irgendwo im Song · 4 Antworten · 2× hören' },
+  profi: { dauer: 1000, intro: false, opt: 6, hoeren: 1, text: '1 Sekunde irgendwo im Song · 6 Antworten · 1× hören' },
+};
+const SP_JAHR_STUFEN = { leicht: { dauer: 8000, intro: true, hoeren: 3, je: 0.7, text: '8 Sekunden · pro Jahr daneben −0,7 Punkte' }, mittel: { dauer: 5000, intro: false, hoeren: 2, je: 1, text: '5 Sekunden · pro Jahr daneben −1 Punkt' }, profi: { dauer: 3000, intro: false, hoeren: 1, je: 1.5, text: '3 Sekunden · pro Jahr daneben −1,5 Punkte' } };
+const SP_MODI = { titel: { name: 'Titel erkennen', emoji: '🎵', text: 'Welcher Song ist das?' }, jahr: { name: 'Jahr schätzen', emoji: '📅', text: 'Aus welchem Jahr?' } };
+const spWahl = () => ({ modus: 'titel', kat: '80er', hits: true, ...(spStore().wahl || {}) });
 let sp = null;
 async function spStart(stufe) {
-  const box = $('ton-song'), S = SP_STUFEN[stufe];
-  zeigeTonTeil('song');
-  box.innerHTML = '<div class="ton-merk">🟢 Spotify wird vorbereitet …</div>';
+  const box = $('ton-song'), W = spWahl(), K = spKat(W.kat), jahr = W.modus === 'jahr';
+  const S = jahr ? SP_JAHR_STUFEN[stufe] : SP_STUFEN[stufe];
+  srZeigen(); if (typeof srAufStart !== 'undefined') srAufStart = false;
+  box.innerHTML = '<div class="ton-merk">' + K.emoji + ' Suche Songs: ' + K.name + ' …</div><div class="sr-platte sp dreht" aria-hidden="true"><i></i></div>';
   try {
-    const titel = await spTitel(), geraet = await spGeraet();
-    if (titel.length < 4) throw new Error('Zu wenige Songs: Speichere in Spotify mindestens 4 Lieblingssongs (♥).');
-    if (!geraet) { spHinweis('📱 Kein Spotify-Gerät gefunden. Öffne die Spotify-App (Handy oder Computer), spiel kurz irgendeinen Song an und tippe dann nochmal auf „Los“.'); return; }
-    const r = Math.random, pool = titel.slice().sort(() => r() - 0.5), runden = [];
-    for (let i = 0; i < SR_RUNDEN && i < pool.length; i++) {
-      const T = pool[i], andere = titel.filter((x) => x !== T && x.name !== T.name).sort(() => r() - 0.5).slice(0, S.opt - 1);
+    const geraet = await spGeraet();
+    if (!geraet) { spHinweis('📱 Kein Spotify-Gerät gefunden. Öffne die Spotify-App (Handy oder Computer), spiel kurz irgendeinen Song an und tippe dann nochmal.'); return; }
+    let pool = (await spPool(K.id, W.hits)).slice().sort(() => Math.random() - 0.5);
+    if (jahr) pool = pool.filter((t) => t.jahr);
+    if (pool.length < (jahr ? SR_RUNDEN : 6)) throw new Error(K.id === 'bib' ? 'Zu wenige Songs: Speichere in Spotify mindestens 6 Lieblingssongs (♥).' : 'Spotify hat für „' + K.name + '“ zu wenige Songs geliefert. Probier eine andere Kategorie.');
+    const r = Math.random, runden = [];
+    for (let i = 0; i < SR_RUNDEN; i++) {
+      const T = pool[i];
       const pos = S.intro ? 0 : (T.dauer || 180000) * (0.25 + r() * 0.45);
-      runden.push({ T, pos, optionen: [T, ...andere].sort(() => r() - 0.5), gehoert: 0, antwort: null });
+      const andere = pool.filter((x) => x !== T && x.name.toLowerCase() !== T.name.toLowerCase()).sort(() => r() - 0.5).slice(0, (S.opt || 1) - 1);
+      runden.push({ T, pos, optionen: jahr ? [] : [T, ...andere].sort(() => r() - 0.5), gehoert: 0, antwort: null });
     }
-    sp = { stufe, geraet, runden, i: 0, punkte: [] };
+    const jahre = pool.map((t) => t.jahr).filter(Boolean);
+    const von = Math.max(1950, Math.min(K.von || 1960, ...jahre) - 3), bis = Math.min(SP_JETZT, Math.max(K.bis || SP_JETZT, ...jahre) + 3);
+    sp = { stufe, modus: W.modus, kat: K, geraet, runden, i: 0, punkte: [], von, bis };
     spRunde();
   } catch (e) { spHinweis(spFehlerText(e)); }
 }
@@ -122,6 +198,7 @@ function spFehlerText(e) {
   if (e.status === 403 && e.grund === 'PREMIUM_REQUIRED') return '💳 Spotify erlaubt das Steuern der Wiedergabe nur mit Premium.';
   if (e.status === 403) return '⛔ Spotify verweigert den Zugriff. Steht deine Spotify-E-Mail in deinem Entwickler-Dashboard unter „User Management“?';
   if (e.status === 404) return '📱 Spotify-Gerät nicht erreichbar. Spotify-App öffnen, kurz etwas abspielen, dann nochmal.';
+  if (e.status === 429) return '⏳ Spotify bremst gerade (zu viele Anfragen). Warte eine Minute und versuch es nochmal.';
   return '⚠️ ' + e.message;
 }
 function spHinweis(text) {
@@ -129,14 +206,20 @@ function spHinweis(text) {
   $('spNochmal').addEventListener('click', () => spStart((sp && sp.stufe) || (sr && sr.stufe) || 'leicht'));
   $('spMenue').addEventListener('click', () => srMenue());
 }
-const spTitelText = (T) => '<b>' + T.name.replace(/</g, '&lt;') + '</b><small>' + T.kuenstler.replace(/</g, '&lt;') + '</small>';
+const spEsc = (t) => String(t).replace(/&/g, '&amp;').replace(/</g, '&lt;');
+const spTitelText = (T) => '<b>' + spEsc(T.name) + '</b><small>' + spEsc(T.kuenstler) + '</small>';
 function spRunde() {
-  const R = sp.runden[sp.i], S = SP_STUFEN[sp.stufe];
-  $('ton-song').innerHTML = '<div class="gb-kopf"><span>🟢 Song erkennen · ' + { leicht: 'Leicht', mittel: 'Mittel', profi: 'Profi' }[sp.stufe] + '</span><span>' + (sp.i + 1) + ' / ' + sp.runden.length + ' · ' + fmt(sp.punkte.reduce((a, b) => a + b, 0)) + ' P.</span></div>'
+  const R = sp.runden[sp.i], jahr = sp.modus === 'jahr', S = jahr ? SP_JAHR_STUFEN[sp.stufe] : SP_STUFEN[sp.stufe], M = SP_MODI[sp.modus];
+  const start = Math.round((sp.von + sp.bis) / 2);
+  $('ton-song').innerHTML = '<div class="gb-kopf"><span>' + M.emoji + ' ' + M.name + ' · ' + sp.kat.emoji + ' ' + sp.kat.name + '</span><span>' + (sp.i + 1) + ' / ' + sp.runden.length + ' · ' + fmt(Math.round(sp.punkte.reduce((a, b) => a + b, 0) * 10) / 10) + ' P.</span></div>'
     + '<div class="gb-balken"><i style="width:' + Math.round((sp.i / sp.runden.length) * 100) + '%"></i></div>'
-    + '<div class="ton-merk">Welcher Song ist das?</div><div class="sr-platte sp" id="srPlatte" aria-hidden="true"><i></i></div>'
-    + '<button type="button" class="gb-hoeren" id="spHoeren">▶︎ ' + S.dauer / 1000 + ' Sek. anspielen</button><p class="gb-fein" id="spRest">Läuft über „' + sp.geraet.name.replace(/</g, '&lt;') + '“</p>'
-    + '<div class="gb-optionen sr-optionen sp-optionen">' + R.optionen.map((T, i) => '<button type="button" class="gb-opt" data-o="' + i + '">' + spTitelText(T) + '</button>').join('') + '</div><div class="gb-urteil" id="srUrteil"></div>';
+    + '<div class="ton-merk">' + (jahr ? 'Aus welchem Jahr ist der Song?' : 'Welcher Song ist das?') + '</div><div class="sr-platte sp" id="srPlatte" aria-hidden="true"><i></i></div>'
+    + '<button type="button" class="gb-hoeren" id="spHoeren">▶︎ ' + S.dauer / 1000 + ' Sek. anspielen</button><p class="gb-fein" id="spRest"></p>'
+    + (jahr ? '<div class="sp-jahr"><button type="button" class="sp-pm" data-d="-1" aria-label="ein Jahr früher">−</button><output id="spJahrZahl">' + start + '</output><button type="button" class="sp-pm" data-d="1" aria-label="ein Jahr später">+</button></div>'
+      + '<input class="ton-regler" type="range" id="spJahr" min="' + sp.von + '" max="' + sp.bis + '" step="1" value="' + start + '" aria-label="Jahr"><div class="ton-skala"><span>' + sp.von + '</span><span>' + sp.bis + '</span></div>'
+      + '<button type="button" class="btn ton-gross" id="spJahrOk">✓ ' + start + '</button>'
+      : '<div class="gb-optionen sr-optionen sp-optionen">' + R.optionen.map((T, i) => '<button type="button" class="gb-opt" data-o="' + i + '">' + spTitelText(T) + '</button>').join('') + '</div>')
+    + '<div class="gb-urteil" id="srUrteil"></div>';
   const rest = () => { $('spRest').textContent = R.gehoert >= S.hoeren ? 'Nicht mehr anhörbar – jetzt raten!' : 'Noch ' + (S.hoeren - R.gehoert) + '× anhören · läuft über „' + sp.geraet.name + '“'; $('spHoeren').disabled = R.gehoert >= S.hoeren; };
   const spiel = async () => {
     if (R.gehoert >= S.hoeren || R.antwort !== null) return;
@@ -147,31 +230,48 @@ function spRunde() {
     if ($('spHoeren')) rest();
   };
   $('spHoeren').addEventListener('click', spiel);
-  $('ton-song').querySelectorAll('[data-o]').forEach((b) => b.addEventListener('click', () => spAntwort(R, R.optionen[Number(b.dataset.o)], b)));
+  if (jahr) {
+    const reg = $('spJahr'), setz = (v) => { reg.value = Math.max(sp.von, Math.min(sp.bis, v)); $('spJahrZahl').textContent = reg.value; $('spJahrOk').textContent = '✓ ' + reg.value; };
+    reg.addEventListener('input', () => setz(Number(reg.value)));
+    $('ton-song').querySelectorAll('.sp-pm').forEach((b) => b.addEventListener('click', () => setz(Number(reg.value) + Number(b.dataset.d))));
+    $('spJahrOk').addEventListener('click', () => spJahrAntwort(R, Number(reg.value)));
+  } else $('ton-song').querySelectorAll('[data-o]').forEach((b) => b.addEventListener('click', () => spAntwort(R, R.optionen[Number(b.dataset.o)], b)));
   rest(); spiel();
 }
-function spAntwort(R, wahl, knopf) {
-  if (R.antwort !== null) return;
-  R.antwort = wahl; spPause();
-  const ok = wahl === R.T, p = ok ? Math.max(4, 13 - 3 * Math.max(1, R.gehoert)) : 0;
+function spAuswerten(R, p, text) {
   sp.punkte.push(p);
-  $('ton-song').querySelectorAll('[data-o]').forEach((b) => { b.disabled = true; if (R.optionen[Number(b.dataset.o)] === R.T) b.classList.add('richtig'); });
-  if (!ok) knopf.classList.add('falsch');
   $('spHoeren').hidden = true; $('spRest').hidden = true;
-  if (navigator.vibrate) navigator.vibrate(ok ? 15 : [40, 40, 40]);
-  $('srUrteil').innerHTML = '<div class="gb-text">' + (ok ? '✅ Erkannt' + (R.gehoert <= 1 ? ' – nach einmal Hören!' : ' – nach ' + R.gehoert + '× Hören.') : '❌ Das war <b>' + R.T.name.replace(/</g, '&lt;') + '</b> von ' + R.T.kuenstler.replace(/</g, '&lt;') + '.') + '</div>'
+  if (navigator.vibrate) navigator.vibrate(p >= 7 ? 15 : [40, 40, 40]);
+  $('srUrteil').innerHTML = '<div class="gb-text sp-aufloesung">' + (R.T.bild ? '<img src="' + spEsc(R.T.bild) + '" alt="" width="56" height="56">' : '') + '<div>' + text + '</div></div>'
     + '<div class="gb-knoepfe"><button type="button" class="btn secondary" id="spWeiterhoeren">🔊 15 Sek. weiterhören</button></div>'
     + '<button type="button" class="btn ton-gross" id="srWeiter">' + (sp.i + 1 < sp.runden.length ? 'Weiter →' : 'Auswertung') + '</button>';
   $('spWeiterhoeren').addEventListener('click', () => spAusschnitt(sp.geraet, R.T.uri, R.pos, 15000).catch((e) => spHinweis(spFehlerText(e))));
   $('srWeiter').addEventListener('click', () => { spPause(); sp.i++; if (sp.i < sp.runden.length) spRunde(); else spEnde(); });
 }
+function spAntwort(R, wahl, knopf) {
+  if (R.antwort !== null) return;
+  R.antwort = wahl; spPause();
+  const ok = wahl === R.T, p = ok ? Math.max(4, 13 - 3 * Math.max(1, R.gehoert)) : 0;
+  $('ton-song').querySelectorAll('[data-o]').forEach((b) => { b.disabled = true; if (R.optionen[Number(b.dataset.o)] === R.T) b.classList.add('richtig'); });
+  if (!ok) knopf.classList.add('falsch');
+  spAuswerten(R, p, (ok ? '✅ Erkannt' + (R.gehoert <= 1 ? ' – nach einmal Hören!' : ' – nach ' + R.gehoert + '× Hören.') : '❌ Das war') + '<br><b>' + spEsc(R.T.name) + '</b> · ' + spEsc(R.T.kuenstler) + (R.T.jahr ? ' · ' + R.T.jahr : ''));
+}
+function spJahrAntwort(R, jahr) {
+  if (R.antwort !== null) return;
+  R.antwort = jahr; spPause();
+  const d = Math.abs(jahr - R.T.jahr), S = SP_JAHR_STUFEN[sp.stufe], p = Math.max(0, Math.round((10 - d * S.je) * 10) / 10);
+  $('spJahr').disabled = true; $('spJahrOk').hidden = true; $('ton-song').querySelectorAll('.sp-pm').forEach((b) => { b.disabled = true; });
+  spAuswerten(R, p, (d === 0 ? '🎯 Genau getroffen!' : d <= 2 ? '👍 Fast – ' + d + ' Jahr' + (d === 1 ? '' : 'e') + ' daneben.' : d <= 6 ? '🟡 ' + d + ' Jahre daneben.' : '❌ ' + d + ' Jahre daneben.') + ' Erschienen: <b>' + R.T.jahr + '</b><br><b>' + spEsc(R.T.name) + '</b> · ' + spEsc(R.T.kuenstler) + '<br><small>+' + fmt(p) + ' Punkte · Jahr laut Spotify-Album (bei Best-of-Alben manchmal später)</small>');
+}
 function spEnde() {
-  const max = sp.runden.length * 10, summe = Math.round((sp.punkte.reduce((a, b) => a + b, 0) / max) * 50 * 10) / 10, k = 'spotify-' + sp.stufe;
+  const max = sp.runden.length * 10, summe = Math.round((sp.punkte.reduce((a, b) => a + b, 0) / max) * 50 * 10) / 10;
+  const k = sp.modus === 'jahr' ? 'spotify-jahr-' + sp.stufe : 'spotify-' + sp.stufe;
   const st = tonStore(); st.song = st.song || {}; const alt = st.song[k] != null ? st.song[k] : null; st.song[k] = Math.max(alt || 0, summe); saveJson(TON_KEY, st);
-  const stufeName = { leicht: 'Leicht', mittel: 'Mittel', profi: 'Profi' }[sp.stufe];
-  if (typeof merkeVerlauf === 'function') merkeVerlauf('toene', summe, 50, 'Song-Rätsel: Spotify · ' + stufeName, { stufe: sp.stufe === 'profi' ? 'schwer' : sp.stufe, modus: 'song-spotify', rekord: alt != null && summe > alt });
-  $('ton-song').innerHTML = '<div class="ton-merk">🟢 Song erkennen · ' + stufeName + '</div><div class="farb-summe">' + fmt(summe) + ' / 50</div>'
-    + '<p class="gb-info">' + (summe >= 45 ? 'Du kennst deine Musik!' : summe >= 30 ? 'Gut erkannt.' : 'Gar nicht so leicht, oder?') + (alt != null && summe > alt ? ' 🏆 Neuer Bestwert!' : alt != null ? ' Bestwert: ' + fmt(alt) : '') + '</p>'
+  const stufeName = { leicht: 'Leicht', mittel: 'Mittel', profi: 'Profi' }[sp.stufe], M = SP_MODI[sp.modus];
+  if (typeof merkeVerlauf === 'function') merkeVerlauf('songs', summe, 50, 'Spotify · ' + M.name + ' · ' + sp.kat.name + ' · ' + stufeName, { stufe: sp.stufe === 'profi' ? 'schwer' : sp.stufe, modus: 'spotify-' + sp.modus, kat: sp.kat.id, rekord: alt != null && summe > alt });
+  $('ton-song').innerHTML = '<div class="ton-merk">' + M.emoji + ' ' + M.name + ' · ' + sp.kat.emoji + ' ' + sp.kat.name + '</div><div class="farb-summe">' + fmt(summe) + ' / 50</div>'
+    + '<p class="gb-info">' + (summe >= 45 ? 'Du kennst deine Musik!' : summe >= 30 ? 'Gut gehört.' : 'Gar nicht so leicht, oder?') + (alt != null && summe > alt ? ' 🏆 Neuer Bestwert!' : alt != null ? ' Bestwert: ' + fmt(alt) : '') + '</p>'
+    + '<ul class="sp-rueckblick">' + sp.runden.map((R, i) => '<li>' + (R.T.bild ? '<img src="' + spEsc(R.T.bild) + '" alt="" width="40" height="40">' : '<span>🎵</span>') + '<span><b>' + spEsc(R.T.name) + '</b><small>' + spEsc(R.T.kuenstler) + (R.T.jahr ? ' · ' + R.T.jahr : '') + '</small></span><em>' + fmt(sp.punkte[i] || 0) + '</em></li>').join('') + '</ul>'
     + '<div class="gb-knoepfe"><button type="button" class="btn ton-gross" id="spNochmalSpiel">Nochmal</button><button type="button" class="btn secondary" id="srZurMenue">Zum Song-Rätsel</button></div>';
   $('spNochmalSpiel').addEventListener('click', () => spStart(sp.stufe));
   $('srZurMenue').addEventListener('click', () => srMenue());
@@ -183,8 +283,8 @@ function spMenueHtml() {
   if (fehler) { delete st.fehler; spSave(st); }
   return '<div class="sr-eigen sp-box"><h3>🟢 Spotify</h3>'
     + (fehler ? '<div class="gb-text sp-fehler">' + fehler.replace(/</g, '&lt;') + '</div>' : '')
-    + (an ? '<p class="gb-fein">✅ Verbunden. Modus „Song erkennen“: kurze Ausschnitte aus deinen Lieblingssongs und Meistgehörten – welcher ist es? Läuft über deine Spotify-App (vorher einmal öffnen).</p><div class="gb-knoepfe"><button type="button" class="btn ton-gross" id="spLos">▶︎ Song erkennen</button><button type="button" class="btn secondary" id="spAb">Trennen</button></div>'
-      : '<p class="gb-fein">Spielt Ausschnitte aus <b>deiner</b> Bibliothek über deine Spotify-App (Premium nötig). Rückwärts und Tonerkennung gehen mit Spotify nicht – dafür eigene Dateien nehmen.</p>'
+    + (an ? spSpielwahlHtml()
+      : '<p class="gb-fein">Zufällige Songs nach Kategorie (80er Pop, Rock-Klassiker, Aktuelle Hits …) oder aus deiner Bibliothek – Titel erkennen oder Jahr schätzen. Läuft über deine Spotify-App (Premium nötig).</p>'
       + '<details class="sr-warum sp-anleitung"' + (st.clientId ? '' : ' open') + '><summary>Einmalig einrichten (kostenlos, ca. 3 Minuten)</summary><ol>'
       + '<li>Am Computer oder Handy <b>developer.spotify.com/dashboard</b> öffnen und mit deinem Spotify-Konto anmelden.</li>'
       + '<li><b>Create app</b>: Name z. B. „Spielekiste“, Beschreibung egal, bei „Which API/SDKs“ <b>Web API</b> ankreuzen.</li>'
@@ -195,8 +295,22 @@ function spMenueHtml() {
       + '<button type="button" class="btn ton-gross" id="spVerbinden">🟢 Mit Spotify verbinden</button>')
     + '</div>';
 }
+function spSpielwahlHtml() {
+  const W = spWahl(), best = tonStore().song || {}, stufe = (sr && sr.stufe) || 'leicht', K = spKat(W.kat);
+  const b = best[W.modus === 'jahr' ? 'spotify-jahr-' + stufe : 'spotify-' + stufe];
+  return '<div class="gb-modi sr-modi">' + Object.entries(SP_MODI).map(([k, m]) => '<button type="button" class="gb-modus' + (k === W.modus ? ' on' : '') + '" data-spm="' + k + '"><span>' + m.emoji + '</span><b>' + m.name + '</b><small>' + m.text + '</small></button>').join('') + '</div>'
+    + '<div class="sp-kats">' + SP_KATEGORIEN.map((k) => '<button type="button" data-kat="' + k.id + '" class="' + (k.id === W.kat ? 'on' : '') + '"><span>' + k.emoji + '</span>' + k.name + '</button>').join('') + '</div>'
+    + (K.id === 'bib' ? '<p class="gb-fein">' + K.text + '</p>' : '<div class="sr-quelle sp-hits"><button type="button" data-hits="1" class="' + (W.hits ? 'on' : '') + '">⭐ Große Hits<small>bekannte Songs</small></button><button type="button" data-hits="0" class="' + (W.hits ? '' : 'on') + '">🔍 Auch Unbekanntes<small>tiefer in den Katalog</small></button></div>')
+    + '<p class="gb-fein">' + SR_STUFE_NAMEN[stufe] + ': ' + (W.modus === 'jahr' ? SP_JAHR_STUFEN : SP_STUFEN)[stufe].text + (b != null ? ' · Bestwert ' + fmt(b) + ' / 50' : '') + '</p>'
+    + '<button type="button" class="btn ton-gross" id="spLos">▶︎ ' + K.emoji + ' ' + K.name + ' – los!</button>'
+    + '<p class="gb-fein">Läuft über deine Spotify-App – vorher einmal öffnen. <button type="button" class="sp-kopier" id="spAb">Spotify trennen</button></p>';
+}
+function spWahlSetzen(x) { const st = spStore(); st.wahl = { ...spWahl(), ...x }; spSave(st); srMenue(); }
 function spMenueVerdrahten() {
   if ($('spLos')) $('spLos').addEventListener('click', () => spStart(sr.stufe || 'leicht'));
+  document.querySelectorAll('[data-spm]').forEach((b) => b.addEventListener('click', () => spWahlSetzen({ modus: b.dataset.spm })));
+  document.querySelectorAll('[data-kat]').forEach((b) => b.addEventListener('click', () => spWahlSetzen({ kat: b.dataset.kat })));
+  document.querySelectorAll('[data-hits]').forEach((b) => b.addEventListener('click', () => spWahlSetzen({ hits: b.dataset.hits === '1' })));
   if ($('spAb')) $('spAb').addEventListener('click', () => { spAbmelden(); srMenue(); });
   if ($('spKopier')) $('spKopier').addEventListener('click', () => { try { navigator.clipboard.writeText(spRedirect()); $('spKopier').textContent = 'Kopiert ✓'; } catch (e) { /* manuell */ } });
   if ($('spVerbinden')) $('spVerbinden').addEventListener('click', () => {
@@ -208,6 +322,6 @@ function spMenueVerdrahten() {
 // Rückkehr nach der Anmeldung → direkt ins Song-Rätsel
 spRueckkehr().then((war) => {
   if (!war) return;
-  const los = () => { try { show('toene', '🎧 Ton-Gedächtnis'); sr = null; srMenue(); setTimeout(() => { const b = document.querySelector('.sp-box'); if (b) b.scrollIntoView({ block: 'center' }); }, 200); } catch (e) { /* App noch nicht bereit */ } };
+  const los = () => { try { sr = null; srMenue(); setTimeout(() => { const b = document.querySelector('.sp-box'); if (b) b.scrollIntoView({ block: 'center' }); }, 200); } catch (e) { /* App noch nicht bereit */ } };
   if (document.readyState === 'complete') setTimeout(los, 300); else window.addEventListener('load', () => setTimeout(los, 300));
 });

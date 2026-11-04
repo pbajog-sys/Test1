@@ -89,7 +89,7 @@ header h1 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes einblenden { from { opacity: 0; } to { opacity: 1; } }
 /* Die Spiele haben eine eigene Vollbild-Bühne (position: fixed). Eine Animation mit transform auf dem
    Bildschirm würde Safari dazu bringen, die Bühne nur innerhalb des Bildschirms zu zeichnen („Fenster im Fenster“). */
-#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-funktion.active, #screen-zufall.active, #screen-zahlen.active, #screen-tierleben.active, #screen-piranha.active, #screen-slo.active, #screen-sk.active, #screen-dopamin.active, #screen-labor.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-riff.active, #screen-krimi.active { animation: none; }
+#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-funktion.active, #screen-zufall.active, #screen-zahlen.active, #screen-tierleben.active, #screen-piranha.active, #screen-slo.active, #screen-sk.active, #screen-dopamin.active, #screen-songs.active, #screen-labor.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-riff.active, #screen-krimi.active { animation: none; }
 @keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
@@ -3312,3 +3312,35 @@ button.slo-maskottchen.looping { animation: sloLooping 1.1s var(--ease-out); }
 .sr-platte.sp i { background: conic-gradient(#1ed760, #a7f3d0, #1ed760); }
 .sp-optionen .gb-opt { text-align: left; } .sp-optionen .gb-opt b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .sp-optionen .gb-opt small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+/* 🎵 Song-Rätsel als eigene App */
+.hub-songs { background: linear-gradient(#06120b, #06120b) padding-box, linear-gradient(90deg, #1ed760, #a78bfa, #f472b6, #1ed760) border-box; background-size: 100% 100%, 300% 100%; }
+.hub-songs .hg-titel { background: linear-gradient(90deg, #4ade80, #c4b5fd, #f9a8d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hg-av-songs { --ring: conic-gradient(#1ed760, #a78bfa, #f472b6, #1ed760); }
+.hg-av-songs > .hg-in { background: #0b0b10; display: grid; place-items: center; }
+.sr-mini { width: 78%; height: 78%; border-radius: 50%; background: repeating-radial-gradient(circle, #111 0 2px, #26262f 2px 4px); display: grid; place-items: center; animation: srDreh 6s linear infinite; }
+.sr-mini i { width: 38%; height: 38%; border-radius: 50%; background: conic-gradient(#1ed760, #a78bfa, #f472b6, #1ed760); }
+@media (prefers-reduced-motion: reduce) { .sr-mini, .sr-platte.dreht-langsam { animation: none; } }
+.sr-held { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; }
+.sr-titel { margin: 0; font-size: 1.8rem; background: linear-gradient(90deg, #4ade80, #c4b5fd, #f9a8d4); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.sr-held .gb-fein { text-align: left; }
+.sr-platte.gross { width: 92px; height: 92px; }
+.sr-platte.dreht-langsam { animation: srDreh 5s linear infinite; }
+.sr-ohne .gb-fein { text-align: center; }
+.sr-verweis { margin-top: 4px; }
+.sp-kats { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+.sp-kats button { display: flex; align-items: center; gap: 6px; padding: 9px 8px; border: 2px solid rgba(255,255,255,.12); border-radius: 12px; background: rgba(255,255,255,.04); color: inherit; font: inherit; font-size: .8rem; font-weight: 700; text-align: left; cursor: pointer; line-height: 1.15; }
+.sp-kats button span { font-size: 1.15rem; }
+.sp-kats button.on { border-color: #1ed760; background: rgba(30,215,96,.18); }
+.sp-hits button.on { border-color: #1ed760; background: rgba(30,215,96,.16); }
+.sp-jahr { display: flex; justify-content: center; align-items: center; gap: 18px; }
+.sp-jahr output { font-size: 3rem; font-weight: 800; font-variant-numeric: tabular-nums; min-width: 4ch; text-align: center; color: #a7f3d0; }
+.sp-pm { width: 52px; height: 52px; border: 0; border-radius: 50%; background: rgba(255,255,255,.1); color: inherit; font: inherit; font-size: 1.6rem; font-weight: 800; cursor: pointer; }
+.sp-aufloesung { display: flex; gap: 12px; align-items: center; } .sp-aufloesung img { border-radius: 8px; flex: none; }
+.sp-rueckblick { list-style: none; margin: 0; padding: 0; display: grid; gap: 6px; }
+.sp-rueckblick li { display: grid; grid-template-columns: 40px 1fr auto; gap: 10px; align-items: center; padding: 6px 10px 6px 6px; border-radius: 12px; background: rgba(255,255,255,.05); }
+.sp-rueckblick img { border-radius: 6px; } .sp-rueckblick li > span:first-child { font-size: 1.5rem; text-align: center; }
+.sp-rueckblick b, .sp-rueckblick small { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .sp-rueckblick small { color: #8fb5b0; font-size: .75rem; }
+.sp-rueckblick em { font-style: normal; font-weight: 800; color: #a7f3d0; font-variant-numeric: tabular-nums; }
+.sp-box .gb-fein .sp-kopier { margin-left: 6px; }
+.bu-songs span { display: inline-block; animation: srDreh 7s linear infinite; }
+@media (prefers-reduced-motion: reduce) { .bu-songs span { animation: none; } }
