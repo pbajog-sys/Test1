@@ -374,6 +374,19 @@ Eigenes Puzzle im Genre „Farben sortieren und Pixelbild abbauen“, mit Amazon
   Spieler-Simulation Schwärme parken muss (ab Level 1, ab Level 5 drei von vier Buchten), aber noch gewinnt – garantiert lösbar.
 - Alles passt auf einen Bildschirm (Bild so breit wie möglich, Höhlenreihen passen sich an). Tipp, Rückgängig, Tagesbild.
 
+## 🧠💥 Dopamin-Maschine
+Ein absichtlich überladenes Spiel (`dopamin.js`) und zugleich ein Experiment im Labor:
+- **Drei Spiele gleichzeitig:** 🫧 Blasen antippen (goldene geben Bonus), 🧱 Blöcke im richtigen Moment stapeln („PERFEKT“ macht
+  den Block wieder breiter), 🎰 Glücksrad (Punkte füllen die Energie).
+- **Darunter** läuft ein selbstgezeichnetes Block-Parkour als endloses „Video“ (Block-Fuchs, Lava, Lücken, Respawn).
+- **Mechaniken:** Combo und Multiplikator bis ×10, Level mit immer etwas längerem Balken, Zufallsgewinne, Jackpot (4 %),
+  eingebaute Beinahe-Gewinne (35 % der Drehungen), Konfetti, Wackeln, Töne, die mit der Combo höher werden, pulsierende Farben.
+- **Sicherheit:** kein Stroboskop. Farbwechsel sind weich, kurzes Aufhellen höchstens alle 500 ms (gemessen im Test: 0,3 pro
+  Sekunde). Vorher gibt es einen Hinweis und einen „Ruhig“-Modus. Alle 5 Minuten kommt ein Pausen-Hinweis, die Spielzeit ist immer sichtbar.
+- **Auflösung am Ende:** Punkte (wert: 0 €), Spielzeit, Belohnungen pro Minute und jeder Trick mit der Zahl, wie oft er
+  benutzt wurde: Zufallsbelohnungen, Beinahe-Gewinne, Fortschritt ohne Ende, Verlustangst, Aufmerksamkeitswechsel, Töne
+  und Farben. Test: `tests/dopamin.test.js`.
+
 ## 🐉 Slowenisch mit Zmajček
 Eigenes Sprachlernspiel (`slo.js`): Mit Zmajček, dem kleinen Drachen aus dem Wappen von Ljubljana, reist man durch Slowenien.
 - **20 Stationen mit 241 Wörtern und 122 Sätzen:** Ljubljana (Begrüßen), Bled (Sich vorstellen), Piran (Zahlen), Postojna (Farben),

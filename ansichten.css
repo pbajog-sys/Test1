@@ -13,8 +13,8 @@
   .app { max-width: 1180px; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
   .spalten { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 32px; align-items: start; }
   .spalte { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
-  .farb-buehne > *, .cello-buehne > *, .ton-buehne > *, .takt-buehne > *, .pw-buehne > *, .fd-buehne > *, .zf-buehne > *, .zl-buehne > *, .tl-buehne > *, .pr-buehne > *, .slo-buehne > *, .sk-buehne > *, .lab-buehne > *, .ag-buehne > *, .kt-buehne > *, .vl-buehne > *, .tg-buehne > *, .rf-buehne > *, .krimi-buehne > * { max-width: 1100px; }
-  .farb-buehne, .cello-buehne, .ton-buehne, .takt-buehne, .pw-buehne, .fd-buehne, .zf-buehne, .zl-buehne, .tl-buehne, .pr-buehne, .slo-buehne, .sk-buehne, .lab-buehne, .ag-buehne, .kt-buehne, .vl-buehne, .tg-buehne, .rf-buehne, .krimi-buehne { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .farb-buehne > *, .cello-buehne > *, .ton-buehne > *, .takt-buehne > *, .pw-buehne > *, .fd-buehne > *, .zf-buehne > *, .zl-buehne > *, .tl-buehne > *, .pr-buehne > *, .slo-buehne > *, .sk-buehne > *, .dp-buehne > *, .lab-buehne > *, .ag-buehne > *, .kt-buehne > *, .vl-buehne > *, .tg-buehne > *, .rf-buehne > *, .krimi-buehne > * { max-width: 1100px; }
+  .farb-buehne, .cello-buehne, .ton-buehne, .takt-buehne, .pw-buehne, .fd-buehne, .zf-buehne, .zl-buehne, .tl-buehne, .pr-buehne, .slo-buehne, .sk-buehne, .dp-buehne, .lab-buehne, .ag-buehne, .kt-buehne, .vl-buehne, .tg-buehne, .rf-buehne, .krimi-buehne { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
 
   /* Dashboard: links die Games, rechts die Bestenliste */
   .hub-spalten .spalte-b .hub-h:first-child { margin-top: 0; }

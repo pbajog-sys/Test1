@@ -197,6 +197,8 @@ function renderHub() {
   $('hubPiranhaBest').textContent = prSt.level > 1 ? 'Level ' + prSt.level + ' · ⭐ ' + prS : 'Noch nicht gespielt';
   const sloSt = loadJson('walquiz.slo.v1'), sloF = Object.values(sloSt.stufe || {}).filter((x) => x >= 3).length, sloB = Object.keys(sloSt.stufe || {}).length;
   $('hubSloBest').textContent = sloSt.xp ? '⚡ ' + sloSt.xp + ' XP · ' + sloB + ' von ' + (typeof SLO_EINHEITEN !== 'undefined' ? SLO_EINHEITEN.length : 20) + ' Stationen' + (sloF ? ' · 👑 ' + sloF : '') : 'Noch nicht begonnen';
+  const dpSt = loadJson('walquiz.dopamin.v1');
+  if ($('hubDopaminBest')) $('hubDopaminBest').textContent = dpSt.best ? 'Bestwert ' + fmt(dpSt.best) + ' · ' + dpSt.runden + ' Runden' : 'Noch nicht gespielt';
   const krimi = loadJson('walquiz.krimi.v1');
   const summe = (o) => Object.values((o && o.geloest) || {}).reduce((x, y) => x + y, 0);
   const faelle = summe(krimi) + Object.values(krimi.modi || {}).reduce((x, m) => x + summe(m), 0);

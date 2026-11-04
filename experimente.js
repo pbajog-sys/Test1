@@ -8,6 +8,7 @@ const LAB_START = Date.UTC(2026, 0, 5);   // Montag der ersten Versuchswoche
 const LAB_EXPERIMENTE = [
   { id: 'grau', emoji: '◐', titel: 'Das Grau, das lügt', teaser: 'Stell sechs Grautöne nach. Klingt leicht.', frage: 'Wie stark verändert die Umgebung, was du siehst?', dauer: '2 Minuten', art: 'eigen', start: labGrau },
   { id: 'anker', emoji: '⚓', titel: 'Der Anker im Kopf', teaser: 'Sechs Schätzfragen. Eine harmlose Vorfrage vor jeder.', frage: 'Lässt du dich von einer Zahl lenken, die gar nichts bedeutet?', dauer: '3 Minuten', art: 'eigen', start: labAnker },
+  { id: 'dopamin', emoji: '🧠', titel: 'Die Dopamin-Maschine', teaser: 'Drei Spiele gleichzeitig, Parkour im Hintergrund. Wie lange hältst du durch?', frage: 'Mit welchen Tricks halten Spiele und Apps uns fest?', dauer: '3 Minuten', art: 'spiel', spiel: 'dopamin', hub: 'hubDopamin' },
   { id: 'tierleben', emoji: '🐾', titel: 'Ein Leben in 42 Tagen', teaser: 'Werde für ein paar Minuten ein Tier. Ausgelost wie in Wirklichkeit.', frage: 'Wie fühlt sich ein Leben an, das für uns geplant ist?', dauer: '5 Minuten', art: 'spiel', spiel: 'tierleben', hub: 'hubTierleben' },
 ];
 

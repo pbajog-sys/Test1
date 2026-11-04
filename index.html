@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=96">
+<link rel="stylesheet" href="fonts/fonts.css?v=97">
 <link rel="icon" href="icons/favicon-64.png?v=3" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=96">
-<link rel="stylesheet" href="ansichten.css?v=96">
+<link rel="stylesheet" href="stil.css?v=97">
+<link rel="stylesheet" href="ansichten.css?v=97">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -551,6 +551,11 @@
     <button class="hub-game hub-zahlen" id="hubZahlen" type="button" data-regen="📊,🎂,🌍,✨">
       <span class="hg-av hg-av-zahlen" aria-hidden="true"><span class="hg-in"><span class="zl-mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
       <span class="hg-text"><span class="hg-titel">Du in Zahlen</span><span class="hg-sub">Dein Leben in Wochen, Herzschlägen, Lichtjahren – mit echten Daten.</span><span class="hg-best">Kein Spiel, sondern Staunen</span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-dopamin" id="hubDopamin" type="button" data-regen="🧠,💥,🎰,🔥">
+      <span class="hg-av hg-av-dopamin" aria-hidden="true"><span class="hg-in"><span class="dp-mini">🎰<i>+100</i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Dopamin-Maschine</span><span class="hg-sub">Drei Spiele gleichzeitig plus Parkour-Video. Und am Ende die Wahrheit.</span><span class="hg-best" id="hubDopaminBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-tierleben" id="hubTierleben" type="button" data-regen="🐾,🐔,🐋,🦧">
@@ -1867,6 +1872,12 @@
     </div>
   </section>
 
+  <section class="screen" id="screen-dopamin">
+    <div class="dp-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="dpZurueck" type="button" aria-label="Zurück">←</button><span>🧠 Dopamin-Maschine</span></div>
+      <div id="dpInhalt" class="dp-inhalt"></div>
+    </div>
+  </section>
   <section class="screen" id="screen-sk">
     <div class="sk-buehne">
       <div class="farb-kopf"><button class="icon-btn" id="skZurueck" type="button" aria-label="Zurück">←</button><span>🧬 Dein Profil</span></div>
@@ -2115,46 +2126,47 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=96"></script>
-<script src="haie.js?v=96"></script>
-<script src="porsche.js?v=96"></script>
-<script src="dackel.js?v=96"></script>
-<script src="groesse.js?v=96"></script>
-<script src="gretchen.js?v=96"></script>
-<script src="effekte.js?v=96"></script>
-<script src="app.js?v=96"></script>
-<script src="melden.js?v=96"></script>
-<script src="verlauf.js?v=96"></script>
-<script src="hub.js?v=96"></script>
-<script src="farben.js?v=96"></script>
-<script src="cello.js?v=96"></script>
-<script src="instrumente.js?v=96"></script>
-<script src="toene.js?v=96"></script>
-<script src="gehoer.js?v=96"></script>
-<script src="takt.js?v=96"></script>
-<script src="punkte.js?v=96"></script>
-<script src="funktion.js?v=96"></script>
-<script src="zufall.js?v=96"></script>
-<script src="zahlen.js?v=96"></script>
-<script src="tierleben.js?v=96"></script>
-<script src="tierpixel.js?v=96"></script>
-<script src="piranha.js?v=96"></script>
-<script src="slo.js?v=96"></script>
-<script src="augen.js?v=96"></script>
-<script src="karten-daten.js?v=96"></script>
-<script src="karte.js?v=96"></script>
-<script src="tiefgang.js?v=96"></script>
-<script src="riff.js?v=96"></script>
-<script src="krimi-grafik.js?v=96"></script>
-<script src="krimi.js?v=96"></script>
-<script src="krimi-wachen.js?v=96"></script>
-<script src="krimi-verhoer.js?v=96"></script>
-<script src="krimi-alibi.js?v=96"></script>
-<script src="krimi-akte.js?v=96"></script>
-<script src="krimi-zentrale.js?v=96"></script>
-<script src="profile.js?v=96"></script>
-<script src="fuehrung.js?v=96"></script>
-<script src="experimente.js?v=96"></script>
-<script src="plattform.js?v=96"></script>
+<script src="wale.js?v=97"></script>
+<script src="haie.js?v=97"></script>
+<script src="porsche.js?v=97"></script>
+<script src="dackel.js?v=97"></script>
+<script src="groesse.js?v=97"></script>
+<script src="gretchen.js?v=97"></script>
+<script src="effekte.js?v=97"></script>
+<script src="app.js?v=97"></script>
+<script src="melden.js?v=97"></script>
+<script src="verlauf.js?v=97"></script>
+<script src="hub.js?v=97"></script>
+<script src="farben.js?v=97"></script>
+<script src="cello.js?v=97"></script>
+<script src="instrumente.js?v=97"></script>
+<script src="toene.js?v=97"></script>
+<script src="gehoer.js?v=97"></script>
+<script src="takt.js?v=97"></script>
+<script src="punkte.js?v=97"></script>
+<script src="funktion.js?v=97"></script>
+<script src="zufall.js?v=97"></script>
+<script src="zahlen.js?v=97"></script>
+<script src="tierleben.js?v=97"></script>
+<script src="tierpixel.js?v=97"></script>
+<script src="piranha.js?v=97"></script>
+<script src="slo.js?v=97"></script>
+<script src="augen.js?v=97"></script>
+<script src="karten-daten.js?v=97"></script>
+<script src="karte.js?v=97"></script>
+<script src="tiefgang.js?v=97"></script>
+<script src="riff.js?v=97"></script>
+<script src="krimi-grafik.js?v=97"></script>
+<script src="krimi.js?v=97"></script>
+<script src="krimi-wachen.js?v=97"></script>
+<script src="krimi-verhoer.js?v=97"></script>
+<script src="krimi-alibi.js?v=97"></script>
+<script src="krimi-akte.js?v=97"></script>
+<script src="krimi-zentrale.js?v=97"></script>
+<script src="profile.js?v=97"></script>
+<script src="fuehrung.js?v=97"></script>
+<script src="dopamin.js?v=97"></script>
+<script src="experimente.js?v=97"></script>
+<script src="plattform.js?v=97"></script>
 </body>
 </html>
