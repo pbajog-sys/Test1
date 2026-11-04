@@ -405,7 +405,6 @@ function sloKarte() {
   $('sloPfad').innerHTML = SLO_EINHEITEN.map((u, i) => {
     const s = st.stufe[u.id] || 0, offen = sloOffen(st, i), seite = ['links', 'mitte', 'rechts', 'mitte'][i % 4];
     return '<div class="slo-station slo-' + seite + (offen ? '' : ' zu') + (s >= 3 ? ' fertig' : '') + (i === jetzt ? ' jetzt' : '') + '" style="--f:' + u.farbe + '">'
-      + '<div class="slo-deko">' + sloSzene(u.id, u.farbe) + '</div>'
       + (i === jetzt ? '<button type="button" class="slo-maskottchen" id="sloMaskottchen" aria-label="Zmajček">' + sloDrache('froh') + '<span class="slo-blase"><b>' + spruch[0] + '</b><small>' + spruch[1] + '</small></span></button>' : '')
       + '<button type="button" class="slo-knoten" data-u="' + u.id + '"' + (offen ? '' : ' aria-disabled="true"') + ' aria-label="' + u.ort + ': ' + u.de + '">'
       + '<span class="slo-ort-emoji">' + (offen ? u.ortEmoji : '🔒') + '</span>'
@@ -530,7 +529,7 @@ function sloEnde() {
   if (typeof merkeVerlauf === 'function') merkeVerlauf('slo', Math.round(quote * 100), 100, was);
   const sek = Math.round((Date.now() - slo.start) / 1000), heute = st.tage[tagSchluessel()], ziel = heute >= SLO_TAGESZIEL && heute - xp < SLO_TAGESZIEL;
   const fertigU = neueStufe && slo.stufe === 3;
-  $('slo-ende').innerHTML = '<div class="slo-ende-szene">' + (slo.u ? sloSzene(slo.u.id, slo.u.farbe) : sloSzene('pozdravi', '#22c55e')) + '<div class="slo-ende-drache">' + sloDrache('jubel') + '</div></div>'
+  $('slo-ende').innerHTML = '<div class="slo-ende-drache slo-ende-flug">' + sloDrache('jubel') + '</div>'
     + '<h2 class="slo-ende-titel">' + (fehlerfrei ? 'Brez napake!' : quote >= 0.8 ? 'Odlično!' : 'Dobro opravljeno!') + '</h2>'
     + '<p class="slo-ende-sub">' + (fehlerfrei ? 'Ohne einen Fehler!' : quote >= 0.8 ? 'Ausgezeichnet!' : 'Gut gemacht!') + ' · ' + sloEsc(was) + '</p>'
     + '<div class="slo-ende-werte"><div><b>+' + xp + '</b>XP</div><div><b>' + Math.round(quote * 100) + ' %</b>richtig</div><div><b>' + Math.floor(sek / 60) + ':' + String(sek % 60).padStart(2, '0') + '</b>Zeit</div></div>'

@@ -28,7 +28,7 @@ const pruefe = (n, b, i = '') => { b ? ok++ : fail++; console.log((b ? '✓ ' : 
     };
   });
   pruefe('Sprach-Urteil: Stille ✗, zu kurz ✗, passend ✓, viel zu lang ✗', !urteile.stille && !urteile.kurz && urteile.passend && !urteile.lang, JSON.stringify(urteile));
-  pruefe('Landschaften an allen Stationen', await p.evaluate(() => document.querySelectorAll('.slo-deko svg').length === SLO_EINHEITEN.length));
+  pruefe('Keine generierten Landschaften mehr (nur Hintergrundbild und Drache)', await p.evaluate(() => !document.querySelector('.slo-deko') && document.querySelectorAll('.slo-station').length === SLO_EINHEITEN.length));
   pruefe('Drache mit Flügeln auf der Karte', await p.evaluate(() => !!document.querySelector('#sloMaskottchen .slo-fl-l')));
   await p.click('#sloMaskottchen', { force: true }); await p.waitForTimeout(300);
   pruefe('Drache antippen → Looping', await p.evaluate(() => $('sloMaskottchen').classList.contains('looping')));

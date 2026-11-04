@@ -3194,3 +3194,4 @@ button.slo-maskottchen.looping { animation: sloLooping 1.1s var(--ease-out); }
 #slo-karte .slo-pfad { background: rgba(8,17,26,.18); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); }
 .slo-status { background: rgba(8,17,26,.72); }
 .slo-fuss { background: rgba(10,21,32,.94); }
+.slo-ende-flug { animation: sloKreis 5s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { .slo-ende-flug { animation: none; } }
