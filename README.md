@@ -116,6 +116,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `cello.js` – Cello-Noten
 - `instrumente.js` – Noten & Griffe für Klavier, Gitarre, Ukulele
 - `toene.js` – Ton-Gedächtnis
+- `songs.js` – Song-Rätsel im Ton-Gedächtnis (Wie geht’s weiter? / Rückwärts, eigene Songs)
 - `takt.js` – Takt-Gefühl (Zeitgefühl, Tempo, Taktart)
 - `verlauf.js` – Verlauf & Statistik
 - `tiefgang.js` – Tiefgang
@@ -224,6 +225,23 @@ wiederholbar, Mittel 2 s, Profi 1 s), danach sucht man ihn mit einem logarithmis
 Abstand in Cent (100 Cent = ein Halbton; 10 − Cent/50, ab einer Quarte 0). Auswertung: Frequenz und nächste Note
 (z. B. „A4 +20 ct“) für Original und eigenen Ton, Differenz in Hz und Cent, Tipp („1,2 Halbtöne zu hoch“),
 Position auf der Skala, beide Töne zum Vergleichen. Tagestöne, Bestwerte, Challenge-Links. Code in `toene.js`.
+
+## 🎵 Song-Rätsel (im Ton-Gedächtnis)
+Zwei Modi (`songs.js`), je 5 Runden, bis zu 50 Punkte, Bestwerte und Verlauf wie die anderen Ton-Übungen:
+- **⏸️ Wie geht’s weiter?** Ein Lied läuft und stoppt – auf der Klaviertastatur den nächsten Ton suchen (Tasten zum
+  Ausprobieren antippen, dann bestätigen; Oktave egal). Leicht: von vorn, Titel sichtbar, nur Töne aus dem Lied. Mittel:
+  mitten im Lied, Titel geheim. Profi: kurzer Ausschnitt in zufälliger anderer Tonart. Richtig 10, ein Halbton daneben 3.
+- **⏪ Rückwärts:** Ein Ausschnitt läuft wirklich rückwärts (umgedrehte Audiodaten) – welches Lied? 3/4/6 Antworten,
+  höchstens 3/2/1× hören, früheres Erkennen gibt mehr Punkte (10/7/4). Danach läuft er vorwärts.
+- **Quellen:** 14 gemeinfreie Lieder (Alle meine Entchen, Bruder Jakob, Stille Nacht, Für Elise, Jingle Bells …), offline
+  als Klavierklang gerendert – oder **eigene Songs** (MP3/M4A/WAV … aus der Dateien-App). Diese bleiben nur im Browser
+  (IndexedDB), nichts wird hochgeladen. Bei eigenen Songs erkennt ein YIN-Tonhöhendetektor eine Stelle, an der ein neuer,
+  klar gehaltener Ton beginnt; dort stoppt das Lied. Volle Mischungen können falsch erkannt werden – dann lässt sich die
+  Runde streichen.
+- **Warum nicht Spotify/YouTube:** Spotify liefert seit November 2024 keine Hörproben mehr, Abspielen braucht Premium,
+  Login und Entwicklerzugang, der Ton ist kopiergeschützt. YouTube läuft nur im fremden iframe, dessen Ton eine Web-App
+  weder umdrehen noch analysieren kann.
+- Test: `tests/songs.test.js` (erzeugt zwei WAV-Testsongs mit bekannten Tönen, prüft Erkennung, Speichern, beide Modi).
 
 ## 🎼 Gehörbildung (im Ton-Gedächtnis)
 Unter dem normalen Ton-Gedächtnis liegen drei Übungen (`gehoer.js`), mit deutschen Notennamen (… A, B, H) und weichem

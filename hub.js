@@ -217,6 +217,7 @@ $('hubQuizzes').addEventListener('click', () => zoomZu($('hubQuizzes'), zeigeQui
 $('quizzeZurueck').addEventListener('click', zeigeHub);
 
 function zeigeHub() {
+  if (typeof srStopp === 'function') srStopp();
   setHubTheme();
   renderHub();
   show('hub');
