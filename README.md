@@ -397,7 +397,11 @@ Eigenes Sprachlernspiel (`slo.js`): Mit Zmajček, dem kleinen Drachen aus dem Wa
 - **Reise-Karte als ein langes Bild:** Das Slowenien-Bild (`img/slo/reise-slowenien.webp`) scrollt mit, 1,7-fach in die Höhe gezogen.
   Die 20 Stationen sitzen auf dem gemalten, leuchtenden Weg (`SLO_PFAD`), in gleichen Höhenabständen entlang des Weges. Die
   Positionen wurden aus den Pfad-Pixeln des Bildes ermittelt. Die Reise beginnt unten bei der Fahne (Ljubljana) und führt hinauf
-  zu den Bergen; beim Öffnen springt die Karte zur aktuellen Station. Hinter der übrigen App liegt dasselbe Bild abgedunkelt.
+  zu den Bergen; beim Öffnen springt die Karte zur aktuellen Station. Oben bleibt eine schmale **Kopfleiste** stehen (Tages-XP-Ring, Serie, XP, Wörter,
+  Üben, Wörter). **Zmajček** sucht sich beim Zeichnen der Karte selbst einen Platz neben der aktuellen Station: Er probiert
+  144 Stellen rundherum und nimmt die nächste, an der er keinen Knopf und kein Schild verdeckt. Reicht der Platz nicht für die
+  Sprechblase, setzt er sich ohne Blase hin und zeigt den Spruch beim Antippen. Test: `tests/slo-karte.test.js` prüft alle
+  20 Stationen auf iPhone SE, iPhone 13 und iPad. Hinter der übrigen App liegt dasselbe Bild abgedunkelt.
 - **Wie bei Duolingo:** „Ich weiß es nicht“ zeigt die Lösung (sie zählt als falsch und kommt am Ende der Lektion wieder),
   „🙊 Ich kann gerade nicht sprechen“ und „🔇 Ich kann gerade nicht hören“ schalten die jeweiligen Aufgaben für eine Stunde ab.
   Auf der Karte kann man sie mit einem Schalter wieder einschalten.

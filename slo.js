@@ -400,7 +400,7 @@ function sloKarte() {
   const st = sloStore(), heuteXp = st.tage[tagSchluessel()] || 0, serie = sloSerie(st);
   const anteil = Math.min(1, heuteXp / SLO_TAGESZIEL);
   $('sloStatus').innerHTML = '<div class="slo-ring" style="--a:' + anteil + '"><b>' + heuteXp + '</b><small>/' + SLO_TAGESZIEL + ' XP</small></div>'
-    + '<div class="slo-zahlen"><span>🔥 <b>' + serie + '</b> ' + (serie === 1 ? 'Tag' : 'Tage') + '</span><span>⚡ <b>' + fmt(st.xp) + '</b> XP</span><span>📚 <b>' + Object.keys(st.wort).length + '</b> Wörter</span></div>';
+    + '<div class="slo-zahlen"><span title="Tage in Folge">🔥 <b>' + serie + '</b></span><span title="Erfahrungspunkte">⚡ <b>' + fmt(st.xp) + '</b></span><span title="Wörter">📚 <b>' + Object.keys(st.wort).length + '</b></span></div>';
   // aktuelle Station: erste offene, die noch nicht fertig ist
   let jetzt = SLO_EINHEITEN.findIndex((u, i) => sloOffen(st, i) && (st.stufe[u.id] || 0) < 3);
   if (jetzt < 0) jetzt = SLO_EINHEITEN.length - 1;
@@ -419,8 +419,9 @@ function sloKarte() {
   $('sloUeben').disabled = !sloUebung(st);
   sloStimmeSuchen();
   zeigeSloTeil('karte');
+  sloDracheSetzen();
   // zur aktuellen Station scrollen (die Reise führt von unten nach oben)
-  requestAnimationFrame(() => { const el = document.querySelector('.slo-station.jetzt'), b = document.querySelector('.slo-buehne'); if (el && b) b.scrollTop = Math.max(0, el.getBoundingClientRect().top + b.scrollTop - b.clientHeight * 0.55); });
+  requestAnimationFrame(() => { const el = document.querySelector('.slo-station.jetzt'), b = document.querySelector('.slo-buehne'); if (el && b) b.scrollTop = Math.max(0, el.getBoundingClientRect().top + b.scrollTop - b.clientHeight * 0.6); });
   // Zmajček antippen: ein Looping und ein neuer Spruch
   const m = $('sloMaskottchen');
   if (m) m.addEventListener('click', () => {
@@ -429,6 +430,37 @@ function sloKarte() {
     m.classList.remove('looping'); void m.offsetWidth; m.classList.add('looping');
     sloSprich(sp[0]);
   });
+}
+// Platz für Zmajček suchen: mehrere Stellen um die aktuelle Station probieren, die erste ohne Überdeckung nehmen
+function sloDracheSetzen() {
+  const m = $('sloMaskottchen');
+  if (!m) return;
+  const st = m.parentElement, pfad = $('sloPfad').getBoundingClientRect(), anker = st.getBoundingClientRect(), blase = m.querySelector('.slo-blase');
+  const W = m.offsetWidth || 54, Hd = (m.querySelector('svg') || m).getBoundingClientRect().height || 56, bw = blase.offsetWidth || 110, bh = blase.offsetHeight || 34;
+  const hindernisse = [];
+  document.querySelectorAll('#slo-karte .slo-station').forEach((s) => ['.slo-knoten', '.slo-info', '.slo-tippknopf'].forEach((sel) => { const e = s.querySelector(sel); if (e) hindernisse.push(e.getBoundingClientRect()); }));
+  const flaeche = (a, c) => Math.max(0, Math.min(a.right, c.right) - Math.max(a.left, c.left)) * Math.max(0, Math.min(a.bottom, c.bottom) - Math.max(a.top, c.top));
+  const plaetze = [];
+  for (const r of [60, 75, 95, 125, 160, 200]) for (let w = 0; w < 24; w++) { const a = (w / 24) * 2 * Math.PI; plaetze.push([Math.round(Math.cos(a) * r - W / 2), Math.round(Math.sin(a) * r * 0.8 - Hd / 2)]); }
+  const pruefen = (mitBlase) => {
+    let best = null;
+    plaetze.forEach(([dx, dy]) => {
+      const x = anker.left + dx, y = anker.top + dy;
+      const drache = { left: x, top: y, right: x + W, bottom: y + Hd };
+      const bl = Math.max(pfad.left + 2, Math.min(pfad.right - bw - 2, x + W / 2 - bw / 2));
+      const sprech = { left: bl, top: y - bh - 4, right: bl + bw, bottom: y - 4 };
+      let wert = hindernisse.reduce((a, h) => a + flaeche(drache, h) + (mitBlase ? flaeche(sprech, h) : 0), 0);
+      if (drache.left < pfad.left + 2 || drache.right > pfad.right - 2) wert += 1e6;
+      const kosten = wert + Math.hypot(dx + W / 2, dy + Hd / 2) * 0.02;   // bei Gleichstand: nah an der Station
+      if (!best || kosten < best.kosten) best = { kosten, frei: wert === 0, dx, dy, bversatz: bl - (x + W / 2 - bw / 2) };
+    });
+    return best;
+  };
+  let best = pruefen(true);
+  m.classList.toggle('ohne-blase', !best.frei);
+  if (!best.frei) best = pruefen(false);
+  m.style.left = best.dx + 'px'; m.style.top = best.dy + 'px'; m.style.right = 'auto';
+  blase.style.marginLeft = best.bversatz + 'px';
 }
 function sloStart(u, art) {
   const st = sloStore();
