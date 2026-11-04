@@ -3195,3 +3195,25 @@ button.slo-maskottchen.looping { animation: sloLooping 1.1s var(--ease-out); }
 .slo-status { background: rgba(8,17,26,.72); }
 .slo-fuss { background: rgba(10,21,32,.94); }
 .slo-ende-flug { animation: sloKreis 5s ease-in-out infinite; } @media (prefers-reduced-motion: reduce) { .slo-ende-flug { animation: none; } }
+
+/* Reise-Karte als ein langes Bild: Stationen sitzen auf dem gemalten Weg (Position aus SLO_PFAD) */
+#slo-karte .slo-pfad { display: block; position: relative; margin: 0 -16px; padding: 0; border-radius: 0; box-shadow: none; overflow: visible;
+  aspect-ratio: 724 / 3692; background: url(img/slo/reise-slowenien.webp) 0 0 / 100% 100% no-repeat; }
+#slo-karte .slo-pfad::before { display: none; }
+#slo-karte .slo-station { position: absolute; display: block; min-height: 0; padding: 0; width: 0; height: 0; }
+#slo-karte .slo-knoten { position: absolute; left: -30px; top: -30px; width: 60px; height: 60px; box-shadow: 0 5px 0 color-mix(in srgb, var(--f) 45%, #000), 0 0 0 4px rgba(255,255,255,.35), 0 10px 24px rgba(0,0,0,.45); }
+#slo-karte .slo-station.zu .slo-knoten { box-shadow: 0 5px 0 #151d24, 0 0 0 3px rgba(255,255,255,.18); }
+#slo-karte .slo-ort-emoji { font-size: 1.7rem; line-height: 60px; }
+#slo-karte .slo-kronen { bottom: -12px; }
+#slo-karte .slo-info { position: absolute; top: -26px; width: max-content; max-width: 46vw; padding: 5px 9px; gap: 0; border-radius: 12px; background: rgba(8,17,26,.8); }
+#slo-karte .slo-links .slo-info { left: 40px; text-align: left; } #slo-karte .slo-rechts .slo-info { right: 40px; text-align: right; }
+#slo-karte .slo-info b { font-size: .92rem; } #slo-karte .slo-info span { font-size: .72rem; } #slo-karte .slo-info small { font-size: .66rem; }
+#slo-karte .slo-tippknopf { position: absolute; top: -10px; padding: 1px 6px; font-size: .7rem; background: rgba(8,17,26,.9); }
+#slo-karte .slo-links .slo-tippknopf { right: -10px; } #slo-karte .slo-rechts .slo-tippknopf { left: -10px; }
+#slo-karte .slo-maskottchen { position: absolute; top: -96px; width: 58px; }
+#slo-karte .slo-links .slo-maskottchen { left: -84px; } #slo-karte .slo-rechts .slo-maskottchen { right: -84px; left: auto; }
+#slo-karte .slo-station[style*="left:2"] .slo-maskottchen, #slo-karte .slo-station[style*="left:3"] .slo-maskottchen { left: 26px; }
+#slo-karte .slo-station[style*="left:6"] .slo-maskottchen, #slo-karte .slo-station[style*="left:7"] .slo-maskottchen { right: 26px; left: auto; }
+#slo-karte .slo-station.fertig .slo-knoten::after { top: -14px; right: -8px; font-size: 1.1rem; }
+.slo-buehne:has(#slo-karte:not([hidden]))::after { background: rgba(8,17,26,.78); }
+#slo-karte .slo-station.jetzt { z-index: 5; }

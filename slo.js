@@ -391,6 +391,9 @@ let slo = null;
 const sloTeile2 = ['karte', 'lektion', 'ende', 'woerter'];
 const zeigeSloTeil = (t) => sloTeile2.forEach((x) => { $('slo-' + x).hidden = x !== t; });
 
+// Stationen auf dem gemalten Weg (x, y in % des Bildes img/slo/reise-slowenien.webp, das 1,7-fach in die Höhe gezogen ist).
+// Ermittelt aus den leuchtenden Pfad-Pixeln des Bildes, in gleichen Höhenabständen entlang des Weges – Start unten bei der Fahne.
+const SLO_PFAD = [[66.0, 94.39], [69.2, 90.13], [28.5, 85.74], [47.7, 81.38], [25.2, 77.0], [33.5, 72.59], [72.3, 68.1], [36.0, 63.88], [68.9, 59.49], [25.1, 55.14], [42.7, 50.78], [73.8, 46.43], [29.4, 42.02], [34.5, 37.58], [72.4, 33.33], [16.9, 28.9], [56.2, 24.54], [48.8, 20.12], [64.1, 15.83], [45.1, 11.43]];
 function sloKarte() {
   slo = null;
   if ('speechSynthesis' in window) speechSynthesis.cancel();
@@ -403,8 +406,8 @@ function sloKarte() {
   if (jetzt < 0) jetzt = SLO_EINHEITEN.length - 1;
   const spruch = SLO_SPRUECHE[Math.floor(Math.random() * SLO_SPRUECHE.length)];
   $('sloPfad').innerHTML = SLO_EINHEITEN.map((u, i) => {
-    const s = st.stufe[u.id] || 0, offen = sloOffen(st, i), seite = ['links', 'mitte', 'rechts', 'mitte'][i % 4];
-    return '<div class="slo-station slo-' + seite + (offen ? '' : ' zu') + (s >= 3 ? ' fertig' : '') + (i === jetzt ? ' jetzt' : '') + '" style="--f:' + u.farbe + '">'
+    const s = st.stufe[u.id] || 0, offen = sloOffen(st, i), [px, py] = SLO_PFAD[i] || [50, 50], seite = px > 50 ? 'rechts' : 'links';
+    return '<div class="slo-station slo-' + seite + (offen ? '' : ' zu') + (s >= 3 ? ' fertig' : '') + (i === jetzt ? ' jetzt' : '') + '" style="--f:' + u.farbe + ';left:' + px + '%;top:' + py + '%">'
       + (i === jetzt ? '<button type="button" class="slo-maskottchen" id="sloMaskottchen" aria-label="Zmajček">' + sloDrache('froh') + '<span class="slo-blase"><b>' + spruch[0] + '</b><small>' + spruch[1] + '</small></span></button>' : '')
       + '<button type="button" class="slo-knoten" data-u="' + u.id + '"' + (offen ? '' : ' aria-disabled="true"') + ' aria-label="' + u.ort + ': ' + u.de + '">'
       + '<span class="slo-ort-emoji">' + (offen ? u.ortEmoji : '🔒') + '</span>'
@@ -416,6 +419,8 @@ function sloKarte() {
   $('sloUeben').disabled = !sloUebung(st);
   sloStimmeSuchen();
   zeigeSloTeil('karte');
+  // zur aktuellen Station scrollen (die Reise führt von unten nach oben)
+  requestAnimationFrame(() => { const el = document.querySelector('.slo-station.jetzt'), b = document.querySelector('.slo-buehne'); if (el && b) b.scrollTop = Math.max(0, el.getBoundingClientRect().top + b.scrollTop - b.clientHeight * 0.55); });
   // Zmajček antippen: ein Looping und ein neuer Spruch
   const m = $('sloMaskottchen');
   if (m) m.addEventListener('click', () => {

@@ -394,7 +394,10 @@ Eigenes Sprachlernspiel (`slo.js`): Mit Zmajček, dem kleinen Drachen aus dem Wa
   - Er fliegt auf der Karte zur aktuellen Station und dreht einen Looping, wenn man ihn antippt (mit neuem Spruch).
   - In der Lektion sitzt er neben dem Fortschrittsbalken und hüpft oder ist traurig.
   - Am Ende fliegt er jubelnd Kreise.
-- **Hintergrund der ganzen Slowenisch-App** (fest stehend, in Lektionen und im Wörterbuch stärker abgedunkelt): eine gemalte Landschaft mit leuchtendem Pfad (`img/slo/reise-slowenien.webp`, 720 px breit, 94 KB: Berge, Bled, Piran, Postojna-Höhle, Weinberge, Brücke, Fahne).
+- **Reise-Karte als ein langes Bild:** Das Slowenien-Bild (`img/slo/reise-slowenien.webp`) scrollt mit, 1,7-fach in die Höhe gezogen.
+  Die 20 Stationen sitzen auf dem gemalten, leuchtenden Weg (`SLO_PFAD`), in gleichen Höhenabständen entlang des Weges. Die
+  Positionen wurden aus den Pfad-Pixeln des Bildes ermittelt. Die Reise beginnt unten bei der Fahne (Ljubljana) und führt hinauf
+  zu den Bergen; beim Öffnen springt die Karte zur aktuellen Station. Hinter der übrigen App liegt dasselbe Bild abgedunkelt.
 - **Wie bei Duolingo:** „Ich weiß es nicht“ zeigt die Lösung (sie zählt als falsch und kommt am Ende der Lektion wieder),
   „🙊 Ich kann gerade nicht sprechen“ und „🔇 Ich kann gerade nicht hören“ schalten die jeweiligen Aufgaben für eine Stunde ab.
   Auf der Karte kann man sie mit einem Schalter wieder einschalten.
