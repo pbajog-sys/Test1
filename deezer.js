@@ -68,7 +68,7 @@ function dzEntsperren() { try { const a = dzAudio(); a.src = DZ_STILL; const p =
 function dzStopp() { dzLauf++; if (dzEl) try { dzEl.pause(); } catch (e) { /* schon aus */ } }
 async function dzAusschnitt(T, pos, dauer, wennStart) {
   const meins = ++dzLauf, a = dzAudio();
-  if (a.dataset.track !== String(T.id)) { a.src = T.preview; a.dataset.track = String(T.id); }
+  if (a.dataset.track !== T.preview) { a.src = T.preview; a.dataset.track = T.preview; }
   const start = Math.max(0, pos / 1000);
   try { a.currentTime = start; } catch (e) { /* noch nicht geladen */ }
   try { await a.play(); }

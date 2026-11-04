@@ -6,16 +6,24 @@ const { chromium, devices } = require('playwright');
 const crypto = require('crypto');
 const ordner = process.argv[2] || '.';
 const b64 = (b) => b.toString('base64').replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
-const BIB = Array.from({ length: 12 }, (_, i) => ({ type: 'track', uri: 'spotify:track:b' + i, name: 'Lieblingssong ' + (i + 1), artists: [{ name: 'Band ' + String.fromCharCode(65 + i) }], duration_ms: 200000, album: { release_date: String(1990 + i), images: [] } }));
+const BIB = Array.from({ length: 12 }, (_, i) => ({ type: 'track', external_ids: { isrc: 'BIB' + i }, uri: 'spotify:track:b' + i, name: 'Lieblingssong ' + (i + 1), artists: [{ name: 'Band ' + String.fromCharCode(65 + i) }], duration_ms: 200000, album: { release_date: String(1990 + i), images: [] } }));
 // Suche: Treffer hängen von q und offset ab; Jahr liegt im angefragten Bereich
 function suchTreffer(q, off) {
   const y = /year:(\d{4})(?:-(\d{4}))?/.exec(q), von = y ? +y[1] : 1975, bis = y ? +(y[2] || y[1]) : 2020, kuenstler = /artist:"([^"]+)"/.exec(q);
   return Array.from({ length: 10 }, (_, i) => {
     const n = off + i;
-    return { type: 'track', uri: 'spotify:track:' + crypto.createHash('md5').update(q + n).digest('hex').slice(0, 12), name: (kuenstler ? kuenstler[1] + ' Song ' : 'Treffer ') + n + (n % 7 === 0 ? ' - Remastered 2011' : ''), artists: [{ name: kuenstler ? kuenstler[1] : 'Künstler ' + n }], duration_ms: 210000, album: { release_date: (von + (n % (bis - von + 1))) + '-01-01', images: [] } };
+    return { type: 'track', external_ids: { isrc: 'TEST' + crypto.createHash('md5').update(q + n).digest('hex').slice(0, 8) }, uri: 'spotify:track:' + crypto.createHash('md5').update(q + n).digest('hex').slice(0, 12), name: (kuenstler ? kuenstler[1] + ' Song ' : 'Treffer ') + n + (n % 7 === 0 ? ' - Remastered 2011' : ''), artists: [{ name: kuenstler ? kuenstler[1] : 'Künstler ' + n }], duration_ms: 210000, album: { release_date: (von + (n % (bis - von + 1))) + '-01-01', images: [] } };
   });
 }
 
+function wav30() {
+  const rate = 8000, n = rate * 30, b = Buffer.alloc(44 + n * 2);
+  b.write('RIFF', 0); b.writeUInt32LE(36 + n * 2, 4); b.write('WAVEfmt ', 8); b.writeUInt32LE(16, 16); b.writeUInt16LE(1, 20); b.writeUInt16LE(1, 22);
+  b.writeUInt32LE(rate, 24); b.writeUInt32LE(rate * 2, 28); b.writeUInt16LE(2, 32); b.writeUInt16LE(16, 34); b.write('data', 36); b.writeUInt32LE(n * 2, 40);
+  for (let i = 0; i < n; i++) b.writeInt16LE(Math.round(3000 * Math.sin(2 * Math.PI * 330 * i / rate)), 44 + i * 2);
+  return b;
+}
+const WAV = wav30();
 (async () => {
   const b = await chromium.launch(); const ctx = await b.newContext({ ...devices['iPhone 13'], serviceWorkers: 'block' });
   await ctx.addInitScript(() => { if (!localStorage.getItem('walquiz.profile.v1')) localStorage.setItem('walquiz.profile.v1', JSON.stringify({ aktiv: 't', liste: [{ id: 't', name: 'T', avatar: '🧪', farbe: '#22c55e' }] })); localStorage.setItem('walquiz.installhinweis.v1', 'weg'); });
@@ -48,6 +56,18 @@ function suchTreffer(q, off) {
     }
     return j({ error: { message: 'unbekannt ' + u.pathname } }, 404);
   });
+  // Deezer: Hörprobe per ISRC (jede 4. ISRC fehlt → Suche nach Künstler + Titel)
+  const D = { isrc: 0, suche: 0, fehlt: 0 };
+  await ctx.route('https://api.deezer.com/**', (route) => {
+    const u = new URL(route.request().url()), cb = u.searchParams.get('callback');
+    let x;
+    const m = /^\/track\/isrc:(.+)$/.exec(decodeURIComponent(u.pathname));
+    if (m) { D.isrc++; const h = parseInt(crypto.createHash('md5').update(m[1]).digest('hex').slice(0, 2), 16); x = h % 4 === 0 ? (D.fehlt++, { error: { type: 'DataException', message: 'no data', code: 800 } }) : { id: h, readable: true, title: m[1], preview: 'https://cdnt-preview.dzcdn.net/isrc/' + m[1] + '.mp3' }; }
+    else if (u.pathname === '/search') { D.suche++; x = { data: [{ id: 1, readable: true, title: u.searchParams.get('q'), preview: 'https://cdnt-preview.dzcdn.net/suche/' + D.suche + '.mp3' }] }; }
+    else x = { error: { message: 'unbekannt' } };
+    return route.fulfill({ status: 200, contentType: 'application/javascript', body: cb + '(' + JSON.stringify(x) + ')' });
+  });
+  await ctx.route('https://cdnt-preview.dzcdn.net/**', (route) => route.fulfill({ status: 200, contentType: 'audio/wav', headers: { 'accept-ranges': 'bytes' }, body: WAV }));
   const p = await ctx.newPage(); const fehler = []; p.on('pageerror', (e) => fehler.push(e.message));
   const checks = [], ck = (n, ok, info = '') => { checks.push([n, ok]); console.log((ok ? '✓ ' : '✗ ') + n + (info ? ' – ' + info : '')); };
   const runde = async (modus, i) => {
@@ -71,7 +91,8 @@ function suchTreffer(q, off) {
   ck('Nach Anmeldung wieder im Song-Rätsel, Adresse sauber', !/code=/.test(p.url()) && await p.evaluate(() => $('screen-songs').classList.contains('active')), p.url());
   await p.screenshot({ path: ordner + '/sp-verbunden.png', fullPage: true });
 
-  // 1) Titel erkennen · 80er Pop · große Hits · Leicht
+  // 1) Titel erkennen · 80er Pop · große Hits · Leicht – über die Spotify-App
+  await p.click('[data-wo="app"]'); await p.waitForTimeout(400);
   await p.click('#spLos');
   for (let i = 0; i < 5; i++) {
     const R = await runde('titel', i);
@@ -126,9 +147,35 @@ function suchTreffer(q, off) {
   await p.click('#spLos'); await runde('titel', 0);
   ck('Favoriten: Suche nach Top-Künstlern', S.suchen.length >= 2 && S.suchen.every((x) => /^artist:"(Alpha|Beta|Gamma|Delta|Epsilon)"$/.test(x.q)), S.suchen.map((x) => x.q).join(' '));
 
-  // 4) kein Gerät / abgelaufene Anmeldung
+  // 4) Im Browser: Spotify sucht aus, Deezer-Hörprobe spielt – keine Spotify-App nötig
+  await p.click('#srAppZurueck'); await p.waitForTimeout(400);
+  await p.click('[data-wo="browser"]'); await p.waitForTimeout(300);
+  await p.click('[data-kat="bib"]'); await p.waitForTimeout(300);
+  await p.click('[data-s="leicht"]'); await p.waitForTimeout(300);
+  S.geraete = false; const playsVorher = S.plays.length;
+  await p.evaluate(() => { window.__gespielt = []; const a = dzAudio(); let ab = null; a.addEventListener('playing', () => { if (!/^data:/.test(a.src)) ab = a.currentTime; }); a.addEventListener('pause', () => { if (ab != null) { window.__gespielt.push(a.currentTime - ab); ab = null; } }); });
+  await p.click('#spLos');
+  for (let i = 0; i < 5; i++) {
+    await p.waitForSelector('.sp-optionen [data-o]', { timeout: 15000 });
+    await p.waitForFunction(() => sp && sp.runden[sp.i].gehoert === 1 && dzAudio().paused && window.__gespielt.length > sp.i, null, { timeout: 15000 });
+    if (i === 0) await p.screenshot({ path: ordner + '/sp-browser-runde.png' });
+    const k = await p.evaluate(() => { const R = sp.runden[sp.i]; return R.optionen.indexOf(R.T); });
+    await p.click('[data-o="' + k + '"]'); await p.waitForTimeout(100); await p.click('#srWeiter');
+  }
+  await p.waitForTimeout(300);
+  ende = await p.evaluate(() => $('ton-song').innerText);
+  ck('Im Browser: Meine Musik, 5 richtig = 50/50, ohne Spotify-Gerät', /50 \/ 50/.test(ende), ende.split('\n')[1]);
+  ck('Im Browser: keine Wiedergabe-Befehle an Spotify', S.plays.length === playsVorher, (S.plays.length - playsVorher) + ' Befehle');
+  const gesp = await p.evaluate(() => window.__gespielt.slice(0, 5));
+  ck('Deezer-Hörprobe wirklich abgespielt, je ≈ 4 s', gesp.length === 5 && gesp.every((x) => x > 3.8 && x < 4.4), gesp.map((x) => x.toFixed(2)).join(', ') + ' s');
+  ck('Hörprobe per ISRC, fehlende per Suche ersetzt', D.isrc >= 5 && (D.fehlt === 0 || D.suche >= D.fehlt), D.isrc + ' ISRC, ' + D.fehlt + ' fehlten, ' + D.suche + ' Suchen');
+  const vlb = await p.evaluate(() => (loadJson(VERLAUF_KEY).tage[skDatum()] || []).filter((e) => e.s === 'songs').map((e) => e.x.modus + ':' + e.x.kat).pop());
+  ck('Verlauf: spotify-titel:bib', vlb === 'spotify-titel:bib', vlb);
+
+  // 5) kein Gerät / abgelaufene Anmeldung (Spotify-App-Modus)
+  await p.click('#srZurMenue'); await p.waitForTimeout(400); await p.click('[data-wo="app"]'); await p.waitForTimeout(300);
   S.geraete = false;
-  await p.click('#srAppZurueck'); await p.waitForTimeout(400); await p.click('#spLos'); await p.waitForTimeout(800);
+  await p.click('#spLos'); await p.waitForTimeout(800);
   ck('Ohne Gerät: Hinweis „Spotify-App öffnen“', /Kein Spotify-Gerät/.test(await p.evaluate(() => $('ton-song').innerText)));
   S.geraete = true; S.abgelaufen = true;
   await p.click('#spNochmal'); await p.waitForTimeout(800);

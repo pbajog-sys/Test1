@@ -252,7 +252,10 @@ Verweis zur App. Je 5 Runden, bis zu 50 Punkte:
   Deezer-Bedingungen: nur nicht-kommerziell und privat im Familienkreis – darauf weist das Menü hin; der Ton wird nur
   abgespielt, nicht verändert oder gespeichert.
 - **🟢 Spotify (Premium, optional):** ⚠️ Spotifys Developer Policy verbietet Spiele inkl. Quizze („Do not create a game,
-  including trivia quizzes“); das Menü warnt davor, Deezer ist Standard. Zwei Modi – **🎵 Titel erkennen** (Leicht 4 s vom Anfang, Mittel 2 s, Profi 1 s irgendwo im
+  including trivia quizzes“); das Menü warnt davor (Nutzung auf eigenes Risiko), Deezer ist Standard.
+  **Wiedergabe „🌐 Im Browser“ (Standard):** Spotify sucht die Songs aus, abgespielt wird derselbe Song als Deezer-Hörprobe
+  (Abgleich per ISRC aus `external_ids`, sonst Deezer-Suche `artist:"…" track:"…"`) – keine Spotify-App, kein „Gerät
+  nicht erreichbar“. „📱 Spotify-App“ spielt ganze Songs über Spotify Connect. Zwei Modi – **🎵 Titel erkennen** (Leicht 4 s vom Anfang, Mittel 2 s, Profi 1 s irgendwo im
   Song, 4–6 Antworten aus derselben Kategorie) und **📅 Jahr schätzen** (8/5/3 s anhören, Jahr mit Schieber und ±,
   pro Jahr daneben −0,7/−1/−1,5 Punkte). **Zufallssongs nach Kategorie:** Querbeet, 70er Disco & Funk, 80er/90er/2000er/
   2010er Pop, Aktuelle Hits, Rock-Klassiker, Hip-Hop, Deutschpop, Schlager, Filmmusik – über die Spotify-Suche mit Genre-
