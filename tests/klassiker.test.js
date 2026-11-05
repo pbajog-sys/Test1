@@ -10,7 +10,7 @@ const ordner = process.argv[2] || '.';
   const ergebnisWeg = async () => { if (await p.$('.kl-ergebnis')) await p.evaluate(() => document.querySelectorAll('.kl-ergebnis').forEach((x) => x.remove())); };
   await p.goto('http://localhost:8765/'); await p.waitForTimeout(900);
   await p.click('#hubKlassiker'); await p.waitForTimeout(900);
-  ck('Klassiker-App mit 5 Spielen', (await p.$$('[data-kl]')).length === 5 && await p.evaluate(() => $('screen-klassiker').classList.contains('active')));
+  ck('Klassiker-App mit 9 Spielen', (await p.$$('[data-kl]')).length === 9 && await p.evaluate(() => $('screen-klassiker').classList.contains('active')));
   await p.screenshot({ path: ordner + '/kl-home.png' });
 
   // ---------- Sudoku ----------
@@ -170,8 +170,72 @@ const ordner = process.argv[2] || '.';
   ck('Vier: Partie über die Oberfläche bis zum Ende', !!(await p.$('.kl-ergebnis')), await p.textContent('.kl-erg-karte h3'));
   await ergebnisWeg();
 
+  // ---------- Zahlenpaare ----------
+  ck('Zahlenpaare: Regeln (gleich/Summe 10, nebeneinander, senkrecht, schräg, Zeilenumbruch, blockiert)', await p.evaluate(() => {
+    const z = new Array(27).fill(0), t = (a, b) => zpPasst(z, a, b);
+    z[0] = 3; z[1] = 7; const neben = t(0, 1);
+    z[2] = 4; z[11] = 4; const senk = t(2, 11);
+    z[3] = 6; z[13] = 6; const schraeg = t(3, 13);
+    z[8] = 5; z[9] = 5; const umbruch = t(8, 9);
+    z[20] = 2; z[22] = 2; z[21] = 9; const blockiert = !t(20, 22);
+    z[24] = 1; z[25] = 3; const falsch = !t(24, 25);
+    z[14] = 8; z[22] = 8; const schraegL = t(14, 22);
+    return neben && senk && schraeg && umbruch && blockiert && falsch && schraegL;
+  }));
+  await p.click('#klZurueck'); await p.waitForTimeout(300);
+  await p.click('[data-kl="zahlen"]'); await p.waitForTimeout(300);
+  await p.screenshot({ path: ordner + '/kl-zahlen.png' });
+  await p.evaluate(() => { zp.z = [1, 9, 5, 5, 0, 0, 0, 0, 0, 2, 8]; zp.nachlegen = 1; zp.punkte = 0; zpZeichnen(); });
+  await p.click('.zp-z[data-i="0"]'); await p.click('.zp-z[data-i="1"]');
+  ck('Zahlenpaare: Paar per Tippen gestrichen', await p.evaluate(() => !zp.z[0] && !zp.z[1] && zp.punkte === 1));
+  await p.click('#zpNach');
+  ck('Zahlenpaare: Nachlegen hängt die restlichen Zahlen an', await p.evaluate(() => zp.z.filter(Boolean).join('') === '55285528'));
+  for (let n = 0; n < 12 && !(await p.$('.kl-ergebnis')); n++) { const pr = await p.evaluate(() => zpEinPaar(zp.z)); if (!pr) break; await p.click('.zp-z[data-i="' + pr[0] + '"]'); await p.click('.zp-z[data-i="' + pr[1] + '"]'); }
+  await p.waitForSelector('.kl-ergebnis', { timeout: 3000 });
+  ck('Zahlenpaare: alles geräumt → Sieg', /Alles geräumt/.test(await p.textContent('.kl-ergebnis')));
+  await ergebnisWeg(); await p.click('#klZurueck'); await p.waitForTimeout(300);
+
+  // ---------- Planeten-Fusion ----------
+  await p.click('[data-kl="planeten"]'); await p.waitForTimeout(400);
+  await p.evaluate(() => { pf.jetzt = 2; pf.ziel = pf.W * 0.3; pf.sperre = 0; pfFallen(); });
+  const cvb = await (await p.$('#pfBild')).boundingBox();
+  await p.waitForTimeout(700);
+  await p.mouse.click(cvb.x + cvb.width * 0.7, cvb.y + 40); await p.waitForTimeout(1500);
+  ck('Planeten: Fallen lassen per Tippen, Planeten liegen am Boden', await p.evaluate(() => pf.obj.length === 2 && pf.obj.every((o) => o.y > pf.H * 0.6 && Number.isFinite(o.x))), await p.evaluate(() => pf.obj.length + ' Objekte'));
+  const fusion = await p.evaluate(() => { pf.obj = [{ id: 901, x: pf.W / 2 - 5, y: pf.H - 60, vx: 0, vy: 0, lv: 4, alter: 100, ueber: 0 }, { id: 902, x: pf.W / 2 + 5, y: pf.H - 60, vx: 0, vy: 0, lv: 4, alter: 100, ueber: 0 }]; const p0 = pf.punkte; for (let i = 0; i < 5; i++) pfSchritt(); return { n: pf.obj.length, lv: pf.obj[0] && pf.obj[0].lv, plus: pf.punkte - p0 }; });
+  ck('Planeten: zwei gleiche verschmelzen zum Nächstgrößeren', fusion.n === 1 && fusion.lv === 5 && fusion.plus > 0, JSON.stringify(fusion));
+  const stabil = await p.evaluate(() => { pf.obj = []; for (let i = 0; i < 25; i++) pf.obj.push({ id: 1000 + i, x: 20 + (i * 37) % (pf.W - 40), y: pf.H - 30 - (i % 5) * 40, vx: 0, vy: 0, lv: i % 4, alter: 100, ueber: 0 }); for (let k = 0; k < 600; k++) pfSchritt(); return pf.obj.every((o) => Number.isFinite(o.x) && Number.isFinite(o.y) && o.x >= -1 && o.x <= pf.W + 1 && o.y <= pf.H + 1); });
+  ck('Planeten: Physik bleibt stabil (keine Ausreißer)', stabil);
+  await p.screenshot({ path: ordner + '/kl-planeten.png' });
+  // je ein Planet jeder Größe (verschmelzen also nicht) – zusammen zu viel für die Box
+  const ende = await p.evaluate(() => { pf.obj = []; for (let lv = 10; lv >= 0; lv--) pf.obj.push({ id: 2000 + lv, x: pf.W * (0.2 + 0.6 * ((lv * 37) % 11) / 10), y: pf.H - (11 - lv) * pf.W * 0.25, vx: 0, vy: 0, lv, alter: 100, ueber: 0 }); let k = 0; while (!pf.ende && k < 4000) { pfSchritt(); k++; } return { ende: pf.ende, schritte: k }; });
+  await p.waitForSelector('.kl-ergebnis', { timeout: 3000 });
+  ck('Planeten: Ende kommt erst nach Verweilen über der Linie (> 1,5 s)', ende.ende && ende.schritte > 100, JSON.stringify(ende));
+  ck('Planeten: über der Linie → Spielende', !!(await p.$('.kl-ergebnis')));
+  await ergebnisWeg(); await p.click('#klZurueck'); await p.waitForTimeout(300);
+
+  // ---------- Schrauben sortieren / Farben umfüllen ----------
+  const sog = await p.evaluate(() => { const out = []; for (const l of [1, 3, 6, 9, 12, 15]) { const t0 = performance.now(), S = soLevel(l, zufallsGenerator('so' + l)); out.push({ l, farben: S.filter((x) => x.length).length, loesbar: soLoesbar(S), ms: Math.round(performance.now() - t0) }); } return out; });
+  ck('Sortieren: Level 1–15 erzeugt und alle lösbar', sog.every((x) => x.loesbar), sog.map((x) => 'L' + x.l + ':' + x.farben + 'F/' + x.ms + 'ms').join(' '));
+  ck('Sortieren: Bau schnell genug (< 2 s je Level)', sog.every((x) => x.ms < 2000));
+  await p.click('[data-kl="schrauben"]'); await p.waitForTimeout(500);
+  await p.screenshot({ path: ordner + '/kl-schrauben.png' });
+  await p.evaluate(() => { so.staebe = [[0, 0, 0, 1], [1, 1, 1, 0], []]; so.zuege = 0; so.rueck = []; soZeichnen(); });
+  await p.click('.so-stab[data-i="0"]'); await p.click('.so-stab[data-i="1"]');
+  ck('Sortieren: falscher Zug (andere Farbe oben, voll) wird abgelehnt', await p.evaluate(() => so.zuege === 0));
+  await p.click('.so-stab[data-i="1"]');
+  for (const [a, b] of [[0, 2], [1, 0], [2, 1]]) { await p.click('.so-stab[data-i="' + a + '"]'); await p.click('.so-stab[data-i="' + b + '"]'); }
+  await p.waitForSelector('.kl-ergebnis', { timeout: 3000 });
+  ck('Sortieren: sortiert → Level geschafft, nächstes Level gespeichert', /geschafft/.test(await p.textContent('.kl-ergebnis')) && await p.evaluate(() => klStore().stat.schraubenLevel === 2));
+  await ergebnisWeg(); await p.click('#klZurueck'); await p.waitForTimeout(300);
+  await p.click('[data-kl="wasser"]'); await p.waitForTimeout(500);
+  ck('Farben umfüllen: Gläser-Ansicht mit Level 1', await p.evaluate(() => !!document.querySelector('.so-feld.wasser') && so.lvl === 1 && so.staebe.length === 5));
+  await p.click('.so-stab[data-i="0"]'); await p.waitForTimeout(200);
+  await p.screenshot({ path: ordner + '/kl-wasser.png' });
+  await p.click('#klZurueck'); await p.waitForTimeout(300);
+
   const vl = await p.evaluate(() => [...new Set((loadJson(VERLAUF_KEY).tage[skDatum()] || []).filter((e) => e.s === 'klassiker').map((e) => e.x.modus))].sort().join(','));
-  ck('Verlauf: alle 5 Spiele eingetragen', vl === 'bloecke,minen,solitaer,sudoku,vier', vl);
+  ck('Verlauf: alle Spiele eingetragen', vl === 'bloecke,minen,planeten,schrauben,solitaer,sudoku,vier,zahlen', vl);
   ck('Keine Seitenfehler', !fehler.length, fehler.join(' | '));
   console.log(checks.filter((c) => c[1]).length + ' bestanden, ' + checks.filter((c) => !c[1]).length + ' fehlgeschlagen');
   await b.close(); process.exit(checks.every((c) => c[1]) ? 0 : 1);

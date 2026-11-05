@@ -1,4 +1,5 @@
-// 🃏 Klassiker: fünf zeitlose Spiele in einer App – Solitär (Klondike), Sudoku, Holzblöcke, Minensuche, Vier in einer Reihe.
+// 🃏 Klassiker: Solitär (Klondike), Sudoku, Holzblöcke, Minensuche, Vier in einer Reihe, Zahlenpaare, Planeten-Fusion,
+// Schrauben sortieren und Farben umfüllen.
 // Alles traditionelle Spielideen bzw. offene Genres, eigene Grafik. Laufende Partien werden gespeichert und fortgesetzt.
 // Speicher: walquiz.klassiker.v1 = { best: {...}, stand: { solitaer, sudoku, bloecke }, einst: {...}, stat: {...} }
 const KL_KEY = 'walquiz.klassiker.v1';
@@ -10,6 +11,10 @@ const KL_SPIELE = {
   bloecke: { name: 'Holzblöcke', emoji: '🟫', text: 'Teile legen, Reihen und Blöcke abräumen', farbe: '#b45309' },
   minen: { name: 'Minensuche', emoji: '💣', text: 'Zahlen lesen, Minen markieren', farbe: '#64748b' },
   vier: { name: 'Vier in einer Reihe', emoji: '🔴', text: 'Gegen den Computer oder zu zweit', farbe: '#dc2626' },
+  zahlen: { name: 'Zahlenpaare', emoji: '🔢', text: 'Gleiche oder Summe 10 streichen', farbe: '#0ea5e9', beliebt: true },
+  planeten: { name: 'Planeten-Fusion', emoji: '🪐', text: 'Gleiche Planeten verschmelzen – bis zur Sonne', farbe: '#8b5cf6', beliebt: true },
+  schrauben: { name: 'Schrauben sortieren', emoji: '🔩', text: 'Muttern nach Farben auf die Stäbe', farbe: '#e11d48', beliebt: true },
+  wasser: { name: 'Farben umfüllen', emoji: '🧪', text: 'Gläser sortieren, bis jede Farbe allein ist', farbe: '#14b8a6' },
 };
 let klAktiv = null, klUhr = null;
 const klZufall = () => zufallsGenerator('kl-' + Date.now() + Math.random());
@@ -30,8 +35,12 @@ function klHome() {
     bloecke: st.best.bloecke ? 'Rekord ' + fmt(st.best.bloecke) : '',
     minen: st.stat.minenSiege ? st.stat.minenSiege + '× geräumt' : '',
     vier: st.stat.vierSiege ? st.stat.vierSiege + ' Siege' : '',
+    zahlen: st.best.zahlen ? 'Rekord ' + fmt(st.best.zahlen) : '',
+    planeten: st.best.planeten ? 'Rekord ' + fmt(st.best.planeten) : '',
+    schrauben: st.stat.schraubenLevel ? 'Level ' + st.stat.schraubenLevel : '',
+    wasser: st.stat.wasserLevel ? 'Level ' + st.stat.wasserLevel : '',
   };
-  $('klInhalt').innerHTML = '<div class="kl-held"><h2>Klassiker</h2><p>Fünf Spiele, die nie alt werden. Laufende Partien merkt sich die App.</p></div><div class="kl-kacheln">'
+  $('klInhalt').innerHTML = '<div class="kl-held"><h2>Klassiker</h2><p>Spiele, die nie alt werden. Laufende Partien merkt sich die App.</p></div><div class="kl-kacheln">'
     + Object.entries(KL_SPIELE).map(([id, S]) => '<button type="button" class="kl-kachel kl-k-' + id + '" data-kl="' + id + '" style="--f:' + S.farbe + '"><span class="kl-k-bild" aria-hidden="true">' + klMiniBild(id) + '</span><span class="kl-k-text"><b>' + S.name + '</b><small>' + S.text + '</small>'
       + (st.stand[id] ? '<em>▶ Fortsetzen</em>' : best[id] ? '<em>' + best[id] + '</em>' : '') + '</span></button>').join('') + '</div>';
   $('klInhalt').querySelectorAll('[data-kl]').forEach((b) => b.addEventListener('click', () => klOeffnen(b.dataset.kl)));
@@ -41,16 +50,20 @@ function klMiniBild(id) {
   if (id === 'sudoku') return '<i class="klm-gitter">' + [5, 3, '', '', 7, '', 6, '', 9].map((z) => '<s>' + z + '</s>').join('') + '</i>';
   if (id === 'bloecke') return '<i class="klm-bloecke">' + [1, 1, 0, 1, 1, 1, 0, 1, 0].map((z) => '<s class="' + (z ? 'v' : '') + '"></s>').join('') + '</i>';
   if (id === 'minen') return '<i class="klm-minen"><s>1</s><s>2</s><s class="f">🚩</s><s></s><s>1</s><s>3</s></i>';
+  if (id === 'zahlen') return '<i class="klm-zahlen">' + [2, 8, 4, 9, 4, 1, 3, 7, 6].map((z, i) => '<s class="' + ([0, 1].includes(i) ? 'p' : [7].includes(i) ? 'q' : [6].includes(i) ? 'q' : '') + '">' + z + '</s>').join('') + '</i>';
+  if (id === 'planeten') return '<i class="klm-planeten"><s style="--g:22px;--f:#3b82f6;left:4px;bottom:2px">🌍</s><s style="--g:30px;--f:#eab308;left:30px;bottom:4px">🪐</s><s style="--g:14px;--f:#94a3b8;left:22px;bottom:30px"></s></i>';
+  if (id === 'schrauben') return '<i class="klm-schrauben">' + [['#22c55e', '#22c55e', '#eab308'], ['#ef4444', '#3b82f6'], ['#3b82f6', '#ef4444', '#ef4444']].map((st) => '<s>' + st.map((f) => '<b style="--f:' + f + '"></b>').join('') + '</s>').join('') + '</i>';
+  if (id === 'wasser') return '<i class="klm-wasser">' + [['#3b82f6', '#ef4444', '#eab308'], ['#22c55e', '#ef4444', '#22c55e']].map((st) => '<s>' + st.map((f) => '<b style="--f:' + f + '"></b>').join('') + '</s>').join('') + '</i>';
   return '<i class="klm-vier"><s class="r"></s><s class="g"></s><s class="r"></s><s class="g"></s><s class="r"></s><s class="r"></s></i>';
 }
 function klOeffnen(id) {
   klStoppUhr(); klAktiv = id;
-  ({ solitaer: solStart, sudoku: sdStart, bloecke: blStart, minen: mnStart, vier: vrStart })[id]();
+  ({ solitaer: solStart, sudoku: sdStart, bloecke: blStart, minen: mnStart, vier: vrStart, zahlen: zpStart, planeten: pfStart, schrauben: () => soStart('schrauben'), wasser: () => soStart('wasser') })[id]();
 }
 function klZeigen() { const sc = $('screen-klassiker'); if (sc && !sc.classList.contains('active')) show('klassiker', '🃏 Klassiker'); }
 $('hubKlassiker').addEventListener('click', () => { merkeZuletzt('klassiker'); zoomZu($('hubKlassiker'), () => { klZeigen(); klHome(); }); });
 $('klZurueck').addEventListener('click', () => {
-  if (klAktiv) { if (klAktiv === 'solitaer') solSpeichern(); if (klAktiv === 'sudoku') sdSpeichern(); if (klAktiv === 'bloecke') blSpeichern(); klHome(); return; }
+  if (klAktiv) { if (klAktiv === 'solitaer') solSpeichern(); if (klAktiv === 'sudoku') sdSpeichern(); if (klAktiv === 'bloecke') blSpeichern(); if (klAktiv === 'zahlen') zpSpeichern(); if (klAktiv === 'schrauben' || klAktiv === 'wasser') soSpeichern(); klHome(); return; }
   klStoppUhr(); zeigeHub();
 });
 function klErgebnis(titel, text, nochmal) {
@@ -635,4 +648,272 @@ function vrEnde() {
   klVerlauf('vier', s === 1 ? 1 : s === 0 ? 0.5 : 0, 1, VR_STUFEN[vr.stufe].name + ' · ' + (s === 1 ? 'gewonnen' : s === 0 ? 'unentschieden' : 'verloren'), { stufe: vr.stufe === 'schwer' ? 'schwer' : vr.stufe });
   if (s === 1 && typeof konfetti === 'function') konfetti(30, ['🔴', '✨', '🏆']);
   setTimeout(() => klErgebnis(s === 1 ? '🎉 Gewonnen!' : s === 0 ? '🤝 Unentschieden' : '🤖 Verloren', s === 1 ? 'Du hast den Computer (' + VR_STUFEN[vr.stufe].name + ') geschlagen.' : s === 0 ? 'Das Brett ist voll.' : 'Der Computer hatte zuerst vier in einer Reihe.', () => vrStart(true, vr.stufe)), 900);
+}
+
+// =====================================================================
+// 🔢 ZAHLENPAARE – gleiche Zahlen oder Summe 10, verbunden über leere Felder (waagrecht, senkrecht, schräg, Lesereihenfolge)
+// =====================================================================
+let zp = null;
+const ZP_SP = 9;
+function zpNeu(r = klZufall()) { const z = []; for (let i = 0; i < 36; i++) z.push(1 + Math.floor(r() * 9)); return { z, wahl: -1, nachlegen: 5, punkte: 0, start: 36, zeit: 0 }; }
+function zpFrei(z, a, b, schritt) { for (let i = a + schritt; i < b; i += schritt) if (z[i]) return false; return true; }
+function zpPasst(z, a, b) {
+  if (a === b || !z[a] || !z[b] || (z[a] !== z[b] && z[a] + z[b] !== 10)) return false;
+  const x = Math.min(a, b), y = Math.max(a, b), d = y - x, cx = x % ZP_SP, cy = y % ZP_SP;
+  if (zpFrei(z, x, y, 1)) return true;                                                     // Lesereihenfolge (auch über Zeilenende)
+  if (d % ZP_SP === 0 && zpFrei(z, x, y, ZP_SP)) return true;                              // senkrecht
+  if (d % (ZP_SP + 1) === 0 && cy - cx === d / (ZP_SP + 1) && zpFrei(z, x, y, ZP_SP + 1)) return true;   // schräg ↘
+  if (d % (ZP_SP - 1) === 0 && cx - cy === d / (ZP_SP - 1) && zpFrei(z, x, y, ZP_SP - 1)) return true;   // schräg ↙
+  return false;
+}
+function zpEinPaar(z) { for (let a = 0; a < z.length; a++) if (z[a]) for (let b = a + 1; b < z.length; b++) if (z[b] && zpPasst(z, a, b)) return [a, b]; return null; }
+function zpAufraeumen() {   // komplett leere Zeilen verschwinden
+  let weg = 0;
+  for (let r = Math.ceil(zp.z.length / ZP_SP) - 1; r >= 0; r--) { const zeile = zp.z.slice(r * ZP_SP, r * ZP_SP + ZP_SP); if (zeile.every((v) => !v)) { zp.z.splice(r * ZP_SP, ZP_SP); weg++; } }
+  while (zp.z.length && !zp.z[zp.z.length - 1]) zp.z.pop();
+  return weg;
+}
+function zpStart(neu) {
+  klZeigen();
+  const st = klStore();
+  zp = !neu && st.stand.zahlen ? st.stand.zahlen : zpNeu();
+  zp.wahl = -1; zpZeichnen();
+  klStoppUhr(); klUhr = setInterval(() => { if (zp && !zp.ende) zp.zeit++; }, 1000);
+}
+function zpSpeichern() { const st = klStore(); if (zp && !zp.ende && zp.punkte) st.stand.zahlen = zp; else delete st.stand.zahlen; klSave(st); }
+function zpZeichnen(tipp) {
+  klKopf('🔢 Zahlenpaare', 'Rekord ' + fmt(klStore().best.zahlen || 0));
+  const rest = zp.z.filter(Boolean).length;
+  $('klInhalt').innerHTML = '<div class="kl-leiste oben"><span>Punkte <b>' + fmt(zp.punkte) + '</b></span><span>Übrig <b>' + rest + '</b></span><button type="button" class="kl-knopf" id="zpTipp">💡</button><button type="button" class="kl-knopf" id="zpNeu">Neu</button></div>'
+    + '<div class="zp-feld" id="zpFeld">' + zp.z.map((v, i) => '<button type="button" class="zp-z' + (v ? '' : ' leer') + (i === zp.wahl ? ' wahl' : '') + (tipp && tipp.includes(i) ? ' tipp' : '') + '" data-i="' + i + '">' + (v || '') + '</button>').join('') + '</div>'
+    + '<button type="button" class="btn zp-nach" id="zpNach"' + (zp.nachlegen ? '' : ' disabled') + '>➕ Zahlen nachlegen (' + zp.nachlegen + '×)</button>'
+    + '<p class="kl-hinweis">Streiche zwei gleiche Zahlen oder zwei, die zusammen 10 ergeben (7+3). Sie müssen nebeneinander, untereinander, schräg oder in Lesereihenfolge liegen – dazwischen dürfen nur leere Felder sein.</p>';
+  $('zpFeld').addEventListener('click', (e) => { const b = e.target.closest('[data-i]'); if (b) zpTippen(+b.dataset.i); });
+  $('zpNach').addEventListener('click', zpNachlegen);
+  $('zpTipp').addEventListener('click', () => { const p = zpEinPaar(zp.z); if (p) zpZeichnen(p); else { const n = $('zpNach'); n.classList.remove('tipp'); void n.offsetWidth; n.classList.add('tipp'); } });
+  $('zpNeu').addEventListener('click', () => { const st = klStore(); delete st.stand.zahlen; klSave(st); zpStart(true); });
+}
+function zpTippen(i) {
+  if (zp.ende || !zp.z[i]) return;
+  if (zp.wahl < 0 || zp.wahl === i) { zp.wahl = zp.wahl === i ? -1 : i; zpZeichnen(); return; }
+  if (zpPasst(zp.z, zp.wahl, i)) {
+    zp.z[zp.wahl] = 0; zp.z[i] = 0; zp.wahl = -1; zp.punkte += 1;
+    const zeilen = zpAufraeumen(); zp.punkte += zeilen * 10;
+    klVibrieren(zeilen ? [15, 30, 15] : 10);
+    zpZeichnen(); zpEndePruefen();
+  } else { zp.wahl = i; zpZeichnen(); klVibrieren(20); }
+}
+function zpNachlegen() { if (!zp.nachlegen || zp.ende) return; zp.nachlegen--; zp.z.push(...zp.z.filter(Boolean)); zp.wahl = -1; zpZeichnen(); zpEndePruefen(); }
+function zpEndePruefen() {
+  const leer = !zp.z.some(Boolean);
+  if (!leer && (zpEinPaar(zp.z) || zp.nachlegen)) return;
+  zp.ende = true; klStoppUhr();
+  if (leer) zp.punkte += 100 + zp.nachlegen * 20;
+  const st = klStore(), alt = st.best.zahlen || 0, rekord = zp.punkte > alt;
+  if (rekord) st.best.zahlen = zp.punkte;
+  if (leer) st.stat.zahlenGeloest = (st.stat.zahlenGeloest || 0) + 1;
+  delete st.stand.zahlen; klSave(st);
+  klVerlauf('zahlen', leer ? 1 : Math.max(0, 1 - zp.z.filter(Boolean).length / Math.max(zp.start, zp.z.length)), 1, (leer ? 'alles geräumt' : 'keine Paare mehr') + ' · ' + fmt(zp.punkte) + ' Punkte', { sieg: leer, rekord });
+  if (leer && typeof konfetti === 'function') konfetti(30, ['🔢', '✨', '🎉']);
+  klErgebnis(leer ? '🎉 Alles geräumt!' : '🧮 Keine Paare mehr', fmt(zp.punkte) + ' Punkte' + (rekord ? ' – 🏆 neuer Rekord!' : ' · Rekord ' + fmt(alt)), () => zpStart(true));
+}
+
+// =====================================================================
+// 🪐 PLANETEN-FUSION – fallen lassen, Gleiches verschmilzt zum Nächstgrößeren
+// =====================================================================
+const PF_STUFEN = [
+  { n: 'Staub', e: '✨', f: '#a8a29e', r: 0.045 }, { n: 'Komet', e: '☄️', f: '#7dd3fc', r: 0.06 }, { n: 'Mond', e: '🌑', f: '#94a3b8', r: 0.077 },
+  { n: 'Merkur', e: '', f: '#d6d3d1', r: 0.093 }, { n: 'Mars', e: '', f: '#ef4444', r: 0.11 }, { n: 'Erde', e: '🌍', f: '#3b82f6', r: 0.13 },
+  { n: 'Neptun', e: '', f: '#6366f1', r: 0.152 }, { n: 'Saturn', e: '🪐', f: '#eab308', r: 0.178 }, { n: 'Jupiter', e: '', f: '#f97316', r: 0.205 },
+  { n: 'Stern', e: '⭐', f: '#fde047', r: 0.235 }, { n: 'Sonne', e: '☀️', f: '#fb923c', r: 0.27 },
+];
+let pf = null;
+function pfStart() {
+  klZeigen(); klKopf('🪐 Planeten-Fusion', 'Rekord ' + fmt(klStore().best.planeten || 0));
+  $('klInhalt').innerHTML = '<div class="kl-leiste oben"><span>Punkte <b id="pfPunkte">0</b></span><span id="pfNext" class="pf-next"></span><button type="button" class="kl-knopf" id="pfNeu">Neu</button></div>'
+    + '<canvas id="pfBild" class="pf-bild"></canvas><div class="pf-leiter" id="pfLeiter">' + PF_STUFEN.map((s, i) => '<i style="--f:' + s.f + ';--g:' + (0.55 + i * 0.06) + '" title="' + s.n + '">' + (s.e || '') + '</i>').join('') + '</div>'
+    + '<p class="kl-hinweis">Zielen und loslassen. Zwei gleiche verschmelzen zum Nächstgrößeren – bis zur Sonne. Nichts darf lange über der Linie liegen.</p>';
+  const cv = $('pfBild'), W = Math.min(cv.parentElement.clientWidth, 460), H = Math.round(W * 1.3), dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
+  const r = klZufall();
+  pf = { W, H, dpr, ctx: cv.getContext('2d'), obj: [], punkte: 0, ziel: W / 2, jetzt: Math.floor(r() * 3), next: Math.floor(r() * 4), sperre: 0, linie: H * 0.16, ende: false, r, id: 0, zeit: 0, hoechste: 0 };
+  $('pfNeu').addEventListener('click', pfStart);
+  const ziel = (e) => { const b = cv.getBoundingClientRect(); pf.ziel = Math.max(0, Math.min(W, e.clientX - b.left)); };
+  cv.addEventListener('pointermove', ziel); cv.addEventListener('pointerdown', (e) => { ziel(e); cv.setPointerCapture(e.pointerId); });
+  cv.addEventListener('pointerup', (e) => { ziel(e); pfFallen(); });
+  pfNextZeigen();
+  let letzt = performance.now(), rest = 0;
+  const schleife = (t) => {
+    if (klAktiv !== 'planeten' || !pf || pf.ctx !== cv.getContext('2d')) return;
+    rest += Math.min(50, t - letzt); letzt = t;
+    while (rest >= 1000 / 60) { pfSchritt(); rest -= 1000 / 60; }
+    pfMalen();
+    if (!pf.ende) requestAnimationFrame(schleife);
+  };
+  requestAnimationFrame(schleife);
+}
+const pfRad = (lv) => PF_STUFEN[lv].r * pf.W;
+function pfNextZeigen() { const n = PF_STUFEN[pf.next]; $('pfNext').innerHTML = 'Als Nächstes: <i style="--f:' + n.f + '">' + (n.e || '') + '</i>'; }
+function pfFallen() {
+  if (pf.ende || pf.sperre > 0) return;
+  const lv = pf.jetzt, rr = pfRad(lv);
+  pf.obj.push({ id: ++pf.id, x: Math.max(rr, Math.min(pf.W - rr, pf.ziel)), y: pf.linie - rr - 4, vx: 0, vy: 0, lv, alter: 0, ueber: 0 });
+  pf.jetzt = pf.next; pf.next = Math.floor(pf.r() * 5 * pf.r());   // kleine öfter
+  pf.sperre = 32; pfNextZeigen();
+}
+function pfSchritt() {
+  if (pf.ende) return;
+  pf.sperre = Math.max(0, pf.sperre - 1);
+  const g = pf.H * 0.0009, O = pf.obj;
+  for (const o of O) { o.vy += g; o.vx *= 0.995; o.vy *= 0.999; o.x += o.vx; o.y += o.vy; o.alter++; }
+  for (let it = 0; it < 5; it++) {
+    for (const o of O) {
+      const r = pfRad(o.lv);
+      if (o.x < r) { o.x = r; o.vx = Math.abs(o.vx) * 0.3; }
+      if (o.x > pf.W - r) { o.x = pf.W - r; o.vx = -Math.abs(o.vx) * 0.3; }
+      if (o.y > pf.H - r) { o.y = pf.H - r; o.vy = -Math.abs(o.vy) * 0.15; o.vx *= 0.96; }
+    }
+    for (let i = 0; i < O.length; i++) for (let j = i + 1; j < O.length; j++) {
+      const a = O[i], b = O[j]; if (a.weg || b.weg) continue;
+      const dx = b.x - a.x, dy = b.y - a.y, ra = pfRad(a.lv), rb = pfRad(b.lv), d = Math.hypot(dx, dy) || 0.01, ueber = ra + rb - d;
+      if (ueber <= 0) continue;
+      if (a.lv === b.lv) {   // verschmelzen
+        a.weg = b.weg = true;
+        if (a.lv < PF_STUFEN.length - 1) O.push({ id: ++pf.id, x: (a.x + b.x) / 2, y: (a.y + b.y) / 2, vx: (a.vx + b.vx) / 2, vy: Math.min(a.vy, b.vy) * 0.5, lv: a.lv + 1, alter: 20, ueber: 0, neu: 12 });
+        pf.punkte += ((a.lv + 2) * (a.lv + 3)) / 2 + (a.lv === PF_STUFEN.length - 1 ? 200 : 0);
+        pf.hoechste = Math.max(pf.hoechste, Math.min(a.lv + 1, PF_STUFEN.length - 1));
+        if (a.lv >= 5) klVibrieren(15);
+        continue;
+      }
+      const nx = dx / d, ny = dy / d, ma = ra * ra, mb = rb * rb, s = ueber / (ma + mb);
+      a.x -= nx * s * mb; a.y -= ny * s * mb; b.x += nx * s * ma; b.y += ny * s * ma;
+      const rel = (b.vx - a.vx) * nx + (b.vy - a.vy) * ny;
+      if (rel < 0) { const k = (-1.2 * rel) / (ma + mb); a.vx -= k * mb * nx; a.vy -= k * mb * ny; b.vx += k * ma * nx; b.vy += k * ma * ny; }
+    }
+    if (O.some((o) => o.weg)) { const bleibt = O.filter((o) => !o.weg); O.length = 0; O.push(...bleibt); }
+  }
+  // über der Linie? (nur Liegendes zählt)
+  for (const o of O) { if (o.alter > 60 && o.y - pfRad(o.lv) < pf.linie && Math.abs(o.vy) < 1.5) o.ueber++; else o.ueber = 0; if (o.neu) o.neu--; }
+  const z = $('pfPunkte'); if (z) z.textContent = fmt(pf.punkte);
+  if (O.some((o) => o.ueber > 110)) pfEnde();
+}
+function pfMalen() {
+  const { ctx: c, W, H, dpr } = pf;
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const hg = c.createLinearGradient(0, 0, 0, H); hg.addColorStop(0, '#0b1026'); hg.addColorStop(1, '#1e1b4b'); c.fillStyle = hg; c.fillRect(0, 0, W, H);
+  for (let i = 0; i < 40; i++) { c.fillStyle = 'rgba(255,255,255,' + (0.15 + (i % 5) * 0.08) + ')'; c.fillRect((i * 97) % W, (i * 53) % H, 1.5, 1.5); }
+  const gefahr = pf.obj.some((o) => o.ueber > 30);
+  c.strokeStyle = gefahr ? 'rgba(248,113,113,.9)' : 'rgba(255,255,255,.35)'; c.setLineDash([6, 6]); c.lineWidth = 2; c.beginPath(); c.moveTo(0, pf.linie); c.lineTo(W, pf.linie); c.stroke(); c.setLineDash([]);
+  if (!pf.ende) {   // Zielhilfe + nächster Planet
+    const rr = pfRad(pf.jetzt), x = Math.max(rr, Math.min(W - rr, pf.ziel));
+    c.strokeStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.moveTo(x, pf.linie); c.lineTo(x, H); c.stroke();
+    if (!pf.sperre) pfKugel(c, x, pf.linie - rr - 4, pf.jetzt, 1);
+  }
+  for (const o of pf.obj) pfKugel(c, o.x, o.y, o.lv, o.neu ? 1 + o.neu / 40 : 1);
+}
+function pfKugel(c, x, y, lv, s) {
+  const S = PF_STUFEN[lv], r = pfRad(lv) * s;
+  const g = c.createRadialGradient(x - r * 0.35, y - r * 0.4, r * 0.1, x, y, r);
+  g.addColorStop(0, '#ffffff'); g.addColorStop(0.18, S.f); g.addColorStop(1, 'rgba(0,0,0,.55)');
+  c.fillStyle = S.f; c.beginPath(); c.arc(x, y, r, 0, Math.PI * 2); c.fill();
+  c.fillStyle = g; c.globalAlpha = 0.85; c.fill(); c.globalAlpha = 1;
+  if (lv === 7) { c.strokeStyle = 'rgba(253,230,138,.85)'; c.lineWidth = r * 0.12; c.beginPath(); c.ellipse(x, y, r * 1.35, r * 0.38, -0.35, 0, Math.PI * 2); c.stroke(); }
+  if (lv >= 9) { c.shadowColor = S.f; c.shadowBlur = r * 0.6; c.beginPath(); c.arc(x, y, r * 0.98, 0, Math.PI * 2); c.strokeStyle = S.f; c.lineWidth = 2; c.stroke(); c.shadowBlur = 0; }
+  if (S.e) { c.font = Math.round(r * 1.05) + 'px system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle'; c.fillText(S.e, x, y + r * 0.05); }
+}
+function pfEnde() {
+  pf.ende = true;
+  const st = klStore(), alt = st.best.planeten || 0, rekord = pf.punkte > alt;
+  if (rekord) st.best.planeten = pf.punkte;
+  st.best.planetenStufe = Math.max(st.best.planetenStufe || 0, pf.hoechste); klSave(st);
+  klVerlauf('planeten', pf.punkte, Math.max(pf.punkte, alt, 1), fmt(pf.punkte) + ' Punkte · bis ' + PF_STUFEN[pf.hoechste].n, { rekord, stufe: pf.hoechste });
+  pfMalen();
+  klErgebnis(rekord ? '🏆 Neuer Rekord!' : '🌌 Kein Platz mehr', fmt(pf.punkte) + ' Punkte · größter Himmelskörper: ' + PF_STUFEN[pf.hoechste].n + (PF_STUFEN[pf.hoechste].e ? ' ' + PF_STUFEN[pf.hoechste].e : '') + '.', pfStart);
+}
+
+// =====================================================================
+// 🔩 SCHRAUBEN SORTIEREN / 🧪 FARBEN UMFÜLLEN – gleiche Farben auf einen Stab bzw. in ein Glas
+// =====================================================================
+const SO_FARBEN = ['#ef4444', '#3b82f6', '#22c55e', '#eab308', '#a855f7', '#f97316', '#ec4899', '#14b8a6', '#78716c', '#e2e8f0'];
+const SO_KAP = 4;
+let so = null;
+const soFertig = (S) => S.every((s) => !s.length || (s.length === SO_KAP && s.every((x) => x === s[0])));
+function soGruppe(s) { let k = 1; while (k < s.length && s[s.length - 1 - k] === s[s.length - 1]) k++; return k; }
+function soZugMoeglich(S, a, b) {
+  const A = S[a], B = S[b];
+  if (a === b || !A.length || B.length >= SO_KAP) return 0;
+  if (B.length && B[B.length - 1] !== A[A.length - 1]) return 0;
+  return Math.min(soGruppe(A), SO_KAP - B.length);
+}
+// Löser (Tiefensuche mit Gedächtnis) – prüft, dass jedes Level lösbar ist
+function soLoesbar(start, grenze = 150000) {
+  const gesehen = new Set(); let n = 0;
+  const schluessel = (S) => S.map((s) => s.join(',')).sort().join('|');
+  const rek = (S) => {
+    if (soFertig(S)) return true;
+    if (++n > grenze) return false;
+    const k = schluessel(S); if (gesehen.has(k)) return false; gesehen.add(k);
+    for (let a = 0; a < S.length; a++) for (let b = 0; b < S.length; b++) {
+      const m = soZugMoeglich(S, a, b); if (!m) continue;
+      if (!S[b].length && soGruppe(S[a]) === S[a].length) continue;   // ganzer einfarbiger Stapel auf leeren Platz: sinnlos
+      const T = S.map((s) => s.slice()); T[b].push(...T[a].splice(T[a].length - m, m));
+      if (rek(T)) return true;
+    }
+    return false;
+  };
+  return rek(start.map((s) => s.slice()));
+}
+function soLevel(lvl, r = klZufall()) {
+  const farben = Math.min(3 + Math.floor((lvl - 1) / 2), SO_FARBEN.length);
+  for (let v = 0; v < 60; v++) {
+    const beutel = []; for (let f = 0; f < farben; f++) for (let k = 0; k < SO_KAP; k++) beutel.push(f);
+    for (let i = beutel.length - 1; i > 0; i--) { const j = Math.floor(r() * (i + 1)); [beutel[i], beutel[j]] = [beutel[j], beutel[i]]; }
+    const S = []; for (let f = 0; f < farben; f++) S.push(beutel.slice(f * SO_KAP, f * SO_KAP + SO_KAP)); S.push([], []);
+    if (S.some((s) => s.length && s.every((x) => x === s[0]))) continue;
+    if (soLoesbar(S)) return S;
+  }
+  return lvl > 1 ? soLevel(lvl - 2, r) : [[0, 1, 0, 1], [1, 0, 1, 0], [], []];   // Notfall: etwas leichter
+}
+function soStart(skin, neuesLevel) {
+  klZeigen();
+  const st = klStore(), key = skin === 'wasser' ? 'wasser' : 'schrauben', lvl = st.stat[key + 'Level'] || 1;
+  if (!neuesLevel && st.stand[key]) so = st.stand[key];
+  else { $('klInhalt').innerHTML = '<div class="kl-held"><p>Level wird gebaut …</p></div>'; so = { skin: key, lvl, staebe: soLevel(lvl), wahl: -1, zuege: 0, rueck: [], extra: false }; }
+  so.wahl = -1; so.rueck = so.rueck || [];
+  soZeichnen();
+}
+function soSpeichern() { if (!so) return; const st = klStore(); if (!so.fertig && so.zuege) { const k = { ...so }; delete k.rueck; st.stand[so.skin] = k; } else delete st.stand[so.skin]; klSave(st); }
+function soZeichnen() {
+  const wasser = so.skin === 'wasser';
+  klKopf(wasser ? '🧪 Farben umfüllen' : '🔩 Schrauben sortieren', 'Level ' + so.lvl);
+  $('klInhalt').innerHTML = '<div class="kl-leiste oben"><span>Level <b>' + so.lvl + '</b></span><span>Züge <b>' + so.zuege + '</b></span><button type="button" class="kl-knopf" id="soRueck"' + (so.rueck.length ? '' : ' disabled') + '>↶</button><button type="button" class="kl-knopf" id="soExtra"' + (so.extra ? ' disabled' : '') + '>➕ ' + (wasser ? 'Glas' : 'Stab') + '</button><button type="button" class="kl-knopf" id="soNeu">↻</button></div>'
+    + '<div class="so-feld ' + (wasser ? 'wasser' : 'schrauben') + '" id="soFeld">' + so.staebe.map((s, i) => {
+      const hoch = i === so.wahl ? soGruppe(s) : 0;
+      return '<button type="button" class="so-stab' + (i === so.wahl ? ' wahl' : '') + (s.length === SO_KAP && s.every((x) => x === s[0]) ? ' voll' : '') + '" data-i="' + i + '"><span class="so-innen">' + s.map((f, k) => '<i class="so-teil' + (k >= s.length - hoch ? ' hoch' : '') + '" style="--f:' + SO_FARBEN[f] + ';--k:' + k + '"></i>').join('') + '</span></button>';
+    }).join('') + '</div>'
+    + '<p class="kl-hinweis">' + (wasser ? 'Tippe ein Glas und dann das Ziel. Gießen geht nur auf die gleiche Farbe oder in ein leeres Glas.' : 'Tippe einen Stab und dann das Ziel. Muttern passen nur auf die gleiche Farbe oder einen leeren Stab.') + ' Jedes Level ist lösbar.</p>';
+  $('soFeld').addEventListener('click', (e) => { const b = e.target.closest('[data-i]'); if (b) soTippen(+b.dataset.i); });
+  $('soRueck').addEventListener('click', () => { const r = so.rueck.pop(); if (r) { so.staebe = JSON.parse(r); so.zuege++; so.wahl = -1; soZeichnen(); } });
+  $('soExtra').addEventListener('click', () => { if (so.extra) return; so.extra = true; so.staebe.push([]); soZeichnen(); });
+  $('soNeu').addEventListener('click', () => { const st = klStore(); delete st.stand[so.skin]; klSave(st); soStart(so.skin, true); });
+}
+function soTippen(i) {
+  if (so.fertig) return;
+  if (so.wahl < 0) { if (so.staebe[i].length) { so.wahl = i; soZeichnen(); } return; }
+  if (so.wahl === i) { so.wahl = -1; soZeichnen(); return; }
+  const m = soZugMoeglich(so.staebe, so.wahl, i);
+  if (!m) { if (so.staebe[i].length) so.wahl = i; else so.wahl = -1; klVibrieren(20); soZeichnen(); return; }
+  so.rueck.push(JSON.stringify(so.staebe)); if (so.rueck.length > 200) so.rueck.shift();
+  so.staebe[i].push(...so.staebe[so.wahl].splice(so.staebe[so.wahl].length - m, m));
+  so.wahl = -1; so.zuege++;
+  soZeichnen();
+  if (soFertig(so.staebe)) soGeschafft();
+}
+function soGeschafft() {
+  so.fertig = true;
+  const st = klStore(), key = so.skin;
+  st.stat[key + 'Level'] = so.lvl + 1; delete st.stand[key]; klSave(st);
+  klVerlauf(key, 1, 1, 'Level ' + so.lvl + ' in ' + so.zuege + ' Zügen', { stufe: so.lvl > 10 ? 'schwer' : so.lvl > 4 ? 'mittel' : 'leicht', level: so.lvl, zuege: so.zuege });
+  if (typeof konfetti === 'function') konfetti(25, key === 'wasser' ? ['🧪', '💧', '✨'] : ['🔩', '⚙️', '✨']);
+  setTimeout(() => klErgebnis('✅ Level ' + so.lvl + ' geschafft!', so.zuege + ' Züge. Nächstes Level: ' + (Math.min(3 + Math.floor(so.lvl / 2), SO_FARBEN.length)) + ' Farben.', () => soStart(key, true)), 350);
 }

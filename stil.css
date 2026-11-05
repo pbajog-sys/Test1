@@ -3461,3 +3461,30 @@ button.slo-maskottchen.looping { animation: sloLooping 1.1s var(--ease-out); }
 .bu-klassiker span { display: inline-block; transform: rotate(-12deg); }
 .mn-feld { grid-template-columns: repeat(var(--b), minmax(0, 1fr)); } .mn-z { min-width: 0; }
 .sd-gitter, .bl-feld, .vr-brett { min-width: 0; } .sd-z, .vr-loch, .bl-z { min-width: 0; }
+/* Klassiker – neue Spiele */
+.kl-beliebt { display: inline-block; margin-left: 4px; padding: 1px 7px; border-radius: 999px; background: #0ea5e9; color: #fff; font-size: .62rem; font-weight: 800; text-transform: uppercase; letter-spacing: .04em; vertical-align: middle; }
+.klm-zahlen { display: grid; grid-template-columns: repeat(3, 17px); gap: 2px; } .klm-zahlen s { text-decoration: none; height: 17px; border-radius: 3px; background: #f8fafc; color: #0f172a; font-size: .66rem; font-weight: 800; display: grid; place-items: center; } .klm-zahlen s.p { background: #7dd3fc; } .klm-zahlen s.q { background: #0ea5e9; color: #fff; }
+.klm-planeten { position: relative; width: 64px; height: 58px; border-radius: 8px; background: #1e1b4b; overflow: hidden; } .klm-planeten s { position: absolute; width: var(--g); height: var(--g); border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff, var(--f) 30%, #111 110%); font-size: calc(var(--g) * .8); display: grid; place-items: center; text-decoration: none; }
+.klm-schrauben { display: flex; gap: 7px; align-items: flex-end; height: 56px; } .klm-schrauben s { position: relative; width: 14px; height: 52px; display: flex; flex-direction: column-reverse; align-items: center; text-decoration: none; background: linear-gradient(90deg, #94a3b8, #e2e8f0, #94a3b8) center / 4px 100% no-repeat; } .klm-schrauben b { width: 16px; height: 10px; margin-top: 1px; background: var(--f); clip-path: polygon(15% 0, 85% 0, 100% 50%, 85% 100%, 15% 100%, 0 50%); }
+.klm-wasser { display: flex; gap: 8px; } .klm-wasser s { width: 16px; height: 52px; border: 2px solid rgba(255,255,255,.7); border-top: 0; border-radius: 0 0 9px 9px; display: flex; flex-direction: column-reverse; overflow: hidden; text-decoration: none; } .klm-wasser b { height: 25%; background: var(--f); }
+/* Zahlenpaare */
+.zp-feld { display: grid; grid-template-columns: repeat(9, minmax(0, 1fr)); gap: 3px; }
+.zp-z { aspect-ratio: 1; min-width: 0; border: 0; border-radius: 8px; padding: 0; background: #f8fafc; color: #0f172a; font: inherit; font-size: clamp(1rem, 5vw, 1.4rem); font-weight: 700; cursor: pointer; }
+.zp-z.leer { background: rgba(255,255,255,.06); cursor: default; } .zp-z.wahl { background: #0ea5e9; color: #fff; transform: scale(1.06); } .zp-z.tipp { animation: klTipp 1.2s 2; background: #bae6fd; }
+.zp-nach { width: 100%; background: linear-gradient(90deg, #0ea5e9, #22d3ee); color: #04202c; } .zp-nach:disabled { opacity: .4; } .zp-nach.tipp { animation: klWackel .3s 2; }
+/* Planeten-Fusion */
+.pf-bild { width: 100%; max-width: 460px; justify-self: center; border-radius: 16px; touch-action: none; box-shadow: 0 10px 30px rgba(0,0,0,.5); display: block; margin: 0 auto; }
+.pf-next { display: inline-flex; align-items: center; gap: 6px; } .pf-next i, .pf-leiter i { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 50%; font-style: normal; font-size: 14px; background: radial-gradient(circle at 35% 30%, #fff, var(--f) 30%, #111 120%); }
+.pf-leiter { display: flex; justify-content: center; align-items: center; gap: 3px; flex-wrap: wrap; } .pf-leiter i { width: calc(26px * var(--g)); height: calc(26px * var(--g)); font-size: calc(15px * var(--g)); }
+/* Sortieren */
+.so-feld { display: flex; flex-wrap: wrap; justify-content: center; gap: 14px 10px; padding: 18px 6px; border-radius: 18px; background: rgba(255,255,255,.04); }
+.so-stab { position: relative; width: 52px; height: 190px; border: 0; padding: 0; background: none; cursor: pointer; }
+.so-innen { position: absolute; left: 0; right: 0; bottom: 0; top: 0; display: block; }
+.schrauben .so-innen::before { content: ''; position: absolute; left: 50%; bottom: 8px; top: 18px; width: 8px; margin-left: -4px; border-radius: 4px; background: linear-gradient(90deg, #64748b, #e2e8f0, #64748b); }
+.schrauben .so-innen::after { content: ''; position: absolute; left: 2px; right: 2px; bottom: 0; height: 12px; border-radius: 6px; background: linear-gradient(#cbd5e1, #64748b); }
+.schrauben .so-teil { position: absolute; left: 1px; right: 1px; bottom: calc(12px + var(--k) * 34px); height: 32px; background: linear-gradient(180deg, color-mix(in srgb, var(--f) 70%, #fff), var(--f) 45%, color-mix(in srgb, var(--f) 70%, #000)); clip-path: polygon(14% 0, 86% 0, 100% 50%, 86% 100%, 14% 100%, 0 50%); transition: transform .18s; }
+.schrauben .so-teil::after { content: ''; position: absolute; left: 50%; top: 50%; width: 12px; height: 12px; margin: -6px; border-radius: 50%; background: rgba(0,0,0,.35); }
+.wasser .so-innen { border: 3px solid rgba(255,255,255,.75); border-top: 0; border-radius: 0 0 26px 26px; overflow: hidden; top: 20px; }
+.wasser .so-teil { position: absolute; left: 0; right: 0; bottom: calc(var(--k) * 25%); height: 25%; background: var(--f); transition: transform .18s; } .wasser .so-teil:last-child { box-shadow: inset 0 4px 0 rgba(255,255,255,.3); }
+.so-stab.wahl .so-teil.hoch { transform: translateY(-26px); } .wasser .so-stab.wahl .so-innen { transform: translateY(-14px); }
+.wasser .so-stab.wahl .so-teil.hoch { transform: none; } .so-stab.voll { filter: drop-shadow(0 0 8px rgba(134,239,172,.8)); }

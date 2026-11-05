@@ -230,7 +230,7 @@ Abstand in Cent (100 Cent = ein Halbton; 10 − Cent/50, ab einer Quarte 0). Aus
 Position auf der Skala, beide Töne zum Vergleichen. Tagestöne, Bestwerte, Challenge-Links. Code in `toene.js`.
 
 ## 🃏 Klassiker (eigene App)
-Fünf zeitlose Spiele in einer App (`klassiker.js`), eigene Grafik, laufende Partien werden gespeichert und fortgesetzt
+Neun Spiele in einer App (`klassiker.js`), eigene Grafik, laufende Partien werden gespeichert und fortgesetzt
 (`walquiz.klassiker.v1`). Verlauf unter „Klassiker“ (`klassiker`, `x.modus` = Spiel), zählt fürs logische Denken.
 - **🂡 Solitär (Klondike):** Tippen legt Karte bzw. Stapel automatisch an den besten Platz (erst Ablage, dann Spalte, König
   in leere Spalte). 1 oder 3 Karten ziehen, ↶ Zurück, 💡 Tipp, „⚡ Fertig legen“ sobald alles offen ist, Bestzeit.
@@ -242,6 +242,16 @@ Fünf zeitlose Spiele in einer App (`klassiker.js`), eigene Grafik, laufende Par
   🚩-Modus, Tipp auf eine Zahl mit passenden Flaggen öffnet die Nachbarn.
 - **🔴 Vier in einer Reihe:** gegen den Computer (Minimax mit Alpha-Beta, Tiefe 2/4/7; gewinnt und blockt sofort auf jeder
   Stufe) oder zu zweit an einem Handy.
+- **🔢 Zahlenpaare** (beliebt): 36 Zahlen in 9 Spalten; zwei gleiche oder zwei mit Summe 10 streichen, wenn sie
+  nebeneinander, untereinander, schräg oder in Lesereihenfolge (auch über das Zeilenende) liegen und dazwischen nur leere
+  Felder sind. Leere Zeilen verschwinden (+10), „➕ Nachlegen“ hängt die Restzahlen an (5×), 💡 zeigt ein Paar.
+- **🪐 Planeten-Fusion** (beliebt): eigene Physik auf Canvas (Schwerkraft, Kreis-Stöße nach Masse, 5 Iterationen je
+  Schritt, 60 Schritte/s). Gleiche Himmelskörper verschmelzen – Staub → Komet → Mond → … → Saturn → Jupiter → Stern →
+  Sonne. Ende, wenn etwas gut 1,8 s ruhig über der Linie liegt.
+- **🔩 Schrauben sortieren / 🧪 Farben umfüllen** (beliebt): gleiche Regeln, zwei Looks. Stapel zu je 4, oben liegende
+  gleiche Farben wandern zusammen, nur auf gleiche Farbe oder leer. Endlose Level (ab 3 Farben, alle 2 Level eine mehr,
+  bis 10); jedes Level wird vor dem Spielen mit einem Löser (Tiefensuche mit Gedächtnis) auf Lösbarkeit geprüft.
+  ↶ Zurück, einmal pro Level ➕ zusätzlicher Stab/Glas.
 - Test: `tests/klassiker.test.js` (90 Sudokus auf Eindeutigkeit, 400 Solitär-Zufallstipps ohne Regelverstoß, Ziehen/Tippen
   bei den Blöcken, Minen-Sieg/-Niederlage, KI-Duell Schwer gegen Leicht, Fortsetzen nach Neuladen).
 
