@@ -197,6 +197,7 @@ function renderHub() {
   $('hubPiranhaBest').textContent = prSt.level > 1 ? 'Level ' + prSt.level + ' · ⭐ ' + prS : 'Noch nicht gespielt';
   const sloSt = loadJson('walquiz.slo.v1'), sloF = Object.values(sloSt.stufe || {}).filter((x) => x >= 3).length, sloB = Object.keys(sloSt.stufe || {}).length;
   $('hubSloBest').textContent = sloSt.xp ? '⚡ ' + sloSt.xp + ' XP · ' + sloB + ' von ' + (typeof SLO_EINHEITEN !== 'undefined' ? SLO_EINHEITEN.length : 20) + ' Stationen' + (sloF ? ' · 👑 ' + sloF : '') : 'Noch nicht begonnen';
+  if ($('hubKlassikerBest')) { const k = loadJson('walquiz.klassiker.v1'), st = k.stat || {}, n = (st.solitaerSiege || 0) + (st.sudokuGeloest || 0) + (st.minenSiege || 0) + (st.vierSiege || 0); $('hubKlassikerBest').textContent = n ? n + ' Siege' + (k.best && k.best.bloecke ? ' · Blöcke ' + fmt(k.best.bloecke) : '') : 'Noch nicht gespielt'; }
   if ($('hubSongsBest')) { const sb = typeof srBest === 'function' ? srBest() : null; $('hubSongsBest').textContent = sb != null ? 'Rekord ' + fmt(sb) + ' / 50' : 'Noch nicht gespielt'; }
   const dpSt = loadJson('walquiz.dopamin.v1');
   if ($('hubDopaminBest')) $('hubDopaminBest').textContent = dpSt.best ? 'Bestwert ' + fmt(dpSt.best) + ' · ' + dpSt.runden + ' Runden' : 'Noch nicht gespielt';
@@ -326,7 +327,7 @@ if (pendingChallenge) {
   const bahnen = [
     ['.bu-punkte', '.bu-karte', '.bu-zufall', '.bu-augen'],
     ['.bu-farben', '.bu-cello', '.bu-takt', '.bu-funktion', '.bu-dackel', '[data-ziel="hubTiefgang"]', '[data-ziel="hubPiranha"]', '[data-ziel="hubSongs"]'],
-    ['.bu-wal', '.bu-krimi', '[data-welt="haie"]', '.bu-toene', '[data-ziel="hubTierleben"]', '.bu-porsche', '[data-ziel="hubZahlen"]', '[data-ziel="hubRiff"]'],
+    ['.bu-wal', '.bu-krimi', '[data-welt="haie"]', '.bu-toene', '[data-ziel="hubTierleben"]', '.bu-porsche', '[data-ziel="hubZahlen"]', '[data-ziel="hubRiff"]', '[data-ziel="hubKlassiker"]'],
   ].map((l) => l.map(q).filter(Boolean));
   const tempo = [0.00011, 0.00007, 0.000045], kipp = -0.16, c = Math.cos(kipp), s = Math.sin(kipp);
   const ellipsen = b.querySelectorAll('.bu-bahnen ellipse'), masse = new Map();

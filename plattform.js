@@ -25,11 +25,12 @@ const SK_SPIELE = {
   riff: { name: 'Riffbau', emoji: '🪸', hub: 'hubRiff', tag: 'rfTagBtn', kat: 'denken' },
   tiefgang: { name: 'Tiefgang', emoji: '🤿', hub: 'hubTiefgang', tag: 'tgTagBtn', kat: 'zahlen' },
   krimi: { name: 'Wer war’s?', emoji: '🔎', hub: 'hubKrimi', kat: 'denken' },
+  klassiker: { name: 'Klassiker', emoji: '🃏', hub: 'hubKlassiker', kat: 'denken' },
 };
 const SK_KRIMI = { mord: { name: 'Tatort', emoji: '🔎' }, wachen: { name: 'Wachen der Villa', emoji: '🛡️' }, alibi: { name: 'Alibi-Raster', emoji: '📋' }, verhoer: { name: 'Verhör', emoji: '🗣️' } };
 const SK_KATEGORIEN = [
   { id: 'original', name: 'Das Original', emoji: '🐋', karten: ['hubQuizzes'] },
-  { id: 'denken', name: 'Denken & Logik', emoji: '🧠', karten: ['hubKrimi', 'hubPiranha', 'hubFunktion', 'hubRiff'] },
+  { id: 'denken', name: 'Denken & Logik', emoji: '🧠', karten: ['hubKrimi', 'hubKlassiker', 'hubPiranha', 'hubFunktion', 'hubRiff'] },
   { id: 'sinne', name: 'Sinne & Wahrnehmung', emoji: '👁️', karten: ['hubFarben', 'hubToene', 'hubSongs', 'hubTakt', 'hubAugen'] },
   { id: 'zahlen', name: 'Zahlen & Welt', emoji: '🔢', karten: ['hubPunkte', 'hubZufall', 'hubKarte', 'hubTiefgang', 'hubZahlen'] },
   { id: 'wissen', name: 'Wissen & Sprache', emoji: '📚', karten: ['hubCello', 'hubSlo'] },
@@ -92,7 +93,7 @@ const skTitel = (L) => SK_TITEL.filter(([l]) => L >= l).pop()[1];
 // ---------- Fähigkeiten ----------
 // Gewicht, mit dem ein Spiel in eine Fähigkeit eingeht
 const SK_FAEHIGKEITEN = [
-  { id: 'logik', name: 'Logisches Denken', kurz: 'Logik', emoji: '🧠', titel: 'Kopfnuss-Knacker', spiele: { krimi: 1, piranha: 0.6, funktion: 0.5 } },
+  { id: 'logik', name: 'Logisches Denken', kurz: 'Logik', emoji: '🧠', titel: 'Kopfnuss-Knacker', spiele: { krimi: 1, piranha: 0.6, klassiker: 0.6, funktion: 0.5 } },
   { id: 'gehoer', name: 'Musikalisches Gehör', kurz: 'Gehör', emoji: '🎵', titel: 'Goldohr', spiele: { toene: 1, songs: 0.8, cello: 0.6, takt: 0.5 } },
   { id: 'visuell', name: 'Visuelle Wahrnehmung', kurz: 'Sehen', emoji: '👁️', titel: 'Adlerauge', spiele: { farben: 1, augen: 0.6, punkte: 0.5 } },
   { id: 'raum', name: 'Räumliches Denken', kurz: 'Raum', emoji: '📐', titel: 'Kartenkopf', spiele: { karte: 1, augen: 0.8, piranha: 0.4 } },

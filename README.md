@@ -116,6 +116,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `cello.js` – Cello-Noten
 - `instrumente.js` – Noten & Griffe für Klavier, Gitarre, Ukulele
 - `toene.js` – Ton-Gedächtnis
+- `klassiker.js` – Klassiker-App: Solitär, Sudoku, Holzblöcke, Minensuche, Vier in einer Reihe
 - `deezer.js` – Deezer-Hörproben im Song-Rätsel (JSONP, Abspielen im Browser)
 - `spotify.js` – Spotify im Song-Rätsel (Titel erkennen / Jahr schätzen, Kategorien, PKCE, Spotify Connect)
 - `songs.js` – Song-Rätsel als eigene App (Wie geht’s weiter? / Rückwärts, eigene Songs, Startseite)
@@ -227,6 +228,22 @@ wiederholbar, Mittel 2 s, Profi 1 s), danach sucht man ihn mit einem logarithmis
 Abstand in Cent (100 Cent = ein Halbton; 10 − Cent/50, ab einer Quarte 0). Auswertung: Frequenz und nächste Note
 (z. B. „A4 +20 ct“) für Original und eigenen Ton, Differenz in Hz und Cent, Tipp („1,2 Halbtöne zu hoch“),
 Position auf der Skala, beide Töne zum Vergleichen. Tagestöne, Bestwerte, Challenge-Links. Code in `toene.js`.
+
+## 🃏 Klassiker (eigene App)
+Fünf zeitlose Spiele in einer App (`klassiker.js`), eigene Grafik, laufende Partien werden gespeichert und fortgesetzt
+(`walquiz.klassiker.v1`). Verlauf unter „Klassiker“ (`klassiker`, `x.modus` = Spiel), zählt fürs logische Denken.
+- **🂡 Solitär (Klondike):** Tippen legt Karte bzw. Stapel automatisch an den besten Platz (erst Ablage, dann Spalte, König
+  in leere Spalte). 1 oder 3 Karten ziehen, ↶ Zurück, 💡 Tipp, „⚡ Fertig legen“ sobald alles offen ist, Bestzeit.
+- **🔢 Sudoku:** eigener Generator (Bitmasken-Löser, „wenigste Kandidaten zuerst“) – jedes Rätsel hat genau eine Lösung.
+  Leicht ≈ 40, Mittel ≈ 32, Schwer ≈ 26 Vorgaben. Notizen, Fehler rot, Tipps, Bestzeit nur ohne Tipps.
+- **🟫 Holzblöcke:** 9×9, drei Teile (31 Formen), ziehen mit Vorschau oder antippen + Zielfeld antippen. Reihen, Spalten
+  und 3×3-Blöcke werden abgeräumt; mehrere Linien und Serien geben Bonus (Linien² × 10 × Serie). Ende, wenn nichts passt.
+- **💣 Minensuche:** 9×9/10, 12×15/30, 14×20/55. Erster Tipp samt Nachbarn immer sicher, Flagge per langem Druck oder
+  🚩-Modus, Tipp auf eine Zahl mit passenden Flaggen öffnet die Nachbarn.
+- **🔴 Vier in einer Reihe:** gegen den Computer (Minimax mit Alpha-Beta, Tiefe 2/4/7; gewinnt und blockt sofort auf jeder
+  Stufe) oder zu zweit an einem Handy.
+- Test: `tests/klassiker.test.js` (90 Sudokus auf Eindeutigkeit, 400 Solitär-Zufallstipps ohne Regelverstoß, Ziehen/Tippen
+  bei den Blöcken, Minen-Sieg/-Niederlage, KI-Duell Schwer gegen Leicht, Fortsetzen nach Neuladen).
 
 ## 🎵 Song-Rätsel (eigene App)
 Eigene Karte im Hub (Kategorie „Sinne“) und eigener Planet 💿 im Universum, Verlauf unter „Song-Rätsel“ (`songs`),
