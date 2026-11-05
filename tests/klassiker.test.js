@@ -10,7 +10,7 @@ const ordner = process.argv[2] || '.';
   const ergebnisWeg = async () => { if (await p.$('.kl-ergebnis')) await p.evaluate(() => document.querySelectorAll('.kl-ergebnis').forEach((x) => x.remove())); };
   await p.goto('http://localhost:8765/'); await p.waitForTimeout(900);
   await p.click('#hubKlassiker'); await p.waitForTimeout(900);
-  ck('Klassiker-App mit 9 Spielen', (await p.$$('[data-kl]')).length === 9 && await p.evaluate(() => $('screen-klassiker').classList.contains('active')));
+  ck('Klassiker-App mit 10 Spielen', (await p.$$('[data-kl]')).length === 10 && await p.evaluate(() => $('screen-klassiker').classList.contains('active')));
   await p.screenshot({ path: ordner + '/kl-home.png' });
 
   // ---------- Sudoku ----------
@@ -234,8 +234,66 @@ const ordner = process.argv[2] || '.';
   await p.screenshot({ path: ordner + '/kl-wasser.png' });
   await p.click('#klZurueck'); await p.waitForTimeout(300);
 
+  // ---------- Darts ----------
+  const wert = await p.evaluate(() => {
+    const t = (x, y) => dtWert(x, y).txt + '=' + dtWert(x, y).p;
+    const w18 = (18 * Math.PI) / 180;
+    return [t(0, 0), t(0, -0.06), t(0, -0.6), t(0, -0.97), t(0, -0.4), t(Math.sin(w18) * 0.4, -Math.cos(w18) * 0.4), t(0, 0.6), t(0, -1.05)].join(' ');
+  });
+  ck('Darts: Scheibe wertet richtig (Bull, 25, T20, D20, 20, 1, T3, daneben)', wert === 'Bull=50 25=25 T20=60 D20=40 20=20 1=1 T3=9 daneben=0', wert);
+  const dtKi = await p.evaluate(() => [dtKiZiel(180, true), dtKiZiel(40, true), dtKiZiel(50, true), dtKiZiel(32, true), dtKiZiel(37, true), dtKiZiel(12, false), dtKiZiel(57, false)].map((x) => x.join('/')).join(' '));
+  ck("Darts: Computer wählt sinnvolle Ziele (T20, D20, Bull, D16, 5 → Rest 32 …)", dtKi === '20/3 20/2 25/2 16/2 5/1 12/1 19/3', dtKi);
+  const schnitt = await p.evaluate(() => { const out = {}; for (const st of ['leicht', 'mittel', 'profi']) { const r = zufallsGenerator('dt' + st); let s = 0; const [x, y] = dtZielPunkt(20, 3); for (let i = 0; i < 900; i++) s += dtWert(x + dtGauss(r) * DT_STUFEN[st].ki, y + dtGauss(r) * DT_STUFEN[st].ki).p; out[st] = Math.round((s / 900) * 3); } return out; });
+  ck('Darts: Computer-Stärke steigt (Ø pro Aufnahme auf T20)', schnitt.leicht < schnitt.mittel && schnitt.mittel < schnitt.profi && schnitt.profi < 140, JSON.stringify(schnitt));
+  await p.click('[data-kl="darts"]'); await p.waitForTimeout(300);
+  await p.click('[data-dt="hoch"]'); await p.waitForTimeout(300);
+  const db = await (await p.$('#dtBild')).boundingBox();
+  for (let i = 0; i < 9; i++) {
+    await p.waitForFunction(() => dtMenschDran(), null, { timeout: 4000 }).catch(() => {});
+    if (await p.$('.kl-ergebnis')) break;
+    const x = db.x + db.width / 2, y = db.y + db.height / 2 + db.width * 0.16 - db.width * 0.4 * 0.6;   // auf T20 zielen
+    await p.mouse.move(x, y); await p.mouse.down(); await p.waitForTimeout(350);
+    if (i === 1) await p.screenshot({ path: ordner + '/kl-darts-zielen.png' });
+    await p.mouse.up(); await p.waitForTimeout(120);
+    if (i === 2) await p.screenshot({ path: ordner + '/kl-darts.png' });
+  }
+  await p.waitForSelector('.kl-ergebnis', { timeout: 5000 });
+  const hoch = await p.evaluate(() => ({ pfeile: dt.sp[0].pfeile, punkte: dt.sp[0].punkte }));
+  ck('Darts Highscore: 9 Würfe über die Oberfläche, dann Ende', hoch.pfeile === 9 && hoch.punkte > 0 && /Punkte mit 9 Pfeilen/.test(await p.textContent('.kl-ergebnis')), JSON.stringify(hoch));
+  await ergebnisWeg();
+  // 501: Überwerfen und Double-Out
+  const regeln = await p.evaluate(() => {
+    dtStart(true, 'x501'); const S = dt.sp[0];
+    S.rest = 10; dt.zugStart = 10; const [x1, y1] = dtZielPunkt(20, 3); const alt = DT_STUFEN[dt.stufe].streu; DT_STUFEN[dt.stufe].streu = 0;
+    dtWurf(x1, y1); const bust = S.rest === 10 && /Überworfen/.test($('dtZug').textContent);
+    dt.pause = false; dt.zug = []; dt.doppel = true; S.rest = 40; dt.zugStart = 40;
+    const [x2, y2] = dtZielPunkt(20, 1); dtWurf(x2, y2); const keinDoppel = S.rest === 20;   // 20 bleibt stehen
+    const [x3, y3] = dtZielPunkt(20, 1); dtWurf(x3, y3); const nurEinfach = S.rest === 40;   // 0 ohne Doppel = überworfen
+    dt.pause = false; dt.zug = []; S.rest = 40; dt.zugStart = 40;
+    const [x4, y4] = dtZielPunkt(20, 2); dtWurf(x4, y4); const checkout = S.rest === 0 && dt.ende;
+    DT_STUFEN[dt.stufe].streu = alt;
+    return { bust, keinDoppel, nurEinfach, checkout };
+  });
+  ck('Darts 501: Überwerfen, Double-Out und Check-out', regeln.bust && regeln.keinDoppel && regeln.nurEinfach && regeln.checkout, JSON.stringify(regeln));
+  await p.waitForSelector('.kl-ergebnis', { timeout: 3000 }); await ergebnisWeg();
+  // Rund um die Uhr: nur die richtige Zahl zählt
+  const uhr = await p.evaluate(() => {
+    dtStart(true, 'uhr'); const S = dt.sp[0], alt = DT_STUFEN[dt.stufe].streu; DT_STUFEN[dt.stufe].streu = 0;
+    const [a, b] = dtZielPunkt(5, 1); dtWurf(a, b); const falsch = S.ziel === 1;
+    const [c, d] = dtZielPunkt(1, 3); dtWurf(c, d); const richtig = S.ziel === 2;
+    DT_STUFEN[dt.stufe].streu = alt; return { falsch, richtig };
+  });
+  ck('Darts Rund um die Uhr: nur die gesuchte Zahl zählt', uhr.falsch && uhr.richtig);
+  // gegen den Computer: der Computer wirft selbst
+  await p.evaluate(() => { dtStart(true, 'x501k'); dt.dran = 1; dt.zugStart = 501; dtZeichnen(); });
+  await p.waitForFunction(() => dt.sp[1].pfeile === 3, null, { timeout: 6000 });
+  ck('Darts gegen den Computer: Computer wirft seine 3 Pfeile', await p.evaluate(() => dt.sp[1].rest < 501 || dt.sp[1].pfeile === 3));
+  await p.waitForTimeout(1300);
+  ck('Darts: danach bist du dran', await p.evaluate(() => dt.dran === 0 && dtMenschDran()));
+  await p.click('#klZurueck'); await p.waitForTimeout(300);
+
   const vl = await p.evaluate(() => [...new Set((loadJson(VERLAUF_KEY).tage[skDatum()] || []).filter((e) => e.s === 'klassiker').map((e) => e.x.modus))].sort().join(','));
-  ck('Verlauf: alle Spiele eingetragen', vl === 'bloecke,minen,planeten,schrauben,solitaer,sudoku,vier,zahlen', vl);
+  ck('Verlauf: alle Spiele eingetragen', vl === 'bloecke,darts,minen,planeten,schrauben,solitaer,sudoku,vier,zahlen', vl);
   ck('Keine Seitenfehler', !fehler.length, fehler.join(' | '));
   console.log(checks.filter((c) => c[1]).length + ' bestanden, ' + checks.filter((c) => !c[1]).length + ' fehlgeschlagen');
   await b.close(); process.exit(checks.every((c) => c[1]) ? 0 : 1);

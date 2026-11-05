@@ -1,5 +1,5 @@
 // 🃏 Klassiker: Solitär (Klondike), Sudoku, Holzblöcke, Minensuche, Vier in einer Reihe, Zahlenpaare, Planeten-Fusion,
-// Schrauben sortieren und Farben umfüllen.
+// Schrauben sortieren, Farben umfüllen und Darts.
 // Alles traditionelle Spielideen bzw. offene Genres, eigene Grafik. Laufende Partien werden gespeichert und fortgesetzt.
 // Speicher: walquiz.klassiker.v1 = { best: {...}, stand: { solitaer, sudoku, bloecke }, einst: {...}, stat: {...} }
 const KL_KEY = 'walquiz.klassiker.v1';
@@ -14,6 +14,7 @@ const KL_SPIELE = {
   zahlen: { name: 'Zahlenpaare', emoji: '🔢', text: 'Gleiche oder Summe 10 streichen', farbe: '#0ea5e9', beliebt: true },
   planeten: { name: 'Planeten-Fusion', emoji: '🪐', text: 'Gleiche Planeten verschmelzen – bis zur Sonne', farbe: '#8b5cf6', beliebt: true },
   schrauben: { name: 'Schrauben sortieren', emoji: '🔩', text: 'Muttern nach Farben auf die Stäbe', farbe: '#e11d48', beliebt: true },
+  darts: { name: 'Darts', emoji: '🎯', text: '501, Rund um die Uhr, Highscore – auch gegen den Computer', farbe: '#f97316', beliebt: true },
   wasser: { name: 'Farben umfüllen', emoji: '🧪', text: 'Gläser sortieren, bis jede Farbe allein ist', farbe: '#14b8a6' },
 };
 let klAktiv = null, klUhr = null;
@@ -39,6 +40,7 @@ function klHome() {
     planeten: st.best.planeten ? 'Rekord ' + fmt(st.best.planeten) : '',
     schrauben: st.stat.schraubenLevel ? 'Level ' + st.stat.schraubenLevel : '',
     wasser: st.stat.wasserLevel ? 'Level ' + st.stat.wasserLevel : '',
+    darts: st.best.dartHoch ? 'Highscore ' + st.best.dartHoch : st.stat.dartSiege ? st.stat.dartSiege + ' Siege' : '',
   };
   $('klInhalt').innerHTML = '<div class="kl-held"><h2>Klassiker</h2><p>Spiele, die nie alt werden. Laufende Partien merkt sich die App.</p></div><div class="kl-kacheln">'
     + Object.entries(KL_SPIELE).map(([id, S]) => '<button type="button" class="kl-kachel kl-k-' + id + '" data-kl="' + id + '" style="--f:' + S.farbe + '"><span class="kl-k-bild" aria-hidden="true">' + klMiniBild(id) + '</span><span class="kl-k-text"><b>' + S.name + '</b><small>' + S.text + '</small>'
@@ -50,6 +52,7 @@ function klMiniBild(id) {
   if (id === 'sudoku') return '<i class="klm-gitter">' + [5, 3, '', '', 7, '', 6, '', 9].map((z) => '<s>' + z + '</s>').join('') + '</i>';
   if (id === 'bloecke') return '<i class="klm-bloecke">' + [1, 1, 0, 1, 1, 1, 0, 1, 0].map((z) => '<s class="' + (z ? 'v' : '') + '"></s>').join('') + '</i>';
   if (id === 'minen') return '<i class="klm-minen"><s>1</s><s>2</s><s class="f">🚩</s><s></s><s>1</s><s>3</s></i>';
+  if (id === 'darts') return '<i class="klm-darts"><s></s></i>';
   if (id === 'zahlen') return '<i class="klm-zahlen">' + [2, 8, 4, 9, 4, 1, 3, 7, 6].map((z, i) => '<s class="' + ([0, 1].includes(i) ? 'p' : [7].includes(i) ? 'q' : [6].includes(i) ? 'q' : '') + '">' + z + '</s>').join('') + '</i>';
   if (id === 'planeten') return '<i class="klm-planeten"><s style="--g:22px;--f:#3b82f6;left:4px;bottom:2px">🌍</s><s style="--g:30px;--f:#eab308;left:30px;bottom:4px">🪐</s><s style="--g:14px;--f:#94a3b8;left:22px;bottom:30px"></s></i>';
   if (id === 'schrauben') return '<i class="klm-schrauben">' + [['#22c55e', '#22c55e', '#eab308'], ['#ef4444', '#3b82f6'], ['#3b82f6', '#ef4444', '#ef4444']].map((st) => '<s>' + st.map((f) => '<b style="--f:' + f + '"></b>').join('') + '</s>').join('') + '</i>';
@@ -58,7 +61,7 @@ function klMiniBild(id) {
 }
 function klOeffnen(id) {
   klStoppUhr(); klAktiv = id;
-  ({ solitaer: solStart, sudoku: sdStart, bloecke: blStart, minen: mnStart, vier: vrStart, zahlen: zpStart, planeten: pfStart, schrauben: () => soStart('schrauben'), wasser: () => soStart('wasser') })[id]();
+  ({ solitaer: solStart, sudoku: sdStart, bloecke: blStart, minen: mnStart, vier: vrStart, zahlen: zpStart, planeten: pfStart, schrauben: () => soStart('schrauben'), wasser: () => soStart('wasser'), darts: dtStart })[id]();
 }
 function klZeigen() { const sc = $('screen-klassiker'); if (sc && !sc.classList.contains('active')) show('klassiker', '🃏 Klassiker'); }
 $('hubKlassiker').addEventListener('click', () => { merkeZuletzt('klassiker'); zoomZu($('hubKlassiker'), () => { klZeigen(); klHome(); }); });
@@ -916,4 +919,191 @@ function soGeschafft() {
   klVerlauf(key, 1, 1, 'Level ' + so.lvl + ' in ' + so.zuege + ' Zügen', { stufe: so.lvl > 10 ? 'schwer' : so.lvl > 4 ? 'mittel' : 'leicht', level: so.lvl, zuege: so.zuege });
   if (typeof konfetti === 'function') konfetti(25, key === 'wasser' ? ['🧪', '💧', '✨'] : ['🔩', '⚙️', '✨']);
   setTimeout(() => klErgebnis('✅ Level ' + so.lvl + ' geschafft!', so.zuege + ' Züge. Nächstes Level: ' + (Math.min(3 + Math.floor(so.lvl / 2), SO_FARBEN.length)) + ' Farben.', () => soStart(key, true)), 350);
+}
+
+// =====================================================================
+// 🎯 DARTS – Finger halten = zielen (die Hand zittert ein wenig), loslassen = werfen
+// =====================================================================
+const DT_ZAHLEN = [20, 1, 18, 4, 13, 6, 10, 15, 2, 17, 3, 19, 7, 16, 8, 11, 14, 9, 12, 5];
+const DT_R = { bullI: 0.037, bull: 0.094, tI: 0.582, tA: 0.629, dI: 0.953, dA: 1 };   // Verhältnisse einer echten Scheibe (170 mm = 1)
+const DT_STUFEN = { leicht: { name: 'Leicht', streu: 0.045, zitter: 0.03, ki: 0.13 }, mittel: { name: 'Mittel', streu: 0.07, zitter: 0.05, ki: 0.085 }, profi: { name: 'Profi', streu: 0.095, zitter: 0.07, ki: 0.05 } };
+const DT_MODI = { x501k: { name: '501 gegen den Computer', emoji: '🤖', text: 'Wer zuerst genau auf 0 kommt' }, x501: { name: '501 allein', emoji: '🎯', text: 'Mit möglichst wenig Pfeilen auf 0' }, uhr: { name: 'Rund um die Uhr', emoji: '🕐', text: '1 bis 20, dann Bull – so schnell wie möglich' }, hoch: { name: 'Highscore', emoji: '🏆', text: '9 Pfeile, so viele Punkte wie möglich' } };
+function dtWert(x, y) {
+  const r = Math.hypot(x, y);
+  if (r > DT_R.dA) return { p: 0, z: 0, m: 0, txt: 'daneben' };
+  if (r <= DT_R.bullI) return { p: 50, z: 25, m: 2, txt: 'Bull' };
+  if (r <= DT_R.bull) return { p: 25, z: 25, m: 1, txt: '25' };
+  let a = (Math.atan2(x, -y) * 180) / Math.PI; if (a < 0) a += 360;
+  const z = DT_ZAHLEN[Math.floor(((a + 9) % 360) / 18)];
+  const m = r >= DT_R.dI ? 2 : r >= DT_R.tI && r <= DT_R.tA ? 3 : 1;
+  return { p: z * m, z, m, txt: (m === 2 ? 'D' : m === 3 ? 'T' : '') + z };
+}
+function dtZielPunkt(z, m) {
+  if (z === 25) return [0, m === 2 ? 0 : -0.065];
+  const w = (DT_ZAHLEN.indexOf(z) * 18 * Math.PI) / 180, r = m === 3 ? (DT_R.tI + DT_R.tA) / 2 : m === 2 ? (DT_R.dI + DT_R.dA) / 2 : 0.79;
+  return [r * Math.sin(w), -r * Math.cos(w)];
+}
+const dtGauss = (r) => Math.sqrt(-2 * Math.log(Math.max(1e-9, r()))) * Math.cos(2 * Math.PI * r());
+// Computer: wohin zielen? (vereinfachte Checkout-Logik)
+function dtKiZiel(rest, doppel) {
+  if (rest > 60) return [20, 3];
+  if (doppel) {
+    if (rest === 50) return [25, 2];
+    if (rest <= 40 && rest % 2 === 0) return [rest / 2, 2];
+    for (const bleib of [32, 40, 16, 24, 36, 20]) { const s = rest - bleib; if (s >= 1 && s <= 20) return [s, 1]; }
+    return rest <= 60 && rest > 40 && (rest - 40) % 1 === 0 ? [Math.min(20, rest - 40) || 20, 1] : [rest % 2 ? 1 : 2, 1];
+  }
+  if (rest <= 20) return [rest, 1];
+  if (rest === 25 || rest === 50) return [25, rest === 50 ? 2 : 1];
+  if (rest <= 40 && rest % 2 === 0) return [rest / 2, 2];
+  if (rest % 3 === 0 && rest <= 60) return [rest / 3, 3];
+  return [Math.min(20, rest - 20), 1];
+}
+let dt = null;
+function dtStart(neu, modus) {
+  klZeigen();
+  if (!modus) { dtMenue(); return; }
+  const st = klStore(), stufe = st.einst.dartStufe || 'mittel', doppel = !!st.einst.dartDoppel;
+  const sp = [{ name: 'Du', rest: 501, punkte: 0, ziel: 1, pfeile: 0, ki: false }];
+  if (modus === 'x501k') sp.push({ name: 'Computer', rest: 501, punkte: 0, ziel: 1, pfeile: 0, ki: true });
+  dt = { modus, stufe, doppel, sp, dran: 0, wurf: 0, imBrett: [], zug: [], zugStart: 501, runde: 1, ende: false, r: klZufall(), zielt: null };
+  dtZeichnen();
+}
+function dtMenue() {
+  klKopf('🎯 Darts');
+  const st = klStore(), stufe = st.einst.dartStufe || 'mittel';
+  $('klInhalt').innerHTML = '<div class="kl-held"><h2>Darts</h2><p>Finger auf die Scheibe legen und halten: Über dem Finger erscheint das Fadenkreuz – die Hand zittert ein bisschen. Ruhig zielen, loslassen = werfen.</p></div>'
+    + '<div class="kl-stufen">' + Object.entries(DT_MODI).map(([k, M]) => '<button type="button" class="kl-stufe" data-dt="' + k + '"><b>' + M.emoji + ' ' + M.name + '</b><small>' + M.text + (k === 'hoch' && st.best.dartHoch ? ' · Rekord ' + st.best.dartHoch : k === 'uhr' && st.best.dartUhr ? ' · Rekord ' + st.best.dartUhr + ' Pfeile' : k === 'x501' && st.best.dart501 ? ' · Rekord ' + st.best.dart501 + ' Pfeile' : k === 'x501k' && st.stat.dartSiege ? ' · ' + st.stat.dartSiege + ' Siege' : '') + '</small></button>').join('') + '</div>'
+    + '<div class="sr-quelle dt-stufen">' + Object.entries(DT_STUFEN).map(([k, S]) => '<button type="button" data-dts="' + k + '" class="' + (k === stufe ? 'on' : '') + '">' + S.name + '<small>' + (k === 'leicht' ? 'ruhige Hand' : k === 'mittel' ? 'normal' : 'zittrig wie in echt') + '</small></button>').join('') + '</div>'
+    + '<div class="kl-einst"><label><input type="checkbox" id="dtDoppel"' + (st.einst.dartDoppel ? ' checked' : '') + '> 501 mit „Double Out“ – der letzte Pfeil muss ein Doppel sein</label></div>';
+  $('klInhalt').querySelectorAll('[data-dt]').forEach((b) => b.addEventListener('click', () => dtStart(true, b.dataset.dt)));
+  $('klInhalt').querySelectorAll('[data-dts]').forEach((b) => b.addEventListener('click', () => { const s = klStore(); s.einst.dartStufe = b.dataset.dts; klSave(s); dtMenue(); }));
+  $('dtDoppel').addEventListener('change', (e) => { const s = klStore(); s.einst.dartDoppel = e.target.checked; klSave(s); });
+}
+function dtStand() {
+  const M = dt.modus;
+  return dt.sp.map((s, i) => '<div class="dt-spieler' + (i === dt.dran && !dt.ende ? ' dran' : '') + '"><span>' + (s.ki ? '🤖 ' : '🙂 ') + s.name + '</span><b>' + (M === 'uhr' ? (s.ziel > 20 ? 'Bull' : s.ziel) : M === 'hoch' ? s.punkte : s.rest) + '</b><small>' + (M === 'uhr' ? 'Ziel · ' + s.pfeile + ' Pfeile' : M === 'hoch' ? 'Runde ' + Math.min(3, dt.runde) + ' / 3' : s.pfeile + ' Pfeile' + (s.pfeile ? ' · Ø ' + fmt(Math.round(((501 - s.rest) / s.pfeile) * 30) / 10) : '')) + '</small></div>').join('');
+}
+function dtZeichnen() {
+  const M = DT_MODI[dt.modus];
+  klKopf('🎯 ' + M.name, DT_STUFEN[dt.stufe].name);
+  $('klInhalt').innerHTML = '<div class="dt-stand" id="dtStand">' + dtStand() + '</div>'
+    + '<canvas id="dtBild" class="dt-bild"></canvas>'
+    + '<div class="dt-zug" id="dtZug"></div>'
+    + '<div class="kl-leiste"><span class="kl-hinweis" id="dtTipp">Halten = zielen · loslassen = werfen</span><button type="button" class="kl-knopf" id="dtNeu">Neu</button></div>';
+  $('dtNeu').addEventListener('click', () => dtStart(true, dt.modus));
+  const cv = $('dtBild'), W = Math.min(cv.parentElement.clientWidth, 460), dpr = Math.min(2, window.devicePixelRatio || 1);
+  cv.width = W * dpr; cv.height = W * dpr; cv.style.height = W + 'px';
+  dt.W = W; dt.dpr = dpr; dt.ctx = cv.getContext('2d'); dt.R = W * 0.4;
+  const zuNorm = (e) => { const b = cv.getBoundingClientRect(); return [(e.clientX - b.left - W / 2) / dt.R, (e.clientY - b.top - W / 2 - W * 0.16) / dt.R]; };   // Fadenkreuz sitzt über dem Finger
+  cv.addEventListener('pointerdown', (e) => { if (!dtMenschDran()) return; cv.setPointerCapture(e.pointerId); dt.zielt = { p: zuNorm(e), t0: performance.now() }; dtSchleife(); });
+  cv.addEventListener('pointermove', (e) => { if (dt.zielt) dt.zielt.p = zuNorm(e); });
+  cv.addEventListener('pointerup', (e) => { if (!dt.zielt) return; dt.zielt.p = zuNorm(e); const z = dtZitter(dt.zielt); dt.zielt = null; dtWurf(z[0], z[1]); });
+  cv.addEventListener('pointercancel', () => { dt.zielt = null; dtMalen(); });
+  dtZugZeigen(); dtMalen();
+  if (dt.sp[dt.dran].ki) dtKiZug();
+}
+const dtMenschDran = () => dt && !dt.ende && !dt.sp[dt.dran].ki && !dt.pause;
+// Zittern: zwei überlagerte Wellen, je länger man hält, desto ruhiger (bis zu 40 %)
+function dtZitter(Z) {
+  const S = DT_STUFEN[dt.stufe], t = (performance.now() - Z.t0) / 1000, ruhig = 1 - Math.min(0.4, t * 0.25);
+  return [Z.p[0] + S.zitter * ruhig * (Math.sin(t * 5.3) + 0.6 * Math.sin(t * 11.7 + 1)), Z.p[1] + S.zitter * ruhig * (Math.cos(t * 4.1) + 0.6 * Math.sin(t * 9.3 + 2))];
+}
+function dtSchleife() { if (!dt || !dt.zielt) return; dtMalen(); requestAnimationFrame(dtSchleife); }
+function dtMalen() {
+  if (!dt || !dt.ctx) return;
+  const c = dt.ctx, W = dt.W, R = dt.R, cx = W / 2, cy = W / 2;
+  c.setTransform(dt.dpr, 0, 0, dt.dpr, 0, 0);
+  const hg = c.createRadialGradient(cx, cy, R * 0.5, cx, cy, W * 0.75); hg.addColorStop(0, '#3f2a1a'); hg.addColorStop(1, '#1a110a'); c.fillStyle = hg; c.fillRect(0, 0, W, W);
+  c.fillStyle = '#111'; c.beginPath(); c.arc(cx, cy, R * 1.16, 0, Math.PI * 2); c.fill();
+  const ring = (r1, r2, a1, a2, f) => { c.fillStyle = f; c.beginPath(); c.arc(cx, cy, r2 * R, a1, a2); c.arc(cx, cy, r1 * R, a2, a1, true); c.closePath(); c.fill(); };
+  for (let i = 0; i < 20; i++) {
+    const a1 = ((i * 18 - 9 - 90) * Math.PI) / 180, a2 = ((i * 18 + 9 - 90) * Math.PI) / 180, gerade = i % 2 === 0;
+    const einf = gerade ? '#1c1917' : '#f5e9d0', ring2 = gerade ? '#dc2626' : '#16a34a';
+    ring(DT_R.bull, DT_R.tI, a1, a2, einf); ring(DT_R.tI, DT_R.tA, a1, a2, ring2); ring(DT_R.tA, DT_R.dI, a1, a2, einf); ring(DT_R.dI, DT_R.dA, a1, a2, ring2);
+    const am = ((i * 18 - 90) * Math.PI) / 180;
+    c.fillStyle = '#f5f5f4'; c.font = '700 ' + Math.round(R * 0.11) + 'px system-ui'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.fillText(DT_ZAHLEN[i], cx + Math.cos(am) * R * 1.085, cy + Math.sin(am) * R * 1.085);
+  }
+  c.fillStyle = '#16a34a'; c.beginPath(); c.arc(cx, cy, DT_R.bull * R, 0, Math.PI * 2); c.fill();
+  c.fillStyle = '#dc2626'; c.beginPath(); c.arc(cx, cy, DT_R.bullI * R, 0, Math.PI * 2); c.fill();
+  c.strokeStyle = 'rgba(200,200,200,.5)'; c.lineWidth = 1;
+  for (const r of [DT_R.bull, DT_R.tI, DT_R.tA, DT_R.dI, DT_R.dA]) { c.beginPath(); c.arc(cx, cy, r * R, 0, Math.PI * 2); c.stroke(); }
+  // steckende Pfeile
+  for (const p of dt.imBrett) {
+    const x = cx + p.x * R, y = cy + p.y * R;
+    c.strokeStyle = 'rgba(0,0,0,.45)'; c.lineWidth = 3; c.beginPath(); c.moveTo(x, y); c.lineTo(x + 10, y + 16); c.stroke();
+    c.strokeStyle = '#d4d4d8'; c.lineWidth = 3; c.beginPath(); c.moveTo(x, y); c.lineTo(x - 8, y - 18); c.stroke();
+    c.fillStyle = p.ki ? '#facc15' : '#38bdf8'; c.beginPath(); c.moveTo(x - 8, y - 18); c.lineTo(x - 16, y - 30); c.lineTo(x - 2, y - 26); c.closePath(); c.fill();
+    c.fillStyle = '#fff'; c.beginPath(); c.arc(x, y, 2.2, 0, Math.PI * 2); c.fill();
+  }
+  if (dt.zielt) {
+    const [zx, zy] = dtZitter(dt.zielt), x = cx + zx * R, y = cy + zy * R;
+    c.strokeStyle = '#fff'; c.lineWidth = 2; c.beginPath(); c.arc(x, y, 9, 0, Math.PI * 2); c.moveTo(x - 15, y); c.lineTo(x - 4, y); c.moveTo(x + 4, y); c.lineTo(x + 15, y); c.moveTo(x, y - 15); c.lineTo(x, y - 4); c.moveTo(x, y + 4); c.lineTo(x, y + 15); c.stroke();
+    const w = dtWert(zx, zy); c.fillStyle = 'rgba(0,0,0,.6)'; c.fillRect(x + 14, y - 30, 46, 20); c.fillStyle = '#fff'; c.font = '700 13px system-ui'; c.textAlign = 'center'; c.fillText(w.txt, x + 37, y - 20);
+  }
+}
+function dtZugZeigen(text) {
+  const z = dt.zug.map((w) => '<span class="dt-wurf m' + w.m + '">' + w.txt + '</span>').join('') + '<span class="dt-wurf leer"></span>'.repeat(Math.max(0, 3 - dt.zug.length));
+  $('dtZug').innerHTML = z + '<b>' + (text || (dt.zug.length ? '= ' + dt.zug.reduce((a, w) => a + w.p, 0) : '')) + '</b>';
+  $('dtStand').innerHTML = dtStand();
+}
+function dtWurf(ax, ay) {
+  if (dt.ende || dt.pause) return;
+  const S = dt.sp[dt.dran], streu = S.ki ? DT_STUFEN[dt.stufe].ki : DT_STUFEN[dt.stufe].streu;
+  const x = ax + dtGauss(dt.r) * streu, y = ay + dtGauss(dt.r) * streu, w = dtWert(x, y);
+  dt.imBrett.push({ x, y, ki: S.ki }); dt.zug.push(w); S.pfeile++;
+  klVibrieren(w.p >= 50 || w.m === 3 ? [15, 20, 15] : 10);
+  let zugEnde = dt.zug.length >= 3, text = '';
+  if (dt.modus === 'x501' || dt.modus === 'x501k') {
+    const rest = S.rest - w.p;
+    if (rest < 0 || (dt.doppel && rest === 1) || (rest === 0 && dt.doppel && w.m !== 2)) { S.rest = dt.zugStart; text = '💥 Überworfen!'; zugEnde = true; }
+    else { S.rest = rest; if (rest === 0) { dt.ende = true; zugEnde = true; text = '🎯 Check-out!'; } }
+  } else if (dt.modus === 'uhr') {
+    if (w.z === (S.ziel > 20 ? 25 : S.ziel)) { S.ziel++; if (S.ziel > 21) { dt.ende = true; zugEnde = true; text = '🎯 Geschafft!'; } }
+  } else {
+    S.punkte += w.p;
+    if (dt.zug.length >= 3 && dt.runde >= 3) dt.ende = true;
+  }
+  dtZugZeigen(text); dtMalen();
+  if (dt.ende) { setTimeout(dtEnde, 700); return; }
+  if (zugEnde) { dt.pause = true; setTimeout(dtNaechster, 1100); }
+  else if (S.ki) setTimeout(dtKiWurf, 650);
+}
+function dtNaechster() {
+  dt.pause = false; dt.zug = []; dt.imBrett = [];
+  if (dt.modus === 'hoch') dt.runde++;
+  if (dt.sp.length > 1) dt.dran = 1 - dt.dran;
+  const S = dt.sp[dt.dran]; dt.zugStart = S.rest;
+  dtZugZeigen(); dtMalen();
+  $('dtTipp').textContent = S.ki ? '🤖 Der Computer wirft …' : 'Halten = zielen · loslassen = werfen';
+  if (S.ki) dtKiZug();
+}
+function dtKiZug() { dt.zugStart = dt.sp[dt.dran].rest; setTimeout(dtKiWurf, 700); }
+function dtKiWurf() {
+  if (!dt || dt.ende || !dt.sp[dt.dran].ki || klAktiv !== 'darts') return;
+  const [z, m] = dtKiZiel(dt.sp[dt.dran].rest, dt.doppel), [x, y] = dtZielPunkt(z, m);
+  dtWurf(x, y);
+}
+function dtEnde() {
+  const ich = dt.sp[0], st = klStore();
+  let titel = '', text = '', p = 0, rekord = false;
+  if (dt.modus === 'x501k') {
+    const sieg = ich.rest === 0;
+    if (sieg) st.stat.dartSiege = (st.stat.dartSiege || 0) + 1;
+    titel = sieg ? '🎉 Gewonnen!' : '🤖 Der Computer gewinnt'; text = sieg ? 'Check-out nach ' + ich.pfeile + ' Pfeilen.' : 'Er war schneller auf 0 – dir fehlten noch ' + ich.rest + '.'; p = sieg ? 1 : 0;
+  } else if (dt.modus === 'x501') {
+    rekord = !st.best.dart501 || ich.pfeile < st.best.dart501; if (rekord) st.best.dart501 = ich.pfeile;
+    titel = '🎯 Check-out!'; text = '501 in ' + ich.pfeile + ' Pfeilen (Ø ' + fmt(Math.round((501 / ich.pfeile) * 30) / 10) + ' pro Aufnahme).' + (rekord ? ' 🏆 Rekord!' : ''); p = Math.min(1, 501 / ich.pfeile / 25);
+  } else if (dt.modus === 'uhr') {
+    rekord = !st.best.dartUhr || ich.pfeile < st.best.dartUhr; if (rekord) st.best.dartUhr = ich.pfeile;
+    titel = '🕐 Einmal rund!'; text = '1 bis 20 und Bull in ' + ich.pfeile + ' Pfeilen.' + (rekord ? ' 🏆 Rekord!' : ''); p = Math.max(0, Math.min(1, 1 - (ich.pfeile - 21) / 80));
+  } else {
+    rekord = ich.punkte > (st.best.dartHoch || 0); if (rekord) st.best.dartHoch = ich.punkte;
+    titel = rekord ? '🏆 Neuer Rekord!' : '🎯 Fertig'; text = ich.punkte + ' Punkte mit 9 Pfeilen' + (rekord ? '.' : ' · Rekord ' + st.best.dartHoch + '.'); p = Math.min(1, ich.punkte / 300);
+  }
+  klSave(st);
+  klVerlauf('darts', p, 1, DT_MODI[dt.modus].name + ' · ' + text.replace(/ 🏆.*$/, ''), { stufe: dt.stufe === 'profi' ? 'schwer' : dt.stufe, art: dt.modus, rekord });
+  if (p >= 0.7 && typeof konfetti === 'function') konfetti(30, ['🎯', '✨', '🏆']);
+  klErgebnis(titel, text, () => dtStart(true, dt.modus));
 }

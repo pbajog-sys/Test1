@@ -116,7 +116,7 @@ im Quiz übersprungen. Die Tonaufnahmen werden genauso auf Wikimedia Commons ges
 - `cello.js` – Cello-Noten
 - `instrumente.js` – Noten & Griffe für Klavier, Gitarre, Ukulele
 - `toene.js` – Ton-Gedächtnis
-- `klassiker.js` – Klassiker-App: Solitär, Sudoku, Holzblöcke, Minensuche, Vier in einer Reihe
+- `klassiker.js` – Klassiker-App: Solitär, Sudoku, Holzblöcke, Minensuche, Vier in einer Reihe, Zahlenpaare, Planeten-Fusion, Sortieren, Darts
 - `deezer.js` – Deezer-Hörproben im Song-Rätsel (JSONP, Abspielen im Browser)
 - `spotify.js` – Spotify im Song-Rätsel (Titel erkennen / Jahr schätzen, Kategorien, PKCE, Spotify Connect)
 - `songs.js` – Song-Rätsel als eigene App (Wie geht’s weiter? / Rückwärts, eigene Songs, Startseite)
@@ -230,7 +230,7 @@ Abstand in Cent (100 Cent = ein Halbton; 10 − Cent/50, ab einer Quarte 0). Aus
 Position auf der Skala, beide Töne zum Vergleichen. Tagestöne, Bestwerte, Challenge-Links. Code in `toene.js`.
 
 ## 🃏 Klassiker (eigene App)
-Neun Spiele in einer App (`klassiker.js`), eigene Grafik, laufende Partien werden gespeichert und fortgesetzt
+Zehn Spiele in einer App (`klassiker.js`), eigene Grafik, laufende Partien werden gespeichert und fortgesetzt
 (`walquiz.klassiker.v1`). Verlauf unter „Klassiker“ (`klassiker`, `x.modus` = Spiel), zählt fürs logische Denken.
 - **🂡 Solitär (Klondike):** Tippen legt Karte bzw. Stapel automatisch an den besten Platz (erst Ablage, dann Spalte, König
   in leere Spalte). 1 oder 3 Karten ziehen, ↶ Zurück, 💡 Tipp, „⚡ Fertig legen“ sobald alles offen ist, Bestzeit.
@@ -252,6 +252,12 @@ Neun Spiele in einer App (`klassiker.js`), eigene Grafik, laufende Partien werde
   gleiche Farben wandern zusammen, nur auf gleiche Farbe oder leer. Endlose Level (ab 3 Farben, alle 2 Level eine mehr,
   bis 10); jedes Level wird vor dem Spielen mit einem Löser (Tiefensuche mit Gedächtnis) auf Lösbarkeit geprüft.
   ↶ Zurück, einmal pro Level ➕ zusätzlicher Stab/Glas.
+- **🎯 Darts:** Scheibe mit echten Maßverhältnissen (Bull 6,35 mm, 25er-Ring 15,9 mm, Triple 99–107 mm, Doppel 162–170 mm)
+  und der klassischen Zahlenfolge. Finger halten = zielen: Das Fadenkreuz sitzt über dem Finger und zittert (zwei
+  überlagerte Wellen; je länger man ruhig hält, desto weniger, bis −40 %), loslassen = werfen (plus Streuung nach Stufe).
+  Modi: 501 gegen den Computer (Checkout-Logik: T20, Rest auf 32/40 stellen, Doppel), 501 allein, Rund um die Uhr
+  (1–20, dann Bull), Highscore (9 Pfeile). Überworfen-Regel, optional Double Out. Ø pro Aufnahme beim Zielen auf T20:
+  du ≈ 101/72/57, Computer ≈ 50/66/97 (Leicht/Mittel/Profi).
 - Test: `tests/klassiker.test.js` (90 Sudokus auf Eindeutigkeit, 400 Solitär-Zufallstipps ohne Regelverstoß, Ziehen/Tippen
   bei den Blöcken, Minen-Sieg/-Niederlage, KI-Duell Schwer gegen Leicht, Fortsetzen nach Neuladen).
 
