@@ -669,6 +669,11 @@ Noten fallen herunter, man tippt im richtigen Moment (Handy: Bahn antippen, Rech
   keine Strecke doppelt; 2 oder 4 Drachen um einen Punkt greifen ineinander.
 - **📈 27 → 1:** Collatz-Folge: 111 Schritte, Gipfel 9.232; Tonhöhe und Beat folgen dem Wert. Rekordjagd mit den
   Champions 97 (118), 871 (178), 6171 (261).
+  **🎵 Zahlen-Musik:** eigene Startzahlen (bis 3, je bis 1 Billion) werden zur Melodie – Tonhöhe = log₂(Wert) auf
+  Pentatonik/Dur/Moll/Blues verteilt (Gipfel ≈ 2½ Oktaven über der 1), ×3+1-Schritte betont, Beat wird voller, je höher
+  die Werte; Tempo 80–200 BPM, Klang Synth/Chiptune/Glocken. Mehrere Zahlen = mehrere Stimmen (logarithmische Linien).
+  „Ins Beat-Studio“ übernimmt die ersten 64 Schritte als Lead (+ Akkorde/Wobble für weitere Stimmen, Beat, halbes Tempo).
+  Test: `tests/zahlenmusik.test.js`.
 Speicher `walquiz.wunder.v1`. Test: `tests/wunder.test.js`.
 
 ## 🎛️ Beat-Studio

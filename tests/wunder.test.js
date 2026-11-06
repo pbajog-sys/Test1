@@ -98,7 +98,7 @@ const ordner = process.argv[2] || '.';
   await p.waitForFunction(() => wu && wu.max === 9232, null, { timeout: 15000 }); await p.waitForTimeout(400); await bild('wu-collatz-gipfel');
   await p.waitForSelector('.ft-ergebnis', { timeout: 15000 });
   ck('Collatz: Ziel nach 111 Schritten', (await p.textContent('#coSchritte')) === '111' && /111 Schritte/.test(await p.textContent('.ft-karte')));
-  await p.click('.ft-ergebnis [data-k="0"]'); await p.waitForTimeout(300);
+  await p.click('.ft-ergebnis [data-k="1"]'); await p.waitForTimeout(300);
   await p.fill('#coZahl', '97'); await p.click('#coProbier');
   await p.waitForSelector('.co-rekord.ok', { timeout: 15000 });
   await bild('wu-collatz-jagd');

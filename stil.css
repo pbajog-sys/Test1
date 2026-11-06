@@ -3734,3 +3734,5 @@ a.bb-datei { text-decoration: none; }
 .st-projekt button { border: 0; border-radius: 10px; background: rgba(255,255,255,.07); color: inherit; font: inherit; cursor: pointer; padding: 8px; text-align: left; } .st-projekt button:not(:first-child) { text-align: center; }
 .st-projekt small { display: block; color: #94a3d4; font-size: .72rem; }
 @media (prefers-reduced-motion: reduce) { .st-mini i { animation: none; } }
+.co-vorschlaege { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; } .co-vorschlaege button { border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 6px 12px; background: rgba(255,255,255,.06); color: inherit; font: inherit; font-size: .8rem; cursor: pointer; }
+.co-einst { justify-content: center; } .co-einst output { min-width: 4.5em; color: #fff; font-variant-numeric: tabular-nums; }

@@ -306,8 +306,9 @@ function biTakt() {
     if (!wu || wu.art !== 'binaer' || !wuAktiv()) { clearInterval(wuSeq); wuSeq = null; return; }
     while (wu.naechste <= 255 && wu.start + wu.naechste * BI_S16 < A.c.currentTime + 0.12) {
       const n = wu.naechste, t = wu.start + n * BI_S16;
-      if (!A.stumm) biSpielt(n).forEach((an, k) => { if (an) biInstrument(A, k, t, n); });
-      if (n === 255 && !A.stumm) { ftSaw(A, t + BI_S16, [65, 68, 72, 77], 1.4, 0.07, 5000); ftRauschen(A, t + BI_S16, 1.5, 2500, 0.3); ftKick(A, t + BI_S16, 1); }
+      const hoerbar = !A.stumm && t >= A.c.currentTime;
+      if (hoerbar) biSpielt(n).forEach((an, k) => { if (an) biInstrument(A, k, t, n); });
+      if (n === 255 && hoerbar) { ftSaw(A, t + BI_S16, [65, 68, 72, 77], 1.4, 0.07, 5000); ftRauschen(A, t + BI_S16, 1.5, 2500, 0.3); ftKick(A, t + BI_S16, 1); }
       wu.warte.push({ t, n }); wu.naechste++;
     }
   }, 25);
@@ -529,7 +530,7 @@ function drFrage2() {
 // 📈 27 → 1 (Collatz)
 // =====================================================================
 const WU_CHAMPS = { 100: [97, 118], 1000: [871, 178], 10000: [6171, 261] };
-function coFolge(n) { const f = [n]; while (n !== 1 && f.length < 2000) { n = n % 2 ? 3 * n + 1 : n / 2; f.push(n); } return f; }
+function coFolge(n) { const f = [n]; while (n !== 1 && f.length < 2000 && n < 3e15) { n = n % 2 ? 3 * n + 1 : n / 2; f.push(n); } return f; }
 function coIntro() {
   wuStopp(); $('wuTitel').textContent = '📈 27 → 1';
   $('wuInhalt').innerHTML = '<div class="ft-intro"><div class="wu-logo">📈</div><h2 class="wu-h">Kommt die 27 bei 1 an?</h2>'
@@ -537,12 +538,14 @@ function coIntro() {
     + '<p class="ft-frage">Wie viele Schritte braucht die <b>27</b>, bis sie bei <b>1</b> ankommt?</p>'
     + '<div class="ft-schaetzen"><input type="range" id="coSchieber" min="0" max="100" value="35" aria-label="Schätzung"><output id="coWahl"></output></div>'
     + '<button type="button" class="btn ft-los wu-los" id="coLos">🎵 Schätzen und loslegen</button>'
+    + '<button type="button" class="btn secondary" id="coMusikBtn">🎵 Eigene Zahlen → Musik</button>'
     + '<button type="button" class="btn secondary" id="coJagd">🏆 Gleich zur Rekordjagd</button></div>';
   const wert = () => Math.round(5 * Math.pow(100, $('coSchieber').value / 100));   // 5 … 500, logarithmisch
   const zeig = () => { $('coWahl').textContent = wert() + ' Schritte'; };
   $('coSchieber').addEventListener('input', zeig); zeig();
   $('coLos').addEventListener('click', () => coStart(27, wert()));
   $('coJagd').addEventListener('click', () => coJagd());
+  $('coMusikBtn').addEventListener('click', coMusikIntro);
 }
 function coStart(start, schaetzung, jagd) {
   wuStopp(); ftLaut = 0;
@@ -606,7 +609,7 @@ function coZiel() {
   setTimeout(() => {
     if (wu !== w) return;
     wuEnde('<div class="wu-logo">📈</div><h3>111 Schritte</h3><p class="ft-gross">Du hast <b>' + w.schaetzung + '</b> geschätzt</p><p>Die 27 klettert bis <b>9.232</b> und braucht 111 Schritte bis zur 1. Ihre Nachbarn 26 und 28 schaffen es in 10 und 18.</p><p class="ft-klein">Die Collatz-Vermutung (1937): Jede Zahl landet irgendwann bei 1. Computer haben es für alle Zahlen bis über 2⁶⁸ geprüft – bewiesen ist es bis heute nicht.</p>',
-      [['🏆 Rekordjagd', () => coJagd()], ['Zurück zur Auswahl', wuMenue]]);
+      [['🎵 Eigene Zahlen → Musik', coMusikIntro], ['🏆 Rekordjagd', () => coJagd()], ['Zurück zur Auswahl', wuMenue]]);
   }, 1500);
 }
 function coFundMerken(st, n, s) {
@@ -640,13 +643,183 @@ function coJagd(zuletzt) {
     + (zuletzt ? '<p class="ft-frage">' + zuletzt + ' braucht <b>' + (coFolge(zuletzt).length - 1) + '</b> Schritte und klettert bis ' + wuZahl(Math.max(...coFolge(zuletzt))) + '.</p>' : '')
     + [100, 1000, 10000].map(zeile).join('')
     + '<div class="co-eingabe"><input type="number" id="coZahl" min="1" max="99999" inputmode="numeric" placeholder="Zahl, z. B. 97" aria-label="Startzahl"><button type="button" class="btn ft-los wu-los" id="coProbier">Los</button></div>'
-    + '<button type="button" class="btn secondary" id="coZufall">🎲 Zufallszahl unter 10.000</button>'
+    + '<button type="button" class="btn secondary" id="coZufall">🎲 Zufallszahl unter 10.000</button><button type="button" class="btn secondary" id="coZurMusik">🎵 Als Musik anhören</button>'
     + '<p class="ft-klein">Tipp: Große Zahlen sind nicht automatisch lang – 1.024 ist in 10 Schritten unten. Ungerade Zahlen klettern oft länger.</p></div>';
   const los = (n) => { if (n >= 1 && n <= 99999) coStart(n, null, true); };
   $('coProbier').addEventListener('click', () => los(Math.floor(+$('coZahl').value)));
   $('coZahl').addEventListener('keydown', (e) => { if (e.key === 'Enter') los(Math.floor(+$('coZahl').value)); });
   $('coZufall').addEventListener('click', () => los(1 + Math.floor(Math.random() * 9999)));
+  $('coZurMusik').addEventListener('click', () => { const z = coZahlenLesen($('coZahl').value); if (z.length) { const s = coMusikStore(); s.collatz.musik.zahlen = z.join(', '); saveJson(WU_KEY, s); } coMusikIntro(); });
   if (zuletzt) [100, 1000, 10000].forEach((g) => { const x = f[g]; if (x && x[0] === WU_CHAMPS[g][0] && zuletzt === x[0] && typeof konfetti === 'function') konfetti(30, ['🏆', '✨', '📈']); });
+}
+
+// ---------- 🎵 Zahlen-Musik: eigene Startzahlen werden zur Melodie (mehrere Zahlen = mehrere Stimmen) ----------
+const CO_SKALEN = { penta: { name: 'Pentatonik', st: [0, 2, 4, 7, 9] }, dur: { name: 'Dur', st: [0, 2, 4, 5, 7, 9, 11] }, moll: { name: 'Moll', st: [0, 2, 3, 5, 7, 8, 10] }, blues: { name: 'Blues', st: [0, 3, 5, 6, 7, 10] } };
+const CO_KLAENGE = ['Synth', 'Chiptune', 'Glocken'];
+const CO_FARBEN = ['#fb923c', '#38bdf8', '#a3e635'];
+const coMusikStore = () => { const s = wuStore(); s.collatz.musik = Object.assign({ zahlen: '27', tempo: 140, skala: 'penta', klang: 0 }, s.collatz.musik || {}); return s; };
+// Eingabe → bis zu 3 Startzahlen (1 … 1 Billion)
+function coZahlenLesen(text) {
+  return String(text).split(/[^0-9]+/).filter(Boolean).map(Number).filter((n) => Number.isSafeInteger(n) && n >= 1 && n <= 1e12).slice(0, 3);
+}
+function coMusikIntro() {
+  wuStopp(); $('wuTitel').textContent = '🎵 Zahlen-Musik';
+  const s = coMusikStore(), m = s.collatz.musik;
+  $('wuInhalt').innerHTML = '<div class="ft-intro"><div class="wu-logo">🎵</div><h2 class="wu-h">Zahlen-Musik</h2>'
+    + '<p>Gib eine Zahl ein – ihr Weg bis zur 1 wird zur Melodie: <b class="co-u">×3+1</b> springt nach oben, <b class="co-g">÷2</b> fällt nach unten. Bis zu <b>drei Zahlen</b> spielen als Stimmen zusammen.</p>'
+    + '<div class="co-eingabe"><input type="text" id="coMZahlen" inputmode="numeric" value="' + m.zahlen + '" placeholder="z. B. 27 oder 27, 97, 871" aria-label="Startzahlen"><button type="button" class="btn ft-los wu-los" id="coMLos">▶ Spielen</button></div>'
+    + '<div class="co-vorschlaege">' + [['27', '27'], ['Duett', '27, 31'], ['Trio', '97, 871, 703'], ['Riese', '63728127'], ['Zweierpotenz', '1024']].map(([n, z]) => '<button type="button" data-z="' + z + '">' + n + '</button>').join('') + '</div>'
+    + '<div class="st-einst co-einst"><label>Tempo <input type="range" id="coMTempo" min="80" max="200" step="5" value="' + m.tempo + '"><output id="coMTempoW"></output></label>'
+    + '<label>Tonleiter <select id="coMSkala">' + Object.entries(CO_SKALEN).map(([id, x]) => '<option value="' + id + '"' + (id === m.skala ? ' selected' : '') + '>' + x.name + '</option>').join('') + '</select></label>'
+    + '<label>Klang <select id="coMKlang">' + CO_KLAENGE.map((n, i) => '<option value="' + i + '"' + (i === m.klang ? ' selected' : '') + '>' + n + '</option>').join('') + '</select></label></div>'
+    + '<p class="ft-klein" id="coMInfo"></p></div>';
+  const info = () => {
+    const z = coZahlenLesen($('coMZahlen').value);
+    $('coMInfo').innerHTML = z.length ? z.map((n, i) => { const f = coFolge(n); return '<span style="color:' + CO_FARBEN[i] + '">' + wuZahl(n) + '</span>: ' + (f.length - 1) + ' Schritte, Gipfel ' + wuZahl(Math.max(...f)); }).join('<br>') + '<br>Dauer etwa ' + Math.round((Math.max(...z.map((n) => coFolge(n).length)) + 4) * 30 / $('coMTempo').value) + ' s' : 'Bitte eine Zahl zwischen 1 und 1 Billion eingeben.';
+    $('coMTempoW').textContent = $('coMTempo').value + ' BPM';
+  };
+  info();
+  ['input', 'change'].forEach((ev) => ['coMZahlen', 'coMTempo'].forEach((id) => $(id).addEventListener(ev, info)));
+  $('wuInhalt').querySelectorAll('[data-z]').forEach((b) => b.addEventListener('click', () => { $('coMZahlen').value = b.dataset.z; info(); }));
+  const los = () => {
+    const z = coZahlenLesen($('coMZahlen').value); if (!z.length) { info(); return; }
+    const opt = { tempo: +$('coMTempo').value, skala: $('coMSkala').value, klang: +$('coMKlang').value };
+    const st = coMusikStore(); st.collatz.musik = { zahlen: z.join(', '), ...opt }; saveJson(WU_KEY, st);
+    coMusik(z, opt);
+  };
+  $('coMLos').addEventListener('click', los);
+  $('coMZahlen').addEventListener('keydown', (e) => { if (e.key === 'Enter') los(); });
+}
+// Tonhöhe: log2(Wert) auf die Tonleiter verteilt, so dass der höchste Gipfel etwa 2½ Oktaven über der 1 liegt
+function coMusikTon(v, gipfel, skala, stimme) {
+  const sk = CO_SKALEN[skala].st, stufen = Math.max(4, Math.round(sk.length * 2.5)), d = Math.round(Math.log2(v) / Math.max(1, Math.log2(gipfel)) * stufen);
+  return 55 + stimme * 7 + 12 * Math.floor(d / sk.length) + sk[d % sk.length];
+}
+function coMusikNote(A, t, midi, klang, laut, dur) {
+  if (klang === 0) ftSaw(A, t, [midi], dur * 0.95, 0.075 * laut, 4200);
+  else if (klang === 1) { stOszWu(A, t, 'square', ftHz(midi), dur * 0.85, 0.055 * laut); stOszWu(A, t + 0.01, 'square', ftHz(midi + 12), dur * 0.4, 0.02 * laut); }
+  else { stOszWu(A, t, 'triangle', ftHz(midi), dur * 2.4, 0.2 * laut); stOszWu(A, t, 'sine', ftHz(midi + 19), dur * 1.2, 0.04 * laut); }
+}
+function stOszWu(A, t, typ, f, dauer, laut) {
+  const c = A.c, o = c.createOscillator(), g = c.createGain();
+  o.type = typ; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(laut, t + 0.005); g.gain.exponentialRampToValueAtTime(0.0008, t + dauer);
+  o.connect(g).connect(A.master); o.start(t); o.stop(t + dauer + 0.03);
+}
+// Ein Schritt (Achtel): Töne aller noch laufenden Stimmen, Bass, Schlagzeug – je höher die Werte, desto voller
+function coMusikSchritt(A, w, i, t) {
+  const dur = w.dur, laut = w.folgen.reduce((m, f) => Math.max(m, Math.log2(f[Math.min(i, f.length - 1)]) / Math.log2(Math.max(16, w.gipfel))), 0);
+  if (i % 2 === 0) ftKick(A, t, 0.8);
+  if (i % 2 === 1) ftRauschen(A, t, 0.05, 8000, 0.08 + 0.08 * laut);
+  if (laut > 0.45 && i % 4 === 2) ftRauschen(A, t, 0.16, 1500, 0.22);
+  w.folgen.forEach((f, s) => {
+    if (i < 1 || i >= f.length) return;
+    const v = f[i], alt = f[i - 1], hoch = alt % 2 === 1;
+    const m = coMusikTon(v, w.gipfel, w.skala, s);
+    coMusikNote(A, t, m, w.klang, hoch ? 1.25 : 0.85, dur);
+    if (s === 0 && i % 4 === 0) stOszWu(A, t, 'sine', ftHz(m - 24 - ((m - 24) % 12 > 6 ? 0 : 0)), dur * 3.6, 0.32);
+    if (hoch && laut > 0.6) ftSaw(A, t, [m + 7], dur * 0.5, 0.025, 3000);
+  });
+}
+function coMusik(zahlen, opt) {
+  wuStopp(); ftTaktStoppen();
+  const A = ftAudio(); if (!A) return;
+  const folgen = zahlen.map(coFolge), gipfel = Math.max(...folgen.map((f) => Math.max(...f))), laenge = Math.max(...folgen.map((f) => f.length));
+  wu = { art: 'comusik', zahlen, folgen, gipfel, laenge, skala: opt.skala, klang: opt.klang, tempo: opt.tempo, dur: 30 / opt.tempo, A, i: -1, naechste: 0, warte: [], start: A.c.currentTime + 0.15, fertig: false, maxA: Math.max(...zahlen), sprung: 0 };
+  $('wuTitel').textContent = '🎵 ' + zahlen.map(wuZahl).join(' · ');
+  $('wuInhalt').innerHTML = '<div class="ft-kopf"><div class="wu-chips" id="coMChips"></div><div class="co-regeln"><span id="coU" class="co-u">ungerade ×3+1</span><span id="coG" class="co-g">gerade ÷2</span></div></div>'
+    + '<canvas id="coMBild" class="ft-bild wu-bild"></canvas>'
+    + '<div class="ft-unten"><div class="ft-text" id="coMText">Hör zu …</div><div class="wu-knoepfe"><button type="button" class="ft-ton" id="coMTon"></button><button type="button" class="btn secondary" id="coMPause">⏸ Pause</button><button type="button" class="btn secondary" id="coMAndere">✏️ Andere Zahl</button></div></div>';
+  Object.assign(wu, wuCanvas('coMBild', 0.5, 300, 560));
+  wuTonKnopf('coMTon');
+  $('coMPause').addEventListener('click', () => { if (wuSeq) { clearInterval(wuSeq); wuSeq = null; $('coMPause').textContent = '▶ Weiter'; } else { wu.start = A.c.currentTime + 0.1 - wu.naechste * wu.dur; coMusikTakt(); $('coMPause').textContent = '⏸ Pause'; } });
+  $('coMAndere').addEventListener('click', coMusikIntro);
+  coMusikTakt();
+  const lauf = () => {
+    if (!wu || wu.art !== 'comusik') return;
+    const jetzt = A.c.currentTime;
+    while (wu.warte.length && wu.warte[0].t <= jetzt) { const e = wu.warte.shift(); wu.i = e.i; wu.sprung = performance.now(); coMusikAnzeige(); }
+    coMusikZeichnen();
+    if (wu.i >= wu.laenge && !wu.fertig) coMusikEnde();
+    wuRaf = requestAnimationFrame(lauf);
+  };
+  wuRaf = requestAnimationFrame(lauf);
+}
+function coMusikTakt() {
+  const w = wu, A = w.A;
+  wuSeq = setInterval(() => {
+    if (!wu || wu !== w || !wuAktiv()) { clearInterval(wuSeq); wuSeq = null; return; }
+    while (w.naechste <= w.laenge && w.start + w.naechste * w.dur < A.c.currentTime + 0.12) {
+      const i = w.naechste, t = w.start + i * w.dur;
+      if (!A.stumm && t >= A.c.currentTime) {   // verpasste Schritte (z. B. nach Hintergrund) nur anzeigen, nicht nachspielen
+        if (i < w.laenge) coMusikSchritt(A, w, i, t);
+        else { const sk = CO_SKALEN[w.skala].st; ftSaw(A, t, [55, 55 + sk[2 % sk.length] + (sk.length > 5 ? 0 : 0), 62, 67], 1.6, 0.06, 4000); ftKick(A, t, 1); ftRauschen(A, t, 1.4, 2500, 0.25); }   // Schlussakkord
+      }
+      w.warte.push({ t, i }); w.naechste++;
+    }
+  }, 25);
+}
+function coMusikAnzeige() {
+  const w = wu, i = Math.min(w.i, w.laenge - 1);
+  $('coMChips').innerHTML = '<span>Schritt <b>' + Math.max(0, i) + '</b></span>' + w.folgen.map((f, s) => '<span style="color:' + CO_FARBEN[s] + '">● <b>' + wuZahl(f[Math.min(i, f.length - 1)]) + '</b></span>').join('');
+  const f = w.folgen[0], alt = f[Math.min(Math.max(0, i - 1), f.length - 1)], ungerade = i > 0 && i < f.length && alt % 2 === 1;
+  $('coU').classList.toggle('an', ungerade); $('coG').classList.toggle('an', i > 0 && i < f.length && !ungerade);
+  const lauf = w.folgen.filter((x) => i < x.length - 1).length;
+  $('coMText').innerHTML = i <= 0 ? 'Hör zu …' : lauf ? (w.folgen.length > 1 ? lauf + ' von ' + w.folgen.length + ' Stimmen unterwegs' : (alt % 2 ? wuZahl(alt) + ' ist <span class="co-u">ungerade</span> → ×3+1' : wuZahl(alt) + ' ist <span class="co-g">gerade</span> → ÷2')) : 'Alle bei 1 angekommen – 4 → 2 → 1.';
+  w.maxA = Math.max(w.maxA, ...w.folgen.map((x) => Math.max(...x.slice(0, i + 1))));
+}
+function coMusikZeichnen() {
+  const w = wu, { c, W, H } = w, i = Math.max(0, Math.min(w.i, w.laenge - 1));
+  c.fillStyle = '#0d0b26'; c.fillRect(0, 0, W, H);
+  const basis = H * 0.88, hoehe = H * 0.78, bw = W / Math.max(w.laenge, 12), log = w.folgen.length > 1;
+  w.skA = w.skA || w.maxA; w.skA += (w.maxA - w.skA) * 0.08;
+  const y = (v) => basis - (log ? Math.log2(v) / Math.log2(Math.max(4, w.skA)) : v / w.skA) * hoehe;
+  w.folgen.forEach((f, s) => {
+    const bis = Math.min(i, f.length - 1);
+    if (!log) {   // eine Zahl: Säulen wie bei 27 → 1
+      for (let k = 0; k <= bis; k++) { const ung = k > 0 && f[k - 1] % 2 === 1; c.fillStyle = k === 0 ? '#e2e8f0' : ung ? '#fb923c' : '#38bdf8'; const h = Math.max(1.5, basis - y(f[k])); c.fillRect(k * bw + bw * 0.12, basis - h, bw * 0.76, h); }
+    } else {   // mehrere Zahlen: Linien (logarithmisch)
+      c.strokeStyle = CO_FARBEN[s]; c.lineWidth = 2.2; c.shadowColor = CO_FARBEN[s]; c.shadowBlur = 8; c.beginPath();
+      for (let k = 0; k <= bis; k++) { const X = (k + 0.5) * bw, Y = y(f[k]); k ? c.lineTo(X, Y) : c.moveTo(X, Y); }
+      c.stroke(); c.shadowBlur = 0;
+    }
+    // Kugel je Stimme
+    const k = Math.min(1, (performance.now() - w.sprung) / (w.dur * 1000)), a = Math.max(0, bis - 1);
+    const bx = (a + 0.5 + (bis - a) * k) * bw, by = y(f[a]) + (y(f[bis]) - y(f[a])) * k - Math.sin(k * Math.PI) * (bis > a ? 18 : 0) - 7;
+    c.fillStyle = log ? CO_FARBEN[s] : '#dbeafe'; c.shadowColor = c.fillStyle; c.shadowBlur = 14; c.beginPath(); c.arc(bx, by, Math.max(4, Math.min(8, bw * 0.6)), 0, 7); c.fill(); c.shadowBlur = 0;
+  });
+  c.strokeStyle = 'rgba(129,140,248,.8)'; c.lineWidth = 1.5; c.beginPath(); c.moveTo(0, basis + 1); c.lineTo(W, basis + 1); c.stroke();
+  c.fillStyle = 'rgba(199,208,245,.55)'; c.font = '600 10px system-ui'; c.textAlign = 'right'; c.fillText(log ? 'logarithmisch · höchster Wert ' + wuZahl(w.maxA) : 'höchster Wert ' + wuZahl(w.maxA), W - 4, 12);
+}
+function coMusikEnde() {
+  const w = wu; w.fertig = true;
+  const st = wuStore(); w.zahlen.forEach((n, s) => coFundMerken(st, n, w.folgen[s].length - 1)); saveJson(WU_KEY, st);
+  setTimeout(() => {
+    if (wu !== w) return;
+    wuEnde('<div class="wu-logo">🎵</div><h3>' + w.zahlen.map(wuZahl).join(' · ') + '</h3>' + w.folgen.map((f, s) => '<p style="color:' + CO_FARBEN[s] + '"><b>' + wuZahl(w.zahlen[s]) + '</b>: ' + (f.length - 1) + ' Schritte, Gipfel ' + wuZahl(Math.max(...f)) + '</p>').join('') + '<p class="ft-klein">Jeder Ton ist ein Schritt der Folge – hoch, wenn die Zahl groß ist. Darum klingt jede Zahl anders.</p>',
+      [['▶ Nochmal', () => coMusik(w.zahlen, w)], ['✏️ Andere Zahl', coMusikIntro], ['🎛️ Ins Beat-Studio', () => coInsStudio(w)], ['Zurück', coIntro]]);
+  }, 1400);
+}
+// Ins Beat-Studio: die ersten 64 Schritte der ersten Zahl als Lead (eine Achtel = ein Studio-Sechzehntel bei halbem Tempo)
+function coInsStudio(w) {
+  wuStopp();
+  const daten = stLaden(), p = stNeuesProjekt('Zahl ' + w.zahlen.map(String).join('+'));
+  Object.assign(p, { bpm: Math.max(60, Math.min(200, Math.round(w.tempo / 2))), tonart: 7, skala: w.skala === 'moll' || w.skala === 'blues' ? 'moll' : 'dur', song: [0, 1, 2, 3] });
+  const studioStufe = (midi) => { let best = 0, d = 99; for (let s = 0; s < ST_ZEILEN; s++) { const x = Math.abs(stMidi(p, 'lead', s) - midi); if (x < d) { d = x; best = s; } } return best; };
+  const studioBass = (midi) => { let best = 0, d = 99; for (let s = 0; s < 7; s++) { const x = Math.abs(((stMidi(p, 'sub', s) - midi) % 12 + 12) % 12); const y = Math.min(x, 12 - x); if (y < d) { d = y; best = s; } } return best; };
+  w.folgen.forEach((f, s) => {
+    const kanal = ['lead', 'chords', 'wobble'][s];
+    for (let i = 1; i < Math.min(65, f.length); i++) {
+      const mi = Math.floor((i - 1) / 16), st16 = (i - 1) % 16, m = coMusikTon(f[i], w.gipfel, w.skala, 0) + 12;
+      if (kanal === 'lead') p.muster[mi].lead[st16] = studioStufe(m);
+      else if (kanal === 'chords' && st16 % 4 === 0) p.muster[mi].chords[st16] = studioBass(m);
+      else if (kanal === 'wobble' && st16 % 2 === 0) p.muster[mi].wobble[st16] = studioBass(m);
+      if (s === 0) { if (st16 % 4 === 0) { p.muster[mi].kick[st16] = 1; p.muster[mi].sub[st16] = studioBass(m); } if (st16 % 4 === 2) p.muster[mi].hat[st16] = 1; if (st16 % 8 === 4) p.muster[mi].snare[st16] = 1; }
+    }
+  });
+  p.kanaele.lead.klang = [0, 1, 2][w.klang] || 0; p.kanaele.sub.laenge = 4; p.kanaele.chords.laenge = 4; p.kanaele.chords.klang = 1;
+  daten.projekte[p.id] = p; daten.aktiv = p.id; saveJson(ST_KEY, daten);
+  stOeffnen();
+  st.modus = 'song'; st.tab = 'melodie'; st.kanal = 'lead'; stAufbau();
 }
 
 // ---------- Navigation ----------
@@ -655,5 +828,7 @@ $('wuZurueck').addEventListener('click', () => {
   const art = wu && wu.art;
   if ($('wuInhalt').querySelector('.wu-modi') && !$('wuInhalt').querySelector('.ft-ergebnis')) { wuStopp(); zeigeHub(); return; }
   if (art === 'collatz' && wu.jagd) { coJagd(); return; }
+  if (art === 'comusik') { coMusikIntro(); return; }
+  if (!art && $('coMZahlen')) { coIntro(); return; }
   wuMenue();
 });
