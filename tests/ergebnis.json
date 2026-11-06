@@ -1,0 +1,108 @@
+{
+  "datum": "2026-11-03T12:11:45.249Z",
+  "faelleJeGenerator": 1000,
+  "auswertung": {
+    "Krimi · Tatort": {
+      "faelle": 1000,
+      "fehler": 0,
+      "beispiele": [],
+      "ms": 11.181199999999837,
+      "max": 244.30000000004657,
+      "stufen": {
+        "leicht": 334,
+        "mittel": 333,
+        "schwer": 333
+      },
+      "zielVerfehlt": 0
+    },
+    "Krimi · Wachen": {
+      "faelle": 1000,
+      "fehler": 0,
+      "beispiele": [],
+      "ms": 22.409100000000095,
+      "max": 301.20000000006985,
+      "stufen": {
+        "leicht": 334,
+        "mittel": 333,
+        "schwer": 333
+      },
+      "zielVerfehlt": 2
+    },
+    "Krimi · Alibi": {
+      "faelle": 1000,
+      "fehler": 0,
+      "beispiele": [],
+      "ms": 46.28029999999981,
+      "max": 532.6999999999534,
+      "stufen": {
+        "leicht": 334,
+        "mittel": 333,
+        "schwer": 333
+      },
+      "zielVerfehlt": 0
+    },
+    "Krimi · Verhör": {
+      "faelle": 1000,
+      "fehler": 0,
+      "beispiele": [],
+      "ms": 0.16500000000011641,
+      "max": 4.199999999953434,
+      "stufen": {
+        "leicht": 334,
+        "mittel": 333,
+        "schwer": 333
+      },
+      "zielVerfehlt": 0
+    },
+    "Piranha · Level": {
+      "faelle": 1000,
+      "fehler": 0,
+      "beispiele": [],
+      "ms": 424.51339999999806,
+      "max": 4162.199999999953,
+      "stufen": {
+        "L1–2": 80,
+        "L3–8": 240,
+        "L9+": 680
+      },
+      "zielVerfehlt": 0
+    },
+    "Slowenisch · Lektionen": {
+      "faelle": 1000,
+      "fehler": 0,
+      "beispiele": [],
+      "ms": 0.024299999999580903,
+      "max": 0.8000000000465661,
+      "stufen": {
+        "Stufe 1": 334,
+        "Stufe 2": 333,
+        "Stufe 3": 333
+      },
+      "zielVerfehlt": 0
+    },
+    "Tagesmodi · Reproduzierbarkeit": {
+      "faelle": 1000,
+      "fehler": 0,
+      "beispiele": [],
+      "ms": 1.7313999999994412,
+      "max": 8.199999999953434,
+      "stufen": {
+        "alle": 1000
+      },
+      "zielVerfehlt": 0
+    },
+    "Zufallsgenerator · Verteilung": {
+      "faelle": 1000,
+      "fehler": 0,
+      "beispiele": [],
+      "ms": 0.28900000000023285,
+      "max": 3.5,
+      "stufen": {
+        "chi": 1000
+      },
+      "zielVerfehlt": 0,
+      "chiSchnitt": 9.205329000000004
+    }
+  },
+  "seitenfehler": []
+}
