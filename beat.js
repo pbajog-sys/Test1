@@ -186,16 +186,18 @@ async function bbIntro() {
   $('bbInhalt').innerHTML = '<div class="ft-intro bb-intro"><div class="bb-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div><h2 class="bb-h">Beat-Bahnen</h2>'
     + '<p>Die Noten fallen herunter – tippe die Bahn genau dann, wenn die Note den Kreis unten trifft. Am Rechner gehen auch die Tasten <b>D F J K</b>.</p>'
     + '<div class="bb-stufen" role="radiogroup" aria-label="Schwierigkeit">' + Object.entries(BB_STUFEN).map(([k, s]) => '<button type="button" class="bb-stufe' + (k === st.stufe ? ' an' : '') + '" data-stufe="' + k + '" role="radio" aria-checked="' + (k === st.stufe) + '">' + s.name + '</button>').join('') + '</div>'
+    + '<button type="button" class="bb-song bb-live" id="bbLive"><span class="bb-se">🎤</span><span class="bb-st"><b>Live – zu jeder Musik</b><small>Spotify, Radio, Lautsprecher: Das Mikro hört mit und findet den Beat</small></span><span class="bb-sterne">' + sterne('live|' + st.stufe) + '</span></button>'
     + '<div class="bb-liste">' + BB_SONGS.map((s) => '<button type="button" class="bb-song" data-song="' + s.id + '"><span class="bb-se">' + s.emoji + '</span><span class="bb-st"><b>' + s.name + '</b><small>' + s.info + '</small></span><span class="bb-sterne">' + sterne(s.id + '|' + st.stufe) + '</span></button>').join('')
     + (eigene.length ? '<h3 class="bb-zwischen">Deine Songs</h3>' + eigene.map((s) => '<button type="button" class="bb-song bb-eigen" data-eigen="' + s.id + '"><span class="bb-se">🎵</span><span class="bb-st"><b>' + s.name.replace(/[<>&]/g, '') + '</b><small>Noten werden aus dem Klang berechnet</small></span><span class="bb-sterne">' + sterne(s.id + '|' + st.stufe) + '</span></button>').join('') : '')
     + '</div><label class="btn secondary bb-datei">＋ Eigenen Song hinzufügen (MP3/M4A)<input type="file" id="bbDatei" accept="audio/*" hidden></label>'
-    + '<p class="ft-klein">Eigene Songs bleiben auf diesem Gerät, die Noten werden offline berechnet – nichts wird hochgeladen. Mit Spotify geht es leider nicht: Dort läuft die Musik nur in der Spotify-App, und Spiele mit Spotify-Musik sind laut Spotify nicht erlaubt.</p>'
+    + '<p class="ft-klein">Eigene Songs bleiben auf diesem Gerät, die Noten werden offline berechnet – nichts wird hochgeladen. Für Spotify-Songs: den Live-Modus nehmen – Spotify spielt, das Mikrofon hört mit. Gehört wird nur hier auf dem Gerät, nichts wird aufgenommen oder gesendet.</p>'
     + '<details class="bb-versatz"><summary>Verzögerung ausgleichen (Bluetooth-Kopfhörer)</summary><p class="ft-klein">Wenn deine Treffer immer „zu früh“ oder „zu spät“ sind, hier verschieben.</p><div class="ft-schaetzen"><input type="range" id="bbVersatz" min="-250" max="250" step="10" value="' + st.versatz + '" aria-label="Verzögerung in Millisekunden"><output id="bbVersatzW"></output></div></details>'
     + (st.runden ? '<p class="ft-klein">Bisher gespielt: ' + st.runden + '×</p>' : '') + '</div>';
   const vw = () => { $('bbVersatzW').textContent = (st.versatz > 0 ? '+' : '') + st.versatz + ' ms'; };
   vw();
   $('bbVersatz').addEventListener('input', (e) => { st.versatz = +e.target.value; vw(); saveJson(BB_KEY, st); });
   $('bbInhalt').querySelectorAll('[data-stufe]').forEach((b) => b.addEventListener('click', () => { st.stufe = b.dataset.stufe; saveJson(BB_KEY, st); bbIntro(); }));
+  $('bbLive').addEventListener('click', () => { ftAudio(); bbLiveIntro(); });
   $('bbInhalt').querySelectorAll('[data-song]').forEach((b) => b.addEventListener('click', () => { ftAudio(); bbStart({ song: BB_SONGS.find((s) => s.id === b.dataset.song) }); }));
   $('bbInhalt').querySelectorAll('[data-eigen]').forEach((b) => b.addEventListener('click', async () => {
     ftAudio();
@@ -211,12 +213,12 @@ async function bbIntro() {
 function bbStart(was) {
   const st = bbStore(), stufe = st.stufe, A = ftAudio(); if (!A) return;
   const song = was.song || null, noten = (was.noten || bbNoten(song, stufe)).map((n) => ({ ...n, urteil: null }));
-  bb = { song, eigen: was.eigen || null, stufe, noten, A, punkte: 0, combo: 0, maxCombo: 0, zaehler: [0, 0, 0, 0], fertig: false, effekte: [], gedrueckt: [0, 0, 0, 0], versatz: st.versatz / 1000 };
-  const dauer = song ? BB_TAKTE * 16 * 60 / song.bpm / 4 : Math.min(bb.eigen.buf.duration, noten[noten.length - 1].t + 2.5);
+  bb = { song, eigen: was.eigen || null, live: null, stufe, noten, A, punkte: 0, combo: 0, maxCombo: 0, zaehler: [0, 0, 0, 0], fertig: false, effekte: [], gedrueckt: [0, 0, 0, 0], versatz: st.versatz / 1000 };
+  const dauer = was.live ? Infinity : song ? BB_TAKTE * 16 * 60 / song.bpm / 4 : Math.min(bb.eigen.buf.duration, noten[noten.length - 1].t + 2.5);
   bb.dauer = dauer;
-  const titel = song ? song.emoji + ' ' + song.name : '🎵 ' + bb.eigen.name;
+  const titel = was.live ? '🎤 Live' : song ? song.emoji + ' ' + song.name : '🎵 ' + bb.eigen.name;
   $('bbInhalt').innerHTML = '<div class="bb-kopf"><span class="bb-titel">' + titel + ' · ' + BB_STUFEN[stufe].name + '</span><span class="bb-punkte" id="bbPunkte">0</span></div>'
-    + '<div class="bb-fort"><b id="bbFort"></b></div><div class="bb-combo" id="bbCombo"></div>'
+    + '<div class="bb-fort"' + (was.live ? ' hidden' : '') + '><b id="bbFort"></b></div><div class="bb-combo" id="bbCombo"></div>'
     + '<canvas id="bbBild" class="bb-bild" aria-label="Spielfeld mit vier Bahnen"></canvas>'
     + '<div class="bb-unten"><button type="button" class="ft-ton" id="bbTon" aria-label="Ton an/aus">' + (A.stumm ? '🔇' : '🔊') + '</button><button type="button" class="btn secondary" id="bbAbbruch">Song abbrechen</button></div>';
   const cv = $('bbBild'), dpr = Math.min(2, window.devicePixelRatio || 1), W = cv.clientWidth || 360, H = Math.max(340, Math.min(window.innerHeight - 190, 720));
@@ -224,11 +226,14 @@ function bbStart(was) {
   Object.assign(bb, { ctx: cv.getContext('2d'), W, H, dpr });
   cv.addEventListener('pointerdown', (e) => { e.preventDefault(); const r = cv.getBoundingClientRect(); bbTippen(Math.max(0, Math.min(3, Math.floor((e.clientX - r.left) / r.width * 4)))); });
   $('bbTon').addEventListener('click', () => { A.stumm = !A.stumm; $('bbTon').textContent = A.stumm ? '🔇' : '🔊'; if (bb && bb.quelle) bb.quelleGain.gain.value = A.stumm ? 0 : 1; });
-  $('bbAbbruch').addEventListener('click', () => bbIntro());
+  $('bbAbbruch').addEventListener('click', () => { if (bb && bb.live && bb.noten.some((n) => n.urteil)) bbEnde(); else bbIntro(); });
+  if (was.live) { $('bbAbbruch').textContent = 'Fertig'; $('bbTon').remove(); $('bbAbbruch').parentNode.classList.add('bb-unten-live'); }
   // Startzeit im Audio-Takt; die Ausgabeverzögerung des Geräts wird abgezogen
   bb.start = A.c.currentTime + BB_VORLAUF;
   bb.lat = (A.c.outputLatency || A.c.baseLatency || 0);
-  if (bb.eigen) {
+  if (was.live) {
+    bb.start = A.c.currentTime; bbLiveVerbinden(was.live);
+  } else if (bb.eigen) {
     const q = A.c.createBufferSource(), g = A.c.createGain(); q.buffer = bb.eigen.buf; g.gain.value = A.stumm ? 0 : 1;
     q.connect(g).connect(A.master); q.start(bb.start); bb.quelle = q; bb.quelleGain = g;
   } else {
@@ -249,6 +254,7 @@ function bbStart(was) {
 // Songzeit in Sekunden (0 = Songbeginn), so wie man sie gerade hört
 function bbJetzt() {
   const A = bb.A;
+  if (bb.live) return A.c.currentTime - bb.start - bb.versatz;
   if (A.c.getOutputTimestamp) {
     const ts = A.c.getOutputTimestamp();
     if (ts.contextTime > 0 && ts.performanceTime > 0) return ts.contextTime + (performance.now() - ts.performanceTime) / 1000 - bb.start - bb.versatz;
@@ -287,7 +293,8 @@ function bbLauf() {
   let neuVerpasst = false;
   for (const n of bb.noten) { if (n.t > jetzt - 0.15) break; if (n.chart && !n.urteil) { n.urteil = 'Verpasst'; bb.zaehler[3]++; bb.combo = 0; neuVerpasst = true; } }
   if (neuVerpasst) bbAnzeige();
-  $('bbFort').style.width = Math.max(0, Math.min(100, jetzt / bb.dauer * 100)) + '%';
+  if (!bb.live) $('bbFort').style.width = Math.max(0, Math.min(100, jetzt / bb.dauer * 100)) + '%';
+  else if (bb.live.stilleSeit && bb.A.c.currentTime - bb.live.stilleSeit > 8 && bb.noten.some((n) => n.urteil) && !bb.fertig) { bbEnde(); return; }
   bbZeichnen(jetzt);
   if (jetzt > bb.dauer + 0.3 && !bb.fertig) { bbEnde(); return; }
   bbRaf = requestAnimationFrame(bbLauf);
@@ -341,12 +348,14 @@ function bbZeichnen(jetzt) {
     if (e.frueh) { c.font = '600 11px system-ui'; c.fillText(e.frueh, x, yH - bw * 0.5 - 22 * k + 14); }
     c.globalAlpha = 1;
   }
+  if (bb.live) { bbLiveStatus(c, W, H, jetzt, reise); return; }
   // Countdown bis die erste Note oben erscheint
   const erste = bb.noten.find((n) => n.chart), bis = erste ? erste.t - reise - jetzt : 0;
   if (bis > 0) { c.fillStyle = 'rgba(255,255,255,' + Math.min(0.85, bis * 2) + ')'; c.font = '800 46px system-ui'; c.textAlign = 'center'; c.fillText(String(Math.ceil(bis)), W / 2, H * 0.4); c.font = '600 14px system-ui'; c.fillText('Gleich geht’s los', W / 2, H * 0.4 + 30); }
 }
 function bbStopp() {
   cancelAnimationFrame(bbRaf); clearInterval(bbTakt); bbTakt = null;
+  if (bb && bb.live) bbLiveTrennen();
   if (bb && bb.quelle) { try { bb.quelle.stop(); } catch (e) { /* schon aus */ } bb.quelle = null; }
 }
 function bbErgebnis() {
@@ -356,13 +365,14 @@ function bbErgebnis() {
 }
 function bbEnde() {
   bb.fertig = true; bbStopp();
+  if (bb.live) bb.noten = bb.noten.filter((n) => n.urteil);   // noch nicht erreichte Noten zählen nicht
   const { genau, sterne, ges } = bbErgebnis(), z = bb.zaehler;
-  const id = bb.song ? bb.song.id : bb.eigen.id, k = id + '|' + bb.stufe, st = bbStore(), alt = st.best[k];
+  const id = bb.live ? 'live' : bb.song ? bb.song.id : bb.eigen.id, k = id + '|' + bb.stufe, st = bbStore(), alt = st.best[k];
   const rekord = !alt || bb.punkte > alt.punkte;
   st.runden++; if (rekord) st.best[k] = { punkte: bb.punkte, sterne: Math.max(sterne, alt ? alt.sterne : 0), genau: Math.round(genau * 1000) / 10 };
   else st.best[k].sterne = Math.max(alt.sterne, sterne);
   saveJson(BB_KEY, st);
-  const name = bb.song ? bb.song.name : bb.eigen.name;
+  const name = bb.live ? 'Live' + (bb.live.periode ? ' ' + Math.round(60 / bb.live.periode) + ' BPM' : '') : bb.song ? bb.song.name : bb.eigen.name;
   if (typeof merkeVerlauf === 'function') merkeVerlauf('beat', Math.round(genau * 100), 100, name.slice(0, 30) + ' · ' + BB_STUFEN[bb.stufe].name + ' · ' + '★'.repeat(sterne), { stufe: bb.stufe, punkte: bb.punkte, combo: bb.maxCombo });
   if (sterne >= 2 && typeof konfetti === 'function') konfetti(30, ['🎸', '🎵', '✨', '⭐']);
   const d = document.createElement('div'); d.className = 'ft-ergebnis';
@@ -373,8 +383,8 @@ function bbEnde() {
     + bbVersatzTipp()
     + '<div class="ft-karte-knoepfe"><button type="button" class="btn ft-los bb-los" id="bbNochmal">Nochmal</button><button type="button" class="btn secondary" id="bbAndere">Anderer Song</button></div></div>';
   $('bbInhalt').appendChild(d);
-  const nochmal = { song: bb.song, eigen: bb.eigen, noten: bb.eigen ? bbCharts[k] : null };
-  $('bbNochmal').addEventListener('click', () => { d.remove(); bbStart(nochmal); });
+  const nochmal = { song: bb.song, eigen: bb.eigen, noten: bb.eigen ? bbCharts[k] : null }, warLive = !!bb.live;
+  $('bbNochmal').addEventListener('click', () => { d.remove(); if (warLive) bbLiveStarten(); else bbStart(nochmal); });
   $('bbAndere').addEventListener('click', () => bbIntro());
 }
 // Wenn die Treffer im Mittel deutlich zu früh/spät waren: Hinweis auf den Verzögerungs-Regler
@@ -384,6 +394,146 @@ function bbVersatzTipp() {
   const m = l.reduce((a, b) => a + b, 0) / l.length;
   if (Math.abs(m) < 0.035) return '';
   return '<p class="ft-klein">Du warst im Schnitt ' + Math.round(Math.abs(m) * 1000) + ' ms ' + (m > 0 ? 'zu früh' : 'zu spät') + '. Liegt es an Bluetooth-Kopfhörern? Unter „Verzögerung ausgleichen“ ' + (m > 0 ? 'nach links' : 'nach rechts') + ' schieben.</p>';
+}
+// ---------- 🎤 Live-Modus: Musik von außen (Spotify, Radio …) übers Mikrofon, Beat finden, Noten vorhersagen ----------
+// Ablauf: Analyser (1024er-FFT) wird alle 10 ms gelesen → Spectral Flux in 10-ms-Fächern → alle 250 ms Tempo per
+// Autokorrelation der letzten 8 s (70–190 BPM, Vorliebe um 120) und Phase per Kamm-Summe → Noten auf die kommenden Schläge.
+// Nichts wird aufgenommen oder gespeichert, das Mikrofonsignal geht nur in den Analyser.
+const BB_LIVE_MUSTER = [[0, 1, 2, 3], [3, 2, 1, 0], [0, 2, 1, 3], [1, 2, 1, 2], [0, 3, 0, 3], [2, 1, 2, 1], [0, 1, 3, 2], [3, 1, 2, 0], [1, 0, 2, 3], [2, 3, 1, 0]];
+const BB_LIVE_R = 1600;   // Ringpuffer: 16 s in 10-ms-Fächern
+function bbLiveIntro() {
+  bbStopp(); bb = null;
+  $('bbInhalt').innerHTML = '<div class="ft-intro bb-intro"><div class="bb-logo" aria-hidden="true"><i></i><i></i><i></i><i></i></div><h2 class="bb-h">Live-Modus</h2>'
+    + '<ol class="bb-schritte"><li>Starte einen Song in <b>Spotify</b> (oder Radio, YouTube, Plattenspieler …).</li><li>Komm hierher zurück und tippe <b>Mithören</b>.</li><li>Nach ein paar Sekunden hat das Spiel den Beat – dann fallen die Noten genau auf die Schläge.</li></ol>'
+    + '<p class="ft-klein">Die Musik muss aus einem <b>Lautsprecher</b> kommen – mit Kopfhörern hört das Mikro nichts. Am besten klappt es mit klarem Beat (Pop, Dance, Rock). Gehört wird nur hier auf dem Gerät: nichts wird aufgenommen, gespeichert oder gesendet.</p>'
+    + '<a class="btn secondary bb-datei" href="spotify:" id="bbSpotify">Spotify öffnen</a>'
+    + '<button type="button" class="btn ft-los bb-los" id="bbMithoeren">🎤 Mithören</button><p class="ft-klein" id="bbLiveFehler"></p></div>';
+  $('bbMithoeren').addEventListener('click', bbLiveStarten);
+}
+async function bbLiveStarten() {
+  const A = ftAudio(); if (!A) return;
+  try {
+    if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('kein Mikrofon');
+    const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
+    if (!$('screen-beat').classList.contains('active')) { stream.getTracks().forEach((t) => t.stop()); return; }
+    bbStart({ live: stream, noten: [] });
+  } catch (e) {
+    const f = $('bbLiveFehler');
+    if (f) f.textContent = 'Kein Zugriff aufs Mikrofon. Erlaube es in den Einstellungen (Safari → Mikrofon) und versuch es nochmal.';
+    else bbLiveIntro();
+  }
+}
+function bbLiveVerbinden(stream) {
+  const c = bb.A.c, src = c.createMediaStreamSource(stream), an = c.createAnalyser();
+  an.fftSize = 1024; an.smoothingTimeConstant = 0; src.connect(an);
+  const tr = stream.getAudioTracks()[0], s = tr && tr.getSettings ? tr.getSettings() : {};
+  bb.live = { stream, src, an, spek: new Float32Array(an.frequencyBinCount), zeit: new Float32Array(an.fftSize), alt: new Float32Array(an.frequencyBinCount),
+    env: new Float32Array(BB_LIVE_R), stempel: new Int32Array(BB_LIVE_R).fill(-1), inLat: (typeof s.latency === 'number' ? s.latency : 0.02) + an.fftSize / 2 / c.sampleRate,
+    periode: 0, anker: 0, kandidat: null, treffer: 0, abweich: 0, konf: 0, pegel: 0, stilleSeit: 0, letzteNote: -1e9, schlag: 0, spitzen: [], tempoUm: 0 };
+  bb.live.timer = setInterval(bbLiveHoeren, 10);
+}
+function bbLiveTrennen() {
+  const L = bb.live; if (!L || !L.stream) return;
+  clearInterval(L.timer); try { L.src.disconnect(); } catch (e) { /* schon getrennt */ }
+  L.stream.getTracks().forEach((t) => t.stop()); L.stream = null;
+}
+function bbLiveHoeren() {
+  if (!bb || !bb.live || !bb.live.stream || bb.fertig) return;
+  const L = bb.live, c = bb.A.c, jetzt = c.currentTime;
+  L.an.getFloatFrequencyData(L.spek); L.an.getFloatTimeDomainData(L.zeit);
+  let fl = 0, q = 0;
+  for (let k = 2; k < L.spek.length; k++) { const m = Math.log1p(1000 * Math.pow(10, L.spek[k] / 20)); const d = m - L.alt[k]; if (d > 0) fl += d; L.alt[k] = m; }
+  for (let i = 0; i < L.zeit.length; i++) q += L.zeit[i] * L.zeit[i];
+  L.pegel = Math.sqrt(q / L.zeit.length);
+  if (L.pegel < 0.004) { if (!L.stilleSeit) L.stilleSeit = jetzt; } else L.stilleSeit = 0;
+  // Zeitpunkt der Fenstermitte, wie er draußen erklang (Eingangsverzögerung abgezogen)
+  const slot = Math.round((jetzt - L.inLat) * 100), i = ((slot % BB_LIVE_R) + BB_LIVE_R) % BB_LIVE_R;
+  if (L.stempel[i] !== slot) { L.stempel[i] = slot; L.env[i] = fl; } else L.env[i] = Math.max(L.env[i], fl);
+  L.slot = slot;
+  if (jetzt - L.tempoUm > 0.25) { L.tempoUm = jetzt; bbLiveTempo(); }
+  bbLiveNoten();
+}
+// Hüllkurve der letzten n Fächer (fehlende = 0), Mittelwert abgezogen, nur positive Teile
+function bbLiveHuelle(L, n) {
+  const x = new Float32Array(n);
+  for (let j = 0; j < n; j++) { const s = L.slot - n + 1 + j, i = ((s % BB_LIVE_R) + BB_LIVE_R) % BB_LIVE_R; x[j] = L.stempel[i] === s ? L.env[i] : 0; }
+  const y = new Float32Array(n), R = 15; let sum = 0;
+  for (let j = 0; j < Math.min(n, R); j++) sum += x[j];
+  for (let j = 0; j < n; j++) { const a = j - R - 1, b = j + R; if (b < n) sum += x[b]; if (a >= 0) sum -= x[a]; const cnt = Math.min(n - 1, b) - Math.max(0, a + 1) + 1; y[j] = Math.max(0, x[j] - sum / cnt); }
+  return y;
+}
+// Tempo und Phase aus einer Hüllkurve (100 Werte pro Sekunde): { lag (Fächer pro Schlag), konf, phase (Fächer seit dem letzten Schlag) }
+function bbTempo(x) {
+  const n = x.length, lo = 31, hi = 86, maxL = Math.min(n - 50, 4 * hi + 2), ac = new Float32Array(maxL + 2);
+  for (let L = 1; L <= maxL + 1; L++) { let s = 0; for (let j = 0; j + L < n; j++) s += x[j] * x[j + L]; ac[L] = s / (n - L); }
+  const acI = (l) => { if (l >= maxL) return 0; const i = Math.floor(l), f = l - i; return ac[i] * (1 - f) + ac[i + 1] * f; };
+  let mittel = 0; for (let L = lo; L <= hi; L++) mittel += ac[L]; mittel /= hi - lo + 1;
+  // Kandidat-Periode L: Wiederholung nach 1, 2, 3, 4 Schlägen muss stark sein; Vorliebe um 120 BPM (L = 50)
+  let lag = lo, bw = -1;
+  for (let L = lo; L <= hi; L += 0.25) {
+    let v = acI(L); for (let m = 2; m <= 4; m++) if (m * L < maxL) v += 0.8 * acI(m * L);
+    v *= Math.exp(-0.5 * (Math.log2(L / 50) / 1.1) ** 2);
+    if (v > bw) { bw = v; lag = L; }
+  }
+  const b = acI(lag);
+  // Phase: Kamm über die Hüllkurve, neuere Schläge zählen mehr
+  let phase = 0, ps = -1;
+  for (let f = 0; f < Math.ceil(lag); f++) {
+    let s = 0;
+    for (let k = 0, w = 1; ; k++, w *= 0.88) { const j = Math.round(n - 1 - f - k * lag); if (j < 1) break; s += w * Math.max(x[j], x[j - 1] * 0.7, j + 1 < n ? x[j + 1] * 0.7 : 0); }
+    if (s > ps) { ps = s; phase = f; }
+  }
+  return { lag, konf: mittel > 0 ? b / mittel : 0, phase };
+}
+function bbLiveTempo() {
+  const L = bb.live, verfuegbar = Math.min(800, Math.round((bb.A.c.currentTime - bb.start) * 100));
+  if (verfuegbar < 350 || L.stilleSeit) return;
+  const x = bbLiveHuelle(L, verfuegbar), t = bbTempo(x);
+  L.konf = t.konf;
+  const P = t.lag / 100, schlag = (L.slot - t.phase) / 100;   // Zeit des letzten Schlags (draußen)
+  if (!L.periode) {
+    if (t.konf < 1.3) { L.kandidat = null; return; }
+    if (L.kandidat && Math.abs(P / L.kandidat - 1) < 0.03) { L.treffer++; } else { L.kandidat = P; L.treffer = 1; }
+    if (L.treffer >= 3) { L.periode = P; L.anker = schlag; }
+    return;
+  }
+  const v = P / L.periode, passt = Math.abs(v - 1) < 0.05, oktave = Math.abs(v - 2) < 0.08 || Math.abs(v - 0.5) < 0.04;
+  if (passt) {
+    L.periode = L.periode * 0.85 + P * 0.15; L.abweich = 0;
+    const vor = L.anker + Math.round((schlag - L.anker) / L.periode) * L.periode;
+    let err = schlag - vor; if (err > L.periode / 2) err -= L.periode; if (err < -L.periode / 2) err += L.periode;
+    L.anker = vor + err * 0.3;
+  } else if (!oktave && t.konf > 1.3) {
+    if (++L.abweich >= 6) { L.periode = P; L.anker = schlag; L.abweich = 0; }   // Tempo hat sich wirklich geändert
+  }
+}
+function bbLiveNoten() {
+  const L = bb.live; if (!L.periode || L.stilleSeit) return;
+  const reise = BB_STUFEN[bb.stufe].reise, jetzt = bb.A.c.currentTime, P = L.periode;
+  const horizont = jetzt + reise + 0.1;
+  for (;;) {
+    let k = Math.ceil((Math.max(L.letzteNote + P * 0.6, jetzt + 0.9) - L.anker) / P), t = L.anker + k * P;
+    if (t > horizont) break;
+    const b = L.schlag++, takt = Math.floor(b / 4), muster = BB_LIVE_MUSTER[(takt * 7 + (takt >> 2) * 3) % BB_LIVE_MUSTER.length], bahn = muster[b % 4];
+    L.letzteNote = t;
+    const zeit = t - bb.start;
+    if (bb.stufe !== 'leicht' || b % 2 === 0) bb.noten.push({ t: zeit, bahn, ton: null, chart: true, urteil: null });
+    if (bb.stufe === 'schwer' && b % 2 === 1 && P > 0.36) bb.noten.push({ t: zeit + P / 2, bahn: (bahn + 2) % 4, ton: null, chart: true, urteil: null });
+  }
+}
+function bbLiveStatus(c, W, H, jetzt, reise) {
+  const L = bb.live; if (!L) return;
+  const bald = bb.noten.some((n) => n.t > jetzt && n.t < jetzt + reise);
+  c.textAlign = 'center';
+  if (L.periode) { c.fillStyle = 'rgba(255,255,255,.35)'; c.font = '700 13px system-ui'; c.fillText('🎤 ' + Math.round(60 / L.periode) + ' BPM', W / 2, 22); }
+  if (bald) return;
+  const pegel = Math.min(1, L.pegel * 12);
+  c.fillStyle = 'rgba(255,255,255,.85)'; c.font = '800 22px system-ui';
+  c.fillText(L.stilleSeit ? 'Ich höre nichts …' : L.periode ? 'Beat gefunden!' : 'Ich höre zu …', W / 2, H * 0.36);
+  c.font = '600 13px system-ui'; c.fillStyle = 'rgba(199,208,245,.8)';
+  c.fillText(L.stilleSeit ? 'Läuft die Musik über den Lautsprecher?' : L.periode ? 'Gleich kommen die Noten' : 'Suche den Beat – ein paar Sekunden', W / 2, H * 0.36 + 26);
+  const bw = W * 0.5; c.fillStyle = 'rgba(255,255,255,.1)'; c.fillRect((W - bw) / 2, H * 0.36 + 44, bw, 6);
+  c.fillStyle = '#a78bfa'; c.fillRect((W - bw) / 2, H * 0.36 + 44, bw * pegel, 6);
 }
 document.addEventListener('keydown', (e) => {
   if (!bb || bb.fertig || !$('screen-beat').classList.contains('active') || e.repeat || e.metaKey || e.ctrlKey) return;

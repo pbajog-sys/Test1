@@ -649,7 +649,12 @@ Noten fallen herunter, man tippt im richtigen Moment (Handy: Bahn antippen, Rech
   Doppelnoten und Kicks.
 - **Eigene Songs** (MP3/M4A, gemeinsamer Speicher mit dem Song-Rätsel): Einsätze per Spectral Flux (FFT 512, Hop 256,
   11 kHz), adaptive Schwelle, Mindestabstand je Stufe 0,42/0,26/0,15 s, Bahn nach Klanghelligkeit. Alles offline.
-- Spotify geht nicht: Die Musik läuft nur in der Spotify-App, und Spotify verbietet Spiele mit seiner Musik.
+- **🎤 Live-Modus – zu jeder Musik (auch Spotify):** Musik läuft über einen Lautsprecher, das Mikrofon hört mit
+  (nur Analyse im Browser, nichts wird aufgenommen). Spectral Flux in 10-ms-Fächern → alle 250 ms Tempo per
+  Autokorrelation mit Oberton-Summe (1–4 Schläge, Vorliebe um 120 BPM, 70–190 BPM) und Phase per Kamm → Noten auf die
+  vorhergesagten Schläge (Leicht jeder 2., Mittel jeder, Schwer plus Achtel). Weiche Nachführung von Tempo und Phase,
+  Tempowechsel nach 1,5 s, 8 s Stille beendet die Runde. Test: `tests/beat-live.test.js` (simuliertes Mikrofon mit
+  einer 120-BPM-WAV).
 - Verzögerungsausgleich (−250 bis +250 ms) für Bluetooth-Kopfhörer, Hinweis nach der Runde, wenn man im Schnitt
   deutlich zu früh/spät war. Speicher `walquiz.beat.v1`. Test: `tests/beat.test.js` (Erkennung an künstlichem Signal,
   Charts, komplette Durchläufe per Taste, eigener Song per Datei-Upload).
