@@ -176,7 +176,8 @@ function tonPhase(phase) {
 }
 
 function tonMixAnzeigen() {
-  $('tonMixHz').textContent = hzText(ts.mix);
+  const n = notenName(ts.mix);
+  $('tonMixHz').innerHTML = hzText(ts.mix) + '<small class="ton-note">' + n.name + (n.cent ? ' <i>' + (n.cent > 0 ? '+' : '−') + Math.abs(n.cent) + ' Cent</i>' : '') + '</small>';
   liveFrequenz(ts.mix);
   const x = $('tonRegler').value / 10;
   $('tonRegler').style.setProperty('--pos', x + '%');

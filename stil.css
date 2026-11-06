@@ -3502,3 +3502,4 @@ button.slo-maskottchen.looping { animation: sloLooping 1.1s var(--ease-out); }
 .dt-wurf.leer { background: rgba(255,255,255,.04); box-shadow: inset 0 0 0 1px rgba(255,255,255,.1); animation: none; min-height: 18px; }
 .dt-wurf.m2 { background: #16a34a; } .dt-wurf.m3 { background: #dc2626; } .dt-wurf.m0 { background: rgba(255,255,255,.05); color: #94a89a; }
 .dt-stufen button.on { border-color: #f97316; background: rgba(249,115,22,.18); }
+.ton-hz .ton-note { display: block; margin-top: 2px; font-size: 1.15rem; font-weight: 700; letter-spacing: 0; color: #a3e635; } .ton-hz .ton-note i { font-style: normal; font-weight: 500; color: #8fb5b0; font-size: .95rem; }
