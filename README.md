@@ -612,7 +612,7 @@ festem Stichtag, ICS-Aufbau, Download, Fehlerfälle, Nachweis „keine Anfrage n
 ## 📄 Falten bis zum Mars
 `falten.js` – ein Blatt Papier (0,1 mm) verdoppelt bei jedem Falten seine Dicke. Vorher schätzen (logarithmischer
 Schieber 2 – 1 Mio.), dann tippen: Faltungszahl und Länge oben, Fortschrittsbalken bis zum Mars, Maßstab links passt sich
-an (mm → km → Mio. km → Lichtjahre), 33 echte Haltepunkte erscheinen an ihrer Höhe (Kreditkarte, Euro-Münze, Tennisball, Giraffe, Freiheitsstatue, Kölner Dom,
+an (mm → km → Mio. km → Lichtjahre), 34 echte Haltepunkte erscheinen an ihrer Höhe (Kreditkarte, Euro-Münze, Tennisball, Giraffe, Freiheitsstatue, Kölner Dom,
 Burj Khalifa, Zugspitze, Everest, Wetterballon, Weltraum 100 km, ISS 408 km, Hubble, Erddurchmesser, GPS, Mond, James Webb, **Mars nach 49 Faltungen**
 (56,3 Mio. km ≥ nächster Abstand 55,76 Mio. km), Sonne, Jupiter, Neptun, Voyager 1, Lichtjahr, Proxima Centauri nach 69).
 Die Faltung, ab der ein Objekt erreicht ist, wird aus der Höhe berechnet (`2^n × 0,1 mm ≥ h`).
