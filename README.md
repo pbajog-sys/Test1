@@ -638,3 +638,18 @@ Sammelt „Entdeckt x von 50“. Gleicher Happy-Hardcore-Beat wie beim Falten (w
 Drei Fragen: Wann halb voll? (11:59) · Wie voll um 11:55? (3,125 %) · Drei neue Gläser – wie lange reicht das? (2 Minuten,
 bis 12:02). Zeit per „+1 Minute“ oder „Laufen lassen“ im Beat, Glas mit Füllstand, Lupe mit der Kolonie, Bakterienzahl
 in Worten (bis 4,6 Trillionen). Test für beide: `tests/zoom-glas.test.js`.
+
+## 🎸 Beat-Bahnen
+`beat.js` – Rhythmusspiel mit vier Bahnen (Genre wie bei bekannten Gitarren-Spielen, aber eigene Songs und eigener Look):
+Noten fallen herunter, man tippt im richtigen Moment (Handy: Bahn antippen, Rechner: D F J K). Urteil ±50 ms Perfekt,
+±100 ms Gut, ±150 ms Okay; Serie gibt Faktor ×2–×4; Sterne nach Genauigkeit (60/80/93 %). Daneben tippen kostet nichts.
+- **Drei eigene Songs**, komplett im Browser erzeugt: „Neon-Sprint“ (Happy Hardcore, 175 BPM), „Pixel-Party“
+  (Chiptune, 150 BPM), „Sonnenaufgang“ (House, 124 BPM). Die Noten sind exakt die Melodie, die Bahn hängt von der
+  Tonhöhe ab; getroffene Noten spielen ihren Melodieton. Leicht/Mittel/Schwer: nur Viertel · ganze Melodie · plus
+  Doppelnoten und Kicks.
+- **Eigene Songs** (MP3/M4A, gemeinsamer Speicher mit dem Song-Rätsel): Einsätze per Spectral Flux (FFT 512, Hop 256,
+  11 kHz), adaptive Schwelle, Mindestabstand je Stufe 0,42/0,26/0,15 s, Bahn nach Klanghelligkeit. Alles offline.
+- Spotify geht nicht: Die Musik läuft nur in der Spotify-App, und Spotify verbietet Spiele mit seiner Musik.
+- Verzögerungsausgleich (−250 bis +250 ms) für Bluetooth-Kopfhörer, Hinweis nach der Runde, wenn man im Schnitt
+  deutlich zu früh/spät war. Speicher `walquiz.beat.v1`. Test: `tests/beat.test.js` (Erkennung an künstlichem Signal,
+  Charts, komplette Durchläufe per Taste, eigener Song per Datei-Upload).

@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=111">
+<link rel="stylesheet" href="fonts/fonts.css?v=112">
 <link rel="icon" href="icons/favicon-64.png?v=3" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=111">
-<link rel="stylesheet" href="ansichten.css?v=111">
+<link rel="stylesheet" href="stil.css?v=112">
+<link rel="stylesheet" href="ansichten.css?v=112">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -480,6 +480,7 @@
       <button class="bu-ding bu-planet bu-falten" type="button" data-ziel="hubFalten" aria-label="Falten bis zum Mars" style="--p1:#fb923c;--p2:#7c2d12"><span>📄</span></button>
       <button class="bu-ding bu-planet bu-zoom" type="button" data-ziel="hubZoom" aria-label="Zoom durchs Universum" style="--p1:#f472b6;--p2:#312e81"><span>🔭</span></button>
       <button class="bu-ding bu-planet bu-glas" type="button" data-ziel="hubGlas" aria-label="Verdopplung im Glas" style="--p1:#86efac;--p2:#064e3b"><span>🦠</span></button>
+      <button class="bu-ding bu-planet bu-beat" type="button" data-ziel="hubBeat" aria-label="Beat-Bahnen" style="--p1:#c084fc;--p2:#831843"><span>🎸</span></button>
       <button class="bu-ding bu-planet bu-songs" type="button" data-ziel="hubSongs" aria-label="Song-Rätsel" style="--p1:#4ade80;--p2:#3b0764"><span>💿</span></button>
       <button class="bu-ding bu-planet" type="button" data-ziel="hubRiff" aria-label="Riffbau" style="--p1:#f9a8d4;--p2:#831843"><span>🪸</span></button>
     </div>
@@ -521,6 +522,11 @@
     <button class="hub-game hub-songs" id="hubSongs" type="button" data-regen="🎵,💿,📼,🎤">
       <span class="hg-av hg-av-songs" aria-hidden="true"><span class="hg-in"><span class="sr-mini"><i></i></span></span></span>
       <span class="hg-text"><span class="hg-titel">Song-Rätsel</span><span class="hg-sub">80er Pop, Rock, Hits: Song erkennen, Jahr schätzen – direkt im Browser.</span><span class="hg-best" id="hubSongsBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-beat" id="hubBeat" type="button" data-regen="🎸,🎵,⭐,🥁">
+      <span class="hg-av hg-av-beat" aria-hidden="true"><span class="hg-in"><span class="bb-mini"><i></i><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Beat-Bahnen</span><span class="hg-sub">Noten fallen, du tippst im Takt – eigene Songs oder deine MP3s.</span><span class="hg-best" id="hubBeatBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-takt" id="hubTakt" type="button" data-regen="⏱️,🥁,🎼,⏳">
@@ -1903,6 +1909,14 @@
     </div>
   </section>
 
+  <!-- Beat-Bahnen -->
+  <section class="screen" id="screen-beat">
+    <div class="ft-buehne bb-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="bbZurueck" type="button" aria-label="Zurück">←</button><span>🎸 Beat-Bahnen</span><span></span></div>
+      <div id="bbInhalt" class="ft-inhalt"></div>
+    </div>
+  </section>
+
   <!-- Zoom durchs Universum -->
   <section class="screen" id="screen-zoom">
     <div class="ft-buehne zm-buehne">
@@ -2197,54 +2211,55 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=111"></script>
-<script src="haie.js?v=111"></script>
-<script src="porsche.js?v=111"></script>
-<script src="dackel.js?v=111"></script>
-<script src="groesse.js?v=111"></script>
-<script src="gretchen.js?v=111"></script>
-<script src="effekte.js?v=111"></script>
-<script src="app.js?v=111"></script>
-<script src="melden.js?v=111"></script>
-<script src="verlauf.js?v=111"></script>
-<script src="hub.js?v=111"></script>
-<script src="farben.js?v=111"></script>
-<script src="cello.js?v=111"></script>
-<script src="instrumente.js?v=111"></script>
-<script src="toene.js?v=111"></script>
-<script src="gehoer.js?v=111"></script>
-<script src="songs.js?v=111"></script>
-<script src="spotify.js?v=111"></script>
-<script src="deezer.js?v=111"></script>
-<script src="klassiker.js?v=111"></script>
-<script src="falten.js?v=111"></script>
-<script src="zoom.js?v=111"></script>
-<script src="glas.js?v=111"></script>
-<script src="takt.js?v=111"></script>
-<script src="punkte.js?v=111"></script>
-<script src="funktion.js?v=111"></script>
-<script src="zufall.js?v=111"></script>
-<script src="zahlen.js?v=111"></script>
-<script src="tierleben.js?v=111"></script>
-<script src="tierpixel.js?v=111"></script>
-<script src="piranha.js?v=111"></script>
-<script src="slo.js?v=111"></script>
-<script src="augen.js?v=111"></script>
-<script src="karten-daten.js?v=111"></script>
-<script src="karte.js?v=111"></script>
-<script src="tiefgang.js?v=111"></script>
-<script src="riff.js?v=111"></script>
-<script src="krimi-grafik.js?v=111"></script>
-<script src="krimi.js?v=111"></script>
-<script src="krimi-wachen.js?v=111"></script>
-<script src="krimi-verhoer.js?v=111"></script>
-<script src="krimi-alibi.js?v=111"></script>
-<script src="krimi-akte.js?v=111"></script>
-<script src="krimi-zentrale.js?v=111"></script>
-<script src="profile.js?v=111"></script>
-<script src="fuehrung.js?v=111"></script>
-<script src="dopamin.js?v=111"></script>
-<script src="experimente.js?v=111"></script>
-<script src="plattform.js?v=111"></script>
+<script src="wale.js?v=112"></script>
+<script src="haie.js?v=112"></script>
+<script src="porsche.js?v=112"></script>
+<script src="dackel.js?v=112"></script>
+<script src="groesse.js?v=112"></script>
+<script src="gretchen.js?v=112"></script>
+<script src="effekte.js?v=112"></script>
+<script src="app.js?v=112"></script>
+<script src="melden.js?v=112"></script>
+<script src="verlauf.js?v=112"></script>
+<script src="hub.js?v=112"></script>
+<script src="farben.js?v=112"></script>
+<script src="cello.js?v=112"></script>
+<script src="instrumente.js?v=112"></script>
+<script src="toene.js?v=112"></script>
+<script src="gehoer.js?v=112"></script>
+<script src="songs.js?v=112"></script>
+<script src="spotify.js?v=112"></script>
+<script src="deezer.js?v=112"></script>
+<script src="klassiker.js?v=112"></script>
+<script src="falten.js?v=112"></script>
+<script src="zoom.js?v=112"></script>
+<script src="glas.js?v=112"></script>
+<script src="beat.js?v=112"></script>
+<script src="takt.js?v=112"></script>
+<script src="punkte.js?v=112"></script>
+<script src="funktion.js?v=112"></script>
+<script src="zufall.js?v=112"></script>
+<script src="zahlen.js?v=112"></script>
+<script src="tierleben.js?v=112"></script>
+<script src="tierpixel.js?v=112"></script>
+<script src="piranha.js?v=112"></script>
+<script src="slo.js?v=112"></script>
+<script src="augen.js?v=112"></script>
+<script src="karten-daten.js?v=112"></script>
+<script src="karte.js?v=112"></script>
+<script src="tiefgang.js?v=112"></script>
+<script src="riff.js?v=112"></script>
+<script src="krimi-grafik.js?v=112"></script>
+<script src="krimi.js?v=112"></script>
+<script src="krimi-wachen.js?v=112"></script>
+<script src="krimi-verhoer.js?v=112"></script>
+<script src="krimi-alibi.js?v=112"></script>
+<script src="krimi-akte.js?v=112"></script>
+<script src="krimi-zentrale.js?v=112"></script>
+<script src="profile.js?v=112"></script>
+<script src="fuehrung.js?v=112"></script>
+<script src="dopamin.js?v=112"></script>
+<script src="experimente.js?v=112"></script>
+<script src="plattform.js?v=112"></script>
 </body>
 </html>

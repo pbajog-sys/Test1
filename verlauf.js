@@ -11,6 +11,7 @@ const VERLAUF_SPIELE = {
   falten: { name: 'Falten bis zum Mars', emoji: '📄', farbe: '#fb923c' },
   zoom: { name: 'Zoom durchs Universum', emoji: '🔭', farbe: '#f472b6' },
   glas: { name: 'Verdopplung im Glas', emoji: '🦠', farbe: '#4ade80' },
+  beat: { name: 'Beat-Bahnen', emoji: '🎸', farbe: '#c084fc' },
   takt: { name: 'Takt-Gefühl', emoji: '⏱️', farbe: '#ff8a3d' },
   punkte: { name: 'Punktwolke', emoji: '📈', farbe: '#fde047' },
   funktion: { name: 'Funktions-Detektiv', emoji: '🕵️', farbe: '#a3e635' },
