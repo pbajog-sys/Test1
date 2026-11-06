@@ -108,19 +108,23 @@ function ftBass(A, t, note, laut) {
   g.gain.setValueAtTime(laut, t); g.gain.exponentialRampToValueAtTime(0.001, t + FT_ACHTEL * 0.95);
   o.connect(f).connect(g).connect(A.master); o.start(t); o.stop(t + FT_ACHTEL);
 }
+// Gemeinsamer Beat für Falten, Zoom und Glas: ftLaut (0…40) bestimmt, wie viele Spuren laufen.
+let ftLaut = 0;
+const FT_MUSIK_SCREENS = ['falten', 'zoom', 'glas'];
+const ftMusikSpielt = () => FT_MUSIK_SCREENS.some((id) => { const sc = document.getElementById('screen-' + id); return sc && sc.classList.contains('active'); });
 // Beat-Schleife: je mehr Faltungen, desto mehr Spuren (Kick → Hats → Bass → Stabs → Claps)
 function ftTaktStarten() {
   const A = ftAudio(); if (!A || A.takt) return;
   A.start = A.c.currentTime + 0.06; A.schritt = 0; A.naechster = A.start;
   A.takt = setInterval(() => {
-    if (!ft || klAktivFalten() === false) { ftTaktStoppen(); return; }
+    if (!ftMusikSpielt()) { ftTaktStoppen(); return; }
     while (A.naechster < A.c.currentTime + 0.12) { ftSchritt(A, A.schritt, A.naechster); A.schritt++; A.naechster += FT_ACHTEL / 2; }
   }, 25);
 }
 function ftTaktStoppen() { if (ftAk && ftAk.takt) { clearInterval(ftAk.takt); ftAk.takt = null; } }
 function ftSchritt(A, s, t) {   // s = Sechzehntel
-  if (A.stumm || !ft) return;
-  const n = ft.n, im = s % 16, takt = Math.floor(s / 16), ak = FT_AKKORDE[takt % 4];
+  if (A.stumm) return;
+  const n = ftLaut, im = s % 16, takt = Math.floor(s / 16), ak = FT_AKKORDE[takt % 4];
   if (im % 4 === 0) ftKick(A, t, n < 3 ? 0.7 : 1);
   if (n >= 6 && im % 4 === 2) ftRauschen(A, t, 0.09, 7000, 0.18);
   if (n >= 12 && im % 4 === 2) ftBass(A, t, ak[0], 0.35);
@@ -169,6 +173,7 @@ function ftIntro() {
   $('ftLos').addEventListener('click', () => { ftAudio(); ftStart(schaetz()); });
 }
 function ftStart(schaetzung) {
+  ftLaut = 0;
   ft = { n: 0, anzeigeN: 0, schaetzung, combo: 0, bestCombo: 0, imTakt: 0, text: 'Falte ein Blatt Papier …', textZeit: 0, partikel: [], anim: null, fertig: false, weiter: false };
   $('ftInhalt').innerHTML = '<div class="ft-kopf"><div class="ft-zahl" id="ftZahl"></div>'
     + '<div class="ft-leiste" id="ftLeiste">' + FT_ZIELE.filter((z) => z.ab <= FT_MARS && z.ab >= 20).map((z) => '<i style="left:' + (z.ab / FT_MARS) * 100 + '%"></i>').join('') + '<b id="ftBalken"></b><span class="ft-mars">🔴<small>Mars</small></span></div></div>'
@@ -185,7 +190,7 @@ function ftStart(schaetzung) {
 }
 function ftFalten() {
   if (!ft || ft.fertig || ft.n >= FT_ENDE) return;
-  const alt = ft.n; ft.n++;
+  const alt = ft.n; ft.n++; ftLaut = ft.n;
   if (!ftAk || !ftAk.takt) ftTaktStarten();
   // Im Takt? (Abstand zum nächsten Achtel ≤ 70 ms)
   const A = ftAudio();

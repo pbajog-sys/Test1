@@ -9,6 +9,8 @@ const VERLAUF_SPIELE = {
   songs: { name: 'Song-Rätsel', emoji: '🎵', farbe: '#1ed760' },
   klassiker: { name: 'Klassiker', emoji: '🃏', farbe: '#f87171' },
   falten: { name: 'Falten bis zum Mars', emoji: '📄', farbe: '#fb923c' },
+  zoom: { name: 'Zoom durchs Universum', emoji: '🔭', farbe: '#f472b6' },
+  glas: { name: 'Verdopplung im Glas', emoji: '🦠', farbe: '#4ade80' },
   takt: { name: 'Takt-Gefühl', emoji: '⏱️', farbe: '#ff8a3d' },
   punkte: { name: 'Punktwolke', emoji: '📈', farbe: '#fde047' },
   funktion: { name: 'Funktions-Detektiv', emoji: '🕵️', farbe: '#a3e635' },

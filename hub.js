@@ -197,6 +197,8 @@ function renderHub() {
   $('hubPiranhaBest').textContent = prSt.level > 1 ? 'Level ' + prSt.level + ' · ⭐ ' + prS : 'Noch nicht gespielt';
   const sloSt = loadJson('walquiz.slo.v1'), sloF = Object.values(sloSt.stufe || {}).filter((x) => x >= 3).length, sloB = Object.keys(sloSt.stufe || {}).length;
   $('hubSloBest').textContent = sloSt.xp ? '⚡ ' + sloSt.xp + ' XP · ' + sloB + ' von ' + (typeof SLO_EINHEITEN !== 'undefined' ? SLO_EINHEITEN.length : 20) + ' Stationen' + (sloF ? ' · 👑 ' + sloF : '') : 'Noch nicht begonnen';
+  if ($('hubZoomBest')) { const z = loadJson('walquiz.zoom.v1'); $('hubZoomBest').textContent = z.entdeckt && z.entdeckt.length ? 'Entdeckt: ' + z.entdeckt.length + ' von ' + (typeof ZM_DINGE !== 'undefined' ? ZM_DINGE.length : 49) : 'Noch nicht gespielt'; }
+  if ($('hubGlasBest')) { const g = loadJson('walquiz.glas.v1'); $('hubGlasBest').textContent = g.runden ? 'Beste Runde: ' + (g.best || 0) + ' von 3' : 'Noch nicht gespielt'; }
   if ($('hubFaltenBest')) { const f = loadJson('walquiz.falten.v1'); $('hubFaltenBest').textContent = f.runden ? 'Beste Schätzung: ' + f.best.abw + ' daneben' : 'Noch nicht gespielt'; }
   if ($('hubKlassikerBest')) { const k = loadJson('walquiz.klassiker.v1'), st = k.stat || {}, n = (st.solitaerSiege || 0) + (st.sudokuGeloest || 0) + (st.minenSiege || 0) + (st.vierSiege || 0); $('hubKlassikerBest').textContent = n ? n + ' Siege' + (k.best && k.best.bloecke ? ' · Blöcke ' + fmt(k.best.bloecke) : '') : 'Noch nicht gespielt'; }
   if ($('hubSongsBest')) { const sb = typeof srBest === 'function' ? srBest() : null; $('hubSongsBest').textContent = sb != null ? 'Rekord ' + fmt(sb) + ' / 50' : 'Noch nicht gespielt'; }
@@ -326,7 +328,7 @@ if (pendingChallenge) {
   if (!b) return;
   const q = (s) => b.querySelector(s);
   const bahnen = [
-    ['.bu-punkte', '.bu-karte', '.bu-zufall', '.bu-augen'],
+    ['.bu-punkte', '.bu-karte', '.bu-zufall', '.bu-augen', '[data-ziel="hubZoom"]', '[data-ziel="hubGlas"]'],
     ['.bu-farben', '.bu-cello', '.bu-takt', '.bu-funktion', '.bu-dackel', '[data-ziel="hubTiefgang"]', '[data-ziel="hubPiranha"]', '[data-ziel="hubSongs"]'],
     ['.bu-wal', '.bu-krimi', '[data-welt="haie"]', '.bu-toene', '[data-ziel="hubTierleben"]', '.bu-porsche', '[data-ziel="hubZahlen"]', '[data-ziel="hubRiff"]', '[data-ziel="hubKlassiker"]', '[data-ziel="hubFalten"]'],
   ].map((l) => l.map(q).filter(Boolean));

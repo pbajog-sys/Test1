@@ -624,3 +624,17 @@ Test: `tests/falten.test.js`.
 Start bei 0 Faltungen = 0,1 mm (Maßstab bis 1,5 mm). Falt-Animation wie echt: Solange das Blatt breit ist, klappt die
 rechte Hälfte über die linke (Breite halbiert, Dicke verdoppelt, danach mittig ausgerichtet); als Säule schwenkt eine
 zweite Säule von rechts unten auf die erste. Der Maßstab zoomt in den ersten 60 % der Animation heraus.
+
+## 🔭 Zoom durchs Universum
+`zoom.js` – jeder Tipp zoomt ×10 heraus oder ÷10 hinein, Bildbreite von 10⁻¹⁵ m (Proton) bis 10²⁷ m (beobachtbares
+Universum). 50 echte Objekte mit Größe (Proton 1,7 fm, Wasserstoff-Atom, DNA, Coronavirus, Blutkörperchen, Ameise, Mensch,
+Blauwal, Everest, Deutschland, Erde, Sonne, Umlaufbahnen als Ringe, Voyager 1, Oortsche Wolke, Proxima Centauri,
+Milchstraße, Virgo-Haufen, Laniakea, Sloan Great Wall …); auf jeder der 43 Stufen ist etwas im Bild (Test). Schätzfrage
+vorher: Zehnerschritte vom Proton bis zum Universum – genau 41,7, also rund **42**. Ziel: beide Enden erreichen.
+Sammelt „Entdeckt x von 50“. Gleicher Happy-Hardcore-Beat wie beim Falten (wird mit jeder neuen Stufe voller).
+
+## 🦠 Verdopplung im Glas
+`glas.js` – Albert A. Bartletts Gedankenexperiment: 11:00 ein Bakterium, jede Minute Verdopplung, 12:00 ist das Glas voll.
+Drei Fragen: Wann halb voll? (11:59) · Wie voll um 11:55? (3,125 %) · Drei neue Gläser – wie lange reicht das? (2 Minuten,
+bis 12:02). Zeit per „+1 Minute“ oder „Laufen lassen“ im Beat, Glas mit Füllstand, Lupe mit der Kolonie, Bakterienzahl
+in Worten (bis 4,6 Trillionen). Test für beide: `tests/zoom-glas.test.js`.
