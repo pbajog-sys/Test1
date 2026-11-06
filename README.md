@@ -598,3 +598,13 @@ und je Spiel Anzahl, Bestwert, Schnitt der letzten 7 Runden und eine Verlaufskur
 - **Games** als Zeilen mit rundem Bild, Stand und ▶: **Quizzes** (im Kreis wechseln die Welten als Diashow), Farb-Gedächtnis,
   Noten & Griffe (Cello, Klavier, Gitarre, Ukulele), Ton-Gedächtnis, Takt-Gefühl, Punktwolke, Augenmaß, Karten-Gefühl, Tiefgang, Riffbau und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
 - Akku: Farbflecken als Verlauf statt Weichzeichner, Bühne und Diashow pausieren außerhalb des Bildschirms; „Bewegung reduzieren“ wird beachtet.
+
+## 📅 Werkzeug: Text zu Kalender (offline)
+Eigene kleine Seite `werkzeuge/text-zu-ics.html` (auf GitHub Pages unter `…/werkzeuge/text-zu-ics.html`). Termine als
+Text schreiben, ein Termin pro Zeile („Zahnarzt morgen um 14:30 in der Hauptstraße 5“, „Teammeeting 12.11. 9–10:30 @ Raum 2“,
+„Mama Geburtstag 3. Dezember“) – die Seite erkennt Datum, Uhrzeit/Spanne, Dauer, Ort und Erinnerung, zeigt alles zum
+Korrigieren und erzeugt eine `.ics`-Datei (RFC 5545: CRLF, Zeilenfaltung, Maskierung, Europe/Berlin mit VTIMEZONE,
+ganztägig als VALUE=DATE, Erinnerung als VALARM). **Komplett offline:** eine Content-Security-Policy sperrt jede
+Netzverbindung (`connect-src 'none'`, keine externen Skripte/Bilder/Schriften), nichts wird gespeichert oder gesendet.
+Über den Service Worker liegt die Seite auch im Offline-Speicher. Test: `tests/text-zu-ics.test.js` (12 Erkennungsfälle mit
+festem Stichtag, ICS-Aufbau, Download, Fehlerfälle, Nachweis „keine Anfrage nach außen“).
