@@ -372,14 +372,14 @@ let pendingChallenge = (() => {
 })();
 
 // ---------- Navigation ----------
-const screens = ['hub', 'quizze', 'start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen', 'farben', 'cello', 'instrument', 'toene', 'takt', 'punkte', 'funktion', 'zufall', 'zahlen', 'tierleben', 'piranha', 'slo', 'sk', 'labor', 'dopamin', 'songs', 'klassiker', 'falten', 'zoom', 'glas', 'beat', 'augen', 'karte', 'tiefgang', 'riff', 'verlauf', 'krimi'];
+const screens = ['hub', 'quizze', 'start', 'pick', 'quiz', 'result', 'lexikon', 'pruefen', 'farben', 'cello', 'instrument', 'toene', 'takt', 'punkte', 'funktion', 'zufall', 'zahlen', 'tierleben', 'piranha', 'slo', 'sk', 'labor', 'dopamin', 'songs', 'klassiker', 'falten', 'zoom', 'glas', 'beat', 'wunder', 'augen', 'karte', 'tiefgang', 'riff', 'verlauf', 'krimi'];
 let aktuellerScreen = 'hub';
 function show(name, title) {
   stopSound();
   screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
   aktuellerScreen = name;
   $('homeBtn').hidden = name === 'hub';
-  document.querySelector('header').hidden = ['hub', 'quizze', 'farben', 'cello', 'instrument', 'toene', 'takt', 'punkte', 'funktion', 'zufall', 'zahlen', 'tierleben', 'piranha', 'slo', 'sk', 'labor', 'dopamin', 'songs', 'klassiker', 'falten', 'zoom', 'glas', 'beat', 'augen', 'karte', 'tiefgang', 'riff', 'verlauf', 'krimi'].includes(name);   // die Spiele haben eine eigene Kopfzeile
+  document.querySelector('header').hidden = ['hub', 'quizze', 'farben', 'cello', 'instrument', 'toene', 'takt', 'punkte', 'funktion', 'zufall', 'zahlen', 'tierleben', 'piranha', 'slo', 'sk', 'labor', 'dopamin', 'songs', 'klassiker', 'falten', 'zoom', 'glas', 'beat', 'wunder', 'augen', 'karte', 'tiefgang', 'riff', 'verlauf', 'krimi'].includes(name);   // die Spiele haben eine eigene Kopfzeile
   $('headerTitle').textContent = title || WELTEN[welt].title;
   window.scrollTo(0, 0);
 }

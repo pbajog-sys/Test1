@@ -29,6 +29,7 @@ const SK_SPIELE = {
   falten: { name: 'Falten bis zum Mars', emoji: '📄', hub: 'hubFalten', kat: 'zahlen' },
   zoom: { name: 'Zoom durchs Universum', emoji: '🔭', hub: 'hubZoom', kat: 'zahlen' },
   glas: { name: 'Verdopplung im Glas', emoji: '🦠', hub: 'hubGlas', kat: 'zahlen' },
+  wunder: { name: 'Wundermuster', emoji: '🌀', hub: 'hubWunder', kat: 'zahlen' },
   beat: { name: 'Beat-Bahnen', emoji: '🎸', hub: 'hubBeat', kat: 'sinne', ton: true },
 };
 const SK_KRIMI = { mord: { name: 'Tatort', emoji: '🔎' }, wachen: { name: 'Wachen der Villa', emoji: '🛡️' }, alibi: { name: 'Alibi-Raster', emoji: '📋' }, verhoer: { name: 'Verhör', emoji: '🗣️' } };
@@ -36,7 +37,7 @@ const SK_KATEGORIEN = [
   { id: 'original', name: 'Das Original', emoji: '🐋', karten: ['hubQuizzes'] },
   { id: 'denken', name: 'Denken & Logik', emoji: '🧠', karten: ['hubKrimi', 'hubKlassiker', 'hubPiranha', 'hubFunktion', 'hubRiff'] },
   { id: 'sinne', name: 'Sinne & Wahrnehmung', emoji: '👁️', karten: ['hubFarben', 'hubToene', 'hubSongs', 'hubBeat', 'hubTakt', 'hubAugen'] },
-  { id: 'zahlen', name: 'Zahlen & Welt', emoji: '🔢', karten: ['hubPunkte', 'hubZufall', 'hubKarte', 'hubTiefgang', 'hubZahlen', 'hubFalten', 'hubZoom', 'hubGlas'] },
+  { id: 'zahlen', name: 'Zahlen & Welt', emoji: '🔢', karten: ['hubPunkte', 'hubZufall', 'hubKarte', 'hubTiefgang', 'hubZahlen', 'hubFalten', 'hubZoom', 'hubGlas', 'hubWunder'] },
   { id: 'wissen', name: 'Wissen & Sprache', emoji: '📚', karten: ['hubCello', 'hubSlo'] },
   { id: 'perspektive', name: 'Perspektivwechsel', emoji: '🪞', karten: ['hubTierleben', 'hubDopamin'] },
 ];
@@ -101,7 +102,7 @@ const SK_FAEHIGKEITEN = [
   { id: 'gehoer', name: 'Musikalisches Gehör', kurz: 'Gehör', emoji: '🎵', titel: 'Goldohr', spiele: { toene: 1, songs: 0.8, cello: 0.6, takt: 0.5, beat: 0.4 } },
   { id: 'visuell', name: 'Visuelle Wahrnehmung', kurz: 'Sehen', emoji: '👁️', titel: 'Adlerauge', spiele: { farben: 1, augen: 0.6, punkte: 0.5 } },
   { id: 'raum', name: 'Räumliches Denken', kurz: 'Raum', emoji: '📐', titel: 'Kartenkopf', spiele: { karte: 1, augen: 0.8, piranha: 0.4, zoom: 0.6 } },
-  { id: 'zahlen', name: 'Zahlenverständnis', kurz: 'Zahlen', emoji: '🔢', titel: 'Zahlenflüsterer', spiele: { zufall: 1, funktion: 0.8, punkte: 0.7, falten: 0.6, glas: 0.7 } },
+  { id: 'zahlen', name: 'Zahlenverständnis', kurz: 'Zahlen', emoji: '🔢', titel: 'Zahlenflüsterer', spiele: { zufall: 1, funktion: 0.8, punkte: 0.7, falten: 0.6, glas: 0.7, wunder: 0.6 } },
   { id: 'reaktion', name: 'Reaktion & Timing', kurz: 'Timing', emoji: '⚡', titel: 'Taktgeber', spiele: { takt: 1, beat: 0.9 } },
   { id: 'gedaechtnis', name: 'Gedächtnis', kurz: 'Gedächtnis', emoji: '🧩', titel: 'Elefantengedächtnis', spiele: { farben: 0.8, slo: 0.8, quiz: 0.7, toene: 0.6, cello: 0.4 } },
 ];

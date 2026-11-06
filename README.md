@@ -653,3 +653,15 @@ Noten fallen herunter, man tippt im richtigen Moment (Handy: Bahn antippen, Rech
 - Verzögerungsausgleich (−250 bis +250 ms) für Bluetooth-Kopfhörer, Hinweis nach der Runde, wenn man im Schnitt
   deutlich zu früh/spät war. Speicher `walquiz.beat.v1`. Test: `tests/beat.test.js` (Erkennung an künstlichem Signal,
   Charts, komplette Durchläufe per Taste, eigener Song per Datei-Upload).
+
+## 🌀 Wundermuster
+`wunder.js` – vier einfache Regeln, aus denen erstaunliche Muster entstehen, jeweils mit Schätzfrage und Beat (Klang aus `falten.js`):
+- **🐜 Langtons Ameise:** Weiß → rechts, Schwarz → links, umfärben, weiter. Erst Ordnung, dann Chaos, ab Schritt **9.977**
+  die „Autobahn“ (Drehungen wiederholen sich mit Periode 104 – wird live erkannt). Weitere Regeln: RLR, LLRR, LRRRRRLLR.
+- **🔢 Binär-Beat:** 0 bis 255 bei 140 BPM, jedes Bit ein Instrument (untere 4 Bits schlagen an, wenn sie auf 1 springen –
+  daraus ergibt sich ein Halftime-Groove; obere 4 Bits schalten Sub, Akkorde, Lead, Wobble zu). Plus Binär-Quiz (10 Runden).
+- **🐉 Drachen-Streifen:** Streifen 12-mal falten und aufklappen → Drachenkurve mit 4.096 Teilstücken und 4.095 Knicken,
+  keine Strecke doppelt; 2 oder 4 Drachen um einen Punkt greifen ineinander.
+- **📈 27 → 1:** Collatz-Folge: 111 Schritte, Gipfel 9.232; Tonhöhe und Beat folgen dem Wert. Rekordjagd mit den
+  Champions 97 (118), 871 (178), 6171 (261).
+Speicher `walquiz.wunder.v1`. Test: `tests/wunder.test.js`.

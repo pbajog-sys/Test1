@@ -110,7 +110,7 @@ function ftBass(A, t, note, laut) {
 }
 // Gemeinsamer Beat für Falten, Zoom und Glas: ftLaut (0…40) bestimmt, wie viele Spuren laufen.
 let ftLaut = 0;
-const FT_MUSIK_SCREENS = ['falten', 'zoom', 'glas'];
+const FT_MUSIK_SCREENS = ['falten', 'zoom', 'glas', 'wunder'];
 const ftMusikSpielt = () => FT_MUSIK_SCREENS.some((id) => { const sc = document.getElementById('screen-' + id); return sc && sc.classList.contains('active'); });
 // Beat-Schleife: je mehr Faltungen, desto mehr Spuren (Kick → Hats → Bass → Stabs → Claps)
 function ftTaktStarten() {
