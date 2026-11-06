@@ -261,10 +261,11 @@ function biIntro() {
   $('wuInhalt').innerHTML = '<div class="ft-intro"><div class="wu-logo">🔢</div><h2 class="wu-h">Binär-Beat</h2>'
     + '<p>Computer zählen nur mit 0 und 1. Jede Stelle ist doppelt so viel wert wie die rechts daneben: <b>1, 2, 4, 8, 16, 32, 64, 128</b>.</p>'
     + '<p>Hier ist jede Stelle ein Instrument. Zählst du von 0 bis 255, entsteht ganz von selbst ein Dubstep-Beat – die schnellen Bits trommeln, die langsamen bauen den Song auf.</p>'
-    + '<button type="button" class="btn ft-los wu-los" id="biHoeren">▶ Von 0 bis 255 zählen</button><button type="button" class="btn secondary" id="biQuizBtn">🧠 Binär-Quiz (10 Runden)</button>'
+    + '<button type="button" class="btn ft-los wu-los" id="biHoeren">▶ Von 0 bis 255 zählen</button><button type="button" class="btn secondary" id="biStudioIntro">🎛️ Selbst bauen im Beat-Studio</button><button type="button" class="btn secondary" id="biQuizBtn">🧠 Binär-Quiz (10 Runden)</button>'
     + (st.binaer.runden ? '<p class="ft-klein">Bestes Quiz: ' + st.binaer.best + ' / 10</p>' : '') + '</div>';
   $('biHoeren').addEventListener('click', biHoeren);
   $('biQuizBtn').addEventListener('click', biQuiz);
+  $('biStudioIntro').addEventListener('click', () => { wuStopp(); stOeffnen(0); });
 }
 function biBitsHtml(id, klickbar) {
   return '<div class="bi-bits" id="' + id + '">' + [7, 6, 5, 4, 3, 2, 1, 0].map((k) => '<button type="button" class="bi-bit" data-k="' + k + '" style="--f:' + BI_BITS[k].f + '"' + (klickbar ? '' : ' tabindex="-1"') + '><small>' + (1 << k) + '</small><b>0</b><em>' + BI_BITS[k].name + '</em></button>').join('') + '</div>';
@@ -282,11 +283,12 @@ function biHoeren() {
   wu = { art: 'binaer', n: -1, A, warte: [], start: A.c.currentTime + 0.15, naechste: 0, verlauf: [], fertig: false };
   $('wuInhalt').innerHTML = '<div class="ft-kopf"><div class="ft-zahl wu-zahl bi-zahl" id="biZahl">0</div><div class="bi-summe" id="biSumme"></div><div class="wu-chips" id="biChips"></div></div>'
     + biBitsHtml('biBits', false) + '<canvas id="biRaster" class="wu-bild bi-raster"></canvas>'
-    + '<div class="ft-unten"><div class="wu-knoepfe"><button type="button" class="ft-ton" id="biTon"></button><button type="button" class="btn secondary" id="biStopp">⏸ Anhalten</button><button type="button" class="btn secondary" id="biZurQuiz">🧠 Quiz</button></div></div>';
+    + '<div class="ft-unten"><div class="wu-knoepfe"><button type="button" class="ft-ton" id="biTon"></button><button type="button" class="btn secondary" id="biStopp">⏸ Anhalten</button><button type="button" class="btn secondary" id="biZurQuiz">🧠 Quiz</button></div><button type="button" class="btn secondary" id="biStudio">🎛️ Selbst bauen im Beat-Studio</button></div>';
   Object.assign(wu, wuCanvas('biRaster', 0.34, 230, 340));
   wuTonKnopf('biTon');
   $('biStopp').addEventListener('click', () => { if (wuSeq) { clearInterval(wuSeq); wuSeq = null; $('biStopp').textContent = '▶ Weiter'; } else { wu.start = A.c.currentTime + 0.1 - wu.naechste * BI_S16; biTakt(); $('biStopp').textContent = '⏸ Anhalten'; } });
   $('biZurQuiz').addEventListener('click', biQuiz);
+  $('biStudio').addEventListener('click', () => { const n = Math.max(0, wu.n) & 0xf0; wuStopp(); stOeffnen(n); });
   biTakt();
   const lauf = () => {
     if (!wu || wu.art !== 'binaer') return;
@@ -344,7 +346,7 @@ function biFinale() {
     if (!wu || wu.art !== 'binaer') return;
     if (typeof konfetti === 'function') konfetti(30, ['1️⃣', '0️⃣', '🎵', '✨']);
     wuEnde('<div class="wu-logo">🔢</div><h3>255 = 11111111</h3><p class="ft-gross">Alle <b>8</b> Instrumente auf einmal</p><p>Mit 8 Bits kann man 256 Zahlen darstellen (0 bis 255). Das ist genau ein <b>Byte</b>. Das Bit ganz rechts wechselt bei jeder Zahl, das ganz links nur einmal – deshalb klingt das Zählen wie ein Song, der sich aufbaut.</p>',
-      [['🧠 Binär-Quiz', biQuiz], ['▶ Nochmal hören', biHoeren], ['Zurück zur Auswahl', wuMenue]]);
+      [['🎛️ Selbst weiterbauen im Beat-Studio', () => { wuStopp(); stOeffnen(0); }], ['🧠 Binär-Quiz', biQuiz], ['▶ Nochmal hören', biHoeren], ['Zurück zur Auswahl', wuMenue]]);
   }, 1600);
 }
 // Quiz: abwechselnd Zahl mit Bits bauen und Bits ablesen

@@ -62,7 +62,7 @@ const ordner = process.argv[2] || '.';
   await p.waitForSelector('.ft-ergebnis', { timeout: 5000 });
   ck('Binär: bei 255 alle Bits an, Ergebniskarte', /11111111/.test(await p.textContent('.ft-karte')) && (await p.$$('#biBits .bi-bit.an')).length === 8);
   await p.evaluate(() => { ftAk.stumm = false; });
-  await p.click('.ft-ergebnis [data-k="0"]'); await p.waitForTimeout(300);
+  await p.click('.ft-ergebnis [data-k="1"]'); await p.waitForTimeout(300);
   for (let r = 0; r < 10; r++) {
     const z = await p.evaluate(() => ({ ziel: wu.ziel, bauen: wu.runde % 2 === 0 }));
     if (z.bauen) { for (let k = 0; k < 8; k++) if (z.ziel & (1 << k)) await p.click('#biQBits [data-k="' + k + '"]'); if (r === 0) await bild('wu-binaer-quiz'); await p.click('#biPruefen'); }

@@ -36,7 +36,7 @@ const SK_KRIMI = { mord: { name: 'Tatort', emoji: '🔎' }, wachen: { name: 'Wac
 const SK_KATEGORIEN = [
   { id: 'original', name: 'Das Original', emoji: '🐋', karten: ['hubQuizzes'] },
   { id: 'denken', name: 'Denken & Logik', emoji: '🧠', karten: ['hubKrimi', 'hubKlassiker', 'hubPiranha', 'hubFunktion', 'hubRiff'] },
-  { id: 'sinne', name: 'Sinne & Wahrnehmung', emoji: '👁️', karten: ['hubFarben', 'hubToene', 'hubSongs', 'hubBeat', 'hubTakt', 'hubAugen'] },
+  { id: 'sinne', name: 'Sinne & Wahrnehmung', emoji: '👁️', karten: ['hubFarben', 'hubToene', 'hubSongs', 'hubStudio', 'hubBeat', 'hubTakt', 'hubAugen'] },
   { id: 'zahlen', name: 'Zahlen & Welt', emoji: '🔢', karten: ['hubPunkte', 'hubZufall', 'hubKarte', 'hubTiefgang', 'hubZahlen', 'hubFalten', 'hubZoom', 'hubGlas', 'hubWunder'] },
   { id: 'wissen', name: 'Wissen & Sprache', emoji: '📚', karten: ['hubCello', 'hubSlo'] },
   { id: 'perspektive', name: 'Perspektivwechsel', emoji: '🪞', karten: ['hubTierleben', 'hubDopamin'] },
@@ -461,6 +461,7 @@ function skDashboard() {
   const hub = $('screen-hub');
   if (!hub) return;
   skKategorienEinrichten();
+  skFavoriten();
   let start = $('skStart');
   if (!start) {
     start = document.createElement('div'); start.id = 'skStart'; start.className = 'sk-start';
@@ -531,6 +532,48 @@ function skKategorienEinrichten() {
   if (rest.length) { const liste = abschnitt('✨', 'Weitere', ''); rest.forEach((el) => liste.appendChild(el)); }
   if (alt !== a && !alt.children.length) alt.remove();
   if (verlauf) { const b = document.querySelector('#screen-hub .spalte-b'); if (b) b.appendChild(verlauf); }
+}
+
+// ---------- ⭐ Favoriten: Stern an jeder Karte, Favoriten stehen ganz oben (je Profil) ----------
+const SK_FAV_KEY = 'walquiz.favoriten.v1';
+function skFavIds() { const f = loadJson(SK_FAV_KEY); return Array.isArray(f.ids) ? f.ids : ['hubStudio']; }   // ohne Eintrag: Beat-Studio als Start-Favorit
+function skFavUmschalten(id) {
+  const ids = skFavIds().slice(), i = ids.indexOf(id);
+  if (i >= 0) ids.splice(i, 1); else ids.push(id);
+  saveJson(SK_FAV_KEY, { ids });
+  skFavoriten();
+}
+function skFavoriten() {
+  const a = document.querySelector('#screen-hub .spalte-a');
+  if (!a) return;
+  const ids = skFavIds().filter((id) => $(id));
+  let sec = $('skFavoriten');
+  if (!sec) {
+    sec = document.createElement('section'); sec.id = 'skFavoriten'; sec.className = 'sk-kat sk-kat-fav';
+    sec.innerHTML = '<h2 class="hub-h"><span>⭐</span> Favoriten</h2><div class="hub-liste"></div>';
+    a.insertBefore(sec, a.querySelector('.sk-kat'));
+  }
+  const fav = sec.querySelector('.hub-liste');
+  // erst alle Nicht-Favoriten zurück an ihren Platz (in der festen Reihenfolge), dann die Favoriten nach oben
+  SK_KATEGORIEN.forEach((k) => {
+    const liste = a.querySelector('.sk-kat-' + k.id + ' .hub-liste');
+    if (liste) k.karten.forEach((id) => { const el = $(id); if (el && !ids.includes(id)) liste.appendChild(el); });
+  });
+  ids.forEach((id) => fav.appendChild($(id)));
+  sec.hidden = !ids.length;
+  a.querySelectorAll('.sk-kat').forEach((s) => { if (s !== sec) s.hidden = !s.querySelector('.hub-game'); });
+  document.querySelectorAll('#screen-hub .hub-game').forEach((el) => {
+    let s = el.querySelector('.hg-stern');
+    if (!s) {
+      s = document.createElement('span'); s.className = 'hg-stern'; s.setAttribute('role', 'button');
+      ['pointerdown', 'mousedown', 'touchstart'].forEach((ev) => s.addEventListener(ev, (e) => e.stopPropagation(), { passive: true }));
+      s.addEventListener('click', (e) => { e.stopPropagation(); e.preventDefault(); skFavUmschalten(el.id); });
+      el.appendChild(s);
+    }
+    const an = ids.includes(el.id), titel = (el.querySelector('.hg-titel') || el).textContent.trim();
+    s.textContent = an ? '★' : '☆'; s.classList.toggle('an', an);
+    s.setAttribute('aria-label', (an ? 'Aus den Favoriten entfernen: ' : 'Zu den Favoriten: ') + titel);
+  });
 }
 
 // renderHub (hub.js) zeichnet die Startseite – danach die neue Schicht

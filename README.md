@@ -670,3 +670,22 @@ Noten fallen herunter, man tippt im richtigen Moment (Handy: Bahn antippen, Rech
 - **📈 27 → 1:** Collatz-Folge: 111 Schritte, Gipfel 9.232; Tonhöhe und Beat folgen dem Wert. Rekordjagd mit den
   Champions 97 (118), 871 (178), 6171 (261).
 Speicher `walquiz.wunder.v1`. Test: `tests/wunder.test.js`.
+
+## 🎛️ Beat-Studio
+`studio.js` – eigene Beats bauen (eigene App, eigener Look; Genre: Step-Sequencer/DAW im Kleinen), komplett offline:
+- **Rhythmus:** 11 Kanäle (Kick, Snare, Clap, Hi-Hat, Open Hat, Perc, Shaker, Bass, Wobble, Lead, Akkorde) × 16 Schritte,
+  4 Muster A–D. Auf dem Handy in zwei Hälften (1–8 / 9–16), die beim Abspielen mitlaufen.
+- **Melodie:** Piano-Roll für Bass, Wobble, Lead (2 Oktaven der gewählten Tonart: Moll/Dur/Dorisch) und Akkorde
+  (Stufen I–VII mit Namen, z. B. Cm, Es, B). Je Kanal 3 Klänge und Notenlänge.
+- **Song:** Muster aneinanderreihen (bis 32 Takte), Modus „🔁 Muster“ (Schleife) oder „🧩 Song“.
+- **Mixer:** Lautstärke, Stumm, Solo, Swing, Tempo 60–200 BPM. **Pads:** live spielen, mit ⏺ ins laufende Muster aufnehmen.
+- **🔢 Binär-Generator:** füllt A–D mit dem Binär-Beat der Wundermuster ab einer Startzahl (0–255). Das erste Projekt ist
+  genau dieser Beat; aus den Wundermustern führt „Selbst bauen im Beat-Studio“ hierher.
+- Vorlagen (Binär-Dubstep, Happy Hardcore, House, Trap, Leer), mehrere Projekte (kopieren, umbenennen, löschen),
+  **WAV-Export** per OfflineAudioContext. Speicher `walquiz.studio.v1` (je Profil); ältere oder unvollständige Projekte
+  werden beim Laden ergänzt, nicht verworfen. Test: `tests/studio.test.js`.
+
+## ⭐ Favoriten
+Jede Spielkarte im Hub hat oben rechts einen Stern. Favoriten stehen ganz oben in „⭐ Favoriten“ (in der Reihenfolge des
+Markierens), beim Entfernen geht die Karte zurück an ihren Platz. Start-Favorit ohne gespeicherte Auswahl: Beat-Studio.
+Speicher `walquiz.favoriten.v1` (je Profil).
