@@ -9,25 +9,35 @@ const FT_ENDE = 69;                      // Proxima Centauri
 // Meilensteine: Höhe in m; ab = erste Faltung, die die Höhe erreicht (wird beim Laden berechnet und im Test geprüft)
 const FT_ZIELE = [
   { n: 'Kreditkarte', h: 0.76e-3, e: '💳', t: 'Dicker als eine Kreditkarte' },
+  { n: '1-Euro-Münze', h: 2.33e-3, e: '🪙', t: 'Dicker als eine Euro-Münze' },
   { n: 'Smartphone', h: 8e-3, e: '📱', t: 'Dicker als ein Smartphone' },
+  { n: 'Daumen', h: 2e-2, e: '👍', t: 'Breiter als ein Daumen' },
+  { n: 'Tennisball', h: 6.7e-2, e: '🎾', t: 'Höher als ein Tennisball' },
   { n: 'Lineal', h: 0.3, e: '📏', t: 'Höher als ein Lineal lang ist' },
+  { n: 'Kind', h: 1.2, e: '🧒', t: 'Größer als ein Kind' },
   { n: 'Mensch', h: 1.8, e: '🧍', t: 'Größer als ein Mensch' },
+  { n: 'Giraffe', h: 5.5, e: '🦒', t: 'Höher als eine Giraffe' },
   { n: 'Haus', h: 10, e: '🏠', t: 'Höher als ein Haus' },
+  { n: 'Freiheitsstatue', h: 93, e: '🗽', t: 'Höher als die Freiheitsstatue' },
   { n: 'Kölner Dom', h: 157, e: '⛪', t: 'Höher als der Kölner Dom' },
   { n: 'Eiffelturm', h: 330, e: '🗼', t: 'Höher als der Eiffelturm' },
   { n: 'Burj Khalifa', h: 828, e: '🏙️', t: 'Höher als der Burj Khalifa' },
   { n: 'Zugspitze', h: 2962, e: '🏔️', t: 'Höher als die Zugspitze' },
   { n: 'Mount Everest', h: 8849, e: '🗻', t: 'Höher als der Mount Everest' },
   { n: 'Flugzeug', h: 10000, e: '✈️', t: 'Über den Flugzeugen' },
+  { n: 'Wetterballon', h: 35e3, e: '🎈', t: 'Höher als Wetterballons fliegen' },
   { n: 'Weltraum', h: 100e3, e: '🌌', t: 'Willkommen im Weltraum (100 km)' },
   { n: 'Raumstation ISS', h: 408e3, e: '🛰️', t: 'Vorbei an der Raumstation …' },
+  { n: 'Hubble-Teleskop', h: 520e3, e: '🔭', t: 'Über dem Hubble-Teleskop' },
   { n: 'Erde (Durchmesser)', h: 12742e3, e: '🌍', t: 'Höher, als die Erde breit ist' },
   { n: 'GPS-Satelliten', h: 20200e3, e: '📡', t: 'Über den GPS-Satelliten' },
   { n: 'Geostationär', h: 35786e3, e: '📺', t: 'Höher als Wettersatelliten' },
   { n: 'Mond', h: 384400e3, e: '🌕', t: 'Bis zum Mond!' },
+  { n: 'James-Webb-Teleskop', h: 1.5e9, e: '🛰️', t: 'Bis zum James-Webb-Teleskop' },
   { n: 'Mars', h: 55.76e9, e: '🔴', t: 'MARS ERREICHT!', mars: true },
   { n: 'Sonne', h: 149.6e9, e: '☀️', t: 'Bis zur Sonne' },
   { n: 'Jupiter', h: 588e9, e: '🪐', t: 'Bis zum Jupiter' },
+  { n: 'Saturn', h: 1.2e12, e: '🪐', t: 'Bis zum Saturn' },
   { n: 'Neptun', h: 4.5e12, e: '🔵', t: 'Bis zum Neptun' },
   { n: 'Voyager 1', h: 25.4e12, e: '🛸', t: 'Weiter als Voyager 1 (2026)' },
   { n: '1 Lichtjahr', h: 9.4607e15, e: '✨', t: 'Ein ganzes Lichtjahr' },
@@ -40,6 +50,7 @@ const ftHoehe = (n) => FT_DICKE * 2 ** n;
 function ftLaenge(m, kurz) {
   const f = (x, d) => x.toLocaleString('de-DE', { maximumFractionDigits: d, minimumFractionDigits: 0 });
   const nk = (x) => (x < 10 ? 2 : x < 100 ? 1 : 0);
+  if (m < 0.001) return f(m * 1000, 2) + ' mm';
   if (m < 0.01) return f(m * 1000, 1) + ' mm';
   if (m < 1) return f(m * 100, nk(m * 100)) + ' cm';
   if (m < 1000) return f(m, nk(m)) + ' m';
@@ -185,7 +196,7 @@ function ftFalten() {
   const ziel = FT_ZIELE.filter((z) => z.ab === ft.n).pop();
   ftFaltKlang(ft.n, !!ziel);
   if (ziel) { ft.text = ziel.t; ft.textZeit = performance.now(); }
-  ft.anim = { von: alt, bis: ft.n, t0: performance.now(), dauer: 420 };
+  ft.anim = { von: alt, bis: ft.n, t0: performance.now(), dauer: 560 };
   for (let i = 0; i < 14; i++) ft.partikel.push({ a: Math.random() * Math.PI * 2, v: 0.6 + Math.random() * 1.6, t: 0 });
   if (navigator.vibrate) navigator.vibrate(ziel ? [15, 30, 15] : 8);
   ftAnzeige();
@@ -208,10 +219,11 @@ const ftEase = (x) => 1 - Math.pow(1 - x, 3);
 function ftMalen() {
   const { ctx: c, W, H, dpr } = ft, jetzt = performance.now();
   // animierte Faltungszahl (für Höhe und Maßstab, logarithmisch weich)
-  let nA = ft.n, fort = 1;
-  if (ft.anim) { fort = Math.min(1, (jetzt - ft.anim.t0) / ft.anim.dauer); nA = ft.anim.von + (ft.anim.bis - ft.anim.von) * ftEase(fort); if (fort >= 1) ft.anim = null; }
-  const hoehe = ftHoehe(nA), boden = H * 0.86, oben = H * 0.08;
-  const sicht = Math.max(hoehe * 1.55, 12e-3), px = (boden - oben) / sicht;   // Pixel pro Meter
+  let fort = 1, von = ft.n, bis = ft.n;
+  if (ft.anim) { fort = Math.min(1, (jetzt - ft.anim.t0) / ft.anim.dauer); von = ft.anim.von; bis = ft.anim.bis; if (fort >= 1) ft.anim = null; }
+  // Maßstab zoomt in den ersten 60 % heraus, damit die umklappende Hälfte ins Bild passt
+  const nA = von + (bis - von) * ftEase(Math.min(1, fort / 0.6)), hoehe = ftHoehe(nA), boden = H * 0.86, oben = H * 0.08;
+  const sicht = Math.max(hoehe * 1.6, 1.5e-3), px = (boden - oben) / sicht;   // Pixel pro Meter; Start: 0,1 mm-Blatt gut sichtbar
   c.setTransform(dpr, 0, 0, dpr, 0, 0);
   const hg = c.createRadialGradient(W / 2, H * 0.45, 10, W / 2, H * 0.45, W); hg.addColorStop(0, '#1e2a6b'); hg.addColorStop(1, '#0b0f2a');
   c.fillStyle = hg; c.fillRect(0, 0, W, H);
@@ -240,18 +252,34 @@ function ftMalen() {
     c.font = '600 11px system-ui'; c.fillStyle = erreicht ? '#bbf7d0' : '#bfdbfe'; c.fillText(z.n, x, y - 22); c.fillStyle = 'rgba(200,210,240,.8)'; c.fillText(ftLaenge(z.h, true), x, y + 14);
     c.globalAlpha = 1;
   });
-  // Papierstapel: wird beim Falten schmaler, bis er nur noch eine Säule ist
-  const breite = Math.max(W * 0.07, W * 0.42 / 2 ** (nA / 2)), hPx = Math.max(2, hoehe * px), x0 = W / 2 - breite / 2, top = boden - hPx;
-  const g = c.createLinearGradient(x0, 0, x0 + breite, 0); g.addColorStop(0, '#fde68a'); g.addColorStop(0.5, '#fffbeb'); g.addColorStop(1, '#fcd34d');
-  c.shadowColor = 'rgba(253,230,138,.9)'; c.shadowBlur = 22; c.fillStyle = g; c.fillRect(x0, top, breite, hPx); c.shadowBlur = 0;
-  if (ft.n < 8) { c.strokeStyle = 'rgba(180,140,40,.35)'; for (let i = 1; i < 2 ** ft.n && i < 128; i++) { const y = boden - (hPx * i) / 2 ** ft.n; c.beginPath(); c.moveTo(x0, y); c.lineTo(x0 + breite, y); c.stroke(); } }
-  // Falt-Klappe: die obere Hälfte klappt herüber
-  if (ft.anim || fort < 1) {
-    const k = ftEase(fort), w = breite, ang = (1 - k) * Math.PI * 0.85;
-    c.save(); c.translate(W / 2 + w / 2, top); c.rotate(-ang); c.fillStyle = 'rgba(255,251,235,' + (1 - k * 0.6) + ')'; c.fillRect(-w, -Math.max(3, hPx * 0.08), w, Math.max(3, hPx * 0.08)); c.restore();
+  // Papierstapel. Falten wie echt: solange das Blatt breit ist, klappt die rechte Hälfte über die linke
+  // (Breite halbiert, Dicke verdoppelt); ist es eine Säule, klappt eine zweite Säule oben auf.
+  const cx = W / 2, minB = W * 0.07, breiteN = (n) => Math.max(minB, W * 0.5 / 2 ** n);
+  const papier = (x, y, w, h) => { const g = c.createLinearGradient(x, 0, x + w, 0); g.addColorStop(0, '#fde68a'); g.addColorStop(0.5, '#fffbeb'); g.addColorStop(1, '#fcd34d'); c.fillStyle = g; c.fillRect(x, y, w, h); };
+  c.shadowColor = 'rgba(253,230,138,.9)'; c.shadowBlur = 22;
+  let top, breite;
+  if (fort < 1 && bis === von + 1) {
+    const wv = breiteN(von), hv = Math.max(2, ftHoehe(von) * px), klapp = ftEase(Math.min(1, fort / 0.75));
+    if (breiteN(bis) < wv) {   // flaches Blatt: rechte Hälfte klappt nach links oben herüber
+      const schieb = ftEase(Math.max(0, (fort - 0.6) / 0.4)), lx = cx - wv / 2 + schieb * (wv / 4), y = boden - hv;
+      papier(lx, y, wv / 2, hv);
+      c.save(); c.translate(lx + wv / 2, y); c.rotate(-Math.PI * klapp); papier(0, 0, wv / 2, hv); c.restore();
+      breite = wv / 2; top = boden - hv * (klapp > 0.5 ? 2 : 1);
+    } else {                   // Säule: zweite Hälfte schwenkt von unten rechts nach oben auf die Säule
+      const w = wv, y = boden - hv;
+      papier(cx - w / 2, y, w, hv);
+      c.save(); c.translate(cx + w / 2, y); c.rotate(Math.PI * 0.92 * (1 - klapp)); papier(-w, -hv, w, hv); c.restore();
+      breite = w; top = boden - hv * (1 + klapp);
+    }
+  } else {
+    breite = breiteN(ft.n); const hPx = Math.max(2, ftHoehe(ft.n) * px); top = boden - hPx;
+    papier(cx - breite / 2, top, breite, hPx);
+    c.shadowBlur = 0;
+    if (ft.n > 0 && ft.n < 7) { c.strokeStyle = 'rgba(180,140,40,.4)'; c.lineWidth = 1; for (let i = 1; i < 2 ** ft.n; i++) { const y = boden - (hPx * i) / 2 ** ft.n; c.beginPath(); c.moveTo(cx - breite / 2, y); c.lineTo(cx + breite / 2, y); c.stroke(); } }
   }
+  c.shadowBlur = 0;
   // Ring + Funken an der Spitze
-  c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(W / 2, top, breite * 0.9 + 12, 8, 0, 0, Math.PI * 2); c.stroke();
+  c.strokeStyle = 'rgba(255,255,255,.75)'; c.lineWidth = 1.5; c.beginPath(); c.ellipse(W / 2, top, breite * 0.7 + 14, 7, 0, 0, Math.PI * 2); c.stroke();
   ft.partikel = ft.partikel.filter((p) => (p.t += 0.03) < 1);
   ft.partikel.forEach((p) => { c.fillStyle = 'rgba(253,230,138,' + (1 - p.t) + ')'; c.fillRect(W / 2 + Math.cos(p.a) * p.v * p.t * 60, top + Math.sin(p.a) * p.v * p.t * 30 - p.t * 20, 2, 2); });
   // Marker am Maßstab

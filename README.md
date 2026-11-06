@@ -612,8 +612,8 @@ festem Stichtag, ICS-Aufbau, Download, Fehlerfälle, Nachweis „keine Anfrage n
 ## 📄 Falten bis zum Mars
 `falten.js` – ein Blatt Papier (0,1 mm) verdoppelt bei jedem Falten seine Dicke. Vorher schätzen (logarithmischer
 Schieber 2 – 1 Mio.), dann tippen: Faltungszahl und Länge oben, Fortschrittsbalken bis zum Mars, Maßstab links passt sich
-an (mm → km → Mio. km → Lichtjahre), 24 echte Vergleichsobjekte erscheinen an ihrer Höhe (Kreditkarte, Mensch, Kölner Dom,
-Burj Khalifa, Zugspitze, Everest, Weltraum 100 km, ISS 408 km, Erddurchmesser, GPS, Mond, **Mars nach 49 Faltungen**
+an (mm → km → Mio. km → Lichtjahre), 33 echte Haltepunkte erscheinen an ihrer Höhe (Kreditkarte, Euro-Münze, Tennisball, Giraffe, Freiheitsstatue, Kölner Dom,
+Burj Khalifa, Zugspitze, Everest, Wetterballon, Weltraum 100 km, ISS 408 km, Hubble, Erddurchmesser, GPS, Mond, James Webb, **Mars nach 49 Faltungen**
 (56,3 Mio. km ≥ nächster Abstand 55,76 Mio. km), Sonne, Jupiter, Neptun, Voyager 1, Lichtjahr, Proxima Centauri nach 69).
 Die Faltung, ab der ein Objekt erreicht ist, wird aus der Höhe berechnet (`2^n × 0,1 mm ≥ h`).
 **Klang:** Happy-Hardcore-Beat (175 BPM) komplett mit Web Audio synthetisiert, keine Musikdatei: Kick → Hi-Hats (ab 6) →
@@ -621,3 +621,6 @@ Offbeat-Bass (ab 12) → Supersaw-Akkorde I–V–vi–IV (ab 20) → Claps (ab 
 eigenen Melodie, auf das nächste Achtel gelegt, plus Riser; Meilensteine bekommen Akkord + Becken. Im Takt falten (±70 ms)
 gibt eine Combo. Kein Blitzen – nur ein sanfter Puls. Wertung im Verlauf: Nähe der Schätzung (logarithmisch).
 Test: `tests/falten.test.js`.
+Start bei 0 Faltungen = 0,1 mm (Maßstab bis 1,5 mm). Falt-Animation wie echt: Solange das Blatt breit ist, klappt die
+rechte Hälfte über die linke (Breite halbiert, Dicke verdoppelt, danach mittig ausgerichtet); als Säule schwenkt eine
+zweite Säule von rechts unten auf die erste. Der Maßstab zoomt in den ersten 60 % der Animation heraus.
