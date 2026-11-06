@@ -3736,3 +3736,10 @@ a.bb-datei { text-decoration: none; }
 @media (prefers-reduced-motion: reduce) { .st-mini i { animation: none; } }
 .co-vorschlaege { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; } .co-vorschlaege button { border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 6px 12px; background: rgba(255,255,255,.06); color: inherit; font: inherit; font-size: .8rem; cursor: pointer; }
 .co-einst { justify-content: center; } .co-einst output { min-width: 4.5em; color: #fff; font-variant-numeric: tabular-nums; }
+.co-regel { display: grid; gap: 8px; padding: 12px; border-radius: 16px; background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(255,255,255,.12); text-align: left; }
+.co-regel-kopf { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; } .co-regel-kopf b { margin-right: 4px; } .co-regel-kopf span { display: flex; flex-wrap: wrap; gap: 4px; }
+.co-regel-kopf button { border: 1px solid rgba(255,255,255,.2); border-radius: 999px; padding: 4px 10px; background: none; color: #c7d0f5; font: inherit; font-size: .75rem; cursor: pointer; }
+.co-regel-zeile { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; font-weight: 700; font-size: .9rem; }
+.co-regel-zeile select, .co-regel-zeile input { background: rgba(255,255,255,.08); color: #fff; border: 1px solid currentColor; border-radius: 8px; padding: 5px 6px; font: inherit; font-size: .9rem; } .co-regel-zeile select option { color: #000; }
+.co-regel-zeile input { width: 3.4em; } .co-regel-zeile label { display: inline-flex; align-items: center; gap: 4px; color: #c7d0f5; font-weight: 600; } .co-regel-zeile label[hidden] { display: none; }
+.co-regel-info { color: #c4b5fd !important; font-weight: 700; }

@@ -673,6 +673,10 @@ Noten fallen herunter, man tippt im richtigen Moment (Handy: Bahn antippen, Rech
   Pentatonik/Dur/Moll/Blues verteilt (Gipfel ≈ 2½ Oktaven über der 1), ×3+1-Schritte betont, Beat wird voller, je höher
   die Werte; Tempo 80–200 BPM, Klang Synth/Chiptune/Glocken. Mehrere Zahlen = mehrere Stimmen (logarithmische Linien).
   „Ins Beat-Studio“ übernimmt die ersten 64 Schritte als Lead (+ Akkorde/Wobble für weitere Stimmen, Beat, halbes Tempo).
+  **Eigene Regel:** „Wenn durch m (2–5) teilbar: A, sonst: B“ mit A/B aus ÷k (abgerundet), ×k+c, ×k−c, +c, −c;
+  Varianten Collatz, 3n−1 (Schleifen, z. B. 5→14→7→20→10→5), 5n+1 (13 Schleife, 7 läuft davon), +1 statt ×3, Dreier.
+  Eine Folge endet bei 1, in einer erkannten Schleife, über 1 Billiarde („läuft davon“), unter 1 oder nach 2.000 Schritten
+  (gespielt werden höchstens 1.000). Rekorde zählen nur mit der echten Collatz-Regel.
   Test: `tests/zahlenmusik.test.js`.
 Speicher `walquiz.wunder.v1`. Test: `tests/wunder.test.js`.
 

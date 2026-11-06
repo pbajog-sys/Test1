@@ -657,6 +657,68 @@ function coJagd(zuletzt) {
 const CO_SKALEN = { penta: { name: 'Pentatonik', st: [0, 2, 4, 7, 9] }, dur: { name: 'Dur', st: [0, 2, 4, 5, 7, 9, 11] }, moll: { name: 'Moll', st: [0, 2, 3, 5, 7, 8, 10] }, blues: { name: 'Blues', st: [0, 3, 5, 6, 7, 10] } };
 const CO_KLAENGE = ['Synth', 'Chiptune', 'Glocken'];
 const CO_FARBEN = ['#fb923c', '#38bdf8', '#a3e635'];
+// ---------- Eigene Regeln: „Wenn durch m teilbar: Regel A, sonst: Regel B“ ----------
+const CO_OPS = [['÷', '÷ k'], ['×+', '× k + c'], ['×−', '× k − c'], ['+', '+ c'], ['−', '− c']];
+const CO_STANDARD = { m: 2, a: { op: '÷', k: 2, c: 0 }, b: { op: '×+', k: 3, c: 1 } };
+const CO_VARIANTEN = [
+  ['Collatz', CO_STANDARD, '27'],
+  ['3n − 1', { m: 2, a: { op: '÷', k: 2, c: 0 }, b: { op: '×−', k: 3, c: 1 } }, '5, 17'],
+  ['5n + 1', { m: 2, a: { op: '÷', k: 2, c: 0 }, b: { op: '×+', k: 5, c: 1 } }, '13, 7'],
+  ['+1 statt ×3', { m: 2, a: { op: '÷', k: 2, c: 0 }, b: { op: '+', k: 1, c: 1 } }, '27'],
+  ['Dreier', { m: 3, a: { op: '÷', k: 3, c: 0 }, b: { op: '+', k: 1, c: 1 } }, '100'],
+];
+function coRegelSauber(r) {
+  const x = JSON.parse(JSON.stringify(r || CO_STANDARD)), z = (v, lo, hi, d) => (Number.isInteger(+v) && +v >= lo && +v <= hi ? +v : d);
+  x.m = z(x.m, 2, 9, 2);
+  for (const t of ['a', 'b']) { const d = CO_STANDARD[t]; x[t] = x[t] || d; if (!CO_OPS.some((o) => o[0] === x[t].op)) x[t].op = d.op; x[t].k = z(x[t].k, x[t].op === '÷' ? 2 : 1, 99, d.k); x[t].c = z(x[t].c, 0, 99, d.c); }
+  return x;
+}
+const coIstStandard = (r) => JSON.stringify(coRegelSauber(r)) === JSON.stringify(CO_STANDARD);
+function coAnwenden(o, n) { return o.op === '÷' ? Math.floor(n / o.k) : o.op === '×+' ? n * o.k + o.c : o.op === '×−' ? n * o.k - o.c : o.op === '+' ? n + o.c : n - o.c; }
+const coTeilbar = (n, r) => n % r.m === 0;
+function coOpText(o) { return o.op === '÷' ? '÷' + o.k : o.op === '×+' ? '×' + o.k + '+' + o.c : o.op === '×−' ? '×' + o.k + '−' + o.c : o.op === '+' ? '+' + o.c : '−' + o.c; }
+function coRegelText(r) { return r.m === 2 ? { a: 'gerade ' + coOpText(r.a), b: 'ungerade ' + coOpText(r.b) } : { a: 'durch ' + r.m + ' teilbar ' + coOpText(r.a), b: 'sonst ' + coOpText(r.b) }; }
+// Folge mit beliebiger Regel: endet bei 1, in einer Schleife, wenn sie davonläuft (> 1 Billiarde), unter 1 fällt oder nach 2000 Schritten
+function coFolgeRegel(n, regel) {
+  const r = coRegelSauber(regel), f = [n], gesehen = new Map([[n, 0]]);
+  let ende = 'lang', zyklus = null;
+  while (f.length <= 2000) {
+    if (n === 1) { ende = 'eins'; break; }
+    const x = coAnwenden(coTeilbar(n, r) ? r.a : r.b, n);
+    if (!Number.isFinite(x) || x < 1) { ende = 'null'; break; }
+    if (x > 1e15) { ende = 'davon'; break; }
+    f.push(x);
+    if (gesehen.has(x)) { ende = 'zyklus'; zyklus = f.slice(gesehen.get(x)); break; }
+    gesehen.set(x, f.length - 1); n = x;
+  }
+  return { f, ende, zyklus };
+}
+function coErgebnisText(e) {
+  const s = e.f.length - 1;
+  if (e.ende === 'eins') return 'erreicht die 1 nach ' + wuZahl(s) + ' Schritten';
+  if (e.ende === 'zyklus') { const z = e.zyklus, l = z.length - 1, teile = l <= 8 ? z.map(wuZahl) : z.slice(0, 5).map(wuZahl).concat(['…', wuZahl(z[z.length - 1])]); return '🔁 Schleife aus ' + l + (l === 1 ? ' Zahl' : ' Zahlen') + ': ' + teile.join(' → '); }
+  if (e.ende === 'davon') return '🚀 läuft davon – über 1 Billiarde nach ' + wuZahl(s) + ' Schritten';
+  if (e.ende === 'null') return '⛔ würde unter 1 fallen – Stopp nach ' + wuZahl(s) + ' Schritten';
+  return '⏳ nach 2.000 Schritten noch unterwegs';
+}
+function coRegelHtml(r) {
+  const opSel = (t) => '<select data-r="' + t + '-op">' + CO_OPS.map(([id, n]) => '<option value="' + id + '"' + (r[t].op === id ? ' selected' : '') + '>' + n + '</option>').join('') + '</select>'
+    + '<label class="co-k">k <input type="number" data-r="' + t + '-k" min="1" max="99" value="' + r[t].k + '" inputmode="numeric"></label><label class="co-c">c <input type="number" data-r="' + t + '-c" min="0" max="99" value="' + r[t].c + '" inputmode="numeric"></label>';
+  return '<div class="co-regel" id="coRegel"><div class="co-regel-kopf"><b>Regel</b><span>' + CO_VARIANTEN.map(([n], i) => '<button type="button" data-variante="' + i + '">' + n + '</button>').join('') + '</span></div>'
+    + '<div class="co-regel-zeile co-g">Wenn durch <select data-r="m">' + [2, 3, 4, 5].map((m) => '<option' + (m === r.m ? ' selected' : '') + '>' + m + '</option>').join('') + '</select> teilbar: ' + opSel('a') + '</div>'
+    + '<div class="co-regel-zeile co-u">Sonst: ' + opSel('b') + '</div></div>';
+}
+function coRegelLesen() {
+  const v = (k) => { const el = document.querySelector('#coRegel [data-r="' + k + '"]'); return el ? el.value : null; };
+  return coRegelSauber({ m: +v('m'), a: { op: v('a-op'), k: +v('a-k'), c: +v('a-c') }, b: { op: v('b-op'), k: +v('b-k'), c: +v('b-c') } });
+}
+function coRegelFelder() {
+  for (const t of ['a', 'b']) {
+    const op = document.querySelector('#coRegel [data-r="' + t + '-op"]').value, k = document.querySelector('#coRegel [data-r="' + t + '-k"]'), c = document.querySelector('#coRegel [data-r="' + t + '-c"]');
+    k.parentNode.hidden = op === '+' || op === '−'; c.parentNode.hidden = op === '÷';
+    k.min = op === '÷' ? 2 : 1;
+  }
+}
 const coMusikStore = () => { const s = wuStore(); s.collatz.musik = Object.assign({ zahlen: '27', tempo: 140, skala: 'penta', klang: 0 }, s.collatz.musik || {}); return s; };
 // Eingabe → bis zu 3 Startzahlen (1 … 1 Billion)
 function coZahlenLesen(text) {
@@ -666,24 +728,33 @@ function coMusikIntro() {
   wuStopp(); $('wuTitel').textContent = '🎵 Zahlen-Musik';
   const s = coMusikStore(), m = s.collatz.musik;
   $('wuInhalt').innerHTML = '<div class="ft-intro"><div class="wu-logo">🎵</div><h2 class="wu-h">Zahlen-Musik</h2>'
-    + '<p>Gib eine Zahl ein – ihr Weg bis zur 1 wird zur Melodie: <b class="co-u">×3+1</b> springt nach oben, <b class="co-g">÷2</b> fällt nach unten. Bis zu <b>drei Zahlen</b> spielen als Stimmen zusammen.</p>'
+    + '<p>Gib eine Zahl ein – ihr Weg wird zur Melodie: große Zahlen klingen hoch, kleine tief. Bis zu <b>drei Zahlen</b> spielen als Stimmen zusammen. Die <b>Regel</b> kannst du unten selbst ändern.</p>'
     + '<div class="co-eingabe"><input type="text" id="coMZahlen" inputmode="numeric" value="' + m.zahlen + '" placeholder="z. B. 27 oder 27, 97, 871" aria-label="Startzahlen"><button type="button" class="btn ft-los wu-los" id="coMLos">▶ Spielen</button></div>'
     + '<div class="co-vorschlaege">' + [['27', '27'], ['Duett', '27, 31'], ['Trio', '97, 871, 703'], ['Riese', '63728127'], ['Zweierpotenz', '1024']].map(([n, z]) => '<button type="button" data-z="' + z + '">' + n + '</button>').join('') + '</div>'
+    + coRegelHtml(coRegelSauber(m.regel))
     + '<div class="st-einst co-einst"><label>Tempo <input type="range" id="coMTempo" min="80" max="200" step="5" value="' + m.tempo + '"><output id="coMTempoW"></output></label>'
     + '<label>Tonleiter <select id="coMSkala">' + Object.entries(CO_SKALEN).map(([id, x]) => '<option value="' + id + '"' + (id === m.skala ? ' selected' : '') + '>' + x.name + '</option>').join('') + '</select></label>'
     + '<label>Klang <select id="coMKlang">' + CO_KLAENGE.map((n, i) => '<option value="' + i + '"' + (i === m.klang ? ' selected' : '') + '>' + n + '</option>').join('') + '</select></label></div>'
     + '<p class="ft-klein" id="coMInfo"></p></div>';
   const info = () => {
     const z = coZahlenLesen($('coMZahlen').value);
-    $('coMInfo').innerHTML = z.length ? z.map((n, i) => { const f = coFolge(n); return '<span style="color:' + CO_FARBEN[i] + '">' + wuZahl(n) + '</span>: ' + (f.length - 1) + ' Schritte, Gipfel ' + wuZahl(Math.max(...f)); }).join('<br>') + '<br>Dauer etwa ' + Math.round((Math.max(...z.map((n) => coFolge(n).length)) + 4) * 30 / $('coMTempo').value) + ' s' : 'Bitte eine Zahl zwischen 1 und 1 Billion eingeben.';
+    const regel = coRegelLesen(); coRegelFelder();
+    const erg = z.map((n) => coFolgeRegel(n, regel)), lang = Math.min(1000, Math.max(0, ...erg.map((e) => e.f.length)));
+    $('coMInfo').innerHTML = z.length ? erg.map((e, i) => '<span style="color:' + CO_FARBEN[i] + '">' + wuZahl(z[i]) + '</span>: ' + coErgebnisText(e) + (e.f.length > 1 ? ', Gipfel ' + wuZahl(Math.max(...e.f)) : '')).join('<br>') + '<br>Dauer etwa ' + Math.round((lang + 4) * 30 / $('coMTempo').value) + ' s' + (erg.some((e) => e.f.length > 1000) ? ' (gespielt werden die ersten 1.000 Schritte)' : '') : 'Bitte eine Zahl zwischen 1 und 1 Billion eingeben.';
     $('coMTempoW').textContent = $('coMTempo').value + ' BPM';
   };
   info();
   ['input', 'change'].forEach((ev) => ['coMZahlen', 'coMTempo'].forEach((id) => $(id).addEventListener(ev, info)));
+  $('coRegel').querySelectorAll('[data-r]').forEach((el) => ['input', 'change'].forEach((ev) => el.addEventListener(ev, info)));
+  $('coRegel').querySelectorAll('[data-variante]').forEach((b) => b.addEventListener('click', () => {
+    const [, rg, zahlen] = CO_VARIANTEN[+b.dataset.variante], st = coMusikStore();
+    Object.assign(st.collatz.musik, { regel: rg, zahlen, tempo: +$('coMTempo').value, skala: $('coMSkala').value, klang: +$('coMKlang').value }); saveJson(WU_KEY, st);
+    coMusikIntro();
+  }));
   $('wuInhalt').querySelectorAll('[data-z]').forEach((b) => b.addEventListener('click', () => { $('coMZahlen').value = b.dataset.z; info(); }));
   const los = () => {
     const z = coZahlenLesen($('coMZahlen').value); if (!z.length) { info(); return; }
-    const opt = { tempo: +$('coMTempo').value, skala: $('coMSkala').value, klang: +$('coMKlang').value };
+    const opt = { tempo: +$('coMTempo').value, skala: $('coMSkala').value, klang: +$('coMKlang').value, regel: coRegelLesen() };
     const st = coMusikStore(); st.collatz.musik = { zahlen: z.join(', '), ...opt }; saveJson(WU_KEY, st);
     coMusik(z, opt);
   };
@@ -713,7 +784,7 @@ function coMusikSchritt(A, w, i, t) {
   if (laut > 0.45 && i % 4 === 2) ftRauschen(A, t, 0.16, 1500, 0.22);
   w.folgen.forEach((f, s) => {
     if (i < 1 || i >= f.length) return;
-    const v = f[i], alt = f[i - 1], hoch = alt % 2 === 1;
+    const v = f[i], alt = f[i - 1], hoch = !coTeilbar(alt, w.regel);
     const m = coMusikTon(v, w.gipfel, w.skala, s);
     coMusikNote(A, t, m, w.klang, hoch ? 1.25 : 0.85, dur);
     if (s === 0 && i % 4 === 0) stOszWu(A, t, 'sine', ftHz(m - 24 - ((m - 24) % 12 > 6 ? 0 : 0)), dur * 3.6, 0.32);
@@ -723,10 +794,11 @@ function coMusikSchritt(A, w, i, t) {
 function coMusik(zahlen, opt) {
   wuStopp(); ftTaktStoppen();
   const A = ftAudio(); if (!A) return;
-  const folgen = zahlen.map(coFolge), gipfel = Math.max(...folgen.map((f) => Math.max(...f))), laenge = Math.max(...folgen.map((f) => f.length));
-  wu = { art: 'comusik', zahlen, folgen, gipfel, laenge, skala: opt.skala, klang: opt.klang, tempo: opt.tempo, dur: 30 / opt.tempo, A, i: -1, naechste: 0, warte: [], start: A.c.currentTime + 0.15, fertig: false, maxA: Math.max(...zahlen), sprung: 0 };
+  const regel = coRegelSauber(opt.regel), ergebnisse = zahlen.map((n) => coFolgeRegel(n, regel)), folgen = ergebnisse.map((e) => e.f.slice(0, 1001)), gipfel = Math.max(...folgen.map((f) => Math.max(...f))), laenge = Math.max(...folgen.map((f) => f.length));
+  wu = { art: 'comusik', zahlen, folgen, regel, ergebnisse, gipfel, laenge, skala: opt.skala, klang: opt.klang, tempo: opt.tempo, dur: 30 / opt.tempo, A, i: -1, naechste: 0, warte: [], start: A.c.currentTime + 0.15, fertig: false, maxA: Math.max(...zahlen), sprung: 0 };
   $('wuTitel').textContent = '🎵 ' + zahlen.map(wuZahl).join(' · ');
-  $('wuInhalt').innerHTML = '<div class="ft-kopf"><div class="wu-chips" id="coMChips"></div><div class="co-regeln"><span id="coU" class="co-u">ungerade ×3+1</span><span id="coG" class="co-g">gerade ÷2</span></div></div>'
+  const rt = coRegelText(regel);
+  $('wuInhalt').innerHTML = '<div class="ft-kopf"><div class="wu-chips" id="coMChips"></div><div class="co-regeln"><span id="coU" class="co-u">' + rt.b + '</span><span id="coG" class="co-g">' + rt.a + '</span></div></div>'
     + '<canvas id="coMBild" class="ft-bild wu-bild"></canvas>'
     + '<div class="ft-unten"><div class="ft-text" id="coMText">Hör zu …</div><div class="wu-knoepfe"><button type="button" class="ft-ton" id="coMTon"></button><button type="button" class="btn secondary" id="coMPause">⏸ Pause</button><button type="button" class="btn secondary" id="coMAndere">✏️ Andere Zahl</button></div></div>';
   Object.assign(wu, wuCanvas('coMBild', 0.5, 300, 560));
@@ -761,10 +833,10 @@ function coMusikTakt() {
 function coMusikAnzeige() {
   const w = wu, i = Math.min(w.i, w.laenge - 1);
   $('coMChips').innerHTML = '<span>Schritt <b>' + Math.max(0, i) + '</b></span>' + w.folgen.map((f, s) => '<span style="color:' + CO_FARBEN[s] + '">● <b>' + wuZahl(f[Math.min(i, f.length - 1)]) + '</b></span>').join('');
-  const f = w.folgen[0], alt = f[Math.min(Math.max(0, i - 1), f.length - 1)], ungerade = i > 0 && i < f.length && alt % 2 === 1;
+  const f = w.folgen[0], alt = f[Math.min(Math.max(0, i - 1), f.length - 1)], ungerade = i > 0 && i < f.length && !coTeilbar(alt, w.regel), rt = coRegelText(w.regel);
   $('coU').classList.toggle('an', ungerade); $('coG').classList.toggle('an', i > 0 && i < f.length && !ungerade);
   const lauf = w.folgen.filter((x) => i < x.length - 1).length;
-  $('coMText').innerHTML = i <= 0 ? 'Hör zu …' : lauf ? (w.folgen.length > 1 ? lauf + ' von ' + w.folgen.length + ' Stimmen unterwegs' : (alt % 2 ? wuZahl(alt) + ' ist <span class="co-u">ungerade</span> → ×3+1' : wuZahl(alt) + ' ist <span class="co-g">gerade</span> → ÷2')) : 'Alle bei 1 angekommen – 4 → 2 → 1.';
+  $('coMText').innerHTML = i <= 0 ? 'Hör zu …' : lauf ? (w.folgen.length > 1 ? lauf + ' von ' + w.folgen.length + ' Stimmen unterwegs' : (ungerade ? wuZahl(alt) + ': <span class="co-u">' + rt.b + '</span>' : wuZahl(alt) + ': <span class="co-g">' + rt.a + '</span>')) : w.ergebnisse.length === 1 ? coErgebnisText(w.ergebnisse[0]) : 'Alle Stimmen fertig.';
   w.maxA = Math.max(w.maxA, ...w.folgen.map((x) => Math.max(...x.slice(0, i + 1))));
 }
 function coMusikZeichnen() {
@@ -776,7 +848,7 @@ function coMusikZeichnen() {
   w.folgen.forEach((f, s) => {
     const bis = Math.min(i, f.length - 1);
     if (!log) {   // eine Zahl: Säulen wie bei 27 → 1
-      for (let k = 0; k <= bis; k++) { const ung = k > 0 && f[k - 1] % 2 === 1; c.fillStyle = k === 0 ? '#e2e8f0' : ung ? '#fb923c' : '#38bdf8'; const h = Math.max(1.5, basis - y(f[k])); c.fillRect(k * bw + bw * 0.12, basis - h, bw * 0.76, h); }
+      for (let k = 0; k <= bis; k++) { const ung = k > 0 && !coTeilbar(f[k - 1], w.regel); c.fillStyle = k === 0 ? '#e2e8f0' : ung ? '#fb923c' : '#38bdf8'; const h = Math.max(1.5, basis - y(f[k])); c.fillRect(k * bw + bw * 0.12, basis - h, bw * 0.76, h); }
     } else {   // mehrere Zahlen: Linien (logarithmisch)
       c.strokeStyle = CO_FARBEN[s]; c.lineWidth = 2.2; c.shadowColor = CO_FARBEN[s]; c.shadowBlur = 8; c.beginPath();
       for (let k = 0; k <= bis; k++) { const X = (k + 0.5) * bw, Y = y(f[k]); k ? c.lineTo(X, Y) : c.moveTo(X, Y); }
@@ -792,10 +864,11 @@ function coMusikZeichnen() {
 }
 function coMusikEnde() {
   const w = wu; w.fertig = true;
-  const st = wuStore(); w.zahlen.forEach((n, s) => coFundMerken(st, n, w.folgen[s].length - 1)); saveJson(WU_KEY, st);
+  const st = wuStore(); if (coIstStandard(w.regel)) { w.zahlen.forEach((n, s) => coFundMerken(st, n, w.folgen[s].length - 1)); saveJson(WU_KEY, st); }
+  const rt = coRegelText(w.regel);
   setTimeout(() => {
     if (wu !== w) return;
-    wuEnde('<div class="wu-logo">🎵</div><h3>' + w.zahlen.map(wuZahl).join(' · ') + '</h3>' + w.folgen.map((f, s) => '<p style="color:' + CO_FARBEN[s] + '"><b>' + wuZahl(w.zahlen[s]) + '</b>: ' + (f.length - 1) + ' Schritte, Gipfel ' + wuZahl(Math.max(...f)) + '</p>').join('') + '<p class="ft-klein">Jeder Ton ist ein Schritt der Folge – hoch, wenn die Zahl groß ist. Darum klingt jede Zahl anders.</p>',
+    wuEnde('<div class="wu-logo">🎵</div><h3>' + w.zahlen.map(wuZahl).join(' · ') + '</h3>' + (coIstStandard(w.regel) ? '' : '<p class="co-regel-info">Regel: ' + rt.a + ' · ' + rt.b + '</p>') + w.ergebnisse.map((e, s) => '<p style="color:' + CO_FARBEN[s] + '"><b>' + wuZahl(w.zahlen[s]) + '</b>: ' + coErgebnisText(e) + ', Gipfel ' + wuZahl(Math.max(...e.f)) + '</p>').join('') + '<p class="ft-klein">Jeder Ton ist ein Schritt der Folge – hoch, wenn die Zahl groß ist. Darum klingt jede Zahl anders.</p>',
       [['▶ Nochmal', () => coMusik(w.zahlen, w)], ['✏️ Andere Zahl', coMusikIntro], ['🎛️ Ins Beat-Studio', () => coInsStudio(w)], ['Zurück', coIntro]]);
   }, 1400);
 }

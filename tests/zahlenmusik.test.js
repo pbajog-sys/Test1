@@ -25,7 +25,7 @@ const ordner = process.argv[2] || '.';
   await p.evaluate(() => wuOeffnen()); await p.waitForTimeout(300);
   await p.click('[data-modus="collatz"]'); await p.click('#coMusikBtn'); await p.waitForTimeout(200);
   await p.fill('#coMZahlen', '27'); await p.evaluate(() => { const s = $('coMTempo'); s.value = 160; s.dispatchEvent(new Event('input')); });
-  ck('Vorschau: Schritte, Gipfel, Dauer', /111 Schritte, Gipfel 9\.232/.test(await p.textContent('#coMInfo')) && /160 BPM/.test(await p.textContent('#coMTempoW')), await p.textContent('#coMInfo'));
+  ck('Vorschau: Schritte, Gipfel, Dauer', /111 Schritten, Gipfel 9\.232/.test(await p.textContent('#coMInfo')) && /160 BPM/.test(await p.textContent('#coMTempoW')), await p.textContent('#coMInfo'));
   await bild('zm-intro');
   await p.click('#coMLos'); await p.waitForTimeout(2000);
   const i1 = await p.evaluate(() => wu.i);
@@ -33,7 +33,7 @@ const ordner = process.argv[2] || '.';
   await p.evaluate(() => { wu.start -= 13; }); await p.waitForTimeout(500); await bild('zm-27');
   await p.evaluate(() => { ftAk.stumm = true; wu.start -= 60; });
   await p.waitForSelector('.ft-ergebnis', { timeout: 5000 });
-  ck('Ende: 27 → 111 Schritte, Gipfel 9.232', /111 Schritte, Gipfel 9\.232/.test(await p.textContent('.ft-karte')));
+  ck('Ende: 27 → 111 Schritte, Gipfel 9.232', /111 Schritten, Gipfel 9\.232/.test(await p.textContent('.ft-karte')));
   await p.evaluate(() => { ftAk.stumm = false; });
   // Trio
   await p.click('.ft-ergebnis [data-k="1"]'); await p.waitForTimeout(200);
@@ -56,6 +56,42 @@ const ordner = process.argv[2] || '.';
   ck('Rekordjagd → Musik übernimmt die Zahl', (await p.inputValue('#coMZahlen')) === '6171');
   await p.click('#wuZurueck'); await p.waitForTimeout(200);
   ck('Zurück führt zu 27 → 1', !!(await p.$('#coMusikBtn')));
+
+  // ---------- Eigene Regeln ----------
+  const rg = await p.evaluate(() => {
+    const R = (b, m = 2, a = { op: '÷', k: 2, c: 0 }) => ({ m, a, b });
+    const t = (n, r) => { const e = coFolgeRegel(n, r); return e.ende + ':' + (e.zyklus ? e.zyklus.join('>') : e.f.length - 1); };
+    return {
+      gleich: [1, 2, 27, 97, 871, 6171, 63728127].every((n) => coFolgeRegel(n, CO_STANDARD).f.join() === coFolge(n).join()) && coFolgeRegel(27, CO_STANDARD).ende === 'eins',
+      minus: t(5, R({ op: '×−', k: 3, c: 1 })), minus17: coFolgeRegel(17, R({ op: '×−', k: 3, c: 1 })).zyklus.length - 1,
+      fuenf13: t(13, R({ op: '×+', k: 5, c: 1 })), fuenf7: coFolgeRegel(7, R({ op: '×+', k: 5, c: 1 })).ende,
+      plus: t(27, R({ op: '+', k: 1, c: 1 })), dreier: coFolgeRegel(100, R({ op: '+', k: 1, c: 1 }, 3, { op: '÷', k: 3, c: 0 })).ende,
+      unter: coFolgeRegel(3, R({ op: '−', k: 1, c: 5 })).ende, kaputt: JSON.stringify(coRegelSauber({ m: 77, a: { op: 'x', k: -3 }, b: null })) === JSON.stringify(CO_STANDARD),
+    };
+  });
+  ck('Standard-Regel = Collatz wie bisher', rg.gleich);
+  ck('3n−1: 5 landet in der Schleife 5→14→7→20→10→5, 17 in einer 18er-Schleife', rg.minus === 'zyklus:5>14>7>20>10>5' && rg.minus17 === 18, rg.minus + ' / ' + rg.minus17);
+  ck('5n+1: 13 Schleife, 7 läuft davon', /^zyklus:13>66>33/.test(rg.fuenf13) && rg.fuenf7 === 'davon', rg.fuenf13 + ' / ' + rg.fuenf7);
+  ck('+1 statt ×3 und Dreier erreichen die 1, −5 fällt unter 1, kaputte Regel → Standard', rg.plus.startsWith('eins') && rg.dreier === 'eins' && rg.unter === 'null' && rg.kaputt, rg.plus);
+  await p.click('#coMusikBtn'); await p.waitForTimeout(200);
+  await p.click('[data-variante="1"]'); await p.waitForTimeout(200);
+  ck('Variante „3n − 1“ setzt Regel und Zahlen, Vorschau zeigt die Schleife', (await p.inputValue('#coMZahlen')) === '5, 17' && (await p.inputValue('#coRegel [data-r="b-op"]')) === '×−' && /Schleife aus 5 Zahlen: 5 → 14 → 7 → 20 → 10 → 5/.test(await p.textContent('#coMInfo')), await p.textContent('#coMInfo'));
+  await bild('zm-regel');
+  // selbst ändern: sonst ×5+1
+  await p.selectOption('#coRegel [data-r="b-op"]', '×+'); await p.fill('#coRegel [data-r="b-k"]', '5'); await p.fill('#coMZahlen', '13');
+  await p.dispatchEvent('#coMZahlen', 'input');
+  ck('Eigene Regel ×5+1: Vorschau aktualisiert', /Schleife aus 10 Zahlen/.test(await p.textContent('#coMInfo')), await p.textContent('#coMInfo'));
+  await p.selectOption('#coRegel [data-r="a-op"]', '+');
+  ck('Felder passen sich an (bei „+ c“ kein k)', await p.evaluate(() => document.querySelector('#coRegel [data-r="a-k"]').parentNode.hidden && !document.querySelector('#coRegel [data-r="a-c"]').parentNode.hidden));
+  await p.selectOption('#coRegel [data-r="a-op"]', '÷');
+  await p.click('#coMLos'); await p.waitForTimeout(400);
+  ck('Beim Spielen stehen die eigenen Regeln oben', (await p.textContent('#coU')) === 'ungerade ×5+1' && (await p.textContent('#coG')) === 'gerade ÷2');
+  await p.evaluate(() => { wu.start -= 1.5; }); await p.waitForTimeout(500); await bild('zm-regel-spiel');
+  await p.evaluate(() => { ftAk.stumm = true; wu.start -= 60; });
+  await p.waitForSelector('.ft-ergebnis', { timeout: 5000 });
+  ck('Ergebnis nennt Regel und Schleife', /Regel: gerade ÷2 · ungerade ×5\+1/.test(await p.textContent('.ft-karte')) && /Schleife aus 10 Zahlen/.test(await p.textContent('.ft-karte')));
+  ck('Regel bleibt gespeichert', await p.evaluate(() => { const r = loadJson(WU_KEY).collatz.musik.regel; return r.b.op === '×+' && r.b.k === 5; }));
+  ck('Rekorde zählen nur mit der echten Collatz-Regel', await p.evaluate(() => !loadJson(WU_KEY).collatz.funde[100] || loadJson(WU_KEY).collatz.funde[100][0] !== 13));
   ck('Keine Seitenfehler', !fehler.length, fehler.join(' | '));
   console.log(checks.filter((c) => c[1]).length + ' bestanden, ' + checks.filter((c) => !c[1]).length + ' fehlgeschlagen');
   await b.close(); process.exit(checks.every((c) => c[1]) ? 0 : 1);
