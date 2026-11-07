@@ -93,15 +93,50 @@ let ftRauschPuffer = null;
 // und hält sich an den Stumm-Schalter. Ohne festen Wert wählt iOS bei einer Home-Bildschirm-App, die schon einmal
 // das Mikrofon hatte, manchmal den Telefon-Modus – dann kommt der Ton aus dem Hörer am Ohr.
 function ftAudioSitzung(typ) { try { if (navigator.audioSession && navigator.audioSession.type !== typ) navigator.audioSession.type = typ; } catch (e) { /* ältere Browser */ } }
-ftAudioSitzung('ambient');
-document.addEventListener('visibilitychange', () => { if (!document.hidden && !(typeof bb !== 'undefined' && bb && bb.live && bb.live.stream)) ftAudioSitzung('ambient'); });
+// Gewählte Wiedergabe-Art (im Ton-Check einstellbar, gilt für dieses Gerät): ambient | playback | auto
+const FT_AUDIO_KEY = 'walquiz.audio.v1';
+const ftAudioArt = () => { try { const a = JSON.parse(localStorage.getItem(FT_AUDIO_KEY) || '{}').sitzung; return ['ambient', 'playback', 'auto'].includes(a) ? a : 'ambient'; } catch (e) { return 'ambient'; } };
+ftAudioSitzung(ftAudioArt());
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !(typeof bb !== 'undefined' && bb && bb.live && bb.live.stream)) ftAudioSitzung(ftAudioArt()); });
 function ftAudioNachMikrofon() {
-  ftAudioSitzung('ambient');
+  ftAudioSitzung(ftAudioArt());
   if (ftAk) { ftStummMerk = ftAk.stumm; ftTaktStoppen(); try { ftAk.c.close(); } catch (e) { /* schon zu */ } ftAk = null; }
   ftRauschPuffer = null;
   if (typeof tonCtx !== 'undefined' && tonCtx && !(typeof live !== 'undefined' && live)) { try { tonCtx.close(); } catch (e) { /* schon zu */ } tonCtx = null; }
 }
 function ftAudioVorMikrofon() { ftAudioSitzung('play-and-record'); }
+// 🔊 Ton-Check: zeigt, was iOS gerade macht, und lässt die Wiedergabe-Art ausprobieren
+function ftTonTest() {
+  const A = ftAudio(); if (!A) return;
+  const t = A.c.currentTime + 0.05, war = A.stumm; A.stumm = false;
+  ftSaw(A, t, [72, 76, 79], 0.35, 0.08, 4000); ftSaw(A, t + 0.35, [84], 0.4, 0.08, 4000); ftKick(A, t, 0.8);
+  A.stumm = war;
+}
+function ftTonCheck() {
+  const as = navigator.audioSession, ios = /OS (\d+)_(\d+)/.exec(navigator.userAgent), art = ftAudioArt();
+  const standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
+  const mikro = typeof bb !== 'undefined' && bb && bb.live && bb.live.stream ? 'an (Live-Modus)' : 'aus';
+  const zeile = (k, v) => '<li><b>' + k + '</b><span>' + v + '</span></li>';
+  const arten = [['ambient', 'Spiel', 'Lautsprecher, mischt sich mit Spotify, Stumm-Schalter gilt'], ['playback', 'Wiedergabe', 'wie ein Musik-Player: spielt auch bei Stumm, hält Spotify an'], ['auto', 'Automatisch', 'iOS entscheidet (so war es früher)']];
+  const html = '<h3>🔊 Ton-Check</h3><ul class="ft-check">'
+    + zeile('App-Stand', typeof APP_STAND !== 'undefined' ? APP_STAND.replace('walquiz-', '') : '?')
+    + zeile('Gerät', (ios ? 'iOS ' + ios[1] + '.' + ios[2] : 'kein iPhone/iPad') + (standalone ? ' · Home-Bildschirm-App' : ' · Browser'))
+    + zeile('Audio-Sitzung', as ? '„' + as.type + '“' + (as.state ? ' (' + as.state + ')' : '') : 'nicht verfügbar (iOS zu alt?)')
+    + zeile('Ton-Kontext', ftAk ? ftAk.c.state + ' · ' + ftAk.c.sampleRate + ' Hz' : 'noch nicht gestartet')
+    + zeile('Mikrofon', mikro) + '</ul>'
+    + '<p class="ft-klein">Kommt der Ton aus dem Hörer am Ohr? Probier nacheinander die Arten aus – jede spielt sofort einen Test-Ton. Die App merkt sich, was du wählst.</p>'
+    + '<div class="ft-arten">' + arten.map(([id, n, t]) => '<button type="button" class="ft-art' + (id === art ? ' an' : '') + '" data-art="' + id + '"><b>' + n + '</b><small>' + t + '</small></button>').join('') + '</div>'
+    + '<button type="button" class="btn secondary" id="ftTestTon">🔔 Test-Ton</button>'
+    + '<p class="ft-klein">Steht im Kontrollzentrum am Lautstärkeregler ein <b>Telefon</b>, ist iOS im Anruf-Modus. Hilft keine Art: iPhone einmal neu starten. Die Spielstände bleiben dabei erhalten.</p>';
+  const d = typeof skDialog === 'function' ? skDialog(html) : null; if (!d) return;
+  d.querySelector('#ftTestTon').addEventListener('click', ftTonTest);
+  d.querySelectorAll('[data-art]').forEach((b) => b.addEventListener('click', () => {
+    try { localStorage.setItem(FT_AUDIO_KEY, JSON.stringify({ sitzung: b.dataset.art })); } catch (e) { /* privat */ }
+    ftAudioNachMikrofon(); ftAudioSitzung(b.dataset.art);
+    setTimeout(() => { ftTonTest(); ftTonCheck(); }, 120);
+  }));
+}
+if (document.getElementById('tonCheckBtn')) document.getElementById('tonCheckBtn').addEventListener('click', ftTonCheck);
 function ftRauschen(A, t, dauer, hp, laut) {
   const c = A.c;
   if (!ftRauschPuffer) { ftRauschPuffer = c.createBuffer(1, c.sampleRate * 0.5, c.sampleRate); const d = ftRauschPuffer.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }
