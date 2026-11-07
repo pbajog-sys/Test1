@@ -89,13 +89,19 @@ let ftRauschPuffer = null;
 // Mikrofon benutzt (Live-Modus, Sprechen)? iOS schaltet dabei auf „Telefonieren“ um und spielt danach über den
 // Hörer am Ohr statt über den Lautsprecher. Darum: Audio-Sitzung zurück auf Wiedergabe und die Audio-Kontexte neu
 // anlegen (beim nächsten Ton) – dann wählt iOS wieder den Lautsprecher.
+// iOS-Audio-Sitzung: „ambient“ = normale Spiel-Wiedergabe über den Lautsprecher, mischt sich mit Spotify & Co.
+// und hält sich an den Stumm-Schalter. Ohne festen Wert wählt iOS bei einer Home-Bildschirm-App, die schon einmal
+// das Mikrofon hatte, manchmal den Telefon-Modus – dann kommt der Ton aus dem Hörer am Ohr.
+function ftAudioSitzung(typ) { try { if (navigator.audioSession && navigator.audioSession.type !== typ) navigator.audioSession.type = typ; } catch (e) { /* ältere Browser */ } }
+ftAudioSitzung('ambient');
+document.addEventListener('visibilitychange', () => { if (!document.hidden && !(typeof bb !== 'undefined' && bb && bb.live && bb.live.stream)) ftAudioSitzung('ambient'); });
 function ftAudioNachMikrofon() {
-  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* ältere Browser */ }
+  ftAudioSitzung('ambient');
   if (ftAk) { ftStummMerk = ftAk.stumm; ftTaktStoppen(); try { ftAk.c.close(); } catch (e) { /* schon zu */ } ftAk = null; }
   ftRauschPuffer = null;
   if (typeof tonCtx !== 'undefined' && tonCtx && !(typeof live !== 'undefined' && live)) { try { tonCtx.close(); } catch (e) { /* schon zu */ } tonCtx = null; }
 }
-function ftAudioVorMikrofon() { try { if (navigator.audioSession) navigator.audioSession.type = 'play-and-record'; } catch (e) { /* ältere Browser */ } }
+function ftAudioVorMikrofon() { ftAudioSitzung('play-and-record'); }
 function ftRauschen(A, t, dauer, hp, laut) {
   const c = A.c;
   if (!ftRauschPuffer) { ftRauschPuffer = c.createBuffer(1, c.sampleRate * 0.5, c.sampleRate); const d = ftRauschPuffer.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }

@@ -82,7 +82,7 @@ function beatWav(bpm, sek) {
   await p.waitForSelector('.ft-ergebnis', { timeout: 3000 });
   ck('Live: „Fertig“ → Ergebnis, Mikrofon aus', await p.evaluate(() => !bb.live.stream && !!document.querySelector('.bb-karte')));
   const sitz = await p.evaluate(() => ({ verlauf: navigator.audioSession.verlauf.join('>'), altZu: window.__altCtx.state, neu: ftAudio().c !== window.__altCtx, laeuft: ftAudio().c.state }));
-  ck('iPhone-Hörer-Problem: vor dem Mithören „play-and-record“, danach zurück auf „playback“ und neuer Audio-Kontext', sitz.verlauf === 'play-and-record>playback' && sitz.altZu === 'closed' && sitz.neu, JSON.stringify(sitz));
+  ck('iPhone-Hörer-Problem: beim Start „ambient“ (Lautsprecher), zum Mithören „play-and-record“, danach zurück auf „ambient“ und neuer Audio-Kontext', sitz.verlauf === 'ambient>play-and-record>ambient' && sitz.altZu === 'closed' && sitz.neu, JSON.stringify(sitz));
   const vl = await p.evaluate(() => (loadJson(VERLAUF_KEY).tage[skDatum()] || []).filter((e) => e.s === 'beat').map((e) => e.i));
   ck('Verlauf: Live-Runde eingetragen', vl.length === 1 && /Live 12\d BPM/.test(vl[0]), vl.join(' | '));
   await p.click('#bbAndere'); await p.waitForTimeout(300);
