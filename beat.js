@@ -414,10 +414,12 @@ async function bbLiveStarten() {
   const A = ftAudio(); if (!A) return;
   try {
     if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw new Error('kein Mikrofon');
+    ftAudioVorMikrofon();
     const stream = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: false, noiseSuppression: false, autoGainControl: false } });
-    if (!$('screen-beat').classList.contains('active')) { stream.getTracks().forEach((t) => t.stop()); return; }
+    if (!$('screen-beat').classList.contains('active')) { stream.getTracks().forEach((t) => t.stop()); ftAudioNachMikrofon(); return; }
     bbStart({ live: stream, noten: [] });
   } catch (e) {
+    ftAudioNachMikrofon();
     const f = $('bbLiveFehler');
     if (f) f.textContent = 'Kein Zugriff aufs Mikrofon. Erlaube es in den Einstellungen (Safari → Mikrofon) und versuch es nochmal.';
     else bbLiveIntro();
@@ -436,6 +438,7 @@ function bbLiveTrennen() {
   const L = bb.live; if (!L || !L.stream) return;
   clearInterval(L.timer); try { L.src.disconnect(); } catch (e) { /* schon getrennt */ }
   L.stream.getTracks().forEach((t) => t.stop()); L.stream = null;
+  ftAudioNachMikrofon();
 }
 function bbLiveHoeren() {
   if (!bb || !bb.live || !bb.live.stream || bb.fertig) return;

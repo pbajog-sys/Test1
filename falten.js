@@ -67,13 +67,13 @@ const FT_BPM = 175, FT_ACHTEL = 60 / FT_BPM / 2;
 // eigene Akkordfolge (I–V–vi–IV in C) und eine eigene Melodie, je Faltung ein Ton
 const FT_AKKORDE = [[60, 64, 67], [55, 59, 62], [57, 60, 64], [53, 57, 60]];
 const FT_MELODIE = [72, 74, 76, 79, 76, 74, 72, 67, 69, 72, 74, 76, 74, 72, 71, 72, 76, 79, 81, 79, 76, 74, 76, 79];
-let ftAk = null;
+let ftAk = null, ftStummMerk = false;
 function ftAudio() {
   if (!ftAk) {
     const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
     const c = new C(), master = c.createGain(), komp = c.createDynamicsCompressor();
     master.gain.value = 0.55; master.connect(komp).connect(c.destination);
-    ftAk = { c, master, takt: null, start: 0, schritt: 0, naechster: 0, stumm: false };
+    ftAk = { c, master, takt: null, start: 0, schritt: 0, naechster: 0, stumm: ftStummMerk };
   }
   if (ftAk.c.state === 'suspended') ftAk.c.resume();
   return ftAk;
@@ -86,6 +86,16 @@ function ftKick(A, t, laut = 1) {
   o.connect(g).connect(A.master); o.start(t); o.stop(t + 0.3);
 }
 let ftRauschPuffer = null;
+// Mikrofon benutzt (Live-Modus, Sprechen)? iOS schaltet dabei auf „Telefonieren“ um und spielt danach über den
+// Hörer am Ohr statt über den Lautsprecher. Darum: Audio-Sitzung zurück auf Wiedergabe und die Audio-Kontexte neu
+// anlegen (beim nächsten Ton) – dann wählt iOS wieder den Lautsprecher.
+function ftAudioNachMikrofon() {
+  try { if (navigator.audioSession) navigator.audioSession.type = 'playback'; } catch (e) { /* ältere Browser */ }
+  if (ftAk) { ftStummMerk = ftAk.stumm; ftTaktStoppen(); try { ftAk.c.close(); } catch (e) { /* schon zu */ } ftAk = null; }
+  ftRauschPuffer = null;
+  if (typeof tonCtx !== 'undefined' && tonCtx && !(typeof live !== 'undefined' && live)) { try { tonCtx.close(); } catch (e) { /* schon zu */ } tonCtx = null; }
+}
+function ftAudioVorMikrofon() { try { if (navigator.audioSession) navigator.audioSession.type = 'play-and-record'; } catch (e) { /* ältere Browser */ } }
 function ftRauschen(A, t, dauer, hp, laut) {
   const c = A.c;
   if (!ftRauschPuffer) { ftRauschPuffer = c.createBuffer(1, c.sampleRate * 0.5, c.sampleRate); const d = ftRauschPuffer.getChannelData(0); for (let i = 0; i < d.length; i++) d[i] = Math.random() * 2 - 1; }

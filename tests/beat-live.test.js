@@ -26,6 +26,8 @@ function beatWav(bpm, sek) {
   const b = await chromium.launch({ args: ['--autoplay-policy=no-user-gesture-required', '--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream', '--use-file-for-fake-audio-capture=' + wav] });
   const ctx = await b.newContext({ ...devices['iPhone 13'], serviceWorkers: 'block', permissions: ['microphone'] });
   await ctx.addInitScript(() => { if (!localStorage.getItem('walquiz.profile.v1')) localStorage.setItem('walquiz.profile.v1', JSON.stringify({ aktiv: 't', liste: [{ id: 't', name: 'T', avatar: '🧪', farbe: '#22c55e' }] })); localStorage.setItem('walquiz.installhinweis.v1', 'weg'); });
+  // iOS-Audio-Sitzung nachbilden (Chromium kennt navigator.audioSession nicht): merkt sich jeden Wechsel
+  await ctx.addInitScript(() => { const w = []; Object.defineProperty(navigator, 'audioSession', { configurable: true, value: { get type() { return w[w.length - 1] || 'auto'; }, set type(v) { w.push(v); }, verlauf: w } }); });
   const p = await ctx.newPage(); const fehler = []; p.on('pageerror', (e) => fehler.push(e.message));
   const checks = [], ck = (n, ok, info = '') => { checks.push([n, ok]); console.log((ok ? '✓ ' : '✗ ') + n + (info ? ' – ' + info : '')); };
   await p.goto('http://localhost:8765/'); await p.waitForTimeout(900);
@@ -52,6 +54,7 @@ function beatWav(bpm, sek) {
   await p.click('.bb-stufe[data-stufe="mittel"]'); await p.waitForTimeout(200);
   await p.click('#bbLive'); await p.waitForTimeout(300);
   await p.screenshot({ path: ordner + '/bb-live-intro.png' });
+  const altCtx = await p.evaluate(() => { window.__altCtx = ftAudio().c; return true; });
   await p.click('#bbMithoeren');
   await p.waitForTimeout(1500); await p.screenshot({ path: ordner + '/bb-live-hoeren.png' });
   await p.waitForFunction(() => bb && bb.live && bb.live.periode > 0, null, { timeout: 15000 });
@@ -78,6 +81,8 @@ function beatWav(bpm, sek) {
   await p.click('#bbAbbruch');
   await p.waitForSelector('.ft-ergebnis', { timeout: 3000 });
   ck('Live: „Fertig“ → Ergebnis, Mikrofon aus', await p.evaluate(() => !bb.live.stream && !!document.querySelector('.bb-karte')));
+  const sitz = await p.evaluate(() => ({ verlauf: navigator.audioSession.verlauf.join('>'), altZu: window.__altCtx.state, neu: ftAudio().c !== window.__altCtx, laeuft: ftAudio().c.state }));
+  ck('iPhone-Hörer-Problem: vor dem Mithören „play-and-record“, danach zurück auf „playback“ und neuer Audio-Kontext', sitz.verlauf === 'play-and-record>playback' && sitz.altZu === 'closed' && sitz.neu, JSON.stringify(sitz));
   const vl = await p.evaluate(() => (loadJson(VERLAUF_KEY).tage[skDatum()] || []).filter((e) => e.s === 'beat').map((e) => e.i));
   ck('Verlauf: Live-Runde eingetragen', vl.length === 1 && /Live 12\d BPM/.test(vl[0]), vl.join(' | '));
   await p.click('#bbAndere'); await p.waitForTimeout(300);

@@ -662,6 +662,7 @@ function sloSprechenAufnahme(text, hinweis) {
     if (sloAufn && sloAufn.rec && sloAufn.rec.state === 'recording') { sloAufn.rec.stop(); return; }
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     try {
+      if (typeof ftAudioVorMikrofon === 'function') ftAudioVorMikrofon();
       const strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true } });
       const teile = [], rec = new MediaRecorder(strom);
       // Pegel live messen: Sprache erkennen und nach ~1,1 s Stille automatisch stoppen
@@ -687,6 +688,7 @@ function sloSprechenAufnahme(text, hinweis) {
       rec.onstop = () => {
         strom.getTracks().forEach((t) => t.stop());
         try { ac.close(); } catch (e) { /* egal */ }
+        if (typeof ftAudioNachMikrofon === 'function') ftAudioNachMikrofon();
         if (!$('sloAufnahme')) return;
         knopf.classList.remove('hoert'); knopf.querySelector('b').textContent = 'Noch einmal sprechen';
         if ($('sloPegel')) $('sloPegel').firstChild.style.width = '0';
@@ -740,7 +742,7 @@ async function sloMikroCheck() {
   const st = sloStore(), standalone = (window.matchMedia && matchMedia('(display-mode: standalone)').matches) || navigator.standalone === true;
   const zeile = (ok, t, s) => '<li class="' + (ok === true ? 'gut' : ok === false ? 'schlecht' : '') + '"><b>' + (ok === true ? '✅' : ok === false ? '❌' : 'ℹ️') + ' ' + t + '</b>' + (s ? '<small>' + s + '</small>' : '') + '</li>';
   let mic = null, micText = '';
-  try { const s2 = await navigator.mediaDevices.getUserMedia({ audio: true }); s2.getTracks().forEach((t) => t.stop()); mic = true; micText = 'Aufnehmen und Vergleichen funktioniert.'; }
+  try { const s2 = await navigator.mediaDevices.getUserMedia({ audio: true }); s2.getTracks().forEach((t) => t.stop()); if (typeof ftAudioNachMikrofon === 'function') ftAudioNachMikrofon(); mic = true; micText = 'Aufnehmen und Vergleichen funktioniert.'; }
   catch (e) { mic = false; micText = e.name === 'NotAllowedError' ? 'Nicht erlaubt – iPhone: Einstellungen › Safari › Mikrofon (bzw. beim Nachfragen „Erlauben“ tippen).' : 'Fehler: ' + (e.name || e.message); }
   const html = '<h3>🩺 Mikrofon-Check</h3><ul class="slo-check">'
     + zeile(mic, 'Mikrofon', micText)
