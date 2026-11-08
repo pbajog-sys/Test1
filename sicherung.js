@@ -92,8 +92,10 @@ async function sbDialog() {
     + '<p class="ft-klein sb-schritte">Auf dem iPhone: im Teilen-Menü <b>„In Dateien sichern“</b> → <b>iCloud Drive</b> wählen. So liegt die Sicherung sicher in der Cloud.</p>'
     + '<label class="btn secondary sb-einspielen">📂 Sicherung einspielen<input type="file" id="sbDatei" accept=".json,application/json" hidden></label>'
     + (rueck ? '<button type="button" class="btn secondary" id="sbRueck">↺ Letztes Einspielen rückgängig (' + new Date(rueck.zeit).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) + ')</button>' : '')
-    + '<p class="ft-klein" id="sbMeldung" role="status"></p>';
+    + '<p class="ft-klein" id="sbMeldung" role="status"></p>'
+    + '<div class="sb-update"><b>🔄 App aktualisieren</b><small>Stand ' + (typeof APP_STAND !== 'undefined' ? APP_STAND.replace('walquiz-', '') : '?') + ' · Updates kommen von selbst – die App nie zum Aktualisieren löschen, sonst sind die Daten weg.</small><button type="button" class="btn secondary" id="sbUpdate">Jetzt nach Update suchen</button></div>';
   const d = skDialog(html);
+  d.querySelector('#sbUpdate').addEventListener('click', sbAktualisieren);
   d.querySelector('#sbJetzt').addEventListener('click', async () => {
     const m = d.querySelector('#sbMeldung'); m.textContent = 'Sicherung wird erstellt …';
     const r = await sbSichern(!!(d.querySelector('#sbMitSongs') && d.querySelector('#sbMitSongs').checked));
@@ -112,6 +114,12 @@ async function sbDialog() {
     setTimeout(() => location.reload(), 900);
   });
   if (d.querySelector('#sbRueck')) d.querySelector('#sbRueck').addEventListener('click', () => { if (confirm('Den Stand von vor dem Einspielen wiederherstellen?') && sbRueckgaengig()) location.reload(); });
+}
+// Neue Version holen, ohne die App zu löschen: Service Worker prüfen lassen, dann neu laden (Daten bleiben)
+async function sbAktualisieren() {
+  const m = $('sbMeldung'); if (m) m.textContent = 'Suche nach Updates …';
+  try { const r = navigator.serviceWorker && await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) { /* offline – dann einfach neu laden */ }
+  setTimeout(() => location.reload(), 1200);
 }
 // Erinnerung im Hub, wenn es Daten gibt und die letzte Sicherung fehlt oder älter als 7 Tage ist
 function sbHinweis() {

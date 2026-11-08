@@ -3860,3 +3860,4 @@ a.bb-datei { text-decoration: none; }
 .sb-songs { display: flex; gap: 8px; align-items: center; margin: 4px 0 10px; font-size: .85rem; }
 .sb-los { width: 100%; } .sb-schritte { margin: 6px 0 10px !important; } .sb-einspielen { display: block; text-align: center; cursor: pointer; margin-bottom: 8px; }
 .fi-unten { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.sb-update { display: grid; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid rgba(255,255,255,.12); } .sb-update small { font-size: .78rem; opacity: .8; line-height: 1.4; }

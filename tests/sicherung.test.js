@@ -75,6 +75,12 @@ const ordner = process.argv[2] || '.';
   ck('Nach 8 Tagen erscheint die Erinnerung wieder', /vor 8 Tagen/.test(await p.textContent('#sbHinweis')));
   await p.evaluate(() => document.querySelector('#sbHinweis .sb-hi-zu').click());
   ck('„×“ = später erinnern (3 Tage Ruhe)', await p.evaluate(() => { sbHinweis(); return !$('sbHinweis') && sbInfo().spaeter > Date.now() + 2.9 * 864e5; }));
+  // ---------- Aktualisieren ohne Löschen: lädt neu, Daten bleiben ----------
+  await p.evaluate(() => sbDialog()); await p.waitForTimeout(300);
+  ck('Dialog zeigt Stand und „Jetzt nach Update suchen“', /App aktualisieren/.test(await p.textContent('#skDlg')) && /v\d+/.test(await p.textContent('.sb-update')));
+  await p.evaluate(() => { window.__vorReload = 1; });
+  await p.click('#sbUpdate'); await p.waitForFunction(() => !window.__vorReload, null, { timeout: 8000 }); await p.waitForTimeout(800);
+  ck('Nach dem Aktualisieren: neu geladen, Daten noch da', await p.evaluate(() => fiStore().einheiten.length === 1));
   ck('Keine Seitenfehler', !fehler.length, fehler.join(' | '));
   console.log(checks.filter((c) => c[1]).length + ' bestanden, ' + checks.filter((c) => !c[1]).length + ' fehlgeschlagen');
   await b.close(); process.exit(checks.every((c) => c[1]) ? 0 : 1);
