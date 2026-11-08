@@ -93,7 +93,8 @@ function fiStart() {
   const genutzt = [...new Set(s.einheiten.flatMap((e) => e.eintraege.map((x) => x.u)))];
   const letzte = s.einheiten.slice().sort((a, b) => b.start - a.start).slice(0, 6);
   $('fiInhalt').innerHTML = '<div class="fi-start">'
-    + '<button type="button" class="fi-los" id="fiLos">' + (s.aktiv ? '▶ Weiter mit dem laufenden Training<small>seit ' + new Date(s.aktiv.start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' · ' + s.aktiv.eintraege.length + ' Einträge</small>' : '▶ Training starten') + '</button>'
+    + '<button type="button" class="fi-los" id="fiLos">' + (s.aktiv ? '▶ Weiter mit dem laufenden Training<small>seit ' + new Date(s.aktiv.start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' · ' + s.aktiv.eintraege.length + ' Einträge</small>' : (s.planAktiv ? '▶ Freies Training' : '▶ Training starten')) + '</button>'
+    + (typeof fiPlanKarte === 'function' && !s.aktiv ? fiPlanKarte(s) : '')
     + '<div class="fi-kacheln"><div><b>' + dieseWoche + '</b><span>diese Woche</span></div><div><b>' + serie + '</b><span>' + (serie === 1 ? 'Woche' : 'Wochen') + ' in Folge</span></div><div><b>' + s.einheiten.length + '</b><span>Trainings gesamt</span></div></div>'
     + fiWochenKarte(s, w0)
     + '<p class="fi-tipp">💡 ' + fiTippDesTages() + '</p>'
@@ -102,6 +103,7 @@ function fiStart() {
     + '<div class="fi-unten"><button type="button" class="btn secondary" id="fiSichern">💾 Sichern (iCloud)</button><button type="button" class="btn secondary" id="fiExport">⬇ Daten als CSV</button></div>'
     + '<p class="ft-klein">Deine Trainingsdaten liegen nur auf diesem Gerät. Wichtig: Beim Löschen der App vom Home-Bildschirm sind sie weg – darum regelmäßig über „💾 Sichern“ in iCloud Drive ablegen.</p></div>';
   $('fiLos').addEventListener('click', fiTraining);
+  if (typeof fiPlanVerdrahten === 'function') fiPlanVerdrahten();
   $('fiInhalt').querySelectorAll('[data-uebung]').forEach((b) => b.addEventListener('click', () => fiDetail(b.dataset.uebung)));
   $('fiInhalt').querySelectorAll('[data-einheit]').forEach((b) => b.addEventListener('click', () => fiEinheitZeigen(b.dataset.einheit)));
   $('fiExport').addEventListener('click', fiExport);
@@ -145,6 +147,7 @@ function fiTraining() {
   if (!s.aktiv) { s.aktiv = { id: 'e' + Date.now().toString(36), start: Date.now(), eintraege: [] }; fiSpeichern(s); }
   const zuletzt = s.aktiv.eintraege.length ? s.aktiv.eintraege[s.aktiv.eintraege.length - 1].u : null;
   fi = { uebung: zuletzt, pauseEnde: 0 };
+  if (!zuletzt && s.aktiv.plan && typeof fiPlanFortschritt === 'function') { const f = fiPlanFortschritt(s); if (f && f.liste.length) fi.uebung = (f.liste.find((x) => x.fertig < x.saetze) || f.liste[0]).u; }
   fiWachAn();
   fiTrainingZeichnen();
 }
@@ -155,7 +158,8 @@ function fiTrainingZeichnen() {
   const u = fi.uebung ? fiUebung(fi.uebung, s) : null;
   $('fiInhalt').innerHTML = '<div class="fi-training">'
     + '<div class="fi-kopf"><span id="fiDauer"></span><span>' + a.eintraege.length + ' Einträge</span></div>'
-    + '<div class="fi-chips">' + benutzt.map((id) => '<button type="button" data-wahl="' + id + '" class="fi-chip-icon' + (id === fi.uebung ? ' an' : '') + '">' + fiIcon(fiInfo(fiUebung(id, s))) + fiEsc(fiUebung(id, s).name) + '</button>').join('') + '<button type="button" class="fi-plus" id="fiNeueUebung">＋ Übung</button></div>'
+    + (typeof fiPlanLeiste === 'function' ? fiPlanLeiste(s) : '')
+    + '<div class="fi-chips' + (s.aktiv.plan ? ' fi-chips-klein' : '') + '">' + benutzt.filter((id) => !(s.aktiv.plan && fiPlanZiel(fiUebung(id, s), s))).map((id) => '<button type="button" data-wahl="' + id + '" class="fi-chip-icon' + (id === fi.uebung ? ' an' : '') + '">' + fiIcon(fiInfo(fiUebung(id, s))) + fiEsc(fiUebung(id, s).name) + '</button>').join('') + '<button type="button" class="fi-plus" id="fiNeueUebung">＋ Übung</button></div>'
     + (u ? fiEingabe(u, s) : '<p class="fi-leer">Wähle oben eine Übung oder tippe auf „＋ Übung“.</p>')
     + '<div class="fi-pause" id="fiPause" hidden></div>'
     + '<button type="button" class="btn secondary fi-ende" id="fiEnde">🏁 Training beenden</button></div>';
@@ -177,20 +181,25 @@ function fiSteigerung(u, s) {
   const info = fiInfo(u); if (u.art !== 'kraft' || !info || !info.schritt || s.aktiv.eintraege.some((x) => x.u === u.id)) return null;
   const v = fiVerlauf(u.id, s); if (!v.length) return null;
   const l = v[v.length - 1].l, top = Math.max(...l.map((x) => x.kg || 0)); if (!top) return null;
-  const oben = l.filter((x) => x.kg === top), ziel = oben[0].wdh;
+  const oben = l.filter((x) => x.kg === top), pz = typeof fiPlanZiel === 'function' ? fiPlanZiel(u, s) : null;
+  if (pz) {   // Plan: alle Sätze am oberen Ende des Bereichs → mehr Gewicht, wieder unten im Bereich anfangen
+    if (oben.length < Math.min(2, pz.saetze) || oben.some((x) => x.wdh < pz.max)) return null;
+    return { kg: top + info.schritt, wdh: pz.min, alt: top, saetze: oben.length, ziel: pz.max };
+  }
+  const ziel = oben[0].wdh;
   if (oben.length < 2 || ziel < 8 || oben.some((x) => x.wdh < ziel)) return null;
-  return { kg: top + info.schritt, wdh: ziel, alt: top, saetze: oben.length };
+  return { kg: top + info.schritt, wdh: ziel, alt: top, saetze: oben.length, ziel };
 }
 function fiEingabe(u, s) {
-  const st = fiSteigerung(u, s), v = st ? { kg: st.kg, wdh: st.wdh } : fiVorschlag(u, s), heute = s.aktiv.eintraege.filter((x) => x.u === u.id), hist = fiVerlauf(u.id, s), vorher = hist.length ? hist[hist.length - 1] : null;
+  const pz0 = typeof fiPlanZiel === 'function' ? fiPlanZiel(u, s) : null, st = fiSteigerung(u, s), v0 = st ? { kg: st.kg, wdh: st.wdh } : fiVorschlag(u, s), v = pz0 && !st && !s.aktiv.eintraege.some((x) => x.u === u.id) && v0.wdh != null && (v0.wdh < pz0.min || v0.wdh > pz0.max) ? { ...v0, wdh: pz0.min } : v0, heute = s.aktiv.eintraege.filter((x) => x.u === u.id), hist = fiVerlauf(u.id, s), vorher = hist.length ? hist[hist.length - 1] : null;
   const letztes = vorher ? 'Letztes Mal (' + fiDatum(vorher.t) + '): ' + (u.art === 'ausdauer' ? vorher.l.map((x) => fiZahl(x.km, 2) + ' km in ' + fiZeit(x.sek)).join(', ') : vorher.l.map((x) => (x.kg ? fiZahl(x.kg) + '×' : '') + x.wdh).join(' · ')) : 'Zum ersten Mal – viel Erfolg!';
   const stepper = (id, wert, label, schritt) => '<div class="fi-stepper"><span>' + label + '</span><div><button type="button" data-schritt="' + id + '" data-d="-' + schritt + '" aria-label="' + label + ' weniger">−</button><input id="' + id + '" inputmode="decimal" value="' + wert + '" aria-label="' + label + '"><button type="button" data-schritt="' + id + '" data-d="' + schritt + '" aria-label="' + label + ' mehr">+</button></div></div>';
   const felder = u.art === 'ausdauer'
     ? stepper('fiKm', fiZahl(v.km, 2), 'Strecke (km)', 0.5) + stepper('fiMin', fiZeit(v.sek), 'Dauer (min:s)', 60) + '<p class="fi-tempo" id="fiTempo"></p>'
     : stepper('fiKg', fiZahl(v.kg || 0, 2), u.kg0 ? 'Zusatzgewicht (kg)' : 'Gewicht (kg)', 2.5) + stepper('fiWdh', v.wdh || 10, 'Wiederholungen', 1);
   const info = fiInfo(u);
-  return '<div class="fi-eingabe"><div class="fi-ue-kopf">' + fiIcon(info) + '<div><h3>' + fiEsc(u.name) + '</h3><small>' + fiMuskelText(info) + '</small></div></div><p class="fi-letztes">' + letztes + '</p>'
-    + (st ? '<p class="fi-steigern" id="fiSteigern">📈 Letztes Mal ' + st.saetze + '× ' + st.wdh + ' mit ' + fiZahl(st.alt) + ' kg geschafft – heute <b>' + fiZahl(st.kg) + ' kg</b>? <button type="button" id="fiWieLetztes">lieber ' + fiZahl(st.alt) + ' kg</button></p>' : '')
+  return '<div class="fi-eingabe"><div class="fi-ue-kopf">' + fiIcon(info) + '<div><h3>' + fiEsc(u.name) + '</h3><small>' + fiMuskelText(info) + '</small>' + (typeof fiPlanZiel === 'function' && fiPlanZiel(u, s) ? '<em class="fi-ziel">🎯 Ziel ' + fiZielText(fiPlanZiel(u, s)) + ' Wdh. · Satz ' + Math.min(heute.length + 1, fiPlanZiel(u, s).saetze) + '/' + fiPlanZiel(u, s).saetze + '</em>' : '') + '</div></div><p class="fi-letztes">' + letztes + '</p>'
+    + (st ? '<p class="fi-steigern" id="fiSteigern">📈 Letztes Mal ' + st.saetze + '× ' + st.ziel + ' mit ' + fiZahl(st.alt) + ' kg geschafft – heute <b>' + fiZahl(st.kg) + ' kg</b>? <button type="button" id="fiWieLetztes">lieber ' + fiZahl(st.alt) + ' kg</button></p>' : '')
     + felder
     + '<button type="button" class="fi-satz" id="fiSatz">✓ ' + (u.art === 'ausdauer' ? 'Speichern' : 'Satz ' + (heute.length + 1) + ' speichern') + '</button>'
     + (info && info.tipps && info.tipps.length ? '<details class="fi-tipps"><summary>💡 Technik-Tipps</summary><ul>' + info.tipps.map((t) => '<li>' + t + '</li>').join('') + '</ul></details>' : '')
@@ -241,7 +250,10 @@ function fiSatzSpeichern(u) {
   const neu = fiNeueBestwerte(x, s); if (neu.length) x.pr = true;
   fiSpeichern(s);
   if (u.art === 'kraft') fi.pauseEnde = Date.now() + s.pause * 1000;
+  const weiter = typeof fiPlanWeiter === 'function' ? fiPlanWeiter(s) : null;
   fiTrainingZeichnen();
+  if (weiter === 'fertig' && !neu.length) fiHinweis('✅ Alle Plan-Übungen geschafft – „Training beenden“ nicht vergessen!', true);
+  else if (weiter && !neu.length) fiHinweis('➡️ Weiter mit ' + weiter);
   if (neu.length) { fiHinweis('🏆 ' + neu.join(' · '), true); if (typeof konfetti === 'function') konfetti(25, ['🏆', '💪', '✨']); }
 }
 function fiHinweis(text, gut) {
@@ -300,7 +312,9 @@ function fiUebungWaehlen() {
 function fiBeenden() {
   const s = fiStore(), a = s.aktiv; if (!a) return;
   if (!a.eintraege.length) { if (confirm('Noch nichts eingetragen – Training verwerfen?')) { s.aktiv = null; fiSpeichern(s); fiStart(); } return; }
-  a.ende = Date.now(); s.einheiten.push(a); s.aktiv = null; fiSpeichern(s);
+  a.ende = Date.now(); s.einheiten.push(a); s.aktiv = null;
+  if (a.plan && s.planAktiv && s.planAktiv.id === a.plan.id && typeof fiPlan === 'function') { const p = fiPlan(a.plan.id, s); if (p) s.planAktiv.naechster = (a.plan.tag + 1) % p.tage.length; }
+  fiSpeichern(s);
   fiTimerAus(); fiWachAus();
   const saetze = a.eintraege.filter((x) => x.wdh != null), volumen = saetze.reduce((v, x) => v + x.kg * x.wdh, 0), km = a.eintraege.reduce((v, x) => v + (x.km || 0), 0), prs = a.eintraege.filter((x) => x.pr).length;
   const info = (saetze.length ? saetze.length + ' Sätze' : '') + (km ? (saetze.length ? ' · ' : '') + fiZahl(km, 1) + ' km' : '');

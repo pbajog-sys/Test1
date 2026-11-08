@@ -747,3 +747,11 @@ Knopf „💾 Jetzt in … sichern“ öffnet das Teilen-Menü. Der Hinweis (dir
 seit der letzten Sicherung etwas geändert hat (Fingerabdruck der Daten) und diese älter als 2 Tage ist bzw. fehlt.
 Nach einem Fitness-Training: „💾 Training gleich sichern“. „🔄 App aktualisieren“ holt Updates ohne Löschen.
 Kein Server, kein Konto. Test: `tests/sicherung.test.js` (sichern → alles löschen wie iOS → einspielen → bitgenau zurück).
+**Trainingspläne** (`fitness-plaene.js`, wie „Routinen“ bei Hevy/Strong): Vorlagen Ganzkörper (A/B), Oberkörper/Unterkörper,
+Push/Pull/Beine, Zuhause ohne Geräte – je Übung „Sätze × Wiederholungsbereich“. Karte „Nächstes Training: …“ auf der
+Übersicht, geführtes Training (Fortschrittsbalken, Satz x/y, Übung erledigt → automatisch zur nächsten), Steigerung nach
+Bereich (alle Sätze am oberen Ende → + Gewicht, wieder unten im Bereich starten), nach dem Training rückt der Plan-Tag
+weiter. Eigene Pläne im Editor (Tage, Übungen, Sätze, Bereich), Vorlagen als Kopie bearbeitbar. **Teilen per Code**
+„SKPLAN1:…“ (Base64-JSON, ohne Server; eigene Übungen reisen mit Name/Muskel mit, Code darf mitten in einer Nachricht
+stehen; ungültige Codes werden abgelehnt). Apple Health: von Web-Apps aus nicht erreichbar (nur App-Store-Apps).
+Test: `tests/fitness-plan.test.js`.
