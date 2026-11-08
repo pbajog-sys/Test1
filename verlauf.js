@@ -13,6 +13,7 @@ const VERLAUF_SPIELE = {
   glas: { name: 'Verdopplung im Glas', emoji: '🦠', farbe: '#4ade80' },
   beat: { name: 'Beat-Bahnen', emoji: '🎸', farbe: '#c084fc' },
   wunder: { name: 'Wundermuster', emoji: '🌀', farbe: '#67e8f9' },
+  fitness: { name: 'Fitness', emoji: '💪', farbe: '#fb923c' },
   takt: { name: 'Takt-Gefühl', emoji: '⏱️', farbe: '#ff8a3d' },
   punkte: { name: 'Punktwolke', emoji: '📈', farbe: '#fde047' },
   funktion: { name: 'Funktions-Detektiv', emoji: '🕵️', farbe: '#a3e635' },

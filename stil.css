@@ -89,7 +89,7 @@ header h1 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes einblenden { from { opacity: 0; } to { opacity: 1; } }
 /* Die Spiele haben eine eigene Vollbild-Bühne (position: fixed). Eine Animation mit transform auf dem
    Bildschirm würde Safari dazu bringen, die Bühne nur innerhalb des Bildschirms zu zeichnen („Fenster im Fenster“). */
-#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-funktion.active, #screen-zufall.active, #screen-zahlen.active, #screen-tierleben.active, #screen-piranha.active, #screen-slo.active, #screen-sk.active, #screen-dopamin.active, #screen-songs.active, #screen-klassiker.active, #screen-falten.active, #screen-zoom.active, #screen-glas.active, #screen-beat.active, #screen-wunder.active, #screen-studio.active, #screen-stimmen.active, #screen-labor.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-riff.active, #screen-krimi.active { animation: none; }
+#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-funktion.active, #screen-zufall.active, #screen-zahlen.active, #screen-tierleben.active, #screen-piranha.active, #screen-slo.active, #screen-sk.active, #screen-dopamin.active, #screen-songs.active, #screen-klassiker.active, #screen-falten.active, #screen-zoom.active, #screen-glas.active, #screen-beat.active, #screen-wunder.active, #screen-studio.active, #screen-stimmen.active, #screen-fitness.active, #screen-labor.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-riff.active, #screen-krimi.active { animation: none; }
 @keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
@@ -3778,3 +3778,48 @@ a.bb-datei { text-decoration: none; }
 .sg-saiten[style*="--n"] { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
 .sg-edit { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 6px; margin-top: -6px; } .sg-edit span { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
 .sg-edit button { border: 0; border-radius: 8px; padding: 8px 0; background: rgba(103,232,249,.15); color: #67e8f9; font: inherit; font-size: .8rem; cursor: pointer; touch-action: manipulation; }
+
+/* ---------- 💪 Fitness ---------- */
+.hub-fitness { background: linear-gradient(#1c0d07, #1c0d07) padding-box, linear-gradient(90deg, #fb923c, #f43f5e, #fde047, #fb923c) border-box; background-size: 100% 100%, 300% 100%; }
+.hub-fitness .hg-titel { background: linear-gradient(90deg, #fdba74, #fda4af); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hg-av-fitness { --ring: conic-gradient(#fb923c, #f43f5e, #fde047, #fb923c); } .hg-av-fitness > .hg-in { background: #170a05; display: grid; place-items: center; }
+.fi-mini-av { font-size: 1.9rem; display: inline-block; animation: fiPump 1.6s ease-in-out infinite; } @keyframes fiPump { 50% { transform: scale(1.15) rotate(-8deg); } }
+.fi-buehne { background: radial-gradient(90% 60% at 50% 20%, #3b1a0e, #120a08 70%); }
+.fi-inhalt { display: grid; gap: 12px; }
+.fi-start, .fi-training, .fi-detail { display: grid; gap: 12px; }
+.fi-los { display: grid; gap: 4px; padding: 20px; border: 0; border-radius: 22px; background: linear-gradient(90deg, #fb923c, #f43f5e); color: #fff; font: inherit; font-size: 1.3rem; font-weight: 900; cursor: pointer; box-shadow: 0 10px 30px rgba(244,63,94,.3); } .fi-los small { font-size: .8rem; font-weight: 600; opacity: .9; }
+.fi-kacheln { display: grid; grid-template-columns: repeat(auto-fit, minmax(90px, 1fr)); gap: 8px; } .fi-kacheln > div { display: grid; justify-items: center; padding: 12px 6px; border-radius: 16px; background: rgba(255,255,255,.06); }
+.fi-kacheln b { font-size: 1.5rem; font-variant-numeric: tabular-nums; } .fi-kacheln span { font-size: .72rem; color: #c4b5a5; text-align: center; }
+.fi-h { margin: 6px 0 0; font-size: 1rem; } .fi-leer { color: #c4b5a5; margin: 0; }
+.fi-liste { display: grid; gap: 6px; }
+.fi-zeile { display: grid; grid-template-columns: 34px 1fr auto; align-items: center; gap: 10px; padding: 12px; border: 0; border-radius: 14px; background: rgba(255,255,255,.06); color: inherit; font: inherit; text-align: left; cursor: pointer; }
+.fi-ze { font-size: 1.4rem; text-align: center; } .fi-zt { display: grid; min-width: 0; } .fi-zt b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .fi-zt small { color: #c4b5a5; font-size: .75rem; }
+.fi-mini { width: 60px; height: 24px; }
+.fi-unten .btn.secondary, .fi-detail .btn.secondary, .fi-ende { width: 100%; background: rgba(255,255,255,.1); color: inherit; box-shadow: none; }
+.fi-kopf { display: flex; justify-content: space-between; color: #fdba74; font-weight: 800; font-variant-numeric: tabular-nums; }
+.fi-chips { display: flex; flex-wrap: wrap; gap: 6px; } .fi-chips button { border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 8px 12px; background: rgba(255,255,255,.05); color: inherit; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }
+.fi-chips button.an { background: #fb923c; border-color: #fb923c; color: #2a1300; } .fi-chips .fi-plus { border-style: dashed; color: #fdba74; }
+.fi-eingabe { display: grid; gap: 10px; padding: 14px; border-radius: 20px; background: rgba(255,255,255,.05); box-shadow: inset 0 0 0 1px rgba(251,146,60,.3); }
+.fi-eingabe h3 { margin: 0; font-size: 1.3rem; } .fi-letztes { margin: 0; font-size: .82rem; color: #c4b5a5; }
+.fi-stepper { display: grid; gap: 4px; } .fi-stepper > span { font-size: .8rem; color: #c4b5a5; font-weight: 700; }
+.fi-stepper > div { display: grid; grid-template-columns: 64px 1fr 64px; gap: 8px; }
+.fi-stepper button { height: 60px; border: 0; border-radius: 16px; background: rgba(255,255,255,.1); color: #fff; font: inherit; font-size: 1.8rem; font-weight: 800; cursor: pointer; touch-action: manipulation; -webkit-user-select: none; user-select: none; } .fi-stepper button:active { background: rgba(251,146,60,.4); }
+.fi-stepper input { min-width: 0; height: 60px; border: 0; border-radius: 16px; background: rgba(0,0,0,.3); color: #fff; font: inherit; font-size: 2rem; font-weight: 900; text-align: center; font-variant-numeric: tabular-nums; }
+.fi-tempo { margin: 0; text-align: center; color: #fde047; font-weight: 800; min-height: 1.3em; }
+.fi-satz { height: 64px; border: 0; border-radius: 18px; background: linear-gradient(90deg, #4ade80, #22c55e); color: #052e16; font: inherit; font-size: 1.3rem; font-weight: 900; cursor: pointer; }
+.fi-satz:active { transform: scale(.98); }
+.fi-heute { display: flex; flex-wrap: wrap; gap: 6px; } .fi-heute span { display: inline-flex; align-items: center; gap: 4px; padding: 6px 4px 6px 10px; border-radius: 999px; background: rgba(74,222,128,.15); font-size: .85rem; font-weight: 700; font-variant-numeric: tabular-nums; }
+.fi-heute button { border: 0; background: none; color: #fca5a5; font-size: 1.1rem; cursor: pointer; padding: 0 6px; }
+.fi-pause { position: relative; overflow: hidden; display: grid; gap: 8px; justify-items: center; padding: 14px; border-radius: 18px; background: rgba(56,189,248,.12); box-shadow: inset 0 0 0 1px rgba(56,189,248,.4); } .fi-pause[hidden] { display: none; }
+.fi-pause::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: calc(var(--fort, 0) * 100%); background: rgba(56,189,248,.15); transition: width .5s linear; }
+.fi-pause b { position: relative; font-size: 1.6rem; font-variant-numeric: tabular-nums; } .fi-pause span { position: relative; display: flex; gap: 6px; }
+.fi-pause button { border: 0; border-radius: 10px; padding: 8px 12px; background: rgba(255,255,255,.12); color: #fff; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; }
+.fi-weiter { color: #4ade80; }
+.fi-toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom) + 24px); z-index: 60; transform: translateX(-50%); max-width: 92vw; padding: 12px 18px; border-radius: 16px; background: #3f1d1d; color: #fff; font-weight: 800; box-shadow: 0 10px 30px rgba(0,0,0,.5); animation: aufploppen .3s var(--ease-spring); }
+.fi-toast.gut { background: linear-gradient(90deg, #ca8a04, #ea580c); }
+.fi-gruppe { margin: 10px 0 6px; font-size: .85rem; color: #c4b5a5; }
+.fi-eigen { display: grid; grid-template-columns: 1fr auto; gap: 6px; } .fi-eigen input, .fi-eigen select { padding: 10px; border-radius: 10px; border: 1px solid rgba(128,128,128,.4); font: inherit; min-width: 0; } .fi-eigen button { grid-column: 1 / -1; }
+.fi-karte .fi-logo { font-size: 3rem; } .fi-zusammen { font-size: .85rem; } .fi-los-btn { background: linear-gradient(90deg, #fb923c, #f43f5e); color: #fff; }
+.fi-was { margin: 0; font-size: .82rem; color: #c4b5a5; } .fi-kurve { width: 100%; display: block; border-radius: 16px; background: rgba(0,0,0,.25); }
+.fi-tabelle { display: grid; gap: 4px; } .fi-tabelle > div { display: grid; grid-template-columns: 80px 1fr; gap: 8px; padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,.04); font-size: .85rem; font-variant-numeric: tabular-nums; } .fi-tabelle b { color: #fdba74; }
+@media (prefers-reduced-motion: reduce) { .fi-mini-av { animation: none; } }

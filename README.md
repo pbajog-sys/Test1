@@ -711,3 +711,17 @@ halbtonweise verstellbar (wird je Instrument gespeichert; ungültige Werte falle
 geht automatisch bis unter die tiefste Saite (5-Saiter-H = 30,9 Hz). Speicher `walquiz.stimmen.v1`
 = { inst, kammerton, stimmung: { inst: id }, eigene: { inst: [MIDI…] } }. Test: `tests/stimmen.test.js`
 (simuliertes Mikrofon mit gezupftem A2 −20 Cent und E4).
+
+## 💪 Fitness
+`fitness.js` – Krafttraining und Ausdauer schnell **während** des Trainings eintragen (Kategorie „Alltag & Fitness“):
+- 24 Übungen (Brust, Rücken, Beine, Schultern, Arme, Bauch; Laufen, Rad, Schwimmen, Rudergerät, Gehen, Crosstrainer)
+  plus eigene Übungen (mit/ohne Gewicht, Ausdauer).
+- Große −/＋-Knöpfe (gedrückt halten = schnell), vorbelegt mit dem letzten Satz (heute, sonst vom letzten Mal),
+  „Letztes Mal“-Zeile, Sätze löschen. Ausdauer: Strecke + Dauer → Tempo (min/km) und km/h.
+- Pausen-Timer nach jedem Kraftsatz (90 s, ±15 s, überspringen; Piep am Ende), rechnet mit Zeitstempeln. Bildschirm
+  bleibt an (Wake Lock, wo verfügbar). Ein laufendes Training übersteht Neuladen/Schließen.
+- Bestwerte: schwerstes Gewicht, geschätztes 1RM (Epley), meiste Wiederholungen ohne Gewicht, längste Strecke,
+  schnellstes Tempo (ab 1 km) – mit 🏆 und Konfetti; das erste Mal zählt nicht als Rekord.
+- Übersicht: Trainings diese Woche, Wochen-Serie, Fortschritt je Übung (Mini-Kurve), letzte Trainings (antippen =
+  Details, löschen). Detail: Kurve (1RM bzw. Tempo) und Tabelle aller Trainings. CSV-Export (Semikolon, deutsche Zahlen).
+- Speicher `walquiz.fitness.v1` (je Profil), Verlauf-Eintrag „fitness“ ohne Punktewertung. Test: `tests/fitness.test.js`.
