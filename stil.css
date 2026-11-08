@@ -3772,3 +3772,9 @@ a.bb-datei { text-decoration: none; }
 .sg-kammer { display: flex; align-items: center; justify-content: center; gap: 8px; color: #a5b4c8; font-size: .85rem; } .sg-kammer b { color: #fff; min-width: 4.5em; text-align: center; }
 .sg-kammer button { width: 34px; height: 34px; border: 0; border-radius: 10px; background: rgba(255,255,255,.1); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
 @media (prefers-reduced-motion: reduce) { .sg-mini i { animation: none; } }
+.sg-stimmung { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; } .sg-stimmung label { flex: 1; display: flex; gap: 8px; align-items: center; font-size: .85rem; color: #a5b4c8; min-width: 0; }
+.sg-stimmung select { flex: 1; min-width: 0; background: rgba(255,255,255,.08); color: #fff; border: 1px solid rgba(255,255,255,.2); border-radius: 10px; padding: 9px 8px; font: inherit; font-size: .9rem; } .sg-stimmung select option { color: #000; }
+.sg-stimmung button { border: 1px solid rgba(255,255,255,.2); border-radius: 10px; padding: 9px 12px; background: rgba(255,255,255,.06); color: inherit; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; } .sg-stimmung button.an { background: #67e8f9; color: #082f49; border-color: #67e8f9; }
+.sg-saiten[style*="--n"] { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); }
+.sg-edit { display: grid; grid-template-columns: repeat(var(--n), minmax(0, 1fr)); gap: 6px; margin-top: -6px; } .sg-edit span { display: grid; grid-template-columns: 1fr 1fr; gap: 3px; }
+.sg-edit button { border: 0; border-radius: 8px; padding: 8px 0; background: rgba(103,232,249,.15); color: #67e8f9; font: inherit; font-size: .8rem; cursor: pointer; touch-action: manipulation; }

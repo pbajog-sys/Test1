@@ -79,6 +79,40 @@ function wav() {
   ck('Referenzton: Mikrofon pausiert, Ton läuft', await p.evaluate(() => !sg.an && !sg.stream && ftAk && ftAk.c.state === 'running') && /🔊/.test(await p.textContent('#sgHz')));
   await p.click('#sgZurueck'); await p.waitForTimeout(500);
   ck('Zurück zum Start, Hub zeigt letzte Wahl', await p.evaluate(() => $('screen-hub').classList.contains('active')) && /Chromatisch · a′ = 442 Hz/.test(await p.textContent('#hubStimmenBest')), await p.textContent('#hubStimmenBest'));
+
+  // ---------- Stimmungen ----------
+  const sti = await p.evaluate(() => {
+    const leer = { stimmung: {}, eigene: {} };
+    const z = (inst, id) => { const a = sgAktuell(inst, { stimmung: { [inst]: id }, eigene: {} }); return a.namen.join(' ') + '|' + a.saiten.map((m) => sgName(m)).join(' '); };
+    const x = new Float32Array(4096), f = 30.87; for (let i = 0; i < x.length; i++) { const t = i / 24000; x[i] = 0.3 * (Math.sin(2 * Math.PI * f * t) + 0.7 * Math.sin(4 * Math.PI * f * t)); }
+    const r = sgYin(x, 24000, 24, 1600);
+    return {
+      std: z('gitarre', 'standard'), dropd: z('gitarre', 'dropd'), dadgad: z('gitarre', 'dadgad'), lowg: z('ukulele', 'lowg'), fuenf: z('bass', 'fuenf'),
+      kaputt: sgAktuell('gitarre', { stimmung: { gitarre: 'eigen' }, eigene: { gitarre: [1, 2] } }).id, chrom: sgAktuell('chromatisch', leer),
+      tiefH: r ? Math.round(1200 * Math.log2(r.f / f) * 10) / 10 : null,
+    };
+  });
+  ck('Stimmungen: Standard, Drop D, DADGAD, Ukulele Low G, 5-Saiter-Bass', sti.std === 'E A D G H e|E2 A2 D3 G3 H3 E4' && sti.dropd === 'D A D G H e|D2 A2 D3 G3 H3 E4' && sti.dadgad === 'D A D G A d|D2 A2 D3 G3 A3 D4' && sti.lowg === 'G C E A|G3 C4 E4 A4' && sti.fuenf === 'H E A D G|H0 E1 A1 D2 G2', [sti.dropd, sti.fuenf].join(' / '));
+  ck('Kaputte eigene Stimmung → Standard; chromatisch ohne Saiten', sti.kaputt === 'standard' && sti.chrom === null);
+  ck('Tiefes H des 5-Saiters (30,9 Hz) wird erkannt', sti.tiefH !== null && Math.abs(sti.tiefH) <= 2, String(sti.tiefH));
+  await p.click('#hubStimmen'); await p.waitForTimeout(800);
+  await p.click('[data-inst="gitarre"]'); await p.waitForTimeout(200);
+  await p.selectOption('#sgStimmung', 'dropd'); await p.waitForTimeout(200);
+  ck('Drop D gewählt: tiefe Saite D2', (await p.textContent('#sgSaiten [data-saite="0"]')) === 'DD2' && await p.evaluate(() => loadJson('walquiz.stimmen.v1').stimmung.gitarre === 'dropd'));
+  await p.click('[data-a4="-1"]'); await p.click('[data-a4="-1"]');   // Kammerton zurück auf 440
+  await p.click('#sgStart'); await p.waitForTimeout(300);
+  await p.waitForFunction(() => sg.anzeige && sg.anzeige.ziel.saite === 1, null, { timeout: 8000 }); await p.waitForTimeout(700);
+  await p.waitForFunction(() => sg.anzeige && sg.anzeige.ziel.saite === 1, null, { timeout: 8000 });
+  ck('Drop D: A-Saite wird weiter erkannt (−20 Cent)', await p.evaluate(() => Math.abs(sg.anzeige.cent + 20) <= 4), String(await p.evaluate(() => sg.anzeige.cent)));
+  await p.click('#sgStart');
+  await bild('sg-dropd');
+  await p.click('#sgAnpassen'); await p.click('[data-tief="5"]'); await p.waitForTimeout(200);
+  ck('Anpassen: hohe Saite einen Halbton tiefer → „Eigene“', await p.evaluate(() => { const s = loadJson('walquiz.stimmen.v1'); return s.stimmung.gitarre === 'eigen' && s.eigene.gitarre.join() === '38,45,50,55,59,63'; }) && (await p.textContent('#sgSaiten [data-saite="5"]')) === 'DisDis4' && /Eigene · D A D G H Dis/.test(await p.textContent('#sgStimmung')));
+  await bild('sg-eigen');
+  await p.reload(); await p.waitForTimeout(900);
+  ck('Nach Neustart: Hub zeigt Gitarre (Eigene)', /Gitarre \(Eigene\) · a′ = 440 Hz/.test(await p.textContent('#hubStimmenBest')), await p.textContent('#hubStimmenBest'));
+  await p.click('#hubStimmen'); await p.waitForTimeout(700);
+  ck('… und die eigene Stimmung ist wieder da', (await p.inputValue('#sgStimmung')) === 'eigen' && (await p.textContent('#sgSaiten [data-saite="5"]')) === 'DisDis4');
   ck('Keine Seitenfehler', !fehler.length, fehler.join(' | '));
   console.log(checks.filter((c) => c[1]).length + ' bestanden, ' + checks.filter((c) => !c[1]).length + ' fehlgeschlagen');
   await b.close(); process.exit(checks.every((c) => c[1]) ? 0 : 1);
