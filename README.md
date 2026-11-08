@@ -733,3 +733,13 @@ mitarbeitende heller), Muskeltext und 2–3 Technik-Tipps (aufklappbar; allgemei
 Filter nach Muskelgruppe; eigene Übungen mit optionalem Hauptmuskel. **Steigerungs-Vorschlag** (doppelte Progression):
 letztes Mal ≥ 2 Sätze mit dem schwersten Gewicht und gleicher Wdh.-Zahl (≥ 8) → heute + Gewichtssprung der Übung
 (1–5 kg), vorbelegt, mit „lieber wie letztes Mal“.
+
+## 💾 Sicherung
+`sicherung.js` – iOS löscht beim Entfernen der Home-Bildschirm-App alle ihre Daten. Darum: **alle** Daten (jeder
+`walquiz.*`-Schlüssel: Spielstände aller Profile, Fitness, Studio, Stimmgerät, Favoriten …) und auf Wunsch die eigenen
+Songs (IndexedDB, Base64) als eine JSON-Datei. Auf dem iPhone über das Teilen-Menü → „In Dateien sichern“ → iCloud Drive,
+sonst als Download. Einspielen über 💾 im Hub oder – nach einer Neuinstallation – direkt auf dem ersten Bildschirm
+„Wie heißt du?“ („Ich habe eine Sicherung – einspielen“). Prüft die Datei (App-Kennung, Format, nur `walquiz.*`),
+ersetzt dann die Daten und merkt sich den alten Stand für „↺ Rückgängig“. Erinnerung im Hub, wenn es Daten gibt und die
+letzte Sicherung fehlt oder älter als 7 Tage ist („×“ = 3 Tage Ruhe). Zusätzlich `navigator.storage.persist()`.
+Kein Server, kein Konto. Test: `tests/sicherung.test.js` (sichern → alles löschen wie iOS → einspielen → bitgenau zurück).

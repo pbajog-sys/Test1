@@ -202,6 +202,7 @@ function renderHub() {
   if ($('hubStudioBest')) { const s = loadJson('walquiz.studio.v1'); const n = s.projekte ? Object.keys(s.projekte).length : 0; $('hubStudioBest').textContent = n ? n + (n === 1 ? ' Projekt' : ' Projekte') : 'Leg los – mit dem Binär-Beat als Start'; }
   if (typeof sgHubText === 'function') sgHubText();
   if (typeof fiHubText === 'function') fiHubText();
+  if (typeof sbHinweis === 'function') sbHinweis();
   if ($('hubWunderBest')) { const w = loadJson('walquiz.wunder.v1'); const n = ['ameise', 'binaer', 'drache', 'collatz'].filter((k) => w[k] && w[k].runden).length; $('hubWunderBest').textContent = n ? n + ' von 4 Mustern entdeckt' : 'Noch nicht gespielt'; }
   if ($('hubGlasBest')) { const g = loadJson('walquiz.glas.v1'); $('hubGlasBest').textContent = g.runden ? 'Beste Runde: ' + (g.best || 0) + ' von 3' : 'Noch nicht gespielt'; }
   if ($('hubFaltenBest')) { const f = loadJson('walquiz.falten.v1'); $('hubFaltenBest').textContent = f.runden ? 'Beste Schätzung: ' + f.best.abw + ' daneben' : 'Noch nicht gespielt'; }

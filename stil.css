@@ -3850,3 +3850,13 @@ a.bb-datei { text-decoration: none; }
 .fi-detail-kopf .fi-koerper { height: 140px; } .fi-muskeln { margin: 0; } .fi-muskeln small { color: #c4b5a5; }
 .sk-dlg .fi-rumpf { fill: rgba(128,128,128,.35); } .sk-dlg .fi-muskel:not(.an) { fill: rgba(128,128,128,.45); }
 .fi-icon { overflow: hidden; } .fi-icon .fi-koerper { width: 100%; height: 100%; }
+
+/* ---------- 💾 Sicherung ---------- */
+.sb-hinweis { display: grid; grid-template-columns: auto 1fr auto auto; gap: 10px; align-items: center; margin-bottom: 12px; padding: 12px 12px 12px 14px; border-radius: 18px; background: linear-gradient(90deg, rgba(56,189,248,.18), rgba(167,139,250,.14)); box-shadow: inset 0 0 0 1px rgba(56,189,248,.45); }
+.sb-hi-icon { font-size: 1.6rem; } .sb-hinweis div { display: grid; gap: 2px; min-width: 0; } .sb-hinweis small { font-size: .78rem; opacity: .85; line-height: 1.35; }
+.sb-hi-los { border: 0; border-radius: 12px; padding: 10px 14px; background: #38bdf8; color: #082f49; font: inherit; font-weight: 800; cursor: pointer; }
+.sb-hi-zu { border: 0; background: none; color: inherit; opacity: .6; font-size: 1.3rem; cursor: pointer; padding: 4px 6px; }
+.sb-warn { margin: 0 0 8px; padding: 10px 12px; border-radius: 12px; background: rgba(251,146,60,.14); font-size: .85rem; line-height: 1.45; }
+.sb-songs { display: flex; gap: 8px; align-items: center; margin: 4px 0 10px; font-size: .85rem; }
+.sb-los { width: 100%; } .sb-schritte { margin: 6px 0 10px !important; } .sb-einspielen { display: block; text-align: center; cursor: pointer; margin-bottom: 8px; }
+.fi-unten { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }

@@ -107,6 +107,7 @@ function zeigeForm(pr) {
   $('pwName').value = pwEntwurf.name;
   $('pwHinweis').textContent = '';
   $('pwAbbrechen').hidden = !p.liste.length;
+  if ($('pwSicherungNeu')) $('pwSicherungNeu').hidden = !!p.liste.length;   // erster Start (z. B. nach Neuinstallation): Sicherung einspielen
   $('pwLoeschen').hidden = !pr;
   $('pwAvatare').innerHTML = '';
   PROFIL_AVATARE.forEach((a) => {

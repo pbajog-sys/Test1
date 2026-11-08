@@ -99,12 +99,13 @@ function fiStart() {
     + '<p class="fi-tipp">💡 ' + fiTippDesTages() + '</p>'
     + (genutzt.length ? '<h3 class="fi-h">📈 Fortschritt</h3><div class="fi-liste">' + genutzt.map((id) => fiZeile(id, s)).join('') + '</div>' : '<p class="fi-leer">Noch keine Trainings. Starte dein erstes – die Werte vom letzten Mal stehen beim nächsten Training schon drin.</p>')
     + (letzte.length ? '<h3 class="fi-h">🗓️ Letzte Trainings</h3><div class="fi-liste">' + letzte.map((e) => '<button type="button" class="fi-zeile" data-einheit="' + e.id + '"><span class="fi-ze">🏋️</span><span class="fi-zt"><b>' + fiDatum(e.start, true) + ' · ' + fiDauer(e.ende - e.start) + '</b><small>' + fiEinheitText(e, s) + '</small></span></button>').join('') + '</div>' : '')
-    + '<div class="fi-unten"><button type="button" class="btn secondary" id="fiExport">⬇ Daten als CSV</button></div>'
-    + '<p class="ft-klein">Deine Trainingsdaten bleiben nur auf diesem Gerät, im aktuellen Profil.</p></div>';
+    + '<div class="fi-unten"><button type="button" class="btn secondary" id="fiSichern">💾 Sichern (iCloud)</button><button type="button" class="btn secondary" id="fiExport">⬇ Daten als CSV</button></div>'
+    + '<p class="ft-klein">Deine Trainingsdaten liegen nur auf diesem Gerät. Wichtig: Beim Löschen der App vom Home-Bildschirm sind sie weg – darum regelmäßig über „💾 Sichern“ in iCloud Drive ablegen.</p></div>';
   $('fiLos').addEventListener('click', fiTraining);
   $('fiInhalt').querySelectorAll('[data-uebung]').forEach((b) => b.addEventListener('click', () => fiDetail(b.dataset.uebung)));
   $('fiInhalt').querySelectorAll('[data-einheit]').forEach((b) => b.addEventListener('click', () => fiEinheitZeigen(b.dataset.einheit)));
   $('fiExport').addEventListener('click', fiExport);
+  $('fiSichern').addEventListener('click', () => { if (typeof sbDialog === 'function') sbDialog(); });
 }
 function fiWochenKarte(s, w0) {
   const m = fiMuskelMenge(s, w0), werte = {};
