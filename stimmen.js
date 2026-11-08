@@ -86,6 +86,7 @@ function sgOeffnen(inst) {
   sgAufbau();
 }
 function sgAufbau() {
+  const bue = document.querySelector('.sg-buehne'); if (bue && !bue.querySelector('.sg-blasen')) { const bl = document.createElement('div'); bl.className = 'sg-blasen'; bl.setAttribute('aria-hidden', 'true'); bl.innerHTML = '<i></i><i></i><i></i>'; bue.prepend(bl); }
   const I = sgAktuell(), st = sgStore(), liste = SG_STIMMUNGEN[sg.inst];
   $('sgInhalt').innerHTML = '<div class="sg-wahl">' + Object.entries(SG_INST).map(([k, v]) => '<button type="button" data-inst="' + k + '" class="' + (k === sg.inst ? 'an' : '') + '">' + v.emoji + ' ' + v.name + '</button>').join('') + '</div>'
     + '<div class="sg-anzeige"><canvas id="sgBild" class="sg-bild"></canvas><div class="sg-ton"><b id="sgNote">–</b><span id="sgHz">Tippe auf „Stimmen starten“</span></div></div>'
@@ -94,7 +95,8 @@ function sgAufbau() {
       + (sg.anpassen ? '<div class="sg-edit" style="--n:' + I.saiten.length + '">' + I.saiten.map((m, i) => '<span><button type="button" data-hoch="' + i + '" aria-label="Saite ' + (i + 1) + ' höher">▲</button><button type="button" data-tief="' + i + '" aria-label="Saite ' + (i + 1) + ' tiefer">▼</button></span>').join('') + '</div><p class="ft-klein sg-tipp">Jede Saite halbtonweise verstellen – wird als „Eigene“ Stimmung gespeichert.</p>' : '<p class="ft-klein sg-tipp">Saite antippen = nur diese Saite stimmen (nochmal tippen = automatisch).</p>')
     : '')
     + '<div class="sg-knoepfe"><button type="button" class="btn ft-los sg-los" id="sgStart">🎤 Stimmen starten</button><button type="button" class="btn secondary" id="sgRef">🔊 Ton</button></div>'
-    + '<div class="sg-kammer"><span>Kammerton a′</span><button type="button" data-a4="-1" aria-label="tiefer">−</button><b id="sgA4">' + sg.a4 + ' Hz</b><button type="button" data-a4="1" aria-label="höher">+</button></div>'
+    + '<div class="sg-kammer sg-glas"><span>Kammerton a′</span><button type="button" data-a4="-1" aria-label="tiefer">−</button><b id="sgA4">' + sg.a4 + ' Hz</b><button type="button" data-a4="1" aria-label="höher">+</button>'
+    + '<input type="range" class="sg-regler" id="sgA4Regler" min="430" max="450" step="1" value="' + sg.a4 + '" aria-label="Kammerton in Hertz" style="--wert:' + ((sg.a4 - 430) / 20) + '"></div>'
     + '<p class="ft-klein">Das Mikrofon hört nur hier auf dem Gerät mit – nichts wird aufgenommen oder gesendet. Am besten jede Saite einzeln anschlagen und ausklingen lassen.</p>';
   const cv = $('sgBild'), dpr = Math.min(2, window.devicePixelRatio || 1), W = Math.min(cv.clientWidth || 340, 520), H = Math.round(W * 0.52);
   cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
@@ -114,7 +116,10 @@ function sgAufbau() {
     if (!sg.an) sgReferenz(saiten[i]);
   }));
   $('sgInhalt').querySelectorAll('[data-saite]').forEach((b) => b.addEventListener('click', () => { const i = +b.dataset.saite; sg.ziel = sg.ziel === i ? null : i; sgSaitenZeigen(); }));
-  $('sgInhalt').querySelectorAll('[data-a4]').forEach((b) => b.addEventListener('click', () => { sg.a4 = Math.max(430, Math.min(450, sg.a4 + +b.dataset.a4)); $('sgA4').textContent = sg.a4 + ' Hz'; const s = sgStore(); s.kammerton = sg.a4; saveJson(SG_KEY, s); }));
+  const a4Setzen = (v) => { sg.a4 = Math.max(430, Math.min(450, v)); $('sgA4').textContent = sg.a4 + ' Hz'; $('sgA4Regler').value = sg.a4; $('sgA4Regler').style.setProperty('--wert', (sg.a4 - 430) / 20); const st = sgStore(); st.kammerton = sg.a4; saveJson(SG_KEY, st); };
+  $('sgA4Regler').addEventListener('input', (e) => a4Setzen(+e.target.value));
+  $('sgInhalt').querySelectorAll('[data-a4]').forEach((b) => b.addEventListener('click', () => { a4Setzen(sg.a4 + +b.dataset.a4); }));
+  $('sgInhalt').querySelectorAll('[data-a4-alt]').forEach((b) => b.addEventListener('click', () => { sg.a4 = Math.max(430, Math.min(450, sg.a4 + +b.dataset.a4)); $('sgA4').textContent = sg.a4 + ' Hz'; const s = sgStore(); s.kammerton = sg.a4; saveJson(SG_KEY, s); }));
   $('sgStart').addEventListener('click', () => (sg.an ? sgStopp() : sgStart()));
   $('sgRef').addEventListener('click', sgReferenz);
   sgKnopf(); sgSaitenZeigen();
@@ -195,24 +200,50 @@ function sgSaitenZeigen() {
   });
 }
 function sgZeichnen() {
-  const { ctx: c, W, H, dpr } = sg; c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
-  const cx = W / 2, cy = H * 0.95, r = Math.min(W * 0.45, H * 0.85);
-  // Skala −50 … +50 Cent auf 150°
-  const winkel = (cent) => -Math.PI / 2 + (Math.max(-50, Math.min(50, cent)) / 50) * (Math.PI * 5 / 12);
+  const { ctx: c, W, H, dpr } = sg, jetzt = performance.now(); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
+  const cx = W / 2, cy = H * 0.95, r = Math.min(W * 0.45, H * 0.85), BOGEN = Math.PI * 5 / 12;
+  const winkel = (cent) => -Math.PI / 2 + (Math.max(-50, Math.min(50, cent)) / 50) * BOGEN;
+  const a = sg.anzeige, frisch = a && jetzt - sg.zuletzt < 1200, ok = frisch && Math.abs(a.cent) <= 5;
+  sg.centA += ((frisch ? a.cent : 0) - sg.centA) * 0.22;
+  sg.glanz = (sg.glanz || 0) + ((ok ? 1 : 0) - (sg.glanz || 0)) * 0.08;   // weiches Ein-/Ausblenden des Treffer-Leuchtens
+  if (ok && !sg.warOk) sg.puls = jetzt; sg.warOk = ok;
   c.lineCap = 'round';
-  c.lineWidth = 14; c.strokeStyle = 'rgba(255,255,255,.08)'; c.beginPath(); c.arc(cx, cy, r, winkel(-50), winkel(50)); c.stroke();
-  c.strokeStyle = 'rgba(74,222,128,.55)'; c.beginPath(); c.arc(cx, cy, r, winkel(-5), winkel(5)); c.stroke();
-  for (let k = -50; k <= 50; k += 10) { const w = winkel(k), l = k % 50 === 0 ? 16 : k === 0 ? 20 : 9; c.strokeStyle = k === 0 ? '#4ade80' : 'rgba(255,255,255,.35)'; c.lineWidth = 2; c.beginPath(); c.moveTo(cx + Math.cos(w) * (r - 22), cy + Math.sin(w) * (r - 22)); c.lineTo(cx + Math.cos(w) * (r - 22 - l), cy + Math.sin(w) * (r - 22 - l)); c.stroke(); }
-  c.fillStyle = 'rgba(199,208,245,.6)'; c.font = '600 11px system-ui'; c.textAlign = 'center';
-  c.fillText('zu tief', cx + Math.cos(winkel(-42)) * (r + 2) , cy + Math.sin(winkel(-42)) * (r + 2) - 12); c.fillText('zu hoch', cx + Math.cos(winkel(42)) * (r + 2), cy + Math.sin(winkel(42)) * (r + 2) - 12);
-  const a = sg.anzeige, frisch = a && performance.now() - sg.zuletzt < 1200;
-  const zielCent = frisch ? a.cent : 0; sg.centA += (zielCent - sg.centA) * 0.25;
-  const ok = frisch && Math.abs(a.cent) <= 5, farbe = !frisch ? 'rgba(255,255,255,.35)' : ok ? '#4ade80' : Math.abs(a.cent) <= 15 ? '#fde047' : '#fb7185';
-  const w = winkel(sg.centA);
-  c.strokeStyle = farbe; c.lineWidth = 4; c.shadowColor = farbe; c.shadowBlur = frisch ? 12 : 0;
-  c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(w) * (r - 8), cy + Math.sin(w) * (r - 8)); c.stroke(); c.shadowBlur = 0;
-  c.fillStyle = farbe; c.beginPath(); c.arc(cx, cy, 7, 0, 7); c.fill();
-  if ($('sgNote')) $('sgNote').classList.toggle('ok', !!ok), $('sgNote').classList.toggle('alt', !frisch);
+  // Glas-Schiene (dunkel, mit heller Oberkante)
+  c.lineWidth = 22; c.strokeStyle = 'rgba(255,255,255,.06)'; c.beginPath(); c.arc(cx, cy, r, winkel(-50), winkel(50)); c.stroke();
+  c.lineWidth = 1.2; c.strokeStyle = 'rgba(255,255,255,.18)'; c.beginPath(); c.arc(cx, cy, r + 11, winkel(-50), winkel(50)); c.stroke();
+  // Farbbogen: rot → gelb → grün → gelb → rot, leuchtend
+  const g = c.createConicGradient ? c.createConicGradient(-Math.PI / 2 - BOGEN - 0.05 + Math.PI * 1.5 - Math.PI * 1.5, cx, cy) : null;
+  const farbe = (k) => { const t = Math.abs(k); return t < 0.1 ? '#4ade80' : t < 0.3 ? '#a3e635' : t < 0.6 ? '#fde047' : '#fb7185'; };
+  for (let i = 0; i < 40; i++) {
+    const k0 = -1 + i / 20, k1 = k0 + 1 / 20;
+    c.strokeStyle = farbe((k0 + k1) / 2); c.globalAlpha = 0.55; c.lineWidth = 8;
+    c.beginPath(); c.arc(cx, cy, r, winkel(k0 * 50), winkel(k1 * 50) + 0.01); c.stroke();
+  }
+  c.globalAlpha = 1;
+  // Ziel-Fenster ±5 Cent als heller Glasstreifen
+  c.lineWidth = 22; c.strokeStyle = 'rgba(74,222,128,' + (0.18 + 0.35 * sg.glanz) + ')'; c.shadowColor = '#4ade80'; c.shadowBlur = 18 * sg.glanz; c.beginPath(); c.arc(cx, cy, r, winkel(-5), winkel(5)); c.stroke(); c.shadowBlur = 0;
+  // Skala
+  for (let k = -50; k <= 50; k += 5) { const w = winkel(k), l = k % 25 === 0 ? 14 : 7; c.strokeStyle = k === 0 ? 'rgba(74,222,128,.9)' : 'rgba(255,255,255,' + (k % 25 === 0 ? 0.45 : 0.2) + ')'; c.lineWidth = k % 25 === 0 ? 2 : 1.2; c.beginPath(); c.moveTo(cx + Math.cos(w) * (r - 20), cy + Math.sin(w) * (r - 20)); c.lineTo(cx + Math.cos(w) * (r - 20 - l), cy + Math.sin(w) * (r - 20 - l)); c.stroke(); }
+  c.fillStyle = 'rgba(226,232,240,.55)'; c.font = '600 11px system-ui'; c.textAlign = 'center';
+  c.fillText('♭ zu tief', cx + Math.cos(winkel(-30)) * (r + 20), cy + Math.sin(winkel(-30)) * (r + 20)); c.fillText('zu hoch ♯', cx + Math.cos(winkel(30)) * (r + 20), cy + Math.sin(winkel(30)) * (r + 20));
+  // Lichtpuls beim Treffer (Ring, der sich ausbreitet)
+  if (sg.puls && jetzt - sg.puls < 900) { const k = (jetzt - sg.puls) / 900; c.strokeStyle = 'rgba(74,222,128,' + (0.6 * (1 - k)) + ')'; c.lineWidth = 3; c.beginPath(); c.arc(cx, cy, r * (0.35 + 0.75 * k), Math.PI, 2 * Math.PI); c.stroke(); }
+  // Nachleuchten der Nadel (Spur der letzten Positionen)
+  sg.spur = (sg.spur || []).concat([sg.centA]).slice(-8);
+  const nadel = !frisch ? 'rgba(255,255,255,.35)' : ok ? '#4ade80' : Math.abs(a.cent) <= 15 ? '#fde047' : '#fb7185';
+  sg.spur.forEach((cent, i) => { const w = winkel(cent); c.strokeStyle = nadel; c.globalAlpha = frisch ? (i + 1) / sg.spur.length * 0.18 : 0; c.lineWidth = 10; c.beginPath(); c.moveTo(cx, cy); c.lineTo(cx + Math.cos(w) * (r - 26), cy + Math.sin(w) * (r - 26)); c.stroke(); });
+  c.globalAlpha = 1;
+  // Glas-Nadel: breiter, halbtransparenter Körper + heller Kern + Spitze
+  const w = winkel(sg.centA), ex = cx + Math.cos(w) * (r - 6), ey = cy + Math.sin(w) * (r - 6);
+  c.shadowColor = nadel; c.shadowBlur = frisch ? 22 : 0;
+  c.strokeStyle = 'rgba(255,255,255,.16)'; c.lineWidth = 9; c.beginPath(); c.moveTo(cx, cy); c.lineTo(ex, ey); c.stroke();
+  c.strokeStyle = nadel; c.lineWidth = 3; c.beginPath(); c.moveTo(cx, cy); c.lineTo(ex, ey); c.stroke();
+  c.fillStyle = nadel; c.beginPath(); c.arc(ex, ey, 5, 0, 7); c.fill(); c.shadowBlur = 0;
+  // Glas-Knopf in der Mitte
+  const kg = c.createRadialGradient(cx - 4, cy - 6, 2, cx, cy, 16); kg.addColorStop(0, 'rgba(255,255,255,.95)'); kg.addColorStop(0.45, 'rgba(255,255,255,.25)'); kg.addColorStop(1, 'rgba(255,255,255,.05)');
+  c.fillStyle = kg; c.beginPath(); c.arc(cx, cy, 14, 0, 7); c.fill(); c.strokeStyle = 'rgba(255,255,255,.4)'; c.lineWidth = 1; c.stroke();
+  if ($('sgNote')) { $('sgNote').classList.toggle('ok', !!ok); $('sgNote').classList.toggle('alt', !frisch); }
+  const box = document.querySelector('.sg-anzeige'); if (box) box.classList.toggle('ok', !!ok);
 }
 // Referenzton: Mikrofon kurz aus (sonst hört es sich selbst und am iPhone käme der Ton aus dem Hörer)
 function sgReferenz(festerTon) {
