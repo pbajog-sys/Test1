@@ -206,14 +206,14 @@ function instrumentWaehlen(inst) {
 }
 function instWahlZeichnen(box, aktiv) {
   box.innerHTML = '';
-  [['cello', '🎻', 'Cello'], ...Object.entries(INSTRUMENTE).map(([k, v]) => [k, v.emoji, v.name])].forEach(([k, e, n]) => {
+  [['cello', '🎻', 'Cello'], ...Object.entries(INSTRUMENTE).map(([k, v]) => [k, v.emoji, v.name]), ['stimmen', '🎚️', 'Stimmen']].forEach(([k, e, n]) => {
     const b = document.createElement('button');
     b.type = 'button';
     b.className = k === aktiv ? 'on' : '';
     b.innerHTML = '<span></span><small></small>';
     b.querySelector('span').textContent = e;
     b.querySelector('small').textContent = n;
-    b.addEventListener('click', () => { if (k !== aktiv) instrumentWaehlen(k); });
+    b.addEventListener('click', () => { if (k === 'stimmen') { if (typeof sgOeffnen === 'function') sgOeffnen({ klavier: 'chromatisch' }[aktiv] || aktiv); return; } if (k !== aktiv) instrumentWaehlen(k); });
     box.appendChild(b);
   });
 }

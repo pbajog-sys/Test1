@@ -89,7 +89,7 @@ header h1 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes einblenden { from { opacity: 0; } to { opacity: 1; } }
 /* Die Spiele haben eine eigene Vollbild-Bühne (position: fixed). Eine Animation mit transform auf dem
    Bildschirm würde Safari dazu bringen, die Bühne nur innerhalb des Bildschirms zu zeichnen („Fenster im Fenster“). */
-#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-funktion.active, #screen-zufall.active, #screen-zahlen.active, #screen-tierleben.active, #screen-piranha.active, #screen-slo.active, #screen-sk.active, #screen-dopamin.active, #screen-songs.active, #screen-klassiker.active, #screen-falten.active, #screen-zoom.active, #screen-glas.active, #screen-beat.active, #screen-wunder.active, #screen-studio.active, #screen-labor.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-riff.active, #screen-krimi.active { animation: none; }
+#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-funktion.active, #screen-zufall.active, #screen-zahlen.active, #screen-tierleben.active, #screen-piranha.active, #screen-slo.active, #screen-sk.active, #screen-dopamin.active, #screen-songs.active, #screen-klassiker.active, #screen-falten.active, #screen-zoom.active, #screen-glas.active, #screen-beat.active, #screen-wunder.active, #screen-studio.active, #screen-stimmen.active, #screen-labor.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-riff.active, #screen-krimi.active { animation: none; }
 @keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
@@ -3746,3 +3746,29 @@ a.bb-datei { text-decoration: none; }
 .ft-check { list-style: none; margin: 0 0 8px; padding: 0; display: grid; gap: 4px; } .ft-check li { display: flex; justify-content: space-between; gap: 10px; font-size: .85rem; } .ft-check li span { text-align: right; opacity: .8; }
 .ft-arten { display: grid; gap: 6px; margin: 8px 0; } .ft-art { display: grid; gap: 2px; text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(255,255,255,.06); color: inherit; font: inherit; cursor: pointer; }
 .ft-art small { opacity: .7; font-size: .75rem; } .ft-art.an { border-color: #4ade80; background: rgba(74,222,128,.18); }
+
+/* ---------- 🎚️ Stimmgerät ---------- */
+.hub-stimmen { background: linear-gradient(#071a17, #071a17) padding-box, linear-gradient(90deg, #a3e635, #22d3ee, #4ade80, #a3e635) border-box; background-size: 100% 100%, 300% 100%; }
+.hub-stimmen .hg-titel { background: linear-gradient(90deg, #d9f99d, #67e8f9); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hg-av-stimmen { --ring: conic-gradient(#a3e635, #22d3ee, #4ade80, #a3e635); } .hg-av-stimmen > .hg-in { background: #06120f; display: grid; place-items: center; }
+.sg-mini { position: relative; width: 70%; height: 40%; border: 3px solid rgba(255,255,255,.25); border-bottom: 0; border-radius: 60px 60px 0 0; } .sg-mini i { position: absolute; left: 50%; bottom: 0; width: 3px; height: 95%; margin-left: -1.5px; background: #4ade80; transform-origin: bottom; animation: sgMini 2.4s ease-in-out infinite; }
+@keyframes sgMini { 0%, 100% { transform: rotate(-35deg); background: #fb7185; } 50% { transform: rotate(0); background: #4ade80; } 70% { transform: rotate(8deg); } }
+.sg-buehne { background: radial-gradient(90% 60% at 50% 25%, #0f3b33, #071311 70%); }
+.sg-inhalt { display: grid; gap: 12px; -webkit-user-select: none; user-select: none; }
+.sg-wahl { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; } .sg-wahl::-webkit-scrollbar { display: none; }
+.sg-wahl button { flex: none; border: 1px solid rgba(255,255,255,.18); border-radius: 999px; padding: 8px 12px; background: rgba(255,255,255,.06); color: inherit; font: inherit; font-size: .85rem; font-weight: 700; cursor: pointer; } .sg-wahl button.an { background: #4ade80; color: #052e16; border-color: #4ade80; }
+.sg-anzeige { display: grid; justify-items: center; gap: 4px; padding: 10px 0 0; border-radius: 22px; background: rgba(0,0,0,.25); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+.sg-bild { width: min(100%, 520px); display: block; }
+.sg-ton { display: grid; justify-items: center; gap: 2px; margin-top: -8px; padding-bottom: 14px; text-align: center; }
+.sg-ton b { font-size: 4rem; line-height: 1; font-weight: 900; transition: color .2s; } .sg-ton b.ok { color: #4ade80; text-shadow: 0 0 20px rgba(74,222,128,.6); } .sg-ton b.alt { opacity: .4; }
+.sg-ton span { font-size: 1rem; font-weight: 700; color: #e2e8f0; display: grid; gap: 2px; } .sg-ton small { font-size: .78rem; font-weight: 600; color: #94a3b8; } .sg-ok { color: #4ade80; }
+.sg-saiten { display: grid; grid-template-columns: repeat(auto-fit, minmax(48px, 1fr)); gap: 6px; }
+.sg-saiten button { position: relative; display: grid; justify-items: center; gap: 1px; padding: 10px 4px; border: 2px solid rgba(255,255,255,.15); border-radius: 14px; background: rgba(255,255,255,.05); color: inherit; font: inherit; cursor: pointer; }
+.sg-saiten b { font-size: 1.3rem; } .sg-saiten small { font-size: .65rem; color: #94a3b8; } .sg-saiten i { position: absolute; top: 2px; right: 5px; font-style: normal; font-size: .7rem; }
+.sg-saiten button.aktiv { border-color: #fde047; } .sg-saiten button.ziel { border-color: #67e8f9; background: rgba(103,232,249,.12); } .sg-saiten button.ok { background: rgba(74,222,128,.18); } .sg-saiten button.ok i { color: #4ade80; font-size: .9rem; }
+.sg-tipp { margin: -4px 0 0 !important; text-align: center; }
+.sg-knoepfe { display: grid; grid-template-columns: 1fr auto; gap: 8px; } .sg-knoepfe .btn.secondary { background: rgba(255,255,255,.1); color: inherit; box-shadow: none; }
+.sg-los { background: linear-gradient(90deg, #4ade80, #22d3ee); color: #052e16; } .sg-los.an { background: rgba(255,255,255,.12); color: #fff; }
+.sg-kammer { display: flex; align-items: center; justify-content: center; gap: 8px; color: #a5b4c8; font-size: .85rem; } .sg-kammer b { color: #fff; min-width: 4.5em; text-align: center; }
+.sg-kammer button { width: 34px; height: 34px; border: 0; border-radius: 10px; background: rgba(255,255,255,.1); color: #fff; font: inherit; font-weight: 800; cursor: pointer; }
+@media (prefers-reduced-motion: reduce) { .sg-mini i { animation: none; } }

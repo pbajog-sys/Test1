@@ -698,3 +698,11 @@ Speicher `walquiz.wunder.v1`. Test: `tests/wunder.test.js`.
 Jede Spielkarte im Hub hat oben rechts einen Stern. Favoriten stehen ganz oben in „⭐ Favoriten“ (in der Reihenfolge des
 Markierens), beim Entfernen geht die Karte zurück an ihren Platz. Start-Favorit ohne gespeicherte Auswahl: Beat-Studio.
 Speicher `walquiz.favoriten.v1` (je Profil).
+
+## 🎚️ Stimmgerät
+`stimmen.js` – übers Mikrofon, alles im Browser. Tonhöhe per YIN (Analyser 8192 Samples, halbe Abtastrate für 35–500 Hz,
+volle Abtastrate für hohe Töne, parabolische Verfeinerung; im Test ±0,5 Cent von 41 Hz bis 1,3 kHz), Median der letzten
+Messungen. Modi: chromatisch, Gitarre, E-Bass, Ukulele, Geige, Bratsche, Cello – Saiten mit ✓, wenn 0,8 s lang ±5 Cent;
+Saite antippen sperrt sie als Ziel. Kammerton a′ 430–450 Hz, Referenzton (pausiert das Mikrofon). Erreichbar als Hub-Karte
+und in „Noten & Griffe“ über den Punkt „Stimmen“. Speicher `walquiz.stimmen.v1`. Test: `tests/stimmen.test.js`
+(simuliertes Mikrofon mit gezupftem A2 −20 Cent und E4).

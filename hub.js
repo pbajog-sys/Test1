@@ -200,6 +200,7 @@ function renderHub() {
   if ($('hubZoomBest')) { const z = loadJson('walquiz.zoom.v1'); $('hubZoomBest').textContent = z.entdeckt && z.entdeckt.length ? 'Entdeckt: ' + z.entdeckt.length + ' von ' + (typeof ZM_DINGE !== 'undefined' ? ZM_DINGE.length : 49) : 'Noch nicht gespielt'; }
   if ($('hubBeatBest')) { const bs = loadJson('walquiz.beat.v1'); const s = Object.values(bs.best || {}).reduce((a, x) => a + (x.sterne || 0), 0); $('hubBeatBest').textContent = bs.runden ? s + ' ★ gesammelt' : 'Noch nicht gespielt'; }
   if ($('hubStudioBest')) { const s = loadJson('walquiz.studio.v1'); const n = s.projekte ? Object.keys(s.projekte).length : 0; $('hubStudioBest').textContent = n ? n + (n === 1 ? ' Projekt' : ' Projekte') : 'Leg los – mit dem Binär-Beat als Start'; }
+  if ($('hubStimmenBest')) { const s = loadJson('walquiz.stimmen.v1'); $('hubStimmenBest').textContent = s.inst ? 'Zuletzt: ' + (typeof SG_INST !== 'undefined' && SG_INST[s.inst] ? SG_INST[s.inst].name : s.inst) + ' · a′ = ' + (s.kammerton || 440) + ' Hz' : 'Mikrofon an, Saite anschlagen'; }
   if ($('hubWunderBest')) { const w = loadJson('walquiz.wunder.v1'); const n = ['ameise', 'binaer', 'drache', 'collatz'].filter((k) => w[k] && w[k].runden).length; $('hubWunderBest').textContent = n ? n + ' von 4 Mustern entdeckt' : 'Noch nicht gespielt'; }
   if ($('hubGlasBest')) { const g = loadJson('walquiz.glas.v1'); $('hubGlasBest').textContent = g.runden ? 'Beste Runde: ' + (g.best || 0) + ' von 3' : 'Noch nicht gespielt'; }
   if ($('hubFaltenBest')) { const f = loadJson('walquiz.falten.v1'); $('hubFaltenBest').textContent = f.runden ? 'Beste Schätzung: ' + f.best.abw + ' daneben' : 'Noch nicht gespielt'; }
@@ -333,7 +334,7 @@ if (pendingChallenge) {
   const bahnen = [
     ['.bu-punkte', '.bu-karte', '.bu-zufall', '.bu-augen', '[data-ziel="hubZoom"]', '[data-ziel="hubGlas"]', '[data-ziel="hubWunder"]'],
     ['.bu-farben', '.bu-cello', '.bu-takt', '.bu-funktion', '.bu-dackel', '[data-ziel="hubTiefgang"]', '[data-ziel="hubPiranha"]', '[data-ziel="hubSongs"]', '[data-ziel="hubBeat"]', '[data-ziel="hubStudio"]'],
-    ['.bu-wal', '.bu-krimi', '[data-welt="haie"]', '.bu-toene', '[data-ziel="hubTierleben"]', '.bu-porsche', '[data-ziel="hubZahlen"]', '[data-ziel="hubRiff"]', '[data-ziel="hubKlassiker"]', '[data-ziel="hubFalten"]'],
+    ['.bu-wal', '.bu-krimi', '[data-welt="haie"]', '.bu-toene', '[data-ziel="hubTierleben"]', '.bu-porsche', '[data-ziel="hubZahlen"]', '[data-ziel="hubRiff"]', '[data-ziel="hubKlassiker"]', '[data-ziel="hubFalten"]', '[data-ziel="hubStimmen"]'],
   ].map((l) => l.map(q).filter(Boolean));
   const tempo = [0.00011, 0.00007, 0.000045], kipp = -0.16, c = Math.cos(kipp), s = Math.sin(kipp);
   const ellipsen = b.querySelectorAll('.bu-bahnen ellipse'), masse = new Map();
