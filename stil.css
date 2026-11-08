@@ -3933,3 +3933,21 @@ a.bb-datei { text-decoration: none; }
 .sg-wahl { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 24px; }
 .sg-stimmung select { -webkit-appearance: none; appearance: none; padding-right: 30px; background-image: none; text-overflow: ellipsis; }
 .sg-kammer { gap: 10px; } .sg-kammer > span { flex: 1; text-align: left; }
+/* Stimmgerät Pro: Ansicht-Umschalter, Wirbel-Anleitung */
+.sg-ansicht { display: grid; grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); gap: 4px; padding: 4px; border-radius: 999px; background: linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.3); }
+.sg-ansicht button { border: 0; border-radius: 999px; padding: 9px 6px; background: none; color: rgba(226,232,240,.8); font: inherit; font-size: .85rem; font-weight: 800; cursor: pointer; transition: background .3s, color .3s; }
+.sg-ansicht button.an { background: linear-gradient(160deg, rgba(255,255,255,.85), rgba(255,255,255,.55)); color: #0b1220; box-shadow: 0 4px 14px rgba(0,0,0,.3); }
+.sg-kopf { display: grid; grid-template-columns: 96px 1fr; gap: 12px; align-items: center; padding: 10px 14px; border-radius: 24px; background: linear-gradient(160deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); -webkit-backdrop-filter: blur(20px); backdrop-filter: blur(20px); border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.3); }
+.sg-kopf[hidden] { display: none; } .sg-kopf.ok { border-color: rgba(74,222,128,.5); }
+.sg-kopf-text { margin: 0; font-size: .88rem; line-height: 1.45; } .sg-kopf-text b { color: #fde047; }
+.sg-kopf-bild { width: 96px; height: auto; display: block; overflow: visible; }
+.sg-kopf-platte { fill: rgba(255,255,255,.1); stroke: rgba(255,255,255,.3); stroke-width: 1.2; }
+.sg-kopf-saite { stroke: rgba(255,255,255,.35); stroke-width: 1.2; } .sg-kopf-saite.an { stroke: #fde047; stroke-width: 2; } .sg-kopf-steg { stroke: rgba(255,255,255,.25); stroke-width: 1; }
+.sg-wirbel ellipse { fill: rgba(255,255,255,.25); stroke: rgba(255,255,255,.5); stroke-width: 1; }
+.sg-wirbel.an ellipse { fill: #fde047; stroke: #fff; filter: drop-shadow(0 0 6px rgba(253,224,71,.9)); }
+.sg-kopf.ok .sg-wirbel.an ellipse { fill: #4ade80; filter: drop-shadow(0 0 6px rgba(74,222,128,.9)); }
+.sg-dreh path { fill: none; stroke: #fde047; stroke-width: 2.5; stroke-linecap: round; }
+.sg-wirbel.spannen .sg-dreh { animation: sgDrehR 1.4s ease-in-out infinite; } .sg-wirbel.lockern .sg-dreh { animation: sgDrehL 1.4s ease-in-out infinite; }
+@keyframes sgDrehR { 0% { transform: rotate(-25deg); opacity: .3; } 60% { transform: rotate(25deg); opacity: 1; } 100% { transform: rotate(25deg); opacity: 0; } }
+@keyframes sgDrehL { 0% { transform: rotate(25deg); opacity: .3; } 60% { transform: rotate(-25deg); opacity: 1; } 100% { transform: rotate(-25deg); opacity: 0; } }
+@media (prefers-reduced-motion: reduce) { .sg-dreh { animation: none !important; } }

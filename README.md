@@ -709,7 +709,15 @@ Drop C, Drop B, DADGAD, Open G/D/E/C), E-Bass (Standard, Drop D, Halbton tiefer,
 Low G, D-Stimmung, Bariton), Geige (Standard, AEAE, GDGD), Cello (Standard, Scordatura A→G) – plus **„Eigene“**: jede Saite
 halbtonweise verstellbar (wird je Instrument gespeichert; ungültige Werte fallen auf Standard zurück). Der Messbereich
 geht automatisch bis unter die tiefste Saite (5-Saiter-H = 30,9 Hz). Speicher `walquiz.stimmen.v1`
-= { inst, kammerton, stimmung: { inst: id }, eigene: { inst: [MIDI…] } }. Test: `tests/stimmen.test.js`
+= { inst, kammerton, stimmung: { inst: id }, eigene: { inst: [MIDI…] }, ansicht }. Test: `tests/stimmen.test.js`
+
+**Pro-Funktionen** (`stimmen-pro.js`, Umschalter Bogen / Strobe / Alle Saiten; Analyser jetzt 32768 Samples, YIN nutzt die letzten 8192):
+- **Strobe:** drei Streifenreihen laufen proportional zur Verstimmung (links = zu tief, rechts = zu hoch) und stehen bei 0 Cent still.
+- **Alle Saiten auf einmal:** Hann-Fenster + FFT über ~0,7 s; je Saite grobe Suche ±60 Cent über die Teiltöne 1–3, Feinmessung per
+  Parabel-Interpolation nur auf Teiltönen, die nicht mit anderen Saiten kollidieren (z. B. E2×3 ≈ H3); Saiten, deren Teiltöne nur
+  Obertöne einer stärkeren Saite sind, werden als „nicht angeschlagen“ verworfen. Test: synthetischer Akkord, 6 Saiten verschieden verstimmt → ±2 Cent.
+- **Wirbel-Anleitung:** Kopfplatte (3+3 bzw. passend zur Saitenzahl), der Wirbel der erkannten Saite leuchtet mit Drehpfeil – spannen bzw. erst lockern und von unten hochstimmen.
+  Alter Speicherstand ohne `ansicht` → Bogen.
 (simuliertes Mikrofon mit gezupftem A2 −20 Cent und E4).
 
 ## 💪 Fitness

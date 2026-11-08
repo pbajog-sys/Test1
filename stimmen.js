@@ -82,14 +82,16 @@ function sgYin(x, rate, fmin = 35, fmax = 1600) {
 function sgOeffnen(inst) {
   show('stimmen', '🎚️ Stimmgerät');
   const s = sgStore(); if (inst && SG_INST[inst]) { s.inst = inst; saveJson(SG_KEY, s); }
-  sg = { inst: s.inst, a4: s.kammerton, an: false, verlauf: [], anzeige: null, gestimmt: {}, halten: {}, ziel: null, cent: 0, centA: 0, zuletzt: 0, ruhe: 0 };
+  sg = { inst: s.inst, a4: s.kammerton, ansicht: ['bogen', 'strobe', 'poly'].includes(s.ansicht) ? s.ansicht : 'bogen', an: false, verlauf: [], anzeige: null, gestimmt: {}, halten: {}, ziel: null, cent: 0, centA: 0, zuletzt: 0, ruhe: 0 };
   sgAufbau();
 }
 function sgAufbau() {
   const bue = document.querySelector('.sg-buehne'); if (bue && !bue.querySelector('.sg-blasen')) { const bl = document.createElement('div'); bl.className = 'sg-blasen'; bl.setAttribute('aria-hidden', 'true'); bl.innerHTML = '<i></i><i></i><i></i>'; bue.prepend(bl); }
   const I = sgAktuell(), st = sgStore(), liste = SG_STIMMUNGEN[sg.inst];
   $('sgInhalt').innerHTML = '<div class="sg-wahl">' + Object.entries(SG_INST).map(([k, v]) => '<button type="button" data-inst="' + k + '" class="' + (k === sg.inst ? 'an' : '') + '">' + v.emoji + ' ' + v.name + '</button>').join('') + '</div>'
-    + '<div class="sg-anzeige"><canvas id="sgBild" class="sg-bild"></canvas><div class="sg-ton"><b id="sgNote" class="alt">·</b><span id="sgHz">Tippe auf „Stimmen starten“</span></div></div>'
+    + '<div class="sg-ansicht" role="radiogroup" aria-label="Anzeige">' + [['bogen', 'Bogen'], ['strobe', 'Strobe'], ['poly', 'Alle Saiten']].filter(([k]) => k !== 'poly' || sgAktuell()).map(([k, n]) => '<button type="button" role="radio" data-ansicht="' + k + '" aria-checked="' + (k === sg.ansicht) + '" class="' + (k === sg.ansicht ? 'an' : '') + '">' + n + '</button>').join('') + '</div>'
+    + '<div class="sg-anzeige ' + sg.ansicht + '"><canvas id="sgBild" class="sg-bild"></canvas><div class="sg-ton"><b id="sgNote" class="alt">·</b><span id="sgHz">' + (sg.ansicht === 'poly' ? 'Starten, dann alle Saiten auf einmal anschlagen' : 'Tippe auf „Stimmen starten“') + '</span></div></div>'
+    + '<div class="sg-kopf" id="sgKopf" hidden><div class="sg-kopf-grafik"></div><p class="sg-kopf-text"></p></div>'
     + (I ? '<div class="sg-stimmung"><label>Stimmung <select id="sgStimmung">' + liste.map((x) => '<option value="' + x[0] + '"' + (x[0] === I.id ? ' selected' : '') + '>' + x[1] + ' · ' + x[3] + '</option>').join('') + '<option value="eigen"' + (I.id === 'eigen' ? ' selected' : '') + '>Eigene' + (st.eigene[sg.inst] ? ' · ' + st.eigene[sg.inst].map((m) => SG_NAMEN[m % 12]).join(' ') : '') + '</option></select></label><button type="button" class="' + (sg.anpassen ? 'an' : '') + '" id="sgAnpassen">✏️ Anpassen</button></div>'
       + '<div class="sg-saiten" id="sgSaiten" style="--n:' + I.saiten.length + '">' + I.saiten.map((m, i) => '<button type="button" data-saite="' + i + '"><b>' + I.namen[i] + '</b><small>' + sgName(m) + '</small><i></i></button>').join('') + '</div>'
       + (sg.anpassen ? '<div class="sg-edit" style="--n:' + I.saiten.length + '">' + I.saiten.map((m, i) => '<span><button type="button" data-hoch="' + i + '" aria-label="Saite ' + (i + 1) + ' höher">▲</button><button type="button" data-tief="' + i + '" aria-label="Saite ' + (i + 1) + ' tiefer">▼</button></span>').join('') + '</div><p class="ft-klein sg-tipp">Jede Saite halbtonweise verstellen – wird als „Eigene“ Stimmung gespeichert.</p>' : '<p class="ft-klein sg-tipp">Saite antippen = nur diese Saite stimmen (nochmal tippen = automatisch).</p>')
@@ -101,7 +103,7 @@ function sgAufbau() {
   const cv = $('sgBild'), dpr = Math.min(2, window.devicePixelRatio || 1), W = Math.min(cv.clientWidth || 340, 520), R = Math.round(W * 0.4), CY = R + 26, H = CY + 4;
   cv.width = W * dpr; cv.height = H * dpr; cv.style.height = H + 'px';
   Object.assign(sg, { ctx: cv.getContext('2d'), W, H, dpr, R, CY });
-  { const ton = document.querySelector('.sg-ton'); if (ton) ton.style.marginTop = -Math.round(R * 0.82) + 'px'; }   // Notenname sitzt mitten im Bogen
+  { const ton = document.querySelector('.sg-ton'); if (ton) ton.style.marginTop = sg.ansicht === 'bogen' ? -Math.round(R * 0.82) + 'px' : '8px'; }   // Notenname sitzt mitten im Bogen
   $('sgInhalt').querySelectorAll('[data-inst]').forEach((b) => b.addEventListener('click', () => { sg.inst = b.dataset.inst; sg.gestimmt = {}; sg.anpassen = false; sg.anzeige = null; sg.ziel = null; sg.verlauf = []; const s = sgStore(); s.inst = sg.inst; saveJson(SG_KEY, s); sgAufbau(); }));
   if ($('sgStimmung')) $('sgStimmung').addEventListener('change', (e) => {
     const s = sgStore(); s.stimmung[sg.inst] = e.target.value;
@@ -122,6 +124,7 @@ function sgAufbau() {
   $('sgInhalt').querySelectorAll('[data-a4]').forEach((b) => b.addEventListener('click', () => { a4Setzen(sg.a4 + +b.dataset.a4); }));
   $('sgInhalt').querySelectorAll('[data-a4-alt]').forEach((b) => b.addEventListener('click', () => { sg.a4 = Math.max(430, Math.min(450, sg.a4 + +b.dataset.a4)); $('sgA4').textContent = sg.a4 + ' Hz'; const s = sgStore(); s.kammerton = sg.a4; saveJson(SG_KEY, s); }));
   $('sgStart').addEventListener('click', () => (sg.an ? sgStopp() : sgStart()));
+  $('sgInhalt').querySelectorAll('[data-ansicht]').forEach((b) => b.addEventListener('click', () => { sg.ansicht = b.dataset.ansicht; const st = sgStore(); st.ansicht = sg.ansicht; saveJson(SG_KEY, st); sg.poly = null; sgAufbau(); }));
   $('sgRef').addEventListener('click', sgReferenz);
   sgKnopf(); sgSaitenZeigen();
   cancelAnimationFrame(sgRaf); const lauf = () => { if (!sg) return; sgZeichnen(); sgRaf = requestAnimationFrame(lauf); }; sgRaf = requestAnimationFrame(lauf);
@@ -135,8 +138,8 @@ async function sgStart() {
     if (!sg || !$('screen-stimmen').classList.contains('active')) { stream.getTracks().forEach((t) => t.stop()); if (typeof ftAudioNachMikrofon === 'function') ftAudioNachMikrofon(); return; }
     const C = window.AudioContext || window.webkitAudioContext, c = new C(), src = c.createMediaStreamSource(stream), an = c.createAnalyser();
     if (c.state === 'suspended') c.resume();
-    an.fftSize = 8192; src.connect(an);
-    Object.assign(sg, { an: true, stream, c, src, analyser: an, puffer: new Float32Array(an.fftSize), halb: new Float32Array(an.fftSize / 2) });
+    an.fftSize = 32768; src.connect(an);
+    Object.assign(sg, { an: true, stream, c, src, analyser: an, puffer: new Float32Array(an.fftSize), halb: new Float32Array(4096) });
     sg.timer = setInterval(sgMessen, 70);
     $('sgHz').textContent = 'Schlag eine Saite an …';
   } catch (e) {
@@ -154,11 +157,17 @@ function sgStopp() {
 function sgMessen() {
   if (!sg || !sg.an || performance.now() < sg.ruhe) return;
   sg.analyser.getFloatTimeDomainData(sg.puffer);
-  const p = sg.puffer, h = sg.halb;
+  if (sg.ansicht === 'poly' && sgAktuell()) {   // alle Saiten auf einmal
+    if (performance.now() - (sg.polyZeit || 0) < 180) return;
+    const w = sgPolyAusSignal(sg.puffer, sg.c.sampleRate, sgAktuell().saiten, sg.a4);
+    if (w.some(Boolean)) { sg.poly = w; sg.polyZeit = performance.now(); sg.zuletzt = sg.polyZeit; sgPolyText(); }
+    return;
+  }
+  const p = sg.puffer.subarray(sg.puffer.length - 8192), h = sg.halb;
   for (let i = 0; i < h.length; i++) h[i] = (p[2 * i] + p[2 * i + 1]) / 2;   // halbe Abtastrate reicht und spart Rechenzeit
   let r = sgYin(h, sg.c.sampleRate / 2, sgFmin(sg.inst), 1600);
   // hohe Töne mit voller Abtastrate nachmessen (feinere Auflösung)
-  if (r && r.f > 500) { const g = sgYin(p.subarray(0, 4096), sg.c.sampleRate, Math.max(400, r.f * 0.8), Math.min(2000, r.f * 1.25)); if (g) r = g; }
+  if (r && r.f > 500) { const g = sgYin(p.subarray(8192 - 4096), sg.c.sampleRate, Math.max(400, r.f * 0.8), Math.min(2000, r.f * 1.25)); if (g) r = g; }
   if (!r) { if (performance.now() - sg.zuletzt > 1500) sg.verlauf = []; return; }
   sg.zuletzt = performance.now();
   sgVerarbeiten(r.f);
@@ -182,6 +191,11 @@ function sgVerarbeiten(f) {
   if (Math.abs(cent) <= 5) { if (!sg.halten[k]) sg.halten[k] = jetzt; if (jetzt - sg.halten[k] > 800 && !sg.gestimmt[k]) { sg.gestimmt[k] = true; if (navigator.vibrate) navigator.vibrate(30); sgSaitenZeigen(); } } else sg.halten[k] = 0;
   sgText();
 }
+function sgPolyText() {
+  const I = sgAktuell(), w = sg.poly || [], gut = w.filter((x) => x && Math.abs(x.cent) <= 4).length, erkannt = w.filter(Boolean).length;
+  $('sgNote').textContent = erkannt ? gut + '/' + I.saiten.length : '·'; $('sgNote').classList.toggle('ok', gut === I.saiten.length);
+  $('sgHz').innerHTML = !erkannt ? 'Alle Saiten auf einmal anschlagen' : gut === I.saiten.length ? '<span class="sg-ok">✓ Alle Saiten gestimmt</span>' : 'Raus: ' + I.namen.filter((n, i) => w[i] && Math.abs(w[i].cent) > 4).join(' ') + '<small>Einzeln nachstimmen geht am genauesten (Bogen/Strobe).</small>';
+}
 function sgText() {
   const a = sg.anzeige; if (!a) return;
   const c = Math.round(a.cent), I = sgAktuell();
@@ -190,6 +204,7 @@ function sgText() {
   $('sgHz').innerHTML = (ok ? '<span class="sg-ok">✓ gestimmt</span>' : Math.abs(c) > 50 ? (c < 0 ? 'viel zu tief – höher stimmen' : 'viel zu hoch – tiefer stimmen') : (c < 0 ? c + ' Cent · etwas zu tief' : '+' + c + ' Cent · etwas zu hoch'))
     + '<small>' + a.f.toFixed(1).replace('.', ',') + ' Hz · Ziel ' + sgName(a.ziel.midi) + ' = ' + sgHz(a.ziel.midi, sg.a4).toFixed(1).replace('.', ',') + ' Hz</small>';
   sgSaitenZeigen();
+  sgKopfAnzeigen();
 }
 function sgSaitenZeigen() {
   if (!$('sgSaiten')) return;
@@ -202,6 +217,17 @@ function sgSaitenZeigen() {
 }
 function sgZeichnen() {
   const { ctx: c, W, H, dpr } = sg, jetzt = performance.now(); c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, W, H);
+  const dt = Math.min(0.1, (jetzt - (sg.letzterFrame || jetzt)) / 1000); sg.letzterFrame = jetzt;
+  if (sg.ansicht === 'poly' && sgAktuell()) { sgPolyZeichnen(c, W, H, sg.poly, sgAktuell().namen, jetzt - (sg.polyZeit || 0) < 2500); return; }
+  if (sg.ansicht === 'strobe') {
+    const a = sg.anzeige, frisch = a && jetzt - sg.zuletzt < 1200, ok = frisch && Math.abs(a.cent) <= 1, farbe = !frisch ? 'rgba(255,255,255,.4)' : ok ? '#4ade80' : Math.abs(a.cent) <= 10 ? '#fde047' : '#fb7185';
+    sgStrobeZeichnen(c, W, H, frisch ? a.cent : 0, frisch, farbe, dt);
+    if ($('sgNote')) { $('sgNote').classList.toggle('ok', !!ok); $('sgNote').classList.toggle('alt', !frisch); }
+    const box = document.querySelector('.sg-anzeige'); if (box) box.classList.toggle('ok', !!ok);
+    if (Math.floor(jetzt / 300) !== sg.kopfTakt) { sg.kopfTakt = Math.floor(jetzt / 300); sgKopfAnzeigen(); }
+    return;
+  }
+  if (Math.floor(jetzt / 300) !== sg.kopfTakt) { sg.kopfTakt = Math.floor(jetzt / 300); sgKopfAnzeigen(); }
   const cx = W / 2, cy = sg.CY, r = sg.R, BOGEN = Math.PI * 5 / 12;
   const winkel = (cent) => -Math.PI / 2 + (Math.max(-50, Math.min(50, cent)) / 50) * BOGEN;
   const a = sg.anzeige, frisch = a && jetzt - sg.zuletzt < 1200, ok = frisch && Math.abs(a.cent) <= 5;

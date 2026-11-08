@@ -113,6 +113,31 @@ function wav() {
   ck('Nach Neustart: Hub zeigt Gitarre (Eigene)', /Gitarre \(Eigene\) · a′ = 440 Hz/.test(await p.textContent('#hubStimmenBest')), await p.textContent('#hubStimmenBest'));
   await p.click('#hubStimmen'); await p.waitForTimeout(700);
   ck('… und die eigene Stimmung ist wieder da', (await p.inputValue('#sgStimmung')) === 'eigen' && (await p.textContent('#sgSaiten [data-saite="5"]')) === 'DisDis4');
+  // ---------- Pro: alle Saiten, Strobe, Wirbel ----------
+  const poly = await p.evaluate(() => {
+    const rate = 48000, n = 32768, soll = [0, -20, 12, 0, -7, 30], saiten = [40, 45, 50, 55, 59, 64], x = new Float32Array(n);
+    let z = 3; const zuf = () => ((z = (z * 16807) % 2147483647) / 2147483647);
+    saiten.forEach((m, i) => { const f = 440 * 2 ** ((m - 69) / 12) * 2 ** (soll[i] / 1200), ph = zuf() * 6; for (let k = 0; k < n; k++) { const t = k / rate; x[k] += 0.12 * (Math.sin(2 * Math.PI * f * t + ph) + 0.5 * Math.sin(4 * Math.PI * f * t) + 0.25 * Math.sin(6 * Math.PI * f * t)); } });
+    for (let k = 0; k < n; k++) x[k] += (zuf() - 0.5) * 0.01;
+    const r = sgPolyAusSignal(x, rate, saiten, 440), still = sgPolyAusSignal(new Float32Array(n), rate, saiten, 440);
+    return { r: r.map((w) => (w ? w.cent : null)), soll, still: still.every((w) => w === null) };
+  });
+  ck('Alle Saiten: Akkord mit 6 verschieden verstimmten Saiten auf ±2 Cent erkannt', poly.r.every((c, i) => c !== null && Math.abs(c - poly.soll[i]) <= 2), 'gemessen ' + poly.r.join(' / ') + ' · soll ' + poly.soll.join(' / '));
+  ck('Alle Saiten: Stille ergibt keine Werte', poly.still);
+  await p.click('[data-inst="gitarre"]'); await p.selectOption('#sgStimmung', 'standard'); await p.waitForTimeout(200);
+  await p.click('#sgStart'); await p.waitForFunction(() => sg.anzeige && sg.anzeige.ziel.saite === 1, null, { timeout: 8000 }); await p.waitForTimeout(500);
+  const kopf = await p.evaluate(() => ({ sichtbar: !$('sgKopf').hidden, text: document.querySelector('.sg-kopf-text').textContent, an: [...document.querySelectorAll('#sgKopf .sg-wirbel')].findIndex((g) => g.classList.contains('an')), spannen: !!document.querySelector('#sgKopf .sg-wirbel.an.spannen') }));
+  ck('Wirbel-Anleitung: A-Saite zu tief → Wirbel der A-Saite leuchtet, „spannen“', kopf.sichtbar && kopf.an === 1 && kopf.spannen && /A-Saite ist zu tief/.test(kopf.text), JSON.stringify(kopf));
+  await bild('sg-wirbel');
+  await p.click('[data-ansicht="strobe"]'); await p.waitForTimeout(200); await p.click('#sgStart');
+  await p.waitForFunction(() => sg.anzeige && sg.anzeige.ziel.saite === 1, null, { timeout: 8000 });
+  const ph0 = await p.evaluate(() => sg.phase || 0); await p.waitForTimeout(500); const ph1 = await p.evaluate(() => sg.phase || 0);
+  ck('Strobe: bei −20 Cent laufen die Streifen nach links', ph1 < ph0 - 5 && await p.evaluate(() => loadJson(SG_KEY).ansicht === 'strobe'), ph0.toFixed(0) + ' → ' + ph1.toFixed(0));
+  await bild('sg-strobe');
+  await p.click('[data-ansicht="poly"]'); await p.waitForTimeout(200);
+  ck('Alle-Saiten-Ansicht: Hinweis zum Anschlagen, Wirbel-Anleitung aus', /Alle Saiten auf einmal|alle Saiten auf einmal/.test(await p.textContent('#sgHz')) && await p.evaluate(() => $('sgKopf').hidden));
+  await p.click('#sgStart'); await p.waitForTimeout(1500); await bild('sg-poly');
+  await p.click('[data-ansicht="bogen"]');
   ck('Keine Seitenfehler', !fehler.length, fehler.join(' | '));
   console.log(checks.filter((c) => c[1]).length + ' bestanden, ' + checks.filter((c) => !c[1]).length + ' fehlgeschlagen');
   await b.close(); process.exit(checks.every((c) => c[1]) ? 0 : 1);
