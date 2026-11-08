@@ -85,6 +85,36 @@ const ordner = process.argv[2] || '.';
   ck('Training löschen', await p.evaluate(() => fiStore().einheiten.length === 2));
   await p.click('#fiZurueck'); await p.waitForTimeout(500);
   ck('Zurück zum Hub', await p.evaluate(() => $('screen-hub').classList.contains('active')));
+
+  // ---------- Muskeln, Icons, Tipps, Steigerung ----------
+  const daten = await p.evaluate(() => {
+    const fehlend = FI_STANDARD.filter((u) => !FI_INFO[u.id] || !FI_INFO[u.id].p.every((m) => FI_MUSKELN[m]) || !(FI_INFO[u.id].tipps || []).length).map((u) => u.id);
+    const formen = Object.keys(FI_MUSKELN).filter((m) => !FI_FORMEN.some((f) => f[0] === m));
+    return { fehlend, formen };
+  });
+  ck('Jede Standard-Übung hat Muskeln und Tipps, jeder Muskel eine Fläche in der Figur', !daten.fehlend.length && !daten.formen.length, JSON.stringify(daten));
+  await p.evaluate(() => {
+    const s = fiStore(), t = Date.now() - 3600e3;
+    s.einheiten.push({ id: 'z', start: t, ende: t + 1800e3, eintraege: [{ u: 'bank', kg: 60, wdh: 10, t }, { u: 'bank', kg: 60, wdh: 10, t }, { u: 'bank', kg: 60, wdh: 10, t }] });
+    fiSpeichern(s);
+  });
+  await p.click('#hubFitness'); await p.waitForTimeout(700);
+  ck('Muskel-Karte der Woche: Brust leuchtet, Text nennt Brust', await p.evaluate(() => !!document.querySelector('.fi-woche .fi-muskel.an[data-muskel="brust"]') && /Brust/.test(document.querySelector('.fi-woche').textContent)));
+  ck('Tipp des Tages und Icons in der Fortschrittsliste', (await p.$$('.fi-tipp')).length === 1 && (await p.$$('.fi-zeile .fi-icon svg')).length >= 3);
+  await p.click('#fiLos'); await p.click('#fiNeueUebung'); await p.waitForTimeout(200);
+  await p.click('#skDlg [data-filter="Brust"]'); const nBrust = (await p.$$('#fiRaster [data-neu]')).length;
+  await p.click('#skDlg [data-filter="Rücken"]'); const nRuecken = (await p.$$('#fiRaster [data-neu]')).length;
+  await p.click('#skDlg [data-filter="Ausdauer"]'); const nAusdauer = (await p.$$('#fiRaster [data-neu]')).length;
+  ck('Auswahl-Filter: Brust 3, Rücken 4, Ausdauer 6', nBrust === 3 && nRuecken === 4 && nAusdauer === 6, [nBrust, nRuecken, nAusdauer].join('/'));
+  await p.click('#skDlg [data-filter="Brust"]'); await p.click('#skDlg [data-neu="bank"]'); await p.waitForTimeout(200);
+  ck('Steigerung: 3× 10 mit 60 kg → Vorschlag 62,5 kg vorbelegt', /3× 10 mit 60 kg geschafft/.test(await p.textContent('#fiSteigern')) && (await p.inputValue('#fiKg')) === '62,5');
+  await p.click('#fiWieLetztes');
+  ck('„lieber 60 kg“ setzt zurück', (await p.inputValue('#fiKg')) === '60' && !(await p.$('#fiSteigern')));
+  ck('Technik-Tipps und Muskeln bei der Übung', (await p.$$('.fi-tipps li')).length === 3 && /Brust · mit Trizeps, Schultern/.test(await p.textContent('.fi-ue-kopf')));
+  await p.click('#fiNeueUebung'); await p.fill('#fiEigenName', 'Hip Thrust Maschine'); await p.selectOption('#fiEigenMuskel', 'gesaess'); await p.click('#fiEigenOk'); await p.waitForTimeout(200);
+  ck('Eigene Übung mit Muskel: Gesäß, Icon zeigt die Beine', /Gesäß/.test(await p.textContent('.fi-ue-kopf')) && !!(await p.$('.fi-ue-kopf .fi-icon-unten')));
+  await p.evaluate(() => { const s = fiStore(); s.aktiv = null; fiSpeichern(s); fiDetail('bank'); }); await p.waitForTimeout(200);
+  ck('Detailseite: Figur mit Brust und Tipps', !!(await p.$('.fi-detail-kopf .fi-muskel.an[data-muskel="brust"]')) && (await p.$$('.fi-tipps-liste li')).length === 3);
   ck('Keine Seitenfehler', !fehler.length, fehler.join(' | '));
   console.log(checks.filter((c) => c[1]).length + ' bestanden, ' + checks.filter((c) => !c[1]).length + ' fehlgeschlagen');
   await b.close(); process.exit(checks.every((c) => c[1]) ? 0 : 1);

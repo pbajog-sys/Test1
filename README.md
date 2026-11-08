@@ -725,3 +725,11 @@ geht automatisch bis unter die tiefste Saite (5-Saiter-H = 30,9 Hz). Speicher `w
 - Übersicht: Trainings diese Woche, Wochen-Serie, Fortschritt je Übung (Mini-Kurve), letzte Trainings (antippen =
   Details, löschen). Detail: Kurve (1RM bzw. Tempo) und Tabelle aller Trainings. CSV-Export (Semikolon, deutsche Zahlen).
 - Speicher `walquiz.fitness.v1` (je Profil), Verlauf-Eintrag „fitness“ ohne Punktewertung. Test: `tests/fitness.test.js`.
+**Muskeln, Icons & Tipps** (`fitness-daten.js`): selbst gezeichnete Körper-Figur (SVG, vorn + hinten, 13 Muskelflächen).
+Jede Übung hat Haupt- und mitarbeitende Muskeln → Icon (Oberkörper- oder Bein-Ausschnitt, Hauptmuskel kräftig orange,
+mitarbeitende heller), Muskeltext und 2–3 Technik-Tipps (aufklappbar; allgemeine Hinweise, keine medizinische Beratung).
+Übersicht: **Muskel-Karte der Woche** als Wärmebild (Hauptmuskel 1, mitarbeitend ½ pro Satz, Ausdauer wie 2 Sätze;
+~10 Sätze = volle Farbe) mit „Noch nicht dran: …“, dazu ein Tipp des Tages. Übungsauswahl als Raster mit Icons und
+Filter nach Muskelgruppe; eigene Übungen mit optionalem Hauptmuskel. **Steigerungs-Vorschlag** (doppelte Progression):
+letztes Mal ≥ 2 Sätze mit dem schwersten Gewicht und gleicher Wdh.-Zahl (≥ 8) → heute + Gewichtssprung der Übung
+(1–5 kg), vorbelegt, mit „lieber wie letztes Mal“.

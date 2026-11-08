@@ -27,6 +27,19 @@ function fiStore() {
 const fiSpeichern = (s) => saveJson(FI_KEY, s);
 const fiUebungen = (s = fiStore()) => FI_STANDARD.concat(s.eigene);
 const fiUebung = (id, s) => fiUebungen(s).find((u) => u.id === id) || { id, name: id, art: 'kraft', gruppe: '', kg0: false };
+const fiInfo = (u) => (typeof FI_INFO !== 'undefined' && FI_INFO[u.id]) || (u.muskel && typeof FI_MUSKELN !== 'undefined' && FI_MUSKELN[u.muskel] ? { p: [u.muskel], s: [], ausdauer: u.art === 'ausdauer', tipps: [] } : null);
+const fiMuskelText = (info) => (info && info.p ? info.p.map((m) => FI_MUSKELN[m].name).join(', ') + (info.s && info.s.length ? ' · mit ' + info.s.map((m) => FI_MUSKELN[m].name).join(', ') : '') : '');
+// Trainingsmenge je Muskel in einem Zeitraum: Hauptmuskel 1 pro Satz, mitarbeitender ½; Ausdauer zählt wie 2 Sätze
+function fiMuskelMenge(s, ab) {
+  const m = {};
+  s.einheiten.concat(s.aktiv ? [s.aktiv] : []).filter((e) => e.start >= ab).forEach((e) => e.eintraege.forEach((x) => {
+    const info = fiInfo(fiUebung(x.u, s)); if (!info) return;
+    const k = x.km != null ? 2 : 1;
+    info.p.forEach((q) => { m[q] = (m[q] || 0) + k; }); (info.s || []).forEach((q) => { m[q] = (m[q] || 0) + k / 2; });
+  }));
+  return m;
+}
+const fiTippDesTages = () => FI_TIPPS_ALLG[Math.floor(Date.now() / 864e5) % FI_TIPPS_ALLG.length];
 const fiZahl = (n, d = 1) => (Math.round(n * 10 ** d) / 10 ** d).toLocaleString('de-DE');
 const fiEsc = (t) => String(t).replace(/[<>&"]/g, (c) => ({ '<': '&lt;', '>': '&gt;', '&': '&amp;', '"': '&quot;' })[c]);
 const fi1RM = (kg, wdh) => (wdh <= 1 ? kg : kg * (1 + wdh / 30));
@@ -82,6 +95,8 @@ function fiStart() {
   $('fiInhalt').innerHTML = '<div class="fi-start">'
     + '<button type="button" class="fi-los" id="fiLos">' + (s.aktiv ? '▶ Weiter mit dem laufenden Training<small>seit ' + new Date(s.aktiv.start).toLocaleTimeString('de-DE', { hour: '2-digit', minute: '2-digit' }) + ' · ' + s.aktiv.eintraege.length + ' Einträge</small>' : '▶ Training starten') + '</button>'
     + '<div class="fi-kacheln"><div><b>' + dieseWoche + '</b><span>diese Woche</span></div><div><b>' + serie + '</b><span>' + (serie === 1 ? 'Woche' : 'Wochen') + ' in Folge</span></div><div><b>' + s.einheiten.length + '</b><span>Trainings gesamt</span></div></div>'
+    + fiWochenKarte(s, w0)
+    + '<p class="fi-tipp">💡 ' + fiTippDesTages() + '</p>'
     + (genutzt.length ? '<h3 class="fi-h">📈 Fortschritt</h3><div class="fi-liste">' + genutzt.map((id) => fiZeile(id, s)).join('') + '</div>' : '<p class="fi-leer">Noch keine Trainings. Starte dein erstes – die Werte vom letzten Mal stehen beim nächsten Training schon drin.</p>')
     + (letzte.length ? '<h3 class="fi-h">🗓️ Letzte Trainings</h3><div class="fi-liste">' + letzte.map((e) => '<button type="button" class="fi-zeile" data-einheit="' + e.id + '"><span class="fi-ze">🏋️</span><span class="fi-zt"><b>' + fiDatum(e.start, true) + ' · ' + fiDauer(e.ende - e.start) + '</b><small>' + fiEinheitText(e, s) + '</small></span></button>').join('') + '</div>' : '')
     + '<div class="fi-unten"><button type="button" class="btn secondary" id="fiExport">⬇ Daten als CSV</button></div>'
@@ -91,6 +106,15 @@ function fiStart() {
   $('fiInhalt').querySelectorAll('[data-einheit]').forEach((b) => b.addEventListener('click', () => fiEinheitZeigen(b.dataset.einheit)));
   $('fiExport').addEventListener('click', fiExport);
 }
+function fiWochenKarte(s, w0) {
+  const m = fiMuskelMenge(s, w0), werte = {};
+  Object.entries(m).forEach(([k, v]) => { werte[k] = Math.min(1, v / 10); });   // ~10 Sätze pro Woche = volle Farbe
+  const top = Object.entries(m).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, v]) => FI_MUSKELN[k].name + ' ' + fiZahl(v, 1));
+  const offen = FI_GRUPPEN.filter((g) => g[1] && !g[1].some((k) => m[k])).map((g) => g[0]);
+  return '<div class="fi-woche"><div class="fi-woche-bild">' + fiKoerper(werte, 'vh', 'fi-gross') + '</div><div class="fi-woche-text"><h3 class="fi-h">🔥 Diese Woche</h3>'
+    + (top.length ? '<p>' + top.join(' · ') + ' <small>Sätze</small></p>' : '<p>Noch nichts trainiert – die Figur füllt sich mit jedem Satz.</p>')
+    + (offen.length && top.length ? '<p class="fi-offen">Noch nicht dran: ' + offen.join(', ') + '</p>' : '') + '</div></div>';
+}
 function fiEinheitText(e, s) {
   const proU = {}; e.eintraege.forEach((x) => { (proU[x.u] = proU[x.u] || []).push(x); });
   return Object.entries(proU).map(([u, l]) => fiEsc(fiUebung(u, s).name) + ' ' + (l[0].wdh != null ? l.length + '×' : fiZahl(l.reduce((a, x) => a + x.km, 0), 1) + ' km')).join(' · ') || 'leer';
@@ -99,7 +123,7 @@ function fiZeile(id, s) {
   const u = fiUebung(id, s), v = fiVerlauf(id, s), b = fiBest(id, s);
   const werte = v.map((x) => fiKennzahl(u, x.l)).filter((w) => w > 0);
   const bestText = u.art === 'ausdauer' ? (b.tempo ? fiZeit(b.tempo) + ' min/km' : fiZahl(b.km, 1) + ' km') : u.kg0 && !b.kg ? b.wdh + ' Wdh' : fiZahl(b.kg) + ' kg × ' + b.kgWdh;
-  return '<button type="button" class="fi-zeile" data-uebung="' + id + '"><span class="fi-ze">' + (u.art === 'ausdauer' ? '🏃' : '🏋️') + '</span><span class="fi-zt"><b>' + fiEsc(u.name) + '</b><small>Bestwert ' + bestText + ' · ' + v.length + '× trainiert</small></span>' + fiMiniKurve(werte, u.art === 'ausdauer') + '</button>';
+  return '<button type="button" class="fi-zeile" data-uebung="' + id + '"><span class="fi-ze">' + fiIcon(fiInfo(u)) + '</span><span class="fi-zt"><b>' + fiEsc(u.name) + '</b><small>Bestwert ' + bestText + ' · ' + v.length + '× trainiert</small></span>' + fiMiniKurve(werte, u.art === 'ausdauer') + '</button>';
 }
 // Kennzahl je Einheit: Kraft = bestes geschätztes 1RM (oder meiste Wdh. ohne Gewicht), Ausdauer = Tempo (s/km, kleiner ist besser)
 function fiKennzahl(u, l) {
@@ -130,7 +154,7 @@ function fiTrainingZeichnen() {
   const u = fi.uebung ? fiUebung(fi.uebung, s) : null;
   $('fiInhalt').innerHTML = '<div class="fi-training">'
     + '<div class="fi-kopf"><span id="fiDauer"></span><span>' + a.eintraege.length + ' Einträge</span></div>'
-    + '<div class="fi-chips">' + benutzt.map((id) => '<button type="button" data-wahl="' + id + '" class="' + (id === fi.uebung ? 'an' : '') + '">' + fiEsc(fiUebung(id, s).name) + '</button>').join('') + '<button type="button" class="fi-plus" id="fiNeueUebung">＋ Übung</button></div>'
+    + '<div class="fi-chips">' + benutzt.map((id) => '<button type="button" data-wahl="' + id + '" class="fi-chip-icon' + (id === fi.uebung ? ' an' : '') + '">' + fiIcon(fiInfo(fiUebung(id, s))) + fiEsc(fiUebung(id, s).name) + '</button>').join('') + '<button type="button" class="fi-plus" id="fiNeueUebung">＋ Übung</button></div>'
     + (u ? fiEingabe(u, s) : '<p class="fi-leer">Wähle oben eine Übung oder tippe auf „＋ Übung“.</p>')
     + '<div class="fi-pause" id="fiPause" hidden></div>'
     + '<button type="button" class="btn secondary fi-ende" id="fiEnde">🏁 Training beenden</button></div>';
@@ -147,15 +171,28 @@ function fiVorschlag(u, s) {
   const v = fiVerlauf(u.id, s); if (v.length) { const l = v[v.length - 1].l; return l[0]; }
   return u.art === 'ausdauer' ? { km: 5, sek: 30 * 60 } : { kg: u.kg0 ? 0 : 20, wdh: 10 };
 }
+// Doppelte Progression: Letztes Mal alle (≥ 2) Sätze mit dem schwersten Gewicht und gleicher Wdh.-Zahl (≥ 8) geschafft → mehr Gewicht
+function fiSteigerung(u, s) {
+  const info = fiInfo(u); if (u.art !== 'kraft' || !info || !info.schritt || s.aktiv.eintraege.some((x) => x.u === u.id)) return null;
+  const v = fiVerlauf(u.id, s); if (!v.length) return null;
+  const l = v[v.length - 1].l, top = Math.max(...l.map((x) => x.kg || 0)); if (!top) return null;
+  const oben = l.filter((x) => x.kg === top), ziel = oben[0].wdh;
+  if (oben.length < 2 || ziel < 8 || oben.some((x) => x.wdh < ziel)) return null;
+  return { kg: top + info.schritt, wdh: ziel, alt: top, saetze: oben.length };
+}
 function fiEingabe(u, s) {
-  const v = fiVorschlag(u, s), heute = s.aktiv.eintraege.filter((x) => x.u === u.id), hist = fiVerlauf(u.id, s), vorher = hist.length ? hist[hist.length - 1] : null;
+  const st = fiSteigerung(u, s), v = st ? { kg: st.kg, wdh: st.wdh } : fiVorschlag(u, s), heute = s.aktiv.eintraege.filter((x) => x.u === u.id), hist = fiVerlauf(u.id, s), vorher = hist.length ? hist[hist.length - 1] : null;
   const letztes = vorher ? 'Letztes Mal (' + fiDatum(vorher.t) + '): ' + (u.art === 'ausdauer' ? vorher.l.map((x) => fiZahl(x.km, 2) + ' km in ' + fiZeit(x.sek)).join(', ') : vorher.l.map((x) => (x.kg ? fiZahl(x.kg) + '×' : '') + x.wdh).join(' · ')) : 'Zum ersten Mal – viel Erfolg!';
   const stepper = (id, wert, label, schritt) => '<div class="fi-stepper"><span>' + label + '</span><div><button type="button" data-schritt="' + id + '" data-d="-' + schritt + '" aria-label="' + label + ' weniger">−</button><input id="' + id + '" inputmode="decimal" value="' + wert + '" aria-label="' + label + '"><button type="button" data-schritt="' + id + '" data-d="' + schritt + '" aria-label="' + label + ' mehr">+</button></div></div>';
   const felder = u.art === 'ausdauer'
     ? stepper('fiKm', fiZahl(v.km, 2), 'Strecke (km)', 0.5) + stepper('fiMin', fiZeit(v.sek), 'Dauer (min:s)', 60) + '<p class="fi-tempo" id="fiTempo"></p>'
     : stepper('fiKg', fiZahl(v.kg || 0, 2), u.kg0 ? 'Zusatzgewicht (kg)' : 'Gewicht (kg)', 2.5) + stepper('fiWdh', v.wdh || 10, 'Wiederholungen', 1);
-  return '<div class="fi-eingabe"><h3>' + fiEsc(u.name) + '</h3><p class="fi-letztes">' + letztes + '</p>' + felder
+  const info = fiInfo(u);
+  return '<div class="fi-eingabe"><div class="fi-ue-kopf">' + fiIcon(info) + '<div><h3>' + fiEsc(u.name) + '</h3><small>' + fiMuskelText(info) + '</small></div></div><p class="fi-letztes">' + letztes + '</p>'
+    + (st ? '<p class="fi-steigern" id="fiSteigern">📈 Letztes Mal ' + st.saetze + '× ' + st.wdh + ' mit ' + fiZahl(st.alt) + ' kg geschafft – heute <b>' + fiZahl(st.kg) + ' kg</b>? <button type="button" id="fiWieLetztes">lieber ' + fiZahl(st.alt) + ' kg</button></p>' : '')
+    + felder
     + '<button type="button" class="fi-satz" id="fiSatz">✓ ' + (u.art === 'ausdauer' ? 'Speichern' : 'Satz ' + (heute.length + 1) + ' speichern') + '</button>'
+    + (info && info.tipps && info.tipps.length ? '<details class="fi-tipps"><summary>💡 Technik-Tipps</summary><ul>' + info.tipps.map((t) => '<li>' + t + '</li>').join('') + '</ul></details>' : '')
     + (heute.length ? '<div class="fi-heute">' + heute.map((x, i) => '<span>' + (u.art === 'ausdauer' ? fiZahl(x.km, 2) + ' km · ' + fiZeit(x.sek) : (i + 1) + '. ' + (x.kg ? fiZahl(x.kg) + ' kg × ' : '') + x.wdh) + (x.pr ? ' 🏆' : '') + '<button type="button" data-weg="' + a(x, s) + '" aria-label="Eintrag löschen">×</button></span>').join('') + '</div>' : '')
     + '</div>';
   function a(x, st) { return st.aktiv.eintraege.indexOf(x); }
@@ -182,6 +219,7 @@ function fiEingabeVerdrahten(u) {
   ['fiKm', 'fiMin'].forEach((id) => { if ($(id)) $(id).addEventListener('input', tempo); });
   tempo();
   $('fiSatz').addEventListener('click', () => fiSatzSpeichern(u));
+  if ($('fiWieLetztes')) $('fiWieLetztes').addEventListener('click', () => { const st = fiSteigerung(u, fiStore()); if (st) $('fiKg').value = fiZahl(st.alt, 2); $('fiSteigern').remove(); });
   $('fiInhalt').querySelectorAll('[data-weg]').forEach((b) => b.addEventListener('click', () => {
     const s = fiStore(); s.aktiv.eintraege.splice(+b.dataset.weg, 1); fiSpeichern(s); fiTrainingZeichnen();
   }));
@@ -238,16 +276,23 @@ function fiWachAus() { try { if (fiWach) fiWach.release(); } catch (e) { /* egal
 document.addEventListener('visibilitychange', () => { if (!document.hidden && fi && $('screen-fitness').classList.contains('active') && fiStore().aktiv) fiWachAn(); });
 
 function fiUebungWaehlen() {
-  const s = fiStore(), gruppen = {};
-  fiUebungen(s).forEach((u) => { (gruppen[u.gruppe || 'Eigene'] = gruppen[u.gruppe || 'Eigene'] || []).push(u); });
-  const html = '<h3>Übung wählen</h3>' + Object.entries(gruppen).map(([g, l]) => '<h4 class="fi-gruppe">' + fiEsc(g) + '</h4><div class="fi-chips">' + l.map((u) => '<button type="button" data-neu="' + u.id + '">' + fiEsc(u.name) + '</button>').join('') + '</div>').join('')
-    + '<h4 class="fi-gruppe">Eigene Übung anlegen</h4><div class="fi-eigen"><input id="fiEigenName" placeholder="Name, z. B. Hip Thrust" maxlength="40"><select id="fiEigenArt"><option value="kraft">Kraft</option><option value="kg0">Kraft ohne Gewicht</option><option value="ausdauer">Ausdauer</option></select><button type="button" class="btn" id="fiEigenOk">Anlegen</button></div>';
+  const s = fiStore(), alle = fiUebungen(s);
+  const passt = (u, g) => { if (!g) return true; const grp = FI_GRUPPEN.find((x) => x[0] === g); const info = fiInfo(u); if (!grp[1]) return u.art === 'ausdauer'; return u.art === 'kraft' && info && grp[1].includes(info.p[0]); };
+  const karten = (g) => alle.filter((u) => passt(u, g)).map((u) => '<button type="button" class="fi-ue-karte" data-neu="' + u.id + '">' + fiIcon(fiInfo(u)) + '<b>' + fiEsc(u.name) + '</b><small>' + (fiInfo(u) ? FI_MUSKELN[fiInfo(u).p[0]].name : u.art === 'ausdauer' ? 'Ausdauer' : 'Eigene') + '</small></button>').join('');
+  const gruppeIcon = (g) => { const grp = FI_GRUPPEN.find((x) => x[0] === g); const w = {}; (grp[1] || ['quad', 'waden']).forEach((m) => { w[m] = 'p'; }); return '<span class="fi-icon">' + fiKoerper(w, grp[1] && grp[1].every((m) => FI_MUSKELN[m].seite === 'h') || g === 'Rücken' ? 'h' : 'v') + '</span>'; };
+  const html = '<h3>Übung wählen</h3><div class="fi-filter"><button type="button" class="an" data-filter="">Alle</button>' + FI_GRUPPEN.map(([g]) => '<button type="button" data-filter="' + g + '">' + gruppeIcon(g) + g + '</button>').join('') + '</div>'
+    + '<div class="fi-ue-raster" id="fiRaster">' + karten('') + '</div>'
+    + '<h4 class="fi-gruppe">Eigene Übung anlegen</h4><div class="fi-eigen"><input id="fiEigenName" placeholder="Name, z. B. Hip Thrust" maxlength="40"><select id="fiEigenArt"><option value="kraft">Kraft</option><option value="kg0">Kraft ohne Gewicht</option><option value="ausdauer">Ausdauer</option></select>'
+    + '<select id="fiEigenMuskel" aria-label="Hauptmuskel"><option value="">Hauptmuskel (optional)</option>' + Object.entries(FI_MUSKELN).map(([k, m]) => '<option value="' + k + '">' + m.name + '</option>').join('') + '</select><button type="button" class="btn" id="fiEigenOk">Anlegen</button></div>';
   const d = skDialog(html);
-  d.querySelectorAll('[data-neu]').forEach((b) => b.addEventListener('click', () => { d.close(); fi.uebung = b.dataset.neu; fiTrainingZeichnen(); }));
+  const verdrahten = () => d.querySelectorAll('[data-neu]').forEach((b) => b.addEventListener('click', () => { d.close(); fi.uebung = b.dataset.neu; fiTrainingZeichnen(); }));
+  d.querySelectorAll('[data-filter]').forEach((b) => b.addEventListener('click', () => { d.querySelectorAll('[data-filter]').forEach((x) => x.classList.toggle('an', x === b)); d.querySelector('#fiRaster').innerHTML = karten(b.dataset.filter); verdrahten(); }));
+  verdrahten();
   d.querySelector('#fiEigenOk').addEventListener('click', () => {
     const name = d.querySelector('#fiEigenName').value.trim().slice(0, 40); if (!name) return;
     const art = d.querySelector('#fiEigenArt').value, st = fiStore(), id = 'x' + Date.now().toString(36);
-    st.eigene.push({ id, name, art: art === 'ausdauer' ? 'ausdauer' : 'kraft', gruppe: 'Eigene', kg0: art === 'kg0' }); fiSpeichern(st);
+    const muskel = d.querySelector('#fiEigenMuskel').value;
+    st.eigene.push({ id, name, art: art === 'ausdauer' ? 'ausdauer' : 'kraft', gruppe: 'Eigene', kg0: art === 'kg0', muskel: FI_MUSKELN[muskel] ? muskel : null }); fiSpeichern(st);
     d.close(); fi.uebung = id; fiTrainingZeichnen();
   });
 }
@@ -279,7 +324,11 @@ function fiDetail(id) {
   $('fiTitel').textContent = (u.art === 'ausdauer' ? '🏃 ' : '🏋️ ') + u.name;
   const ohneGewicht = u.art === 'kraft' && v.every((x) => x.l.every((y) => !y.kg));
   const was = u.art === 'ausdauer' ? 'Tempo (min/km) – tiefer ist schneller' : ohneGewicht ? 'Meiste Wiederholungen je Training' : 'Geschätztes Maximalgewicht (1RM) je Training';
-  $('fiInhalt').innerHTML = '<div class="fi-detail"><div class="fi-kacheln">'
+  const info = fiInfo(u), fw = {}; if (info) { info.p.forEach((m) => { fw[m] = 'p'; }); (info.s || []).forEach((m) => { if (!fw[m]) fw[m] = 's'; }); }
+  $('fiInhalt').innerHTML = '<div class="fi-detail">'
+    + (info ? '<div class="fi-detail-kopf">' + fiKoerper(fw, 'vh', 'fi-gross') + '<div><p class="fi-muskeln"><b>' + info.p.map((m) => FI_MUSKELN[m].name).join(', ') + '</b>' + (info.s && info.s.length ? '<br><small>mit ' + info.s.map((m) => FI_MUSKELN[m].name).join(', ') + '</small>' : '') + '</p>'
+      + (info.tipps && info.tipps.length ? '<ul class="fi-tipps-liste">' + info.tipps.map((t) => '<li>' + t + '</li>').join('') + '</ul>' : '') + '</div></div>' : '')
+    + '<div class="fi-kacheln">'
     + (u.art === 'ausdauer' ? '<div><b>' + (b.tempo ? fiZeit(b.tempo) : '–') + '</b><span>bestes Tempo</span></div><div><b>' + fiZahl(b.km, 1) + '</b><span>km am Stück</span></div>'
       : ohneGewicht ? '<div><b>' + b.wdh + '</b><span>Wdh. Bestwert</span></div>' : '<div><b>' + fiZahl(b.kg) + ' kg</b><span>schwerstes × ' + b.kgWdh + '</span></div><div><b>' + fiZahl(b.rm) + ' kg</b><span>geschätztes 1RM</span></div>')
     + '<div><b>' + v.length + '</b><span>Trainings</span></div></div>'

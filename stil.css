@@ -3823,3 +3823,30 @@ a.bb-datei { text-decoration: none; }
 .fi-was { margin: 0; font-size: .82rem; color: #c4b5a5; } .fi-kurve { width: 100%; display: block; border-radius: 16px; background: rgba(0,0,0,.25); }
 .fi-tabelle { display: grid; gap: 4px; } .fi-tabelle > div { display: grid; grid-template-columns: 80px 1fr; gap: 8px; padding: 8px 10px; border-radius: 10px; background: rgba(255,255,255,.04); font-size: .85rem; font-variant-numeric: tabular-nums; } .fi-tabelle b { color: #fdba74; }
 @media (prefers-reduced-motion: reduce) { .fi-mini-av { animation: none; } }
+/* Fitness: Körper-Figur, Icons, Tipps */
+.fi-koerper { display: block; height: 100%; width: auto; }
+.fi-rumpf { fill: rgba(255,255,255,.13); }
+.fi-muskel { fill: rgba(255,255,255,.2); transition: fill .3s; } .fi-muskel.an { filter: drop-shadow(0 0 2px rgba(251,146,60,.6)); }
+.fi-icon { flex: none; display: inline-grid; place-items: center; width: 34px; height: 40px; border-radius: 10px; background: rgba(0,0,0,.25); padding: 3px 0; box-sizing: border-box; }
+.fi-icon-ausdauer { background: rgba(56,189,248,.14); } .fi-icon-leer { font-size: 1.2rem; }
+.fi-ze .fi-icon { width: 36px; height: 44px; }
+.fi-chip-icon { display: inline-flex !important; align-items: center; gap: 6px; padding: 4px 12px 4px 4px !important; } .fi-chip-icon .fi-icon { width: 24px; height: 30px; border-radius: 999px; padding: 2px 0; }
+.fi-woche { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: center; padding: 12px; border-radius: 20px; background: rgba(255,255,255,.05); }
+.fi-woche-bild { height: 150px; display: grid; place-items: center; } .fi-woche-text p { margin: 4px 0 0; font-size: .85rem; } .fi-woche-text small { color: #c4b5a5; } .fi-offen { color: #fdba74; }
+.fi-tipp { margin: 0; padding: 10px 12px; border-radius: 14px; background: rgba(253,224,71,.08); box-shadow: inset 3px 0 0 #fde047; font-size: .85rem; line-height: 1.45; }
+.fi-ue-kopf { display: flex; gap: 12px; align-items: center; } .fi-ue-kopf .fi-icon { width: 46px; height: 56px; } .fi-ue-kopf small { color: #fdba74; font-size: .78rem; } .fi-ue-kopf h3 { margin: 0; }
+.fi-steigern { margin: 0; padding: 10px 12px; border-radius: 14px; background: rgba(74,222,128,.12); font-size: .88rem; line-height: 1.5; } .fi-steigern b { color: #4ade80; }
+.fi-steigern button { border: 0; border-radius: 8px; padding: 4px 8px; margin-left: 4px; background: rgba(255,255,255,.12); color: inherit; font: inherit; font-size: .78rem; cursor: pointer; }
+.fi-tipps { border-radius: 14px; background: rgba(255,255,255,.04); padding: 8px 12px; } .fi-tipps summary { cursor: pointer; font-weight: 800; font-size: .9rem; color: #fde047; }
+.fi-tipps ul, .fi-tipps-liste { margin: 8px 0 0; padding-left: 1.2em; display: grid; gap: 4px; font-size: .85rem; line-height: 1.45; }
+.fi-filter { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px; scrollbar-width: none; } .fi-filter::-webkit-scrollbar { display: none; }
+.fi-filter button { flex: none; display: inline-flex; align-items: center; gap: 4px; border: 1px solid rgba(128,128,128,.4); border-radius: 999px; padding: 3px 10px 3px 3px; background: none; color: inherit; font: inherit; font-size: .8rem; font-weight: 700; cursor: pointer; }
+.fi-filter button:first-child { padding-left: 10px; } .fi-filter button.an { background: #fb923c; border-color: #fb923c; color: #2a1300; } .fi-filter .fi-icon { width: 22px; height: 28px; border-radius: 999px; padding: 2px 0; }
+.fi-ue-raster { display: grid; grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); gap: 8px; margin-top: 8px; max-height: 46vh; overflow-y: auto; }
+.fi-ue-karte { display: grid; justify-items: center; gap: 3px; padding: 10px 4px; border: 0; border-radius: 14px; background: rgba(128,128,128,.14); color: inherit; font: inherit; cursor: pointer; text-align: center; }
+.fi-ue-karte .fi-icon { width: 42px; height: 52px; } .fi-ue-karte b { font-size: .78rem; line-height: 1.2; } .fi-ue-karte small { font-size: .65rem; opacity: .7; }
+.fi-eigen select#fiEigenMuskel { grid-column: 1 / -1; }
+.fi-detail-kopf { display: grid; grid-template-columns: 140px 1fr; gap: 12px; align-items: center; padding: 12px; border-radius: 20px; background: rgba(255,255,255,.05); }
+.fi-detail-kopf .fi-koerper { height: 140px; } .fi-muskeln { margin: 0; } .fi-muskeln small { color: #c4b5a5; }
+.sk-dlg .fi-rumpf { fill: rgba(128,128,128,.35); } .sk-dlg .fi-muskel:not(.an) { fill: rgba(128,128,128,.45); }
+.fi-icon { overflow: hidden; } .fi-icon .fi-koerper { width: 100%; height: 100%; }
