@@ -75,6 +75,17 @@ const ordner = process.argv[2] || '.';
   ck('Nach 8 Tagen erscheint die Erinnerung wieder', /vor 8 Tagen/.test(await p.textContent('#sbHinweis')));
   await p.evaluate(() => document.querySelector('#sbHinweis .sb-hi-zu').click());
   ck('„×“ = später erinnern (3 Tage Ruhe)', await p.evaluate(() => { sbHinweis(); return !$('sbHinweis') && sbInfo().spaeter > Date.now() + 2.9 * 864e5; }));
+  // ---------- Ziel wählen, Anleitung, „nur wenn Neues“ ----------
+  await p.evaluate(() => { sbInfoSetzen({ zuletzt: 0 }); sbDialog(); }); await p.waitForTimeout(300);
+  ck('Ziel-Wahl: iCloud Drive vorgewählt, Anleitung offen (noch nie gesichert)', /Jetzt in iCloud Drive sichern/.test(await p.textContent('#sbJetzt')) && await p.evaluate(() => document.getElementById('sbAnleitung').open) && /In Dateien sichern/.test(await p.textContent('#sbAnleitung')));
+  await p.click('#skDlg [data-ziel="onedrive"]'); await p.waitForTimeout(300);
+  ck('OneDrive gewählt: Knopf, Anleitung und gemerkt', /Jetzt in OneDrive sichern/.test(await p.textContent('#sbJetzt')) && /Microsoft OneDrive/.test(await p.textContent('#sbAnleitung')) && await p.evaluate(() => sbInfo().ziel === 'onedrive'));
+  await p.keyboard.press('Escape');
+  await p.evaluate(() => { sbInfoSetzen({ zuletzt: Date.now() - 30 * 864e5, abdruck: sbFingerabdruck(), spaeter: 0 }); sbHinweis(); });
+  ck('Alte Sicherung, aber nichts Neues → kein Hinweis', !(await p.$('#sbHinweis')));
+  await p.evaluate(() => { const s = fiStore(); s.einheiten.push({ id: 'n', start: Date.now(), ende: Date.now(), eintraege: [] }); fiSpeichern(s); sbHinweis(); });
+  ck('Neuer Eintrag → Hinweis „Neue Einträge sichern“ mit Ziel OneDrive', /Neue Einträge sichern/.test(await p.textContent('#sbHinweis')) && /OneDrive/.test(await p.textContent('#sbHinweis')));
+  await p.evaluate(() => { const s = fiStore(); s.einheiten.pop(); fiSpeichern(s); });
   // ---------- Aktualisieren ohne Löschen: lädt neu, Daten bleiben ----------
   await p.evaluate(() => sbDialog()); await p.waitForTimeout(300);
   ck('Dialog zeigt Stand und „Jetzt nach Update suchen“', /App aktualisieren/.test(await p.textContent('#skDlg')) && /v\d+/.test(await p.textContent('.sb-update')));

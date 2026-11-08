@@ -5,6 +5,18 @@
 const SB_KEY = 'walquiz.sicherung.v1';            // { zuletzt, spaeter } – letzte Sicherung, „später erinnern“
 const SB_VORHER = 'spielekiste-vor-einspielen';   // Stand vor dem letzten Einspielen (zum Rückgängigmachen; bewusst ohne „walquiz.“)
 const SB_TAGE = 7;
+const SB_ZIELE = {
+  icloud: { name: 'iCloud Drive', icon: '☁️', schritte: ['Auf „Jetzt sichern“ tippen.', 'Im Teilen-Menü <b>„In Dateien sichern“</b> wählen.', 'Links oben <b>„iCloud Drive“</b> antippen – beim ersten Mal unten rechts mit dem Ordner-Symbol einen Ordner <b>„Spielekiste“</b> anlegen und hineingehen.', 'Oben rechts <b>„Sichern“</b>. Fertig – beim nächsten Mal merkt sich das iPhone den Ordner.'] },
+  onedrive: { name: 'OneDrive', icon: '🟦', schritte: ['Einmalig: die App <b>„Microsoft OneDrive“</b> aus dem App Store laden und anmelden.', 'Auf „Jetzt sichern“ tippen.', 'Im Teilen-Menü <b>„OneDrive“</b> wählen (falls nicht sichtbar: ganz rechts „Mehr“ und OneDrive einschalten).', 'Ordner wählen (z. B. neu „Spielekiste“) und hochladen. Alternativ: „In Dateien sichern“ → OneDrive.'] },
+  gdrive: { name: 'Google Drive', icon: '🟩', schritte: ['Einmalig: die App <b>„Google Drive“</b> aus dem App Store laden und anmelden.', 'Auf „Jetzt sichern“ tippen.', 'Im Teilen-Menü <b>„Drive“</b> wählen (falls nicht sichtbar: ganz rechts „Mehr“ und Drive einschalten).', 'Ordner wählen (z. B. neu „Spielekiste“) und „Hochladen“. Alternativ: „In Dateien sichern“ → Drive.'] },
+};
+// Fingerabdruck aller Daten (ohne Sicherungs-Infos) – so erkennt die App, ob es seit der letzten Sicherung Neues gibt
+function sbFingerabdruck() {
+  let h = 5381; const unwichtig = [SB_KEY, 'walquiz.zuletzt.v1', 'walquiz.gesehen.v1', 'walquiz.installhinweis.v1'];
+  sbSchluessel().filter((k) => !unwichtig.includes(k)).forEach((k) => { const t = k + '=' + (localStorage.getItem(k) || ''); for (let i = 0; i < t.length; i++) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0; });
+  return h.toString(36);
+}
+const sbNeues = () => sbFingerabdruck() !== sbInfo().abdruck;
 
 function sbSchluessel() {
   const l = [];
@@ -36,14 +48,14 @@ async function sbSichern(mitSongs) {
   if (navigator.canShare && navigator.share && navigator.canShare({ files: [datei] })) {
     try { await navigator.share({ files: [datei], title: 'Spielekiste-Sicherung' }); }
     catch (e) { if (e && e.name === 'AbortError') return { ok: false, abgebrochen: true }; return sbHerunterladen(datei, obj); }
-    sbInfoSetzen({ zuletzt: Date.now(), groesse: text.length }); return { ok: true, weg: 'teilen', obj };
+    sbInfoSetzen({ zuletzt: Date.now(), groesse: text.length, abdruck: sbFingerabdruck() }); return { ok: true, weg: 'teilen', obj };
   }
   return sbHerunterladen(datei, obj);
 }
 function sbHerunterladen(datei, obj) {
   const a = document.createElement('a'); a.href = URL.createObjectURL(datei); a.download = datei.name;
   document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 2000);
-  sbInfoSetzen({ zuletzt: Date.now(), groesse: datei.size }); return { ok: true, weg: 'download', obj };
+  sbInfoSetzen({ zuletzt: Date.now(), groesse: datei.size, abdruck: sbFingerabdruck() }); return { ok: true, weg: 'download', obj };
 }
 // Datei prüfen → { obj } oder { fehler }
 function sbPruefen(text) {
@@ -60,7 +72,7 @@ async function sbEinspielen(obj) {
   try { localStorage.setItem(SB_VORHER, JSON.stringify({ zeit: Date.now(), daten: vorher })); } catch (e) { /* zu groß – dann ohne Rückgängig */ }
   sbSchluessel().forEach((k) => localStorage.removeItem(k));
   Object.entries(obj.daten).forEach(([k, v]) => localStorage.setItem(k, v));
-  sbInfoSetzen({ zuletzt: Date.parse(obj.erstellt) || Date.now(), eingespielt: Date.now() });
+  sbInfoSetzen({ zuletzt: Date.parse(obj.erstellt) || Date.now(), eingespielt: Date.now(), abdruck: sbFingerabdruck() });
   let songs = 0;
   if (Array.isArray(obj.songs) && obj.songs.length && typeof srDbTun === 'function') {
     for (const x of obj.songs) { try { await srDbTun('readwrite', (s) => s.put({ id: x.id, name: x.name, groesse: x.groesse, daten: sbAusB64(x.b64) })); songs++; } catch (e) { /* einzelner Song kaputt */ } }
@@ -75,6 +87,7 @@ function sbRueckgaengig() {
   localStorage.removeItem(SB_VORHER);
   return true;
 }
+const sbZiel = () => (SB_ZIELE[sbInfo().ziel] ? sbInfo().ziel : 'icloud');
 const sbVorHer = (t) => { if (!t) return 'noch nie'; const d = Math.floor((Date.now() - t) / 864e5); return d <= 0 ? 'heute' : d === 1 ? 'gestern' : 'vor ' + d + ' Tagen'; };
 const sbMB = (n) => (n / 1048576).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' MB';
 
@@ -88,7 +101,9 @@ async function sbDialog() {
     + '<ul class="ft-check"><li><b>Letzte Sicherung</b><span id="sbZuletzt">' + sbVorHer(info.zuletzt) + '</span></li><li><b>Daten</b><span>' + sbSchluessel().length + ' Einträge' + (songs.length ? ' · ' + songs.length + (songs.length === 1 ? ' eigener Song' : ' eigene Songs') : '') + '</span></li>'
     + '<li><b>Dauerhaft gespeichert</b><span>' + (dauerhaft === true ? 'ja ✓' : dauerhaft === false ? 'nein – Sicherung umso wichtiger' : 'unbekannt') + '</span></li></ul>'
     + (songs.length ? '<label class="sb-songs"><input type="checkbox" id="sbMitSongs"' + (songGroesse < 40 * 1048576 ? ' checked' : '') + '> eigene Songs mitsichern (' + sbMB(songGroesse) + ')</label>' : '')
-    + '<button type="button" class="btn sb-los" id="sbJetzt">💾 Jetzt sichern</button>'
+    + '<div class="sb-ziele" role="radiogroup" aria-label="Wohin sichern?">' + Object.entries(SB_ZIELE).map(([k, z]) => '<button type="button" role="radio" data-ziel="' + k + '" class="' + (k === sbZiel() ? 'an' : '') + '" aria-checked="' + (k === sbZiel()) + '">' + z.icon + ' ' + z.name + '</button>').join('') + '</div>'
+    + '<details class="sb-anleitung" id="sbAnleitung"' + (info.zuletzt ? '' : ' open') + '><summary>So geht’s mit ' + SB_ZIELE[sbZiel()].name + '</summary><ol>' + SB_ZIELE[sbZiel()].schritte.map((x) => '<li>' + x + '</li>').join('') + '</ol></details>'
+    + '<button type="button" class="btn sb-los" id="sbJetzt">💾 Jetzt in ' + SB_ZIELE[sbZiel()].name + ' sichern</button>'
     + '<p class="ft-klein sb-schritte">Auf dem iPhone: im Teilen-Menü <b>„In Dateien sichern“</b> → <b>iCloud Drive</b> wählen. So liegt die Sicherung sicher in der Cloud.</p>'
     + '<label class="btn secondary sb-einspielen">📂 Sicherung einspielen<input type="file" id="sbDatei" accept=".json,application/json" hidden></label>'
     + (rueck ? '<button type="button" class="btn secondary" id="sbRueck">↺ Letztes Einspielen rückgängig (' + new Date(rueck.zeit).toLocaleString('de-DE', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) + ')</button>' : '')
@@ -96,6 +111,7 @@ async function sbDialog() {
     + '<div class="sb-update"><b>🔄 App aktualisieren</b><small>Stand ' + (typeof APP_STAND !== 'undefined' ? APP_STAND.replace('walquiz-', '') : '?') + ' · Updates kommen von selbst – die App nie zum Aktualisieren löschen, sonst sind die Daten weg.</small><button type="button" class="btn secondary" id="sbUpdate">Jetzt nach Update suchen</button></div>';
   const d = skDialog(html);
   d.querySelector('#sbUpdate').addEventListener('click', sbAktualisieren);
+  d.querySelectorAll('[data-ziel]').forEach((b) => b.addEventListener('click', () => { sbInfoSetzen({ ziel: b.dataset.ziel }); d.close(); sbDialog(); }));
   d.querySelector('#sbJetzt').addEventListener('click', async () => {
     const m = d.querySelector('#sbMeldung'); m.textContent = 'Sicherung wird erstellt …';
     const r = await sbSichern(!!(d.querySelector('#sbMitSongs') && d.querySelector('#sbMitSongs').checked));
@@ -125,14 +141,14 @@ async function sbAktualisieren() {
 function sbHinweis() {
   const hub = $('screen-hub'); if (!hub) return;
   let box = $('sbHinweis');
-  const info = sbInfo(), faellig = sbHatDaten() && (!info.zuletzt || Date.now() - info.zuletzt > SB_TAGE * 864e5) && !(info.spaeter > Date.now());
+  const info = sbInfo(), faellig = sbHatDaten() && sbNeues() && (!info.zuletzt || Date.now() - info.zuletzt > 2 * 864e5) && !(info.spaeter > Date.now());
   if (!faellig) { if (box) box.remove(); return; }
   if (!box) {
     box = document.createElement('div'); box.id = 'sbHinweis'; box.className = 'sb-hinweis'; box.setAttribute('role', 'status');
-    const ziel = hub.querySelector('.spalte-a'); if (!ziel) return;
-    ziel.insertBefore(box, ziel.firstChild);
+    const start = $('skStart'), ziel = hub.querySelector('.spalte-a');   // gut sichtbar: direkt über der Level-Karte
+    if (start && start.parentNode) start.parentNode.insertBefore(box, start); else if (ziel) ziel.insertBefore(box, ziel.firstChild); else return;
   }
-  box.innerHTML = '<span class="sb-hi-icon">💾</span><div><b>Daten sichern</b><small>Letzte Sicherung: ' + sbVorHer(info.zuletzt) + '. Beim Löschen der App wären sonst alle Spielstände weg.</small></div><button type="button" class="sb-hi-los">Sichern</button><button type="button" class="sb-hi-zu" aria-label="Später erinnern">×</button>';
+  box.innerHTML = '<span class="sb-hi-icon">💾</span><div><b>Neue Einträge sichern</b><small>Letzte Sicherung: ' + sbVorHer(info.zuletzt) + ' · Ziel: ' + SB_ZIELE[sbZiel()].name + '</small></div><button type="button" class="sb-hi-los">Sichern</button><button type="button" class="sb-hi-zu" aria-label="Später erinnern">×</button>';
   box.querySelector('.sb-hi-los').addEventListener('click', sbDialog);
   box.querySelector('.sb-hi-zu').addEventListener('click', () => { sbInfoSetzen({ spaeter: Date.now() + 3 * 864e5 }); box.remove(); });
 }

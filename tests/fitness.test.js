@@ -65,6 +65,7 @@ const ordner = process.argv[2] || '.';
   await p.evaluate(() => { fi.pauseEnde = 0; });
   await p.click('#fiEnde'); await p.waitForTimeout(400);
   const karte = await p.textContent('.fi-karte');
+  ck('Abschluss-Karte bietet „Training gleich sichern“', !!(await p.$('#fiSichernJetzt')));
   ck('Abschluss: 3 Sätze, 5 km, 2 Bestwerte', /3\s*Sätze/.test(karte) && /5\s*km/.test(karte) && /2<\/b> neue Bestwerte|2 neue Bestwerte/.test(await p.innerText('.fi-karte')), karte.replace(/\s+/g, ' ').slice(0, 160));
   await bild('fi-ende');
   const vl = await p.evaluate(() => (loadJson(VERLAUF_KEY).tage[skDatum()] || []).filter((e) => e.s === 'fitness').map((e) => e.i + ' | ' + JSON.stringify(e.x)));

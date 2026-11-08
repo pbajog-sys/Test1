@@ -742,4 +742,8 @@ sonst als Download. Einspielen über 💾 im Hub oder – nach einer Neuinstalla
 „Wie heißt du?“ („Ich habe eine Sicherung – einspielen“). Prüft die Datei (App-Kennung, Format, nur `walquiz.*`),
 ersetzt dann die Daten und merkt sich den alten Stand für „↺ Rückgängig“. Erinnerung im Hub, wenn es Daten gibt und die
 letzte Sicherung fehlt oder älter als 7 Tage ist („×“ = 3 Tage Ruhe). Zusätzlich `navigator.storage.persist()`.
+**Ziel-Wahl** iCloud Drive / OneDrive / Google Drive mit Schritt-für-Schritt-Anleitung (beim ersten Mal aufgeklappt),
+Knopf „💾 Jetzt in … sichern“ öffnet das Teilen-Menü. Der Hinweis (direkt über der Level-Karte) erscheint nur, wenn sich
+seit der letzten Sicherung etwas geändert hat (Fingerabdruck der Daten) und diese älter als 2 Tage ist bzw. fehlt.
+Nach einem Fitness-Training: „💾 Training gleich sichern“. „🔄 App aktualisieren“ holt Updates ohne Löschen.
 Kein Server, kein Konto. Test: `tests/sicherung.test.js` (sichern → alles löschen wie iOS → einspielen → bitgenau zurück).

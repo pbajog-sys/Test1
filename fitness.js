@@ -312,10 +312,11 @@ function fiBeenden() {
     + (km ? '<div><b>' + fiZahl(km, 1) + '</b><span>km</span></div>' : '') + '</div>'
     + (prs ? '<p class="ft-gross">🏆 <b>' + prs + '</b> neue' + (prs > 1 ? '' : 'r') + ' Bestwert' + (prs > 1 ? 'e' : '') + '</p>' : '')
     + '<p class="fi-zusammen">' + fiEinheitText(a, s) + '</p>'
-    + '<div class="ft-karte-knoepfe"><button type="button" class="btn ft-los fi-los-btn" id="fiFertig">Zur Übersicht</button></div></div>';
+    + '<div class="ft-karte-knoepfe">' + (typeof sbDialog === 'function' ? '<button type="button" class="btn ft-los fi-los-btn" id="fiSichernJetzt">💾 Training gleich sichern</button>' : '') + '<button type="button" class="btn ' + (typeof sbDialog === 'function' ? 'secondary' : 'ft-los fi-los-btn') + '" id="fiFertig">Zur Übersicht</button></div></div>';
   $('fiInhalt').appendChild(d);
   if (prs && typeof konfetti === 'function') konfetti(30, ['💪', '🏆', '✨']);
   $('fiFertig').addEventListener('click', () => { d.remove(); fiStart(); });
+  if ($('fiSichernJetzt')) $('fiSichernJetzt').addEventListener('click', () => { d.remove(); fiStart(); sbDialog(); });
 }
 
 // ---------- Fortschritt einer Übung ----------
