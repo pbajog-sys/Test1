@@ -3925,3 +3925,11 @@ a.bb-datei { text-decoration: none; }
 .sg-regler:active::-webkit-slider-thumb { transform: scale(1.18); }
 .sg-regler::-moz-range-thumb { width: 34px; height: 26px; border-radius: 999px; background: rgba(255,255,255,.9); border: 1px solid #fff; box-shadow: 0 4px 14px rgba(0,0,0,.35); }
 @media (prefers-reduced-motion: reduce) { .sg-blasen i { animation: none; } .sg-ton b.ok { transform: none; } }
+/* Stimmgerät: Note im Bogen, ruhigere Abstände, Leisten laufen weich aus */
+.sg-anzeige { padding: 14px 0 18px; gap: 0; } .sg-bild { max-width: 100%; }
+.sg-ton { position: relative; z-index: 1; padding: 0 16px; pointer-events: none; }
+.sg-ton b { line-height: .95; } .sg-ton b.alt { opacity: .35; }
+.sg-ton span { margin-top: 26px; text-align: center; } .sg-ton small { margin-top: 2px; }
+.sg-wahl { -webkit-mask-image: linear-gradient(90deg, #000 85%, transparent); mask-image: linear-gradient(90deg, #000 85%, transparent); padding-right: 24px; }
+.sg-stimmung select { -webkit-appearance: none; appearance: none; padding-right: 30px; background-image: none; text-overflow: ellipsis; }
+.sg-kammer { gap: 10px; } .sg-kammer > span { flex: 1; text-align: left; }
