@@ -4012,3 +4012,22 @@ a.bb-datei { text-decoration: none; }
 .sc-kamera p { position: absolute; left: 0; right: 0; bottom: 12px; margin: 0; text-align: center; color: #fff; font-weight: 700; text-shadow: 0 1px 4px #000; padding: 0 12px; }
 @media (prefers-reduced-motion: reduce) { .sc-mini i, .sc-rahmen i { animation: none; } .sc-laden i { animation-duration: 2.4s; } }
 .sc-inhalt *, .sc-inhalt *::before, .sc-inhalt *::after { box-sizing: border-box; } .sc-scan-btn { width: 100%; } .sc-eingabe button { flex: none; }
+/* Kalorien-Tagebuch */
+.sc-kal-oben { display: grid; grid-template-columns: 112px 1fr; gap: 14px; align-items: center; }
+.sc-ring { width: 112px; height: 112px; } .sc-ring circle { fill: none; stroke: rgba(255,255,255,.10); stroke-width: 11; }
+.sc-ring .voll { stroke: #34d399; stroke-linecap: round; transform: rotate(-90deg); transform-origin: 60px 60px; transition: stroke-dasharray .5s ease; } .sc-ring.drueber .voll { stroke: #fb923c; }
+.sc-ring text { fill: #ecfdf5; font: 800 24px system-ui; text-anchor: middle; } .sc-ring text.kl { font: 600 12px system-ui; fill: rgba(236,253,245,.6); }
+.sc-kal-zahlen { display: grid; gap: 6px; min-width: 0; } .sc-kal-zahlen b { font-size: 1.1rem; } .sc-kal-zahlen span { font-size: .85rem; color: rgba(236,253,245,.7); line-height: 1.35; }
+.sc-ziel { font-size: .85rem; color: rgba(236,253,245,.7); } .sc-ziel input { width: 76px; padding: 6px 8px; border-radius: 10px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.25); color: #ecfdf5; font: 700 .95rem system-ui; }
+.sc-woche { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; height: 64px; margin: 14px 0 8px; align-items: end; }
+.sc-woche div { height: 100%; display: grid; grid-template-rows: 1fr auto; gap: 3px; justify-items: center; font-size: .7rem; color: rgba(236,253,245,.55); }
+.sc-woche i { align-self: end; width: 100%; height: max(3px, var(--h)); border-radius: 5px; background: rgba(52,211,153,.45); } .sc-woche .heute i { background: #34d399; } .sc-woche .drueber i { background: #fb923c; } .sc-woche .heute span { color: #fff; font-weight: 700; }
+.sc-eintrag { display: flex; align-items: center; gap: 10px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.07); } .sc-eintrag span { flex: 1; min-width: 0; display: grid; } .sc-eintrag b { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; } .sc-eintrag small { color: rgba(236,253,245,.6); }
+.sc-eintrag button { appearance: none; border: 0; width: 36px; height: 36px; border-radius: 50%; background: rgba(255,255,255,.08); color: #fda4af; font-size: 1rem; cursor: pointer; flex: none; }
+.sc-eigen { display: grid; grid-template-columns: minmax(0, 1fr) 84px 46px; gap: 8px; margin-top: 10px; }
+.sc-eigen input, .sc-menge input { min-width: 0; padding: 11px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.25); color: #ecfdf5; font: 600 1rem system-ui; }
+.sc-eigen button { appearance: none; border: 0; border-radius: 12px; background: linear-gradient(135deg, #6ee7b7, #22d3ee); color: #022c22; font: 800 1.3rem system-ui; cursor: pointer; }
+.sc-kal-100 { margin: 0 0 10px; } .sc-kal-100 b { font-size: 1.3rem; }
+.sc-menge { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-bottom: 10px; } .sc-menge input { width: 96px; } .sc-menge b { margin-left: auto; font-size: 1.1rem; color: #6ee7b7; } .sc-menge span, .sc-menge label { color: rgba(236,253,245,.7); }
+.sc-plus { width: 100%; background: rgba(52,211,153,.18); border-color: #34d399; }
+@media (prefers-reduced-motion: reduce) { .sc-ring .voll { transition: none; } }

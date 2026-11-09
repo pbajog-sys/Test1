@@ -6,9 +6,9 @@ const { chromium, devices } = require('playwright');
 const ordner = process.argv[2] || '.';
 const NUTELLA = { code: '3017620422003', product_name: 'Nuss-Nougat-Creme', brands: 'Testmarke', quantity: '400 g', nutriscore_grade: 'e', nova_group: 4,
   additives_tags: ['en:e322', 'en:e129'], allergens_tags: ['en:milk', 'en:nuts', 'en:soybeans'], traces_tags: [], ingredients_analysis_tags: ['en:palm-oil', 'en:non-vegan', 'en:vegetarian'],
-  nutriments: { fat_100g: 30.9, 'saturated-fat_100g': 10.6, sugars_100g: 56.3, salt_100g: 0.107 }, ingredients_text_de: 'Zucker, Palmöl, Haselnüsse 13 %, Magermilchpulver 8,7 %, Kakao, Emulgator Lecithine (Soja), Vanillin' };
+  serving_quantity: 15, nutriments: { 'energy-kcal_100g': 539, proteins_100g: 6.3, carbohydrates_100g: 57.5, fat_100g: 30.9, 'saturated-fat_100g': 10.6, sugars_100g: 56.3, salt_100g: 0.107 }, ingredients_text_de: 'Zucker, Palmöl, Haselnüsse 13 %, Magermilchpulver 8,7 %, Kakao, Emulgator Lecithine (Soja), Vanillin' };
 const HAFER = { code: '4000000000006', product_name: 'Haferflocken', brands: 'Testmühle', nutriscore_grade: 'a', nova_group: 1, additives_tags: [], allergens_tags: ['en:gluten'], traces_tags: [],
-  ingredients_analysis_tags: ['en:palm-oil-free', 'en:vegan', 'en:vegetarian'], nutriments: { fat_100g: 7, 'saturated-fat_100g': 1.3, sugars_100g: 0.7, salt_100g: 0.01 } };
+  ingredients_analysis_tags: ['en:palm-oil-free', 'en:vegan', 'en:vegetarian'], nutriments: { energy_100g: 1548, proteins_100g: 13, carbohydrates_100g: 59, fat_100g: 7, 'saturated-fat_100g': 1.3, sugars_100g: 0.7, salt_100g: 0.01 } };
 const DUSCH = { code: '4005900000003', product_name: 'Duschgel Test', brands: 'Testpflege', ingredients_tags: ['en:aqua', 'en:sodium-laureth-sulfate', 'en:polyethylene', 'en:limonene', 'en:methylisothiazolinone'] };
 (async () => {
   const b = await chromium.launch({ args: ['--use-fake-ui-for-media-stream', '--use-fake-device-for-media-stream'] });
@@ -96,9 +96,44 @@ const DUSCH = { code: '4005900000003', product_name: 'Duschgel Test', brands: 'T
   ck('Abbrechen: Kamera aus, zurück zum Start', !(await p.$('#scVideo')) && !!(await p.$('#scScannen')) && await p.evaluate(() => !sc.reader));
   await p.click('#scZurueck'); await p.waitForTimeout(400);
   ck('Zurück zum Hub, Hub-Text aktualisiert', /2 Produkte geprüft · zuletzt: Nuss-Nougat-Creme/.test(await p.textContent('#hubScanBest')), await p.textContent('#hubScanBest'));
+  // ---------- Kalorien-Tagebuch ----------
+  const kr = await p.evaluate(([n, h]) => ({ a: scKcal100(n), b: Math.round(scKcal100(h)), c: scKcal100({}), port: scPortion(n, 30), unsinn: scKcal100({ nutriments: { 'energy-kcal_100g': 5000 } }) }), [NUTELLA, HAFER]);
+  ck('Kalorien je 100 g: kcal direkt, kJ umgerechnet (1548 kJ → 370), fehlend/unsinnig → keine', kr.a === 539 && kr.b === 370 && kr.c === null && kr.unsinn === null && kr.port.kcal === 162 && kr.port.f === 9.3, JSON.stringify(kr));
+  const alt = await p.evaluate(() => { localStorage.setItem(SC_KEY, JSON.stringify({ version: 1, verlauf: [{ code: '3017620422003', name: 'Alt' }], cache: {}, favoriten: ['3017620422003'], filter: { vegan: true } })); const s = scStore(); return { v: s.verlauf.length, f: s.favoriten.length, veg: s.filter.vegan, tb: s.tagebuch.length, ziel: s.ziel }; });
+  ck('Alter Speicherstand (ohne Tagebuch) bleibt erhalten, Tagebuch leer, Ziel 2000', alt.v === 1 && alt.f === 1 && alt.veg === true && alt.tb === 0 && alt.ziel === 2000, JSON.stringify(alt));
+  await p.evaluate(() => scOeffnen()); await p.waitForTimeout(1000);
+  ck('Startseite: Karte „Heute gegessen“ mit 0 kcal, „Noch 2000 kcal“', /Noch 2000 kcal/.test(await p.textContent('#scRest')) && /^0kcal$/.test((await p.textContent('.sc-ring')).trim()));
+  await p.evaluate((c) => scZeigen(c), NUTELLA.code); await p.waitForTimeout(600);
+  ck('Produkt: 539 kcal je 100 g, Portion 15 g vorbelegt = 81 kcal', /539 kcal/.test(await p.textContent('.sc-kal-100')) && (await p.inputValue('#scGramm')) === '15' && /= 81 kcal/.test(await p.textContent('#scMengeKcal')));
+  await p.fill('#scGramm', '30'); ck('Menge 30 g → 162 kcal', /= 162 kcal/.test(await p.textContent('#scMengeKcal')));
+  await p.click('#scInsTagebuch'); await p.waitForTimeout(150);
+  ck('Ins Tagebuch: Bestätigung „heute 162 von 2000 kcal“', /heute 162 von 2000 kcal/.test(await p.textContent('#scEingetragen')));
+  await bild('sc-kalorien-produkt');
+  await p.fill('#scGramm', '0'); await p.click('#scInsTagebuch'); await p.waitForTimeout(100);
+  ck('Menge 0 wird abgelehnt', /zwischen 1 und 5000/.test(await p.textContent('#scEingetragen')) && await p.evaluate(() => scStore().tagebuch.length === 1));
+  await p.evaluate(() => scStart()); await p.waitForTimeout(200);
+  await p.fill('#scEigenName', 'Apfel'); await p.fill('#scEigenKcal', '95'); await p.click('#scEigen button'); await p.waitForTimeout(200);
+  const st1 = await p.evaluate(() => { const s = scStore(); return { n: s.tagebuch.length, sum: scTagSumme(s, scTag()) }; });
+  ck('Eigener Eintrag „Apfel 95 kcal“ → 2 Einträge, 257 kcal, Rest 1743', st1.n === 2 && st1.sum.kcal === 257 && /Noch 1743 kcal/.test(await p.textContent('#scRest')) && (await p.locator('.sc-eintrag').count()) === 2, JSON.stringify(st1.sum));
+  await p.fill('#scEigenName', ''); await p.fill('#scEigenKcal', '50'); await p.click('#scEigen button'); await p.waitForTimeout(100);
+  ck('Eigener Eintrag ohne Namen wird abgelehnt', /Name und Kalorien/.test(await p.textContent('#scFehler')) && await p.evaluate(() => scStore().tagebuch.length === 2));
+  await p.fill('#scZiel', '1000'); await p.dispatchEvent('#scZiel', 'change'); await p.waitForTimeout(200);
+  await p.evaluate(() => { scEintragen({ name: 'Pizza', kcal: 900 }); scStart(); }); await p.waitForTimeout(200);
+  ck('Ziel 1000 gespeichert; darüber → „157 kcal über dem Ziel“, Ring wechselt die Farbe', await p.evaluate(() => scStore().ziel === 1000) && /157 kcal über dem Ziel/.test(await p.textContent('#scRest')) && (await p.locator('.sc-ring.drueber').count()) === 1);
+  await p.fill('#scZiel', '99999'); await p.dispatchEvent('#scZiel', 'change'); await p.waitForTimeout(200);
+  ck('Unsinniges Ziel wird nicht übernommen', await p.evaluate(() => scStore().ziel === 1000));
+  await p.click('.sc-eintrag button[aria-label="Pizza entfernen"]'); await p.waitForTimeout(200);
+  ck('Eintrag löschen → wieder 257 kcal', await p.evaluate(() => scTagSumme(scStore(), scTag()).kcal === 257));
+  await p.evaluate(() => { const s = scStore(); const d = new Date(); d.setDate(d.getDate() - 1); s.tagebuch.push({ id: 'g', tag: scTag(d), name: 'Gestern', kcal: 1500 }); scSpeichern(s); scStart(); }); await p.waitForTimeout(200);
+  ck('Gestern zählt nicht zu heute; Wochenbalken zeigen 7 Tage', await p.evaluate(() => scTagSumme(scStore(), scTag()).kcal === 257) && (await p.locator('.sc-woche div').count()) === 7);
+  await bild('sc-kalorien');
+  await p.evaluate((c) => scZeigen(c), DUSCH.code); await p.waitForTimeout(600);
+  ck('Kosmetik: keine Kalorien-Karte', (await p.locator('#scGramm').count()) === 0 && !/Kalorien/.test(await p.textContent('#scInhalt')));
+  await p.click('#scZurueck'); await p.waitForTimeout(200); await p.click('#scZurueck'); await p.waitForTimeout(400);
+  ck('Hub-Text: „Heute 257 von 1000 kcal“', /Heute 257 von 1000 kcal/.test(await p.textContent('#hubScanBest')), await p.textContent('#hubScanBest'));
   // kaputter Speicher
   await p.evaluate(() => { localStorage.setItem(SC_KEY, '{"version":1,"verlauf":[{"code":"x"},null],"favoriten":"kaputt"}'); });
-  ck('Kaputter Speicher wird bereinigt', await p.evaluate(() => { const s = scStore(); return s.verlauf.length === 0 && Array.isArray(s.favoriten); }));
+  ck('Kaputter Speicher wird bereinigt', await p.evaluate(() => { const s = scStore(); return s.verlauf.length === 0 && Array.isArray(s.favoriten) && Array.isArray(s.tagebuch) && s.ziel === 2000; }));
   ck('Keine Seitenfehler', !fehler.length, fehler.join(' | '));
   console.log(checks.filter((c) => c[1]).length + ' bestanden, ' + checks.filter((c) => !c[1]).length + ' fehlgeschlagen');
   await b.close(); process.exit(checks.every((c) => c[1]) ? 0 : 1);

@@ -776,3 +776,10 @@ der Barcode wird gesendet. Eigene Ampel `scBewerten(p, art, filter)` mit sichtba
 - Zu wenig Daten → grau statt erfundener Bewertung; unbekannte Produkte → Link zum Eintragen bei Open Food Facts.
 Speicher `walquiz.scan.v1` = { version, verlauf[≤100], cache{code→Produkt} (≤150, offline nutzbar), favoriten[], filter{} };
 kaputte Einträge werden beim Laden verworfen. Test: `tests/scan.test.js` (API wird im Test simuliert).
+
+**Kalorien-Tagebuch (im Zutaten-Check, ab v133):** Auf der Produktseite (nur Lebensmittel) kcal je 100 g (aus `energy-kcal_100g`,
+sonst kJ ÷ 4,184; unplausible Werte > 900 werden ignoriert), Menge in g/ml (vorbelegt mit der Portionsgröße, sonst 100) →
+„Ins Tagebuch“. Startseite: Ring „Heute gegessen“ gegen das Tagesziel (1000–6000 kcal, Standard 2000), Eiweiß/Kohlenhydrate/Fett,
+7-Tage-Balken, Einträge löschen, eigene Einträge (Name + kcal). Speicher: zusätzliche Felder `tagebuch[]`
+({ id, tag: JJJJ-MM-TT lokal, name, kcal, g?, e?, k?, f?, code? }, max. 3000) und `ziel` in `walquiz.scan.v1`; ältere Stände
+ohne diese Felder werden beim Laden mit leeren Vorgaben ergänzt (im Test geprüft).

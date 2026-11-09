@@ -2,7 +2,7 @@
 // Open Beauty Facts (frei, ohne Konto) → eigene Ampel mit nachvollziehbaren Gründen + persönliche Filter.
 // Es wird nur der Barcode an openfoodfacts.org / openbeautyfacts.org geschickt. Verlauf, Favoriten und Filter bleiben lokal.
 const SC_KEY = 'walquiz.scan.v1';
-const SC_FELDER = 'code,product_name,product_name_de,brands,quantity,nutriscore_grade,nova_group,additives_tags,allergens_tags,traces_tags,ingredients_analysis_tags,ingredients_tags,ingredients_text_de,ingredients_text,nutriments,image_front_small_url,categories_tags';
+const SC_FELDER = 'code,product_name,product_name_de,brands,quantity,nutriscore_grade,nova_group,additives_tags,allergens_tags,traces_tags,ingredients_analysis_tags,ingredients_tags,ingredients_text_de,ingredients_text,nutriments,image_front_small_url,categories_tags,serving_quantity';
 const SC_FILTER = [
   ['vegan', '🌱 Vegan'], ['vegetarisch', '🥕 Vegetarisch'], ['palmoel', '🌴 Ohne Palmöl'], ['milch', '🥛 Ohne Milch/Laktose'],
   ['gluten', '🌾 Glutenfrei'], ['nuesse', '🥜 Ohne Nüsse/Erdnüsse'], ['ei', '🥚 Ohne Ei'], ['soja', '🫘 Ohne Soja'],
@@ -60,12 +60,15 @@ function scStore() {
     cache: ok && s.cache && typeof s.cache === 'object' ? s.cache : {},
     favoriten: ok && Array.isArray(s.favoriten) ? s.favoriten.filter((c) => /^\d{6,14}$/.test(c)) : [],
     filter: ok && s.filter && typeof s.filter === 'object' ? s.filter : {},
+    // Kalorien-Tagebuch (ab v133; ältere Stände ohne diese Felder bekommen leere Vorgaben)
+    tagebuch: ok && Array.isArray(s.tagebuch) ? s.tagebuch.filter((e) => e && /^\d{4}-\d{2}-\d{2}$/.test(e.tag) && isFinite(+e.kcal) && +e.kcal >= 0 && typeof e.name === 'string') : [],
+    ziel: ok && +s.ziel >= 1000 && +s.ziel <= 6000 ? Math.round(+s.ziel) : 2000,
   };
 }
 function scSpeichern(s) {
   const codes = Object.keys(s.cache);
   if (codes.length > 150) { const behalten = new Set([...s.favoriten, ...s.verlauf.slice(0, 100).map((v) => v.code)]); codes.forEach((c) => { if (!behalten.has(c)) delete s.cache[c]; }); }
-  s.verlauf = s.verlauf.slice(0, 100); saveJson(SC_KEY, s);
+  s.verlauf = s.verlauf.slice(0, 100); s.tagebuch = s.tagebuch.slice(-3000); saveJson(SC_KEY, s);
 }
 const scEsc = (t) => String(t == null ? '' : t).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 // EAN-8/13, UPC-A (12): Prüfziffer
@@ -114,6 +117,25 @@ function scBewerten(p, art, filter = {}) {
       : ['Gute Wahl', 'Geht so – ab und zu', 'Eher selten'][stufe];
   return { ampel, satz, gruende, konflikte };
 }
+// ---------- Kalorien-Tagebuch ----------
+const scTag = (d = new Date()) => d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+// kcal je 100 g aus den Nährwerten (kJ wird umgerechnet); null, wenn die Datenbank nichts kennt
+function scKcal100(p) { const n = (p && p.nutriments) || {}; const k = n['energy-kcal_100g'] != null ? +n['energy-kcal_100g'] : n.energy_100g != null ? +n.energy_100g / 4.184 : NaN; return isFinite(k) && k >= 0 && k <= 900 ? k : null; }
+function scPortion(p, g) { const n = (p && p.nutriments) || {}, f = g / 100, m = (k) => (isFinite(+n[k]) && n[k] != null ? Math.round(+n[k] * f * 10) / 10 : 0); const k = scKcal100(p); return { kcal: k == null ? 0 : Math.round(k * f), e: m('proteins_100g'), k: m('carbohydrates_100g'), f: m('fat_100g') }; }
+function scTagSumme(s, tag) { const l = s.tagebuch.filter((e) => e.tag === tag); return l.reduce((a, e) => ({ kcal: a.kcal + +e.kcal, e: a.e + (+e.e || 0), k: a.k + (+e.k || 0), f: a.f + (+e.f || 0), n: a.n + 1 }), { kcal: 0, e: 0, k: 0, f: 0, n: 0 }); }
+function scEintragen(e) { const s = scStore(); s.tagebuch.push({ id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6), tag: scTag(), zeit: Date.now(), ...e }); scSpeichern(s); scHubText(); return scTagSumme(s, scTag()); }
+function scTagebuchHtml(s) {
+  const heute = scTag(), sum = scTagSumme(s, heute), anteil = Math.min(1, sum.kcal / s.ziel), U = 2 * Math.PI * 52, rest = s.ziel - Math.round(sum.kcal);
+  const tage = [...Array(7)].map((_, i) => { const d = new Date(); d.setDate(d.getDate() - (6 - i)); return { t: scTag(d), n: ['So', 'Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa'][d.getDay()] }; });
+  const max = Math.max(s.ziel, ...tage.map((t) => scTagSumme(s, t.t).kcal));
+  return '<div class="sc-karte sc-kal"><h3>Heute gegessen</h3><div class="sc-kal-oben"><svg viewBox="0 0 120 120" class="sc-ring' + (sum.kcal > s.ziel ? ' drueber' : '') + '" role="img" aria-label="' + Math.round(sum.kcal) + ' von ' + s.ziel + ' Kilokalorien"><circle cx="60" cy="60" r="52"/><circle cx="60" cy="60" r="52" class="voll" stroke-dasharray="' + (U * anteil).toFixed(1) + ' ' + U.toFixed(1) + '"/><text x="60" y="58">' + Math.round(sum.kcal) + '</text><text x="60" y="76" class="kl">kcal</text></svg>'
+    + '<div class="sc-kal-zahlen"><b id="scRest">' + (rest >= 0 ? 'Noch ' + rest + ' kcal' : Math.abs(rest) + ' kcal über dem Ziel') + '</b><span>Eiweiß ' + scZahl(sum.e) + ' g · Kohlenhydrate ' + scZahl(sum.k) + ' g · Fett ' + scZahl(sum.f) + ' g</span>'
+    + '<label class="sc-ziel">Tagesziel <input id="scZiel" type="number" inputmode="numeric" min="1000" max="6000" step="50" value="' + s.ziel + '"> kcal</label></div></div>'
+    + '<div class="sc-woche" aria-hidden="true">' + tage.map((t) => { const k = scTagSumme(s, t.t).kcal; return '<div class="' + (t.t === heute ? 'heute' : '') + (k > s.ziel ? ' drueber' : '') + '"><i style="--h:' + Math.round((k / max) * 100) + '%"></i><span>' + t.n + '</span></div>'; }).join('') + '</div>'
+    + (sum.n ? s.tagebuch.filter((e) => e.tag === heute).map((e) => '<div class="sc-eintrag"><span><b>' + scEsc(e.name) + '</b><small>' + (e.g ? scZahl(+e.g) + ' g · ' : '') + Math.round(+e.kcal) + ' kcal</small></span><button type="button" data-weg="' + scEsc(e.id) + '" aria-label="' + scEsc(e.name) + ' entfernen">✕</button></div>').join('') : '<p class="sc-klein">Noch nichts eingetragen. Produkt scannen und „Ins Tagebuch“ tippen – oder unten selbst eintragen.</p>')
+    + '<form class="sc-eigen" id="scEigen"><input id="scEigenName" placeholder="z. B. Apfel" maxlength="40" autocomplete="off"><input id="scEigenKcal" type="number" inputmode="numeric" min="1" max="5000" placeholder="kcal"><button type="submit" aria-label="Eintragen">＋</button></form>'
+    + '<p class="sc-klein">Das Tagesziel ist ein Richtwert (Erwachsene oft 1800–2500 kcal) – dein Bedarf hängt von Größe, Gewicht und Bewegung ab.</p></div>';
+}
 const scZahl = (v) => (Math.round(v * 10) / 10).toString().replace('.', ',');
 const scInci = (t) => t.replace(/^[a-z]{2}:/, '').replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
 
@@ -149,6 +171,7 @@ function scStart() {
     + '<button type="button" class="sc-scan-btn" id="scScannen">📷 Barcode scannen</button>'
     + '<form class="sc-eingabe" id="scForm"><input id="scCode" inputmode="numeric" autocomplete="off" placeholder="EAN-Nummer eintippen" maxlength="14"><button type="submit">Prüfen</button></form>'
     + '<p class="sc-fehler" id="scFehler" role="alert"></p></div>'
+    + scTagebuchHtml(s)
     + '<div class="sc-karte"><h3>Meine Filter</h3><div class="sc-chips">' + SC_FILTER.map(([k, n]) => '<button type="button" class="sc-chip' + (s.filter[k] ? ' an' : '') + '" data-filter="' + k + '" aria-pressed="' + !!s.filter[k] + '">' + n + '</button>').join('') + '</div><p class="sc-klein">Passt ein Produkt nicht, wird es rot markiert.</p></div>'
     + (favs.length ? '<div class="sc-karte"><h3>★ Favoriten</h3>' + favs.map(zeile).join('') + '</div>' : '')
     + '<div class="sc-karte"><h3>Zuletzt geprüft</h3>' + (s.verlauf.length ? s.verlauf.slice(0, 20).map(zeile).join('') : '<p class="sc-klein">Noch nichts gescannt. Halte die Kamera auf den Strichcode einer Verpackung.</p>') + '</div>'
@@ -157,6 +180,9 @@ function scStart() {
   $('scForm').addEventListener('submit', (e) => { e.preventDefault(); const c = $('scCode').value.replace(/\D/g, ''); if (!/^\d{8,14}$/.test(c)) { $('scFehler').textContent = 'Bitte die 8- bis 13-stellige Nummer unter dem Strichcode eingeben.'; return; } scZeigen(c); });
   box.querySelectorAll('[data-filter]').forEach((b) => b.addEventListener('click', () => { const st = scStore(); st.filter[b.dataset.filter] = !st.filter[b.dataset.filter]; scSpeichern(st); scStart(); }));
   box.querySelectorAll('[data-code]').forEach((b) => b.addEventListener('click', () => scZeigen(b.dataset.code)));
+  box.querySelectorAll('[data-weg]').forEach((b) => b.addEventListener('click', () => { const st = scStore(); st.tagebuch = st.tagebuch.filter((e) => e.id !== b.dataset.weg); scSpeichern(st); scHubText(); scStart(); }));
+  $('scZiel').addEventListener('change', () => { const v = Math.round(+$('scZiel').value); const st = scStore(); if (v >= 1000 && v <= 6000) { st.ziel = v; scSpeichern(st); } scStart(); });
+  $('scEigen').addEventListener('submit', (e) => { e.preventDefault(); const name = $('scEigenName').value.trim(), k = Math.round(+$('scEigenKcal').value); if (!name || !(k >= 1 && k <= 5000)) { $('scFehler').textContent = 'Für einen eigenen Eintrag bitte Name und Kalorien (1–5000) angeben.'; return; } scEintragen({ name, kcal: k }); scStart(); });
 }
 const scName = (p) => p.product_name_de || p.product_name || 'Ohne Namen';
 
@@ -183,11 +209,18 @@ async function scZeigen(code) {
     + '<div class="sc-ampel ' + b.ampel + '"><div class="sc-lichter" aria-hidden="true"><i class="r"></i><i class="y"></i><i class="g"></i></div><div><b>' + b.satz + '</b><small>' + (b.ampel === 'grau' ? 'Die Datenbank kennt zu wenig zu diesem Produkt.' : 'Eigene Einschätzung aus den Gründen unten') + '</small></div></div>'
     + (b.konflikte.length ? '<div class="sc-karte sc-konflikt"><h3>Deine Filter</h3>' + b.konflikte.map((k) => '<p class="' + (k[0] === '?' ? 'vllt' : 'nein') + '">' + (k[0] === '?' ? '⚠️ ' + scEsc(k.slice(1)) : '⛔ ' + scEsc(k)) + '</p>').join('') + '</div>' : '')
     + '<div class="sc-karte"><h3>Warum?</h3>' + (b.gruende.length ? b.gruende.map((g) => '<p class="sc-grund"><i class="sc-punkt ' + g.farbe + '"></i>' + scEsc(g.text) + '</p>').join('') : '<p class="sc-klein">' + (e.art === 'kosmetik' ? 'Keine der geprüften kritischen Inhaltsstoffe gefunden.' : 'Keine Auffälligkeiten in den vorhandenen Daten.') + '</p>') + '</div>'
+    + (e.art === 'food' ? (scKcal100(p) != null ? '<div class="sc-karte sc-kal-prod"><h3>Kalorien</h3><p class="sc-kal-100"><b>' + Math.round(scKcal100(p)) + ' kcal</b> je 100 g</p><div class="sc-menge"><label for="scGramm">Menge</label><input id="scGramm" type="number" inputmode="decimal" min="1" max="5000" value="' + (+p.serving_quantity > 0 && +p.serving_quantity <= 2000 ? Math.round(+p.serving_quantity) : 100) + '"><span>g/ml</span><b id="scMengeKcal"></b></div><button type="button" class="sc-zweit sc-plus" id="scInsTagebuch">➕ Ins Tagebuch</button><p class="sc-klein" id="scEingetragen" role="status"></p></div>' : '<div class="sc-karte"><h3>Kalorien</h3><p class="sc-klein">Für dieses Produkt sind keine Kalorien hinterlegt. Du kannst es auf der Startseite als eigenen Eintrag mit kcal eintragen.</p></div>') : '')
     + (naehr ? '<div class="sc-karte"><h3>Nährwerte je 100 g</h3>' + naehr + '<p class="sc-klein">Farben nach den Grenzwerten der britischen Lebensmittelbehörde (FSA).</p></div>' : '')
     + (zutaten ? '<details class="sc-karte sc-zutaten"><summary>Zutaten</summary><p>' + scEsc(zutaten) + '</p></details>' : '')
     + '<div class="sc-knoepfe"><button type="button" class="sc-scan-btn" id="scNochmal">📷 Nächstes scannen</button><a class="sc-link" href="' + e.quelle + '/product/' + code + '" target="_blank" rel="noopener">Quelle ansehen ↗</a></div></div>';
   $('scFav').addEventListener('click', () => { const st = scStore(); st.favoriten = st.favoriten.includes(code) ? st.favoriten.filter((c) => c !== code) : [code, ...st.favoriten]; scSpeichern(st); const an = st.favoriten.includes(code); $('scFav').classList.toggle('an', an); $('scFav').textContent = an ? '★' : '☆'; $('scFav').setAttribute('aria-pressed', an); });
   $('scNochmal').addEventListener('click', scKamera);
+  if ($('scGramm')) {
+    const menge = () => { const g = +String($('scGramm').value).replace(',', '.'); return g >= 1 && g <= 5000 ? g : null; };
+    const zeig = () => { const g = menge(); $('scMengeKcal').textContent = g ? '= ' + scPortion(p, g).kcal + ' kcal' : '–'; };
+    $('scGramm').addEventListener('input', zeig); zeig();
+    $('scInsTagebuch').addEventListener('click', () => { const g = menge(); if (!g) { $('scEingetragen').textContent = 'Bitte eine Menge zwischen 1 und 5000 eingeben.'; return; } const sum = scEintragen({ code, name, g, ...scPortion(p, g) }); const z = scStore().ziel; $('scEingetragen').textContent = '✓ Eingetragen – heute ' + Math.round(sum.kcal) + ' von ' + z + ' kcal.'; });
+  }
   scHubText();
 }
 
@@ -221,7 +254,7 @@ function scKameraAus() { if (sc && sc.reader) { try { sc.reader.reset(); } catch
 
 function scHubText() {
   const el = $('hubScanBest'); if (!el) return;
-  const s = scStore(); el.textContent = s.verlauf.length ? s.verlauf.length + (s.verlauf.length === 1 ? ' Produkt' : ' Produkte') + ' geprüft · zuletzt: ' + s.verlauf[0].name : 'Lebensmittel & Kosmetik scannen';
+  const s = scStore(), heute = scTagSumme(s, scTag()); el.textContent = heute.n ? 'Heute ' + Math.round(heute.kcal) + ' von ' + s.ziel + ' kcal' : s.verlauf.length ? s.verlauf.length + (s.verlauf.length === 1 ? ' Produkt' : ' Produkte') + ' geprüft · zuletzt: ' + s.verlauf[0].name : 'Lebensmittel & Kosmetik scannen';
 }
 scHubText();
 $('hubScan').addEventListener('click', () => { merkeZuletzt('scan'); zoomZu($('hubScan'), scOeffnen); });
