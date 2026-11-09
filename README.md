@@ -763,3 +763,16 @@ weiter. Eigene Pläne im Editor (Tage, Übungen, Sätze, Bereich), Vorlagen als 
 „SKPLAN1:…“ (Base64-JSON, ohne Server; eigene Übungen reisen mit Name/Muskel mit, Code darf mitten in einer Nachricht
 stehen; ungültige Codes werden abgelehnt). Apple Health: von Web-Apps aus nicht erreichbar (nur App-Store-Apps).
 Test: `tests/fitness-plan.test.js`.
+
+## 🔎 Zutaten-Check
+`scan.js` – Barcode scannen (Kamera, ZXing 0.21.3 lokal in `lib/zxing.min.js`, Apache-2.0, erst beim ersten Scan geladen) oder
+EAN eintippen (mit Prüfziffer). Produktdaten von **Open Food Facts**, sonst **Open Beauty Facts** (frei, ohne Konto, ODbL) – nur
+der Barcode wird gesendet. Eigene Ampel `scBewerten(p, art, filter)` mit sichtbaren Gründen:
+- Lebensmittel: Nutri-Score (A/B grün, C gelb, D/E rot), NOVA 4 → gelb, Zusatzstoffe mit EU-Pflichtwarnhinweis/Verbot → rot,
+  umstrittene (Nitrit, Phosphate, BHA/BHT, Carrageen) → gelb; ohne Nutri-Score Nährwert-Ampel nach FSA-Grenzwerten je 100 g.
+- Kosmetik (INCI): EU-verbotene Stoffe (Lilial, bestimmte Parabene) → rot; Mikroplastik/Polymere, Formaldehyd-Abspalter,
+  Isothiazolinone, Propyl-/Butylparaben, Triclosan → gelb; deklarationspflichtige Duftstoff-Allergene als Info.
+- Filter (vegan, vegetarisch, ohne Palmöl, Milch, Gluten, Nüsse, Ei, Soja): Treffer → rot, „Spuren“/unklar → Warnung.
+- Zu wenig Daten → grau statt erfundener Bewertung; unbekannte Produkte → Link zum Eintragen bei Open Food Facts.
+Speicher `walquiz.scan.v1` = { version, verlauf[≤100], cache{code→Produkt} (≤150, offline nutzbar), favoriten[], filter{} };
+kaputte Einträge werden beim Laden verworfen. Test: `tests/scan.test.js` (API wird im Test simuliert).

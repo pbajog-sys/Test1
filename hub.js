@@ -336,7 +336,7 @@ if (pendingChallenge) {
   const bahnen = [
     ['.bu-punkte', '.bu-karte', '.bu-zufall', '.bu-augen', '[data-ziel="hubZoom"]', '[data-ziel="hubGlas"]', '[data-ziel="hubWunder"]'],
     ['.bu-farben', '.bu-cello', '.bu-takt', '.bu-funktion', '.bu-dackel', '[data-ziel="hubTiefgang"]', '[data-ziel="hubPiranha"]', '[data-ziel="hubSongs"]', '[data-ziel="hubBeat"]', '[data-ziel="hubStudio"]'],
-    ['.bu-wal', '.bu-krimi', '[data-welt="haie"]', '.bu-toene', '[data-ziel="hubTierleben"]', '.bu-porsche', '[data-ziel="hubZahlen"]', '[data-ziel="hubRiff"]', '[data-ziel="hubKlassiker"]', '[data-ziel="hubFalten"]', '[data-ziel="hubStimmen"]', '[data-ziel="hubFitness"]'],
+    ['.bu-wal', '.bu-krimi', '[data-welt="haie"]', '.bu-toene', '[data-ziel="hubTierleben"]', '.bu-porsche', '[data-ziel="hubZahlen"]', '[data-ziel="hubRiff"]', '[data-ziel="hubKlassiker"]', '[data-ziel="hubFalten"]', '[data-ziel="hubStimmen"]', '[data-ziel="hubFitness"]', '[data-ziel="hubScan"]'],
   ].map((l) => l.map(q).filter(Boolean));
   const tempo = [0.00011, 0.00007, 0.000045], kipp = -0.16, c = Math.cos(kipp), s = Math.sin(kipp);
   const ellipsen = b.querySelectorAll('.bu-bahnen ellipse'), masse = new Map();

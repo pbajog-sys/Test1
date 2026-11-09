@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=131">
+<link rel="stylesheet" href="fonts/fonts.css?v=132">
 <link rel="icon" href="icons/favicon-64.png?v=3" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=131">
-<link rel="stylesheet" href="ansichten.css?v=131">
+<link rel="stylesheet" href="stil.css?v=132">
+<link rel="stylesheet" href="ansichten.css?v=132">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -485,6 +485,7 @@
       <button class="bu-ding bu-planet bu-studio" type="button" data-ziel="hubStudio" aria-label="Beat-Studio" style="--p1:#fbbf24;--p2:#7c2d12"><span>🎛️</span></button>
       <button class="bu-ding bu-planet bu-stimmen" type="button" data-ziel="hubStimmen" aria-label="Stimmgerät" style="--p1:#a3e635;--p2:#164e63"><span>🎚️</span></button>
       <button class="bu-ding bu-planet bu-fitness" type="button" data-ziel="hubFitness" aria-label="Fitness" style="--p1:#fb923c;--p2:#7f1d1d"><span>💪</span></button>
+      <button class="bu-ding bu-planet bu-scan" type="button" data-ziel="hubScan" aria-label="Zutaten-Check" style="--p1:#34d399;--p2:#064e3b"><span>🔎</span></button>
       <button class="bu-ding bu-planet bu-songs" type="button" data-ziel="hubSongs" aria-label="Song-Rätsel" style="--p1:#4ade80;--p2:#3b0764"><span>💿</span></button>
       <button class="bu-ding bu-planet" type="button" data-ziel="hubRiff" aria-label="Riffbau" style="--p1:#f9a8d4;--p2:#831843"><span>🪸</span></button>
     </div>
@@ -521,6 +522,11 @@
     <button class="hub-game hub-fitness" id="hubFitness" type="button" data-regen="💪,🏋️,🏃,🏆">
       <span class="hg-av hg-av-fitness" aria-hidden="true"><span class="hg-in"><span class="fi-mini-av">💪</span></span></span>
       <span class="hg-text"><span class="hg-titel">Fitness</span><span class="hg-sub">Kraft & Ausdauer schnell eintragen – Bestwerte, Kurven, Pausen-Timer.</span><span class="hg-best" id="hubFitnessBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-scan" id="hubScan" type="button" data-regen="🔎,🛒,🧴,🥫">
+      <span class="hg-av hg-av-scan" aria-hidden="true"><span class="hg-in"><span class="sc-mini"><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Zutaten-Check</span><span class="hg-sub">Barcode scannen – Ampel für Lebensmittel &amp; Kosmetik, mit deinen Filtern.</span><span class="hg-best" id="hubScanBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-stimmen" id="hubStimmen" type="button" data-regen="🎚️,🎸,🎻,🪕">
@@ -1941,6 +1947,14 @@
     </div>
   </section>
 
+  <!-- Zutaten-Check -->
+  <section class="screen" id="screen-scan">
+    <div class="ft-buehne sc-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="scZurueck" type="button" aria-label="Zurück">←</button><span>🔎 Zutaten-Check</span><span></span></div>
+      <div id="scInhalt" class="sc-inhalt"></div>
+    </div>
+  </section>
+
   <!-- Stimmgerät -->
   <section class="screen" id="screen-stimmen">
     <div class="ft-buehne sg-buehne">
@@ -2271,63 +2285,64 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=131"></script>
-<script src="haie.js?v=131"></script>
-<script src="porsche.js?v=131"></script>
-<script src="dackel.js?v=131"></script>
-<script src="groesse.js?v=131"></script>
-<script src="gretchen.js?v=131"></script>
-<script src="effekte.js?v=131"></script>
-<script src="app.js?v=131"></script>
-<script src="melden.js?v=131"></script>
-<script src="verlauf.js?v=131"></script>
-<script src="hub.js?v=131"></script>
-<script src="farben.js?v=131"></script>
-<script src="cello.js?v=131"></script>
-<script src="instrumente.js?v=131"></script>
-<script src="stimmen-pro.js?v=131"></script>
-<script src="stimmen.js?v=131"></script>
-<script src="fitness-daten.js?v=131"></script>
-<script src="fitness-plaene.js?v=131"></script>
-<script src="fitness.js?v=131"></script>
-<script src="toene.js?v=131"></script>
-<script src="gehoer.js?v=131"></script>
-<script src="songs.js?v=131"></script>
-<script src="spotify.js?v=131"></script>
-<script src="deezer.js?v=131"></script>
-<script src="klassiker.js?v=131"></script>
-<script src="falten.js?v=131"></script>
-<script src="zoom.js?v=131"></script>
-<script src="glas.js?v=131"></script>
-<script src="beat.js?v=131"></script>
-<script src="wunder.js?v=131"></script>
-<script src="studio.js?v=131"></script>
-<script src="takt.js?v=131"></script>
-<script src="punkte.js?v=131"></script>
-<script src="funktion.js?v=131"></script>
-<script src="zufall.js?v=131"></script>
-<script src="zahlen.js?v=131"></script>
-<script src="tierleben.js?v=131"></script>
-<script src="tierpixel.js?v=131"></script>
-<script src="piranha.js?v=131"></script>
-<script src="slo.js?v=131"></script>
-<script src="augen.js?v=131"></script>
-<script src="karten-daten.js?v=131"></script>
-<script src="karte.js?v=131"></script>
-<script src="tiefgang.js?v=131"></script>
-<script src="riff.js?v=131"></script>
-<script src="krimi-grafik.js?v=131"></script>
-<script src="krimi.js?v=131"></script>
-<script src="krimi-wachen.js?v=131"></script>
-<script src="krimi-verhoer.js?v=131"></script>
-<script src="krimi-alibi.js?v=131"></script>
-<script src="krimi-akte.js?v=131"></script>
-<script src="krimi-zentrale.js?v=131"></script>
-<script src="profile.js?v=131"></script>
-<script src="fuehrung.js?v=131"></script>
-<script src="dopamin.js?v=131"></script>
-<script src="experimente.js?v=131"></script>
-<script src="plattform.js?v=131"></script>
-<script src="sicherung.js?v=131"></script>
+<script src="wale.js?v=132"></script>
+<script src="haie.js?v=132"></script>
+<script src="porsche.js?v=132"></script>
+<script src="dackel.js?v=132"></script>
+<script src="groesse.js?v=132"></script>
+<script src="gretchen.js?v=132"></script>
+<script src="effekte.js?v=132"></script>
+<script src="app.js?v=132"></script>
+<script src="melden.js?v=132"></script>
+<script src="verlauf.js?v=132"></script>
+<script src="hub.js?v=132"></script>
+<script src="farben.js?v=132"></script>
+<script src="cello.js?v=132"></script>
+<script src="instrumente.js?v=132"></script>
+<script src="stimmen-pro.js?v=132"></script>
+<script src="stimmen.js?v=132"></script>
+<script src="fitness-daten.js?v=132"></script>
+<script src="fitness-plaene.js?v=132"></script>
+<script src="fitness.js?v=132"></script>
+<script src="scan.js?v=132"></script>
+<script src="toene.js?v=132"></script>
+<script src="gehoer.js?v=132"></script>
+<script src="songs.js?v=132"></script>
+<script src="spotify.js?v=132"></script>
+<script src="deezer.js?v=132"></script>
+<script src="klassiker.js?v=132"></script>
+<script src="falten.js?v=132"></script>
+<script src="zoom.js?v=132"></script>
+<script src="glas.js?v=132"></script>
+<script src="beat.js?v=132"></script>
+<script src="wunder.js?v=132"></script>
+<script src="studio.js?v=132"></script>
+<script src="takt.js?v=132"></script>
+<script src="punkte.js?v=132"></script>
+<script src="funktion.js?v=132"></script>
+<script src="zufall.js?v=132"></script>
+<script src="zahlen.js?v=132"></script>
+<script src="tierleben.js?v=132"></script>
+<script src="tierpixel.js?v=132"></script>
+<script src="piranha.js?v=132"></script>
+<script src="slo.js?v=132"></script>
+<script src="augen.js?v=132"></script>
+<script src="karten-daten.js?v=132"></script>
+<script src="karte.js?v=132"></script>
+<script src="tiefgang.js?v=132"></script>
+<script src="riff.js?v=132"></script>
+<script src="krimi-grafik.js?v=132"></script>
+<script src="krimi.js?v=132"></script>
+<script src="krimi-wachen.js?v=132"></script>
+<script src="krimi-verhoer.js?v=132"></script>
+<script src="krimi-alibi.js?v=132"></script>
+<script src="krimi-akte.js?v=132"></script>
+<script src="krimi-zentrale.js?v=132"></script>
+<script src="profile.js?v=132"></script>
+<script src="fuehrung.js?v=132"></script>
+<script src="dopamin.js?v=132"></script>
+<script src="experimente.js?v=132"></script>
+<script src="plattform.js?v=132"></script>
+<script src="sicherung.js?v=132"></script>
 </body>
 </html>
