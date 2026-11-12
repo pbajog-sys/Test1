@@ -808,3 +808,23 @@ Hub) oder der runde ↑-Knopf, der ab ~1 Bildschirmhöhe erscheint, scrollt nach
 **Aussortiert (v136):** Die Quizze (Wale, Haie, Porsche, Dackel) und der Piranha-Schwarm sind aus dem Hub, dem Universum,
 den Tagesaufgaben und den offenen Erfolgen verschwunden (`SK_AUSSORTIERT` in `plattform.js`). Code und Spielstände bleiben
 unangetastet; bereits verdiente Erfolge bleiben sichtbar. Wieder einblenden = Eintrag aus `SK_AUSSORTIERT` entfernen.
+
+## 🐉 Slowenisch – großer Ausbau (v137)
+`slo-pro.js` + `slo-lex.json`. Das Slowenisch-Spiel hat jetzt **vier Seiten** mit Tab-Leiste, zwischen denen man wischt:
+**Reise** (die bisherigen 20 Stationen, A1) · **Wortschatz** · **Grammatik** · **Gespräche**.
+- **Wortschatz:** 1.694 Wörter nach Häufigkeit (geschriebene Sprache aus dem Korpus SSJ + gesprochene aus Untertiteln) plus alle
+  Reise-Wörter = 1.766. Lernen mit **Spaced Repetition** (Stufen 1–9, Wiederholung nach 1, 2, 4, 7, 15, 30, 60, 120, 240 Tagen;
+  falsch → Stufe 1; nur die erste Antwort je Sitzung zählt). Neue Wörter pro Tag 5–30. Reise-Wörter, die man schon gut kann
+  (Wortstärke ≥ 3), starten auf Stufe 3. Niveau-Schätzung (Start/A1/A2/B1/B1+) nach gelernten Wörtern. **Wörterbuch** mit Suche
+  (auch ohne Häkchen) und Wortkarte: Deklination (6 Fälle × Einzahl/Dual/Mehrzahl), Gegenwart, l-Form, Befehlsform.
+- **Formen aus echten Daten:** `werkzeuge/slo/paradigma.py` erzeugt Formen nach Regeln und gleicht **jede Zelle** mit Belegen aus
+  Universal Dependencies SSJ und UniMorph ab. Belegtes gewinnt (bratje, iger, oken, ljudje, otroci …), unsichere Zellen bleiben
+  leer und werden **nie abgefragt**. Ergebnis: 716 Nomen, 291 Verben (Gegenwart), 342 l-Formen, 243 Adjektive.
+- **Grammatik-Werkstatt:** 13 Themen (Gegenwart, Vergangenheit, Zukunft, Verneinung, Genitiv, Dativ, Akkusativ, Lokativ,
+  Instrumental, Dual, Zahlen & Fälle, Adjektiv + Nomen, z/s und k/h) – jeweils kurze Erklärung, dann 10 Aufgaben;
+  ab 80 % wird die zweite Hälfte getippt. Regeln z/s (s vor p t k c č s š f h) und k/h (h vor k g) sind eingebaut.
+- **Gespräche:** 11 Rollenspiele A1–B2 (Café, Kennenlernen, Markt, Weg, Arzt, Hotel, Fahrkarte, Verabredung, Wochenende,
+  Wohnung, Meinung). Falsche Antworten erklären, warum (Fall, z/s, Klitika am Satzanfang …); am Ende zwei Sätze laut sprechen.
+- Speicher: zusätzliche Felder in `walquiz.slo.v1` (`srs`, `srsNeu`, `srsZiel`, `gram`, `gespr`); alte Stände bleiben unverändert.
+- Lizenzen: Formen/Häufigkeit aus UD SSJ, UniMorph/Wiktionary, FrequencyWords (alle CC BY-SA) → `slo-lex.json` CC BY-SA 4.0.
+- Test: `tests/slo-pro.test.js` (Formen-Stichproben, SRS-Ablauf mit Zeitreise, 400 Aufgaben je Grammatik-Thema, Dialoge).
