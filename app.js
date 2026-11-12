@@ -376,12 +376,14 @@ const screens = ['hub', 'quizze', 'start', 'pick', 'quiz', 'result', 'lexikon', 
 let aktuellerScreen = 'hub';
 function show(name, title) {
   stopSound();
+  if (aktuellerScreen === 'hub' && name !== 'hub' && typeof hubMerkenFallback === 'function') hubMerkenFallback();
   screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
   aktuellerScreen = name;
   $('homeBtn').hidden = name === 'hub';
   document.querySelector('header').hidden = ['hub', 'quizze', 'farben', 'cello', 'instrument', 'toene', 'takt', 'punkte', 'funktion', 'zufall', 'zahlen', 'tierleben', 'piranha', 'slo', 'sk', 'labor', 'dopamin', 'songs', 'klassiker', 'falten', 'zoom', 'glas', 'beat', 'wunder', 'studio', 'stimmen', 'fitness', 'scan', 'augen', 'karte', 'tiefgang', 'riff', 'verlauf', 'krimi'].includes(name);   // die Spiele haben eine eigene Kopfzeile
   $('headerTitle').textContent = title || WELTEN[welt].title;
   window.scrollTo(0, 0);
+  const oben = $('hubNachOben'); if (oben) oben.hidden = true;
 }
 // ←: von der Quiz-Startseite zurück zur Quiz-Auswahl, sonst zur Startseite der Welt
 $('homeBtn').addEventListener('click', () => {

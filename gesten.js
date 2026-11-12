@@ -12,7 +12,8 @@ function skGestenAn() {
   let x0 = null, y0 = 0, t0 = 0, dx = 0, aktiv = false, knopf = null, pfeil = null;
   function zurueckKnopf() {
     const s = document.querySelector('.screen.active');
-    if (!s || s.id === 'screen-hub') return null;
+    if (!s) return null;
+    if (s.id === 'screen-hub') return window.scrollY > 20 && typeof hubNachOben === 'function' ? { click: hubNachOben, isConnected: true } : null;  // „nochmal zurück“ = nach oben
     const sichtbar = (b) => b && !b.disabled && !b.hidden && b.offsetParent !== null;
     const k = [...s.querySelectorAll('[id$="Zurueck"], .farb-kopf .icon-btn')].find(sichtbar);
     if (k) return k;

@@ -799,3 +799,8 @@ ohne diese Felder werden beim Laden mit leeren Vorgaben ergänzt (im Test geprü
   Eiweiß 0,8–2,0 g/kg), Filter.
 - Speicher `walquiz.scan.v1` zusätzlich: `tagebuch[].m` (Mahlzeit; alte Einträge bekommen sie aus der Uhrzeit), `makro {e,f}`,
   `profil`, `wasser {Tag: Gläser}` (90 Tage), `seite`. Alte Stände bleiben vollständig erhalten (im Test geprüft).
+
+**Hub: zurück an dieselbe Stelle (v135).** Beim Öffnen eines Spiels merkt sich der Hub die angetippte Karte und ihren Abstand
+zum oberen Rand (`hubMerken` in `zoomZu`, sonst die Scrollposition in `show`). `zeigeHub` stellt genau diese Lage wieder her –
+auch wenn sich darüber etwas geändert hat – und lässt die Karte einmal sanft aufleuchten. „Nochmal zurück“ (Rand-Geste auf dem
+Hub) oder der runde ↑-Knopf, der ab ~1 Bildschirmhöhe erscheint, scrollt nach ganz oben. Test: `tests/hub-zurueck.test.js`.

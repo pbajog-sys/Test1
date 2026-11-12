@@ -227,19 +227,54 @@ function zeigeQuizze() {
 $('hubQuizzes').addEventListener('click', () => zoomZu($('hubQuizzes'), zeigeQuizze));
 $('quizzeZurueck').addEventListener('click', zeigeHub);
 
+// ---------- Zurück an dieselbe Stelle: beim Verlassen des Hubs merken, wo man war ----------
+// Gemerkt wird die angetippte Karte samt ihrem Abstand zum oberen Bildschirmrand. Beim Zurückkommen steht genau diese
+// Karte wieder an derselben Stelle – auch wenn sich darüber etwas verändert hat (z. B. „Zuletzt gespielt“).
+let hubRueck = null;
+function hubDocTop(el) { let y = 0; for (let e = el; e; e = e.offsetParent) y += e.offsetTop; return y; }
+function hubMerken(karte) {
+  const sichtbar = karte && karte.offsetParent !== null, top = sichtbar ? hubDocTop(karte) - window.scrollY : 0;
+  hubRueck = { id: sichtbar && karte.id && top > -karte.offsetHeight && top < window.innerHeight ? karte.id : null, abstand: top, y: window.scrollY, zeit: Date.now() };
+}
+function hubMerkenFallback() { if (!hubRueck || Date.now() - hubRueck.zeit > 3000) hubRueck = { id: null, abstand: 0, y: window.scrollY, zeit: Date.now() }; }
+function hubWiederherstellen() {
+  const r = hubRueck; hubRueck = null; if (!r) return 0;
+  const k = r.id && $(r.id), maxY = Math.max(0, document.documentElement.scrollHeight - window.innerHeight);
+  const y = Math.max(0, Math.min(maxY, k && k.offsetParent !== null ? hubDocTop(k) - r.abstand : r.y));
+  window.scrollTo(0, y);
+  if (k && y > 0) { k.classList.remove('hub-zurueck'); void k.offsetWidth; k.classList.add('hub-zurueck'); setTimeout(() => k.classList.remove('hub-zurueck'), 1600); }
+  return y;
+}
+function hubNachOben() { window.scrollTo({ top: 0, behavior: wenigBewegung() ? 'auto' : 'smooth' }); }
+
 function zeigeHub() {
   if (typeof srStopp === 'function') srStopp();
   if (typeof sp !== 'undefined' && sp) { spPause(); sp = null; }
   setHubTheme();
   renderHub();
   show('hub');
-  // Karten gleiten nacheinander herein (einmalig beim Öffnen)
+  const y = hubWiederherstellen();
+  // Karten gleiten nacheinander herein – nur oben; wer zurück an seine Stelle kommt, soll nichts herumfliegen sehen
   const hub = $('screen-hub');
-  hub.classList.remove('auftritt'); void hub.offsetWidth; hub.classList.add('auftritt');
+  hub.classList.remove('auftritt'); if (y < 40) { void hub.offsetWidth; hub.classList.add('auftritt'); }
+  hubObenKnopf();
+}
+// Schwebender „Nach oben“-Knopf, sobald man weit unten ist
+function hubObenKnopf() {
+  let b = $('hubNachOben');
+  if (!b) {
+    b = document.createElement('button'); b.id = 'hubNachOben'; b.type = 'button'; b.className = 'hub-nach-oben'; b.hidden = true;
+    b.setAttribute('aria-label', 'Nach oben'); b.innerHTML = '<span aria-hidden="true">↑</span>'; b.title = 'Nach oben';
+    b.addEventListener('click', hubNachOben); document.body.appendChild(b);
+    let warte = false;
+    window.addEventListener('scroll', () => { if (warte) return; warte = true; requestAnimationFrame(() => { warte = false; hubObenKnopf(); }); }, { passive: true });
+  }
+  b.hidden = !(aktuellerScreen === 'hub' && window.scrollY > window.innerHeight * 1.2);
 }
 
 // Übergang: Die angetippte Karte wächst auf den ganzen Bildschirm, dann erscheint das Ziel.
 function zoomZu(karte, weiter) {
+  if (aktuellerScreen === 'hub') hubMerken(karte);
   if (wenigBewegung() || !karte.animate) { weiter(); return; }
   const r = karte.getBoundingClientRect();
   const cs = getComputedStyle(karte);
