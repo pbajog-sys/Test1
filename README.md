@@ -804,3 +804,7 @@ ohne diese Felder werden beim Laden mit leeren Vorgaben ergänzt (im Test geprü
 zum oberen Rand (`hubMerken` in `zoomZu`, sonst die Scrollposition in `show`). `zeigeHub` stellt genau diese Lage wieder her –
 auch wenn sich darüber etwas geändert hat – und lässt die Karte einmal sanft aufleuchten. „Nochmal zurück“ (Rand-Geste auf dem
 Hub) oder der runde ↑-Knopf, der ab ~1 Bildschirmhöhe erscheint, scrollt nach ganz oben. Test: `tests/hub-zurueck.test.js`.
+
+**Aussortiert (v136):** Die Quizze (Wale, Haie, Porsche, Dackel) und der Piranha-Schwarm sind aus dem Hub, dem Universum,
+den Tagesaufgaben und den offenen Erfolgen verschwunden (`SK_AUSSORTIERT` in `plattform.js`). Code und Spielstände bleiben
+unangetastet; bereits verdiente Erfolge bleiben sichtbar. Wieder einblenden = Eintrag aus `SK_AUSSORTIERT` entfernen.

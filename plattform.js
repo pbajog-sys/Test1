@@ -33,9 +33,11 @@ const SK_SPIELE = {
   beat: { name: 'Beat-Bahnen', emoji: '🎸', hub: 'hubBeat', kat: 'sinne', ton: true },
 };
 const SK_KRIMI = { mord: { name: 'Tatort', emoji: '🔎' }, wachen: { name: 'Wachen der Villa', emoji: '🛡️' }, alibi: { name: 'Alibi-Raster', emoji: '📋' }, verhoer: { name: 'Verhör', emoji: '🗣️' } };
+// Aussortiert (auf Wunsch): Die Karten verschwinden aus dem Hub, Code und Spielstände bleiben unangetastet –
+// so geht nichts verloren und alles ließe sich mit einer Zeile wieder einblenden.
+const SK_AUSSORTIERT = { karten: ['hubQuizzes', 'hubPiranha'], spiele: ['piranha'], erfolge: ['piranha', 'abzeichen'] };
 const SK_KATEGORIEN = [
-  { id: 'original', name: 'Das Original', emoji: '🐋', karten: ['hubQuizzes'] },
-  { id: 'denken', name: 'Denken & Logik', emoji: '🧠', karten: ['hubKrimi', 'hubKlassiker', 'hubPiranha', 'hubFunktion', 'hubRiff'] },
+  { id: 'denken', name: 'Denken & Logik', emoji: '🧠', karten: ['hubKrimi', 'hubKlassiker', 'hubFunktion', 'hubRiff'] },
   { id: 'sinne', name: 'Sinne & Wahrnehmung', emoji: '👁️', karten: ['hubFarben', 'hubToene', 'hubSongs', 'hubStudio', 'hubBeat', 'hubTakt', 'hubAugen'] },
   { id: 'zahlen', name: 'Zahlen & Welt', emoji: '🔢', karten: ['hubPunkte', 'hubZufall', 'hubKarte', 'hubTiefgang', 'hubZahlen', 'hubFalten', 'hubZoom', 'hubGlas', 'hubWunder'] },
   { id: 'wissen', name: 'Wissen & Sprache', emoji: '📚', karten: ['hubCello', 'hubStimmen', 'hubSlo'] },
@@ -166,7 +168,7 @@ const SK_ERFOLGE = [
   { id: 'rekord', emoji: '⏱️', name: 'Gegen die Uhr', text: 'Stelle drei neue Krimi-Bestzeiten ohne Hinweise auf.', xp: 60, f: (D) => [D.E.filter((e) => e.s === 'krimi' && e.x && e.x.rekord).length, 3] },
 ];
 function skErfolgeStand(D) {
-  return SK_ERFOLGE.map((a) => { const [ist, ziel] = a.f(D); return { ...a, ist: Math.min(ist, ziel), ziel, fertig: ist >= ziel, datum: (D.erfolgSt || {})[a.id] }; });
+  return SK_ERFOLGE.filter((a) => !SK_AUSSORTIERT.erfolge.includes(a.id) || (D.erfolgSt || {})[a.id]).map((a) => { const [ist, ziel] = a.f(D); return { ...a, ist: Math.min(ist, ziel), ziel, fertig: ist >= ziel, datum: (D.erfolgSt || {})[a.id] }; });
 }
 // neue Erfolge festhalten und melden
 function skErfolgePruefen(melden = true) {
@@ -181,9 +183,9 @@ function skErfolgePruefen(melden = true) {
 
 // ---------- Tagesaufgaben ----------
 const SK_POOL = {
-  brain: [{ spiel: 'krimi', modus: 'mord' }, { spiel: 'krimi', modus: 'wachen' }, { spiel: 'krimi', modus: 'alibi' }, { spiel: 'krimi', modus: 'verhoer' }, { spiel: 'funktion' }, { spiel: 'piranha' }],
+  brain: [{ spiel: 'krimi', modus: 'mord' }, { spiel: 'krimi', modus: 'wachen' }, { spiel: 'krimi', modus: 'alibi' }, { spiel: 'krimi', modus: 'verhoer' }, { spiel: 'funktion' }],
   sense: [{ spiel: 'farben' }, { spiel: 'toene' }, { spiel: 'augen' }, { spiel: 'takt' }],
-  chaos: [{ spiel: 'karte' }, { spiel: 'punkte' }, { spiel: 'riff' }, { spiel: 'tiefgang' }, { spiel: 'zufall' }, { spiel: 'piranha' }, { spiel: 'krimi', modus: 'verhoer' }, { spiel: 'funktion' }],
+  chaos: [{ spiel: 'karte' }, { spiel: 'punkte' }, { spiel: 'riff' }, { spiel: 'tiefgang' }, { spiel: 'zufall' }, { spiel: 'krimi', modus: 'verhoer' }, { spiel: 'funktion' }],
 };
 const SK_SLOTS = [
   { id: 'brain', name: 'Daily Brain', emoji: '🧠', text: 'Eine Denkaufgabe' },
@@ -528,6 +530,10 @@ function skKategorienEinrichten() {
     const liste = abschnitt(k.emoji, k.name, 'sk-kat-' + k.id);
     k.karten.forEach((id) => { const el = $(id); if (el) liste.appendChild(el); });
   });
+  // aussortierte Karten in ein unsichtbares Fach (die Spiele greifen weiter auf ihre Knöpfe zu)
+  let fach = $('skAussortiert');
+  if (!fach) { fach = document.createElement('div'); fach.id = 'skAussortiert'; fach.hidden = true; document.body.appendChild(fach); }
+  SK_AUSSORTIERT.karten.forEach((id) => { const el = $(id); if (el) fach.appendChild(el); });
   // was keiner Kategorie zugeordnet ist, bleibt sichtbar
   const rest = [...alt.querySelectorAll(':scope > .hub-game')];
   if (rest.length) { const liste = abschnitt('✨', 'Weitere', ''); rest.forEach((el) => liste.appendChild(el)); }
@@ -547,7 +553,7 @@ function skFavUmschalten(id) {
 function skFavoriten() {
   const a = document.querySelector('#screen-hub .spalte-a');
   if (!a) return;
-  const ids = skFavIds().filter((id) => $(id));
+  const ids = skFavIds().filter((id) => $(id) && !SK_AUSSORTIERT.karten.includes(id));
   let sec = $('skFavoriten');
   if (!sec) {
     sec = document.createElement('section'); sec.id = 'skFavoriten'; sec.className = 'sk-kat sk-kat-fav';
