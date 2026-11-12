@@ -783,3 +783,19 @@ sonst kJ ÷ 4,184; unplausible Werte > 900 werden ignoriert), Menge in g/ml (vor
 7-Tage-Balken, Einträge löschen, eigene Einträge (Name + kcal). Speicher: zusätzliche Felder `tagebuch[]`
 ({ id, tag: JJJJ-MM-TT lokal, name, kcal, g?, e?, k?, f?, code? }, max. 3000) und `ziel` in `walquiz.scan.v1`; ältere Stände
 ohne diese Felder werden beim Laden mit leeren Vorgaben ergänzt (im Test geprüft).
+
+**Neu in v134 – Seiten, Gesten, Makros:**
+- Der Zutaten-Check hat vier Seiten zum **Wischen** (CSS-Scroll-Snap, also natives iOS-Scrollen): *Heute* · *Scannen* · *Produkte* · *Ich*,
+  dazu eine Tab-Leiste, deren Leuchtfläche dem Finger folgt. Die zuletzt benutzte Seite wird gemerkt (`seite`).
+- Produkt, Kamera und „Hinzufügen“ schieben sich als **Blatt** von rechts herein (Stapel wie iOS: ← geht eine Ebene zurück).
+  **Vom linken Rand wischen** zieht das Blatt mit dem Finger weg; kurzes Ziehen federt zurück.
+- `gesten.js`: dieselbe **Rand-Geste „zurück“ in der ganzen Spielekiste** (drückt den Zurück-Knopf der aktiven Seite, mit Pfeil-Feedback).
+  Nur in der Home-Bildschirm-App bzw. außerhalb von iOS aktiv – im Safari-Tab gehört die Randgeste Safari.
+- **Heute:** Ring „kcal übrig“, Balken für Eiweiß/Kohlenhydrate/Fett gegen Ziele, vier Mahlzeiten mit ＋, Wasser (8 × 250 ml),
+  Tage vor/zurück zum Nachtragen. **Hinzufügen:** Barcode, „Zuletzt gegessen“ mit einem Tipp, Favoriten, Schnell-Eintrag
+  (kcal oder nur Makros → 4/4/9 kcal pro g). Produktseite: Mahlzeit wählen, Menge/Portion/100 g, Makros live.
+- **Ich:** Wochenbalken (ø kcal, ø Eiweiß, Tage im Ziel ±10 %), Ziele (kcal, Eiweiß, Fett; Kohlenhydrate = Rest),
+  Bedarfsrechner nach Mifflin-St Jeor × Bewegungsfaktor (abnehmen −500, aufbauen +300 kcal, Untergrenze 1200/1500 kcal,
+  Eiweiß 0,8–2,0 g/kg), Filter.
+- Speicher `walquiz.scan.v1` zusätzlich: `tagebuch[].m` (Mahlzeit; alte Einträge bekommen sie aus der Uhrzeit), `makro {e,f}`,
+  `profil`, `wasser {Tag: Gläser}` (90 Tage), `seite`. Alte Stände bleiben vollständig erhalten (im Test geprüft).
