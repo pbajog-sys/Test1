@@ -338,7 +338,7 @@ function zufallEnde() {
     const li = document.createElement('li');
     li.innerHTML = '<span class="tl-n"></span><span class="tl-c"></span><b></b>';
     li.querySelector('.tl-n').textContent = rd.emoji + ' ' + zfProz(rd.p);
-    li.querySelector('.tl-c').textContent = 'Tipp ' + zfProz(zf.tipps[i]);
+    li.querySelector('.tl-c').textContent = 'Tipp ' + zfProz(zf.tipps[i]) + (zf.hilfe && zf.hilfe[i] ? ' · 🧮 gerechnet' : '');
     li.querySelector('b').textContent = fmt(zf.punkte[i]);
     liste.appendChild(li);
   });

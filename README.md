@@ -551,6 +551,12 @@ Danach der Rechenweg mit Bild: 6×6-Würfeltafel, Baumdiagramm, Pascal-Balken, G
   Geburtstagsparadoxon. Spickzettel unter `?`.
 - Tages-Zufall, Bestwerte je Profil, Challenge-Links (`?zufall=`).
 
+### 🧮 Rechenhilfe (v143)
+`zfrechen.js`: Unter dem Regler öffnet „🧮 Rechenhilfe“ ein Rechenblatt mit zwei Reitern.
+- **Baumdiagramm:** Vorlagen (Ja/Nein, Münze, Würfel 6/keine 6, Kugeln rot/blau mit oder ohne Zurücklegen, bis 4 Züge). „＋ Stufe wiederholen“ hängt die letzte Stufe an alle Enden. Eigene Äste bauen: Knoten antippen → „＋ Ast“, Name und Wahrscheinlichkeit eintragen (1/6, 0,3, 30 %), 🗑. Enden antippen = Treffer. Jeder Pfad wird multipliziert, Treffer-Pfade addiert, optional Gegenteil (1 − Summe). Warnt, wenn Äste nicht 100 % ergeben oder Werte fehlen. Höchstens 64 Enden.
+- **Rechner:** Brüche, + − × ÷, Klammern, Potenzen, %, Taste „1 − (…)“ – exakt als Bruch gerechnet.
+- „→ als Tipp übernehmen“ stellt den Regler. Keine Punktabzüge, aber die Runde wird im Ergebnis als „🧮 gerechnet“ markiert. Test: `tests/zfrechen.test.js`.
+
 ## 📐 Augenmaß
 Fünf Aufgaben, jede einmal pro Runde (bis zu 50 Punkte): **Halbieren** (Mitte einer Linie antippen), **Mittelpunkt** (Kreis, Quadrat,
 bei Profi der Schwerpunkt eines Dreiecks), **Winkel** (vorgegebene Gradzahl einstellen), **Länge** (zweite Linie gleich lang ziehen)

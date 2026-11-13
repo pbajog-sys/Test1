@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=142">
+<link rel="stylesheet" href="fonts/fonts.css?v=143">
 <link rel="icon" href="icons/favicon-64.png?v=3" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=142">
-<link rel="stylesheet" href="ansichten.css?v=142">
+<link rel="stylesheet" href="stil.css?v=143">
+<link rel="stylesheet" href="ansichten.css?v=143">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -1809,6 +1809,8 @@
         <input class="zf-regler" id="zfRegler" type="range" min="0" max="100" step="1" value="50" aria-label="Geschätzte Wahrscheinlichkeit in Prozent">
         <div class="zf-skala"><span>0 % nie</span><span>50 %</span><span>100 % sicher</span></div>
         <button class="btn zf-gross-btn" id="zfTippen" type="button">Tipp abgeben ✓</button>
+        <button class="btn secondary zf-rechen-btn" id="zfRechenBtn" type="button" aria-expanded="false" aria-controls="zfRechen">🧮 Rechenhilfe: Baumdiagramm &amp; Rechner</button>
+        <div class="zr-box" id="zfRechen" hidden></div>
       </div>
 
       <div class="zf-teil" id="zf-aufloesung" hidden>
@@ -2310,68 +2312,69 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=142"></script>
-<script src="haie.js?v=142"></script>
-<script src="porsche.js?v=142"></script>
-<script src="dackel.js?v=142"></script>
-<script src="groesse.js?v=142"></script>
-<script src="gretchen.js?v=142"></script>
-<script src="effekte.js?v=142"></script>
-<script src="app.js?v=142"></script>
-<script src="melden.js?v=142"></script>
-<script src="verlauf.js?v=142"></script>
-<script src="hub.js?v=142"></script>
-<script src="farben.js?v=142"></script>
-<script src="cello.js?v=142"></script>
-<script src="instrumente.js?v=142"></script>
-<script src="stimmen-pro.js?v=142"></script>
-<script src="stimmen.js?v=142"></script>
-<script src="fitness-daten.js?v=142"></script>
-<script src="fitness-plaene.js?v=142"></script>
-<script src="fitness.js?v=142"></script>
-<script src="scan.js?v=142"></script>
-<script src="gesten.js?v=142"></script>
-<script src="toene.js?v=142"></script>
-<script src="gehoer.js?v=142"></script>
-<script src="songs.js?v=142"></script>
-<script src="spotify.js?v=142"></script>
-<script src="deezer.js?v=142"></script>
-<script src="klassiker.js?v=142"></script>
-<script src="falten.js?v=142"></script>
-<script src="zoom.js?v=142"></script>
-<script src="glas.js?v=142"></script>
-<script src="beat.js?v=142"></script>
-<script src="wunder.js?v=142"></script>
-<script src="studio.js?v=142"></script>
-<script src="takt.js?v=142"></script>
-<script src="punkte.js?v=142"></script>
-<script src="funktion.js?v=142"></script>
-<script src="zufall.js?v=142"></script>
-<script src="zahlen.js?v=142"></script>
-<script src="tierleben.js?v=142"></script>
-<script src="tierpixel.js?v=142"></script>
-<script src="piranha.js?v=142"></script>
-<script src="slo.js?v=142"></script>
-<script src="slo-pro.js?v=142"></script>
-<script src="augen.js?v=142"></script>
-<script src="karten-daten.js?v=142"></script>
-<script src="karte.js?v=142"></script>
-<script src="tiefgang.js?v=142"></script>
-<script src="riff.js?v=142"></script>
-<script src="krimi-grafik.js?v=142"></script>
-<script src="krimi.js?v=142"></script>
-<script src="krimi-wachen.js?v=142"></script>
-<script src="krimi-verhoer.js?v=142"></script>
-<script src="krimi-alibi.js?v=142"></script>
-<script src="krimi-akte.js?v=142"></script>
-<script src="krimi-zentrale.js?v=142"></script>
-<script src="profile.js?v=142"></script>
-<script src="fuehrung.js?v=142"></script>
-<script src="dopamin.js?v=142"></script>
-<script src="rage.js?v=142"></script>
-<script src="naehen.js?v=142"></script>
-<script src="experimente.js?v=142"></script>
-<script src="plattform.js?v=142"></script>
-<script src="sicherung.js?v=142"></script>
+<script src="wale.js?v=143"></script>
+<script src="haie.js?v=143"></script>
+<script src="porsche.js?v=143"></script>
+<script src="dackel.js?v=143"></script>
+<script src="groesse.js?v=143"></script>
+<script src="gretchen.js?v=143"></script>
+<script src="effekte.js?v=143"></script>
+<script src="app.js?v=143"></script>
+<script src="melden.js?v=143"></script>
+<script src="verlauf.js?v=143"></script>
+<script src="hub.js?v=143"></script>
+<script src="farben.js?v=143"></script>
+<script src="cello.js?v=143"></script>
+<script src="instrumente.js?v=143"></script>
+<script src="stimmen-pro.js?v=143"></script>
+<script src="stimmen.js?v=143"></script>
+<script src="fitness-daten.js?v=143"></script>
+<script src="fitness-plaene.js?v=143"></script>
+<script src="fitness.js?v=143"></script>
+<script src="scan.js?v=143"></script>
+<script src="gesten.js?v=143"></script>
+<script src="toene.js?v=143"></script>
+<script src="gehoer.js?v=143"></script>
+<script src="songs.js?v=143"></script>
+<script src="spotify.js?v=143"></script>
+<script src="deezer.js?v=143"></script>
+<script src="klassiker.js?v=143"></script>
+<script src="falten.js?v=143"></script>
+<script src="zoom.js?v=143"></script>
+<script src="glas.js?v=143"></script>
+<script src="beat.js?v=143"></script>
+<script src="wunder.js?v=143"></script>
+<script src="studio.js?v=143"></script>
+<script src="takt.js?v=143"></script>
+<script src="punkte.js?v=143"></script>
+<script src="funktion.js?v=143"></script>
+<script src="zufall.js?v=143"></script>
+<script src="zfrechen.js?v=143"></script>
+<script src="zahlen.js?v=143"></script>
+<script src="tierleben.js?v=143"></script>
+<script src="tierpixel.js?v=143"></script>
+<script src="piranha.js?v=143"></script>
+<script src="slo.js?v=143"></script>
+<script src="slo-pro.js?v=143"></script>
+<script src="augen.js?v=143"></script>
+<script src="karten-daten.js?v=143"></script>
+<script src="karte.js?v=143"></script>
+<script src="tiefgang.js?v=143"></script>
+<script src="riff.js?v=143"></script>
+<script src="krimi-grafik.js?v=143"></script>
+<script src="krimi.js?v=143"></script>
+<script src="krimi-wachen.js?v=143"></script>
+<script src="krimi-verhoer.js?v=143"></script>
+<script src="krimi-alibi.js?v=143"></script>
+<script src="krimi-akte.js?v=143"></script>
+<script src="krimi-zentrale.js?v=143"></script>
+<script src="profile.js?v=143"></script>
+<script src="fuehrung.js?v=143"></script>
+<script src="dopamin.js?v=143"></script>
+<script src="rage.js?v=143"></script>
+<script src="naehen.js?v=143"></script>
+<script src="experimente.js?v=143"></script>
+<script src="plattform.js?v=143"></script>
+<script src="sicherung.js?v=143"></script>
 </body>
 </html>
