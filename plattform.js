@@ -41,7 +41,7 @@ const SK_KATEGORIEN = [
   { id: 'sinne', name: 'Sinne & Wahrnehmung', emoji: '👁️', karten: ['hubFarben', 'hubToene', 'hubSongs', 'hubStudio', 'hubBeat', 'hubTakt', 'hubAugen'] },
   { id: 'zahlen', name: 'Zahlen & Welt', emoji: '🔢', karten: ['hubPunkte', 'hubZufall', 'hubKarte', 'hubTiefgang', 'hubZahlen', 'hubFalten', 'hubZoom', 'hubGlas', 'hubWunder'] },
   { id: 'wissen', name: 'Wissen & Sprache', emoji: '📚', karten: ['hubCello', 'hubStimmen', 'hubSlo'] },
-  { id: 'alltag', name: 'Alltag & Fitness', emoji: '💪', karten: ['hubFitness', 'hubScan'] },
+  { id: 'alltag', name: 'Alltag & Fitness', emoji: '💪', karten: ['hubFitness', 'hubScan', 'hubNaehen'] },
   { id: 'perspektive', name: 'Perspektivwechsel', emoji: '🪞', karten: ['hubTierleben', 'hubDopamin', 'hubRage'] },
 ];
 

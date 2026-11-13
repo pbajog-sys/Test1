@@ -865,6 +865,15 @@ er das Gerät; in der Datenschutzerklärung ergänzt). Antippen eines Worts öff
   Nach jeder Aufgabe steht die richtige Größe in der Zeichnung, dazu ein Tipp (z. B. warum man Flächen unterschätzt).
   Challenge-Links tragen den Modus mit. Test: `tests/augen.test.js` (600 Schätzrunden auf Gültigkeit).
 
+## 🧵 Nähstube (v142)
+`naehen.js`, Kategorie „Alltag & Fitness“. Gemütliche Schneiderei im erfundenen Städtchen Fadenbach – eigene Figuren, eigene Grafik (SVG-Kleid auf der Schneiderpuppe), kein Nachbau eines bestimmten Spiels. Speicher: `walquiz.naehstube.v1` (im Profil, kaputte Werte werden beim Lesen auf sichere Standards gesetzt).
+- **Laden:** Kundschaft (8 Figuren) mit Anlass, Farbe, Muster, Länge, Ärmeln und Budget; Schaufenster mit 3 Plätzen; Kater Zwirn zum Streicheln (über ihn wischen → Herzchen).
+- **Stoffladen:** täglich 10 Ballen (Baumwolle, Leinen, Wolle, Samt, Chiffon, Seide in 12 Farben, 5 Mustern) mit Werten für Fall, Glanz, Wärme. Start: 3 m Baumwolle, 80 Münzen.
+- **Skizzenbuch:** Ausschnitt, Ärmel, Rock, Länge, Stoff fürs Oberteil und für den Rock – Live-Vorschau.
+- **Zuschnitt:** echte Schnittteile in cm auf der 140 cm breiten Stoffbahn ziehen und drehen (0°/45°/90°). Überlappungen werden rot; schräger Fadenlauf lässt den Rock weicher fallen und ist am Muster sichtbar. Der Verbrauch wird vom Ballen abgezogen.
+- **Schneiden:** Vorderteil mit dem Finger entlang der Linie ausschneiden (oder Schneidemaschine, 60 %). **Nähen:** Finger = Pedal, Stoff seitlich nachführen, damit die Stiche auf der Linie landen. **Verzieren:** bis 14 Knöpfe, Schleifen, Blüten …
+- **Wertung:** (50 % Wünsche + 30 % Stoff passt zum Anlass + 20 % Verzierungen) × Handwerk-Faktor (0,55–1). Sterne, Kommentare, Lohn, Ruf; Lookbook. Freie Entwürfe hängen im Schaufenster und werden über Nacht (Feierabend) je nach Ruf verkauft. Test: `tests/naehen.test.js`.
+
 ## 😡 Ragebait-Fabrik (Satire, v141)
 `rage.js`, Kategorie „Perspektivwechsel“. Satire über Empörungs-Posts – gespottet wird über Haltungen, Phrasen und Tricks,
 nicht über Gruppen; alle Lager kriegen ihr Fett weg: Haltungs-Aktivist:in, Früher-war-alles-besser, Die Jugend von heute,
