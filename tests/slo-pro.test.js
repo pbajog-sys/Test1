@@ -16,7 +16,7 @@ const ordner = process.argv[2] || '.';
   // alter Spielstand (vor dem Ausbau) bleibt erhalten
   await p.evaluate(() => saveJson(SLO_KEY, { stufe: { pozdravi: 3, jaz: 1 }, tage: {}, wort: { hvala: 4, prosim: 3 }, xp: 120 }));
   await p.evaluate(() => { show('slo', '🐉 Slowenisch'); sloKarte(); }); await p.waitForTimeout(600);
-  ck('Reise wie gewohnt + Tab-Leiste mit 4 Seiten', !!(await p.$('.slo-station.jetzt')) && (await p.locator('#sloTabs button').count()) === 4 && await p.evaluate(() => !$('sloTabs').hidden && document.querySelector('#sloTabs .an').dataset.slp === 'karte'));
+  ck('Reise wie gewohnt + Tab-Leiste mit 5 Seiten', !!(await p.$('.slo-station.jetzt')) && (await p.locator('#sloTabs button').count()) === 5 && await p.evaluate(() => !$('sloTabs').hidden && document.querySelector('#sloTabs .an').dataset.slp === 'karte'));
   await bild('slp-reise');
   await wisch(330, 500, 70, 505); await p.waitForTimeout(1200);
   ck('Wischen nach links → Wortschatz', await p.evaluate(() => !$('slo-wortschatz').hidden && slpSeite === 'wortschatz' && !!document.querySelector('#slpLernen')));
@@ -73,10 +73,12 @@ const ordner = process.argv[2] || '.';
   // Zeitreise: zwei Tage später sind die Wörter fällig; eins falsch → Stufe 1, Rest Stufe 2
   await p.evaluate(() => { const st = slpStore(); Object.values(st.srs).forEach((c) => { c[1] = slpTagNr() - 1; }); st.srsNeu = { [slpTagNr()]: st.srsZiel }; saveJson(SLO_KEY, st); slpWortschatz(); });
   await p.click('#slpLernen'); await p.waitForTimeout(300);
+  const falschesWort = await p.evaluate(() => slo.liste[0].w.sl);
+  const vorher1 = await p.evaluate(() => Object.entries(slpStore().srs).filter(([, c]) => (c[2] || 1) === 1).map(([k]) => k));
   await p.evaluate(() => { const a = slo.liste[0]; const inp = document.querySelector('#sloEingabe'); if (inp) { inp.value = 'falsch'; inp.dispatchEvent(new Event('input')); } else { const o = [...document.querySelectorAll('.slo-opt')].find((x) => sloNorm(x.textContent) !== sloNorm(a.typ === 'slde' ? a.w.de : a.w.sl)); o.click(); } sloPruefen(); sloPruefen(); });
   await spiele(true, 80);
-  const nach2 = await p.evaluate(() => { const w = Object.values(slpStore().srs); return { s1: w.filter((c) => c[0] === 1).length, s2: w.filter((c) => c[0] === 2).length, s2tage: w.filter((c) => c[0] === 2 && c[1] === slpTagNr() + 3).length }; });
-  ck('Wiederholung: 1 Fehler → Stufe 1 (morgen), 9 richtig → in 3 Tagen wieder (Intervall × Leichtigkeit 2,5); die Wiederholung am Ende zählt nicht doppelt', nach2.s1 === 1 && nach2.s2 === 9 && nach2.s2tage === 9, JSON.stringify(nach2));
+  const nach2 = await p.evaluate(([fw, v1]) => { const S = slpStore().srs, h = slpTagNr(); return { falsch: S[fw][0] === 1 && S[fw][1] === h + 1, dreiTage: v1.filter((k) => k !== fw && S[k][1] === h + 3).length, erwartet: v1.filter((k) => k !== fw).length }; }, [falschesWort, vorher1]);
+  ck('Wiederholung: das falsch beantwortete Wort → Stufe 1 (morgen); die anderen (Intervall 1) → in 3 Tagen (× Leichtigkeit 2,5); die Wiederholung am Ende zählt nicht doppelt', nach2.falsch && nach2.dreiTage === nach2.erwartet && nach2.erwartet >= 9, JSON.stringify(nach2));
   await p.click('#sloEndeWeiter'); await p.waitForTimeout(300);
   // ---------- 🃏 Karteikarten wie Anki ----------
   const plan = await p.evaluate(() => [slpPlan({ ivl: 4, e: 2.5, l: 0 }, 1), slpPlan({ ivl: 4, e: 2.5, l: 0 }, 2), slpPlan({ ivl: 4, e: 2.5, l: 0 }, 3), slpPlan({ ivl: 4, e: 2.5, l: 0 }, 4), slpPlan(null, 3), slpPlan(null, 4)].map((x) => x.ivl + '/' + Math.round(x.e * 100) / 100 + '/' + x.l).join(' '));
@@ -170,6 +172,23 @@ const ordner = process.argv[2] || '.';
   await p.click('#sloTabs [data-slp="wortschatz"]'); await p.waitForTimeout(600);
   await p.click('#sloZurueck'); await p.waitForTimeout(500);
   ck('Zurück von „Wortschatz“ → Hub', await p.evaluate(() => document.querySelector('.screen.active').id === 'screen-hub'));
+  // ---------- Übersetzer ----------
+  await p.evaluate(() => { show('slo', '🐉 Slowenisch'); sloKarte(); }); await p.waitForTimeout(400);
+  await p.click('#sloTabs [data-slp="uebersetzer"]'); await p.waitForTimeout(800);
+  ck('Fünf Tabs, „Übersetzen“ öffnet den Übersetzer', (await p.locator('#sloTabs button').count()) === 5 && await p.evaluate(() => !$('slo-uebersetzer').hidden));
+  await p.fill('#slpUText', 'Vidim psa in hiše. Midva sva bila doma.'); await p.waitForTimeout(500);
+  const an = await p.evaluate(() => [...document.querySelectorAll('.slp-u-wort')].map((b) => b.textContent));
+  const finde = (w) => an.find((t) => t.startsWith(w)) || '';
+  ck('Wortformen erkannt: vidim → videti (ich, Gegenwart), psa → pes (Akkusativ), hiše → hiša (Genitiv/Mehrzahl), sva → biti (wir zwei), bila → biti (Vergangenheit)',
+    /videti/.test(finde('Vidim')) && /ich – Gegenwart/.test(finde('Vidim')) && /pes/.test(finde('psa')) && /Akkusativ Einzahl/.test(finde('psa')) && /hiša/.test(finde('hiše')) && /Genitiv Einzahl/.test(finde('hiše')) && /wir zwei/.test(finde('sva')) && /Vergangenheit/.test(finde('bila')), an.slice(0, 4).join(' || '));
+  ck('Rohfassung Wort für Wort, alle Wörter erkannt', /von 8 Wörtern/.test(await p.textContent('.slp-roh + .slp-klein')) && /8 von 8/.test(await p.textContent('.slp-roh + .slp-klein')), await p.textContent('.slp-roh'));
+  await bild('slp-uebersetzer');
+  const deepl = await p.evaluate(() => { let url = null; const o = window.open; window.open = (u) => { url = u; }; $('slpDeepl').click(); window.open = o; return url; });
+  ck('DeepL-Knopf öffnet sl→de mit dem Text', /^https:\/\/www\.deepl\.com\/translator#sl\/de\/Vidim%20psa/.test(deepl || ''), deepl);
+  await p.click('[data-ur="de"]'); await p.waitForTimeout(300);
+  await p.fill('#slpUText', 'Hund Bahnhof'); await p.waitForTimeout(500);
+  const de = await p.textContent('#slpUErgebnis');
+  ck('Deutsch → Slowenisch: Hund → pes, Bahnhof → kolodvor/postaja', /pes/.test(de) && /(kolodvor|postaja)/.test(de), de.slice(0, 120));
   ck('Keine Seitenfehler', !fehler.length, fehler.join(' | '));
   console.log(checks.filter((c) => c[1]).length + ' bestanden, ' + checks.filter((c) => !c[1]).length + ' fehlgeschlagen');
   await b.close(); process.exit(checks.every((c) => c[1]) ? 0 : 1);

@@ -114,11 +114,12 @@ function slpSrsAntwort(w, ok) {
 }
 
 // ---------- Rahmen: vier Seiten mit Tab-Leiste und Wischen ----------
-const SLP_SEITEN = [['karte', '🗺️', 'Reise'], ['wortschatz', '🧠', 'Wortschatz'], ['grammatik', '🧩', 'Grammatik'], ['gespraeche', '💬', 'Gespräche']];
+const SLP_SEITEN = [['karte', '🗺️', 'Reise'], ['wortschatz', '🧠', 'Wörter'], ['grammatik', '🧩', 'Grammatik'], ['gespraeche', '💬', 'Gespräche'], ['uebersetzer', '🔤', 'Übersetzen']];
+const SLP_TABSEITEN = SLP_SEITEN.map((x) => x[0]);
 function slpRahmen() {
   if ($('sloTabs')) return;
   const b = document.querySelector('.slo-buehne');
-  ['wortschatz', 'grammatik', 'gespraeche'].forEach((t) => { const d = document.createElement('div'); d.className = 'slo-teil slp-seite'; d.id = 'slo-' + t; d.hidden = true; b.appendChild(d); sloTeile2.push(t); });
+  ['wortschatz', 'grammatik', 'gespraeche', 'uebersetzer'].forEach((t) => { const d = document.createElement('div'); d.className = 'slo-teil slp-seite'; d.id = 'slo-' + t; d.hidden = true; b.appendChild(d); sloTeile2.push(t); });
   const nav = document.createElement('nav'); nav.className = 'slp-tabs'; nav.id = 'sloTabs'; nav.setAttribute('role', 'tablist');
   nav.innerHTML = SLP_SEITEN.map(([id, ic, n]) => '<button type="button" role="tab" data-slp="' + id + '"><b aria-hidden="true">' + ic + '</b>' + n + '</button>').join('');
   b.appendChild(nav);
@@ -140,7 +141,7 @@ function slpZeige(id, richtung) {
     zeigeSloTeil(id);
     const box = $('slo-' + id);
     box.innerHTML = '<div class="slp-laden"><i></i><p>Lade Wortschatz …</p></div>';
-    slpLaden().then(() => { if (slpSeite !== id) return; ({ wortschatz: slpWortschatz, grammatik: slpGrammatik, gespraeche: slpGespraeche })[id](); })
+    slpLaden().then(() => { if (slpSeite !== id) return; ({ wortschatz: slpWortschatz, grammatik: slpGrammatik, gespraeche: slpGespraeche, uebersetzer: slpUebersetzer })[id](); })
       .catch(() => { box.innerHTML = '<div class="slp-karte"><p>Der Wortschatz konnte nicht geladen werden. Einmal online öffnen, dann geht es auch offline.</p></div>'; });
     document.querySelector('.slo-buehne').scrollTop = 0;
   }
@@ -151,7 +152,7 @@ function slpZeige(id, richtung) {
 function slpTabsMarkieren() {
   const nav = $('sloTabs'); if (!nav) return;
   const teil = sloTeile2.find((t) => !$('slo-' + t).hidden);
-  const weg = !['karte', 'wortschatz', 'grammatik', 'gespraeche'].includes(teil);
+  const weg = !SLP_TABSEITEN.includes(teil);
   if (nav.hidden !== weg) nav.hidden = weg;
   if (teil && !nav.hidden) slpSeite = teil;
   nav.querySelectorAll('[data-slp]').forEach((x) => { const an = x.dataset.slp === slpSeite; x.classList.toggle('an', an); x.setAttribute('aria-selected', an); });
@@ -678,5 +679,97 @@ function slpGespraeche() {
 // Zurück-Knopf: von Wortschatz/Grammatik/Gespräche direkt zum Hub
 $('sloZurueck').addEventListener('click', (e) => {
   if ($('slo-karten') && !$('slo-karten').hidden) { e.stopImmediatePropagation(); slkEnde(); return; }
-  if (['wortschatz', 'grammatik', 'gespraeche'].some((t) => $('slo-' + t) && !$('slo-' + t).hidden)) { e.stopImmediatePropagation(); if ('speechSynthesis' in window) speechSynthesis.cancel(); zeigeHub(); }
+  if (['wortschatz', 'grammatik', 'gespraeche', 'uebersetzer'].some((t) => $('slo-' + t) && !$('slo-' + t).hidden)) { e.stopImmediatePropagation(); if ('speechSynthesis' in window) speechSynthesis.cancel(); zeigeHub(); }
 }, true);
+
+// ---------- 🔤 Übersetzer ----------
+// Offline: jede Wortform wird über die Formen-Tabellen ihrem Grundwort zugeordnet (mit Fall, Person, Zeit …).
+// Ganze Sätze: auf Knopfdruck DeepL oder Google Übersetzer öffnen (erst dann wird der Text dorthin geschickt).
+const SLP_PERS_DE = ['ich', 'du', 'er/sie/es', 'wir zwei', 'ihr zwei', 'die zwei', 'wir', 'ihr', 'sie'];
+const SLP_PRONOMEN = [
+  ['jaz', 'ich', { mene: 'Genitiv/Akkusativ', me: 'Genitiv/Akkusativ (kurz)', meni: 'Dativ/Lokativ', mi: 'Dativ (kurz)', mano: 'Instrumental', menoj: 'Instrumental' }],
+  ['ti', 'du', { tebe: 'Genitiv/Akkusativ', te: 'Genitiv/Akkusativ (kurz)', tebi: 'Dativ/Lokativ', tabo: 'Instrumental', teboj: 'Instrumental' }],
+  ['on', 'er', { njega: 'Genitiv/Akkusativ', ga: 'Genitiv/Akkusativ (kurz)', njemu: 'Dativ', mu: 'Dativ (kurz)', njem: 'Lokativ', njim: 'Instrumental' }],
+  ['ona', 'sie (eine)', { nje: 'Genitiv', je: 'Genitiv (kurz) – oder „ist“', njej: 'Dativ/Lokativ', ji: 'Dativ (kurz)', njo: 'Akkusativ/Instrumental', jo: 'Akkusativ (kurz)' }],
+  ['mi', 'wir', { nas: 'Genitiv/Akkusativ/Lokativ', nam: 'Dativ', nami: 'Instrumental' }],
+  ['vi', 'ihr / Sie', { vas: 'Genitiv/Akkusativ/Lokativ', vam: 'Dativ', vami: 'Instrumental' }],
+  ['oni', 'sie (mehrere)', { njih: 'Genitiv/Akkusativ/Lokativ', jih: 'Genitiv/Akkusativ (kurz)', njim: 'Dativ', jim: 'Dativ (kurz)', njimi: 'Instrumental' }],
+  ['midva', 'wir zwei', { naju: 'Genitiv/Akkusativ/Lokativ', nama: 'Dativ/Instrumental' }],
+  ['vidva', 'ihr zwei', { vaju: 'Genitiv/Akkusativ/Lokativ', vama: 'Dativ/Instrumental' }],
+  ['onadva', 'die zwei', { njiju: 'Genitiv/Akkusativ/Lokativ', ju: 'Genitiv/Akkusativ (kurz)', njima: 'Dativ/Instrumental', jima: 'Dativ (kurz)' }],
+];
+let slpIndex = null;
+function slpFormIndex() {
+  if (slpIndex) return slpIndex;
+  const I = new Map(), dazu = (form, w, info) => { if (!form) return; const k = form.toLowerCase(); if (!I.has(k)) I.set(k, []); const l = I.get(k); const e = l.find((x) => x.w === w); if (e) { if (info && !e.info.includes(info)) e.info.push(info); } else l.push({ w, info: info ? [info] : [] }); };
+  const G = ['männlich', 'weiblich', 'sächlich'];
+  slpLex.forEach((w) => {
+    dazu(w.sl, w, w.p === 'n' ? 'Grundform' : w.p === 'v' ? 'Grundform (Infinitiv)' : '');
+    if (w.p === 'n' && w.F) w.F.forEach((f, i) => dazu(f, w, SLP_KASUS[i % 6] + ' ' + SLP_ZAHL[Math.floor(i / 6)]));
+    if (w.p === 'a' && w.F) w.F.forEach((f, i) => dazu(f, w, SLP_KASUS[i % 6] + ' ' + SLP_ZAHL[Math.floor(i / 6) % 3] + ' ' + G[Math.floor(i / 18)]));
+    if (w.p === 'v') {
+      if (w.pr) w.pr.forEach((f, i) => dazu(f, w, SLP_PERS_DE[i] + ' – Gegenwart'));
+      if (w.lp) w.lp.forEach((f, i) => dazu(f, w, 'Vergangenheit/Zukunft (' + G[i % 3] + ', ' + SLP_ZAHL[Math.floor(i / 3)] + ')'));
+      if (w.imp) dazu(w.imp, w, 'Befehlsform (du)');
+    }
+  });
+  SLP_PRONOMEN.forEach(([sl, de, F]) => { const w = slpLex.find((x) => x.sl === sl) || { sl, de, p: 'o' }; dazu(sl, w, 'Nominativ'); Object.entries(F).forEach(([f, info]) => dazu(f, w, info)); });
+  slpIndex = I; return I;
+}
+function slpAnalyse(text) {
+  const I = slpFormIndex(), woerter = text.match(/[\p{L}]+/gu) || [], out = [];
+  for (let i = 0; i < woerter.length; i++) {
+    const zwei = i + 1 < woerter.length ? (woerter[i] + ' ' + woerter[i + 1]).toLowerCase() : null;
+    if (zwei && I.has(zwei)) { out.push({ wort: woerter[i] + ' ' + woerter[i + 1], treffer: I.get(zwei) }); i++; continue; }
+    const k = woerter[i].toLowerCase();
+    out.push({ wort: woerter[i], treffer: I.get(k) || I.get(sloOhneZeichen(k)) || [] });
+  }
+  return out;
+}
+function slpSucheDeutsch(text) {
+  const woerter = (text.toLowerCase().match(/[\p{L}]+/gu) || []).filter((w) => w.length >= 3 && !['der', 'die', 'das', 'und', 'ein', 'eine', 'ist', 'sind', 'den', 'dem', 'des', 'mit', 'für', 'von', 'auf'].includes(w));
+  return woerter.map((q) => {
+    const t = [];
+    slpLex.forEach((w) => {
+      const teile = w.de.toLowerCase().replace(/\([^)]*\)/g, '').split(/[;,]/).map((x) => x.trim());
+      const genau = teile.some((x) => x === q || x.split(/\s+/).includes(q)), anfang = !genau && teile.some((x) => x.startsWith(q));
+      if (genau || anfang) t.push({ w, s: (genau ? 0 : 1e6) + w.r });
+    });
+    return { wort: q, treffer: t.sort((a, b) => a.s - b.s).slice(0, 4).map((x) => x.w) };
+  });
+}
+function slpUebersetzer() {
+  const st = slpStore(), richtung = st.uRichtung === 'de' ? 'de' : 'sl', box = $('slo-uebersetzer');
+  box.innerHTML = '<div class="slp-karte"><h3>🔤 Übersetzer</h3><div class="slp-chips slp-richtung"><button type="button" class="slp-chip' + (richtung === 'sl' ? ' an' : '') + '" data-ur="sl">🇸🇮 → 🇩🇪</button><button type="button" class="slp-chip' + (richtung === 'de' ? ' an' : '') + '" data-ur="de">🇩🇪 → 🇸🇮</button></div>'
+    + '<textarea class="slp-eingabe" id="slpUText" rows="2" placeholder="' + (richtung === 'sl' ? 'z. B. Rada bi kupila dve vozovnici za Maribor.' : 'z. B. Wo ist der Bahnhof?') + '" autocapitalize="sentences" spellcheck="false">' + sloEsc(st.uText || '') + '</textarea>'
+    + '<div class="slo-zeichen slp-zeichen">' + ['č', 'š', 'ž'].map((z) => '<button type="button" data-z="' + z + '">' + z + '</button>').join('') + '</div>'
+    + '<div class="slp-knoepfe"><button type="button" class="btn secondary" id="slpDeepl">DeepL ↗</button><button type="button" class="btn secondary" id="slpGoogle">Google Übersetzer ↗</button></div>'
+    + '</div><div id="slpUErgebnis"></div>'
+    + '<p class="slp-klein slp-quelle">Die Wort-Analyse läuft offline mit dem Wörterbuch der App. Ganze Sätze übersetzt DeepL bzw. Google – erst beim Antippen wird der Text dorthin geschickt.</p>';
+  const ta = $('slpUText');
+  const zeigen = () => {
+    const text = ta.value; const s2 = slpStore(); s2.uText = text.slice(0, 500); saveJson(SLO_KEY, s2);
+    const erg = $('slpUErgebnis');
+    if (!text.trim()) { erg.innerHTML = ''; return; }
+    if (richtung === 'sl') {
+      const A = slpAnalyse(text), bekannt = A.filter((a) => a.treffer.length).length;
+      erg.innerHTML = '<div class="slp-karte"><h3>Wort für Wort</h3><p class="slp-roh">' + A.map((a) => (a.treffer.length ? sloEsc(a.treffer[0].w.de.split(/[;,]/)[0].replace(/\s*\(.*$/, '')) : '<i>' + sloEsc(a.wort) + '?</i>')).join(' · ') + '</p><p class="slp-klein">Rohfassung aus den Grundbedeutungen (' + bekannt + ' von ' + A.length + ' Wörtern erkannt) – keine fertige Übersetzung. ' + sloLaut(text) + '</p></div>'
+        + '<div class="slp-woerter-u">' + A.map((a) => '<button type="button" class="slp-u-wort' + (a.treffer.length ? '' : ' unbekannt') + '" data-wi="' + (a.treffer.length && a.treffer[0].w.i != null ? a.treffer[0].w.i : '') + '"><b>' + sloEsc(a.wort) + '</b>'
+          + (a.treffer.length ? a.treffer.slice(0, 2).map((t) => '<span>' + (t.w.sl.toLowerCase() !== a.wort.toLowerCase() ? '→ <em>' + sloEsc(t.w.sl) + '</em> ' : '') + sloEsc(t.w.de) + (t.info.length ? '<small>' + sloEsc(t.info.slice(0, 3).join(' · ')) + '</small>' : '') + '</span>').join('') : '<span>nicht im Wörterbuch – DeepL fragen</span>') + '</button>').join('') + '</div>';
+    } else {
+      const R = slpSucheDeutsch(text);
+      erg.innerHTML = '<div class="slp-woerter-u">' + R.map((r) => '<div class="slp-u-gruppe"><b>' + sloEsc(r.wort) + '</b>' + (r.treffer.length ? r.treffer.map((w) => '<button type="button" class="slp-u-wort" data-wi="' + w.i + '"><b>' + sloEsc(w.sl) + '</b><span>' + sloEsc(w.de) + (w.n ? ' <small>' + SLP_NIVEAUS[w.n - 1] + '</small>' : '') + '</span></button>').join('') : '<span class="slp-klein">nicht im Wörterbuch</span>') + '</div>').join('') + '</div>'
+        + '<p class="slp-klein">Die Suche findet Wörter, nicht ganze Sätze. Für Sätze: DeepL oder Google oben.</p>';
+    }
+    erg.querySelectorAll('[data-wi]').forEach((b) => { if (b.dataset.wi !== '') b.addEventListener('click', () => slpWortKarte(slpLex[+b.dataset.wi])); });
+    erg.querySelectorAll('[data-sprich]').forEach((b) => b.addEventListener('click', () => sloSprich(b.dataset.sprich)));
+  };
+  let t = null; ta.addEventListener('input', () => { clearTimeout(t); t = setTimeout(zeigen, 180); });
+  box.querySelectorAll('[data-z]').forEach((b) => b.addEventListener('click', () => { const p = ta.selectionStart ?? ta.value.length; ta.value = ta.value.slice(0, p) + b.dataset.z + ta.value.slice(ta.selectionEnd ?? p); ta.focus(); ta.setSelectionRange(p + 1, p + 1); zeigen(); }));
+  box.querySelectorAll('[data-ur]').forEach((b) => b.addEventListener('click', () => { const s2 = slpStore(); s2.uRichtung = b.dataset.ur; s2.uText = ''; saveJson(SLO_KEY, s2); slpUebersetzer(); }));
+  const von = richtung, nach = richtung === 'sl' ? 'de' : 'sl';
+  $('slpDeepl').addEventListener('click', () => { if (ta.value.trim()) window.open('https://www.deepl.com/translator#' + von + '/' + nach + '/' + encodeURIComponent(ta.value.trim()), '_blank', 'noopener'); });
+  $('slpGoogle').addEventListener('click', () => { if (ta.value.trim()) window.open('https://translate.google.com/?sl=' + von + '&tl=' + nach + '&op=translate&text=' + encodeURIComponent(ta.value.trim()), '_blank', 'noopener'); });
+  zeigen();
+  slpTabsMarkieren();
+}

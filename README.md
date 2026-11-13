@@ -846,3 +846,21 @@ unangetastet; bereits verdiente Erfolge bleiben sichtbar. Wieder einblenden = Ei
   Alternative und nutzt denselben Plan (richtig = Gut, falsch = Nochmal).
 - Speicher: `srs[wort]` jetzt `[Stufe, fällig, Intervall, Leichtigkeit, Patzer]` – alte Einträge `[Stufe, fällig]` gelten
   weiter (Intervall aus der alten Stufentabelle); neu `eigene`, `kRichtung`, `kNiveau`, `srsLog`.
+
+**🔤 Slowenisch-Übersetzer (v140):** fünfte Seite „Übersetzen“. Slowenisch → Deutsch: jede Wortform wird **offline** über die
+Formen-Tabellen (Nomen, Adjektive, Verben, Pronomen samt Kurzformen) ihrem Grundwort zugeordnet – mit Fall/Zahl/Geschlecht bzw.
+Person/Zeit – plus „Wort für Wort“-Rohfassung; Zweiwort-Ausdrücke (z. B. *dober tek*) werden erkannt. Deutsch → Slowenisch:
+Suche in den Bedeutungen. Ganze Sätze: Knöpfe **DeepL ↗** / **Google Übersetzer ↗** öffnen den Text dort (erst dann verlässt
+er das Gerät; in der Datenschutzerklärung ergänzt). Antippen eines Worts öffnet seine Wortkarte mit allen Formen.
+
+## 📐 Augenmaß – fairer und mit „Schätzen“ (v140)
+- **Faire Darstellung:** flache Linienenden (kein Überstand durch runde Kappen), die eigene Linie gleich dick wie die Vorlage.
+  Beim **Halbieren** markiert ein feiner Querstrich statt eines dicken Punkts die Stelle; gewertet wird nur die Position entlang
+  der Linie. Bei **Länge** sitzt der Griff 30 px *neben* dem Linienende (mit feiner Führungslinie) statt darauf – ein Punkt am
+  Ende ließ die Linie länger wirken. Bei Winkel/Parallel ist der Griff ein heller Ring.
+- **Neuer Modus „Schätzen“** (je 5 Aufgaben, Stufen wie gehabt, eigene Bestwerte): **Länge** (blauer Balken = z. B. 5 m – wie
+  lang ist die Linie? ab Mittel senkrecht/schräg), **Höhe** (der Mensch ist 1,80 m – wie hoch ist der Turm?), **Fläche**
+  (Quadrat = 1/4/10 m² – Kreis bzw. Quadrat schätzen), **Winkel ablesen** und **Anteil** eines Kreises in %. Eingabe per Regler
+  (Größen logarithmisch) und ±. Wertung: 10 Punkte genau, 0 ab ±35 % (Länge/Höhe), ±50 % (Fläche), ±25° bzw. ±15 Prozentpunkte.
+  Nach jeder Aufgabe steht die richtige Größe in der Zeichnung, dazu ein Tipp (z. B. warum man Flächen unterschätzt).
+  Challenge-Links tragen den Modus mit. Test: `tests/augen.test.js` (600 Schätzrunden auf Gültigkeit).

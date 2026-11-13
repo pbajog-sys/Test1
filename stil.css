@@ -4192,3 +4192,37 @@ a.bb-datei { text-decoration: none; }
 .slk-note.n1 { background: #dc2626; } .slk-note.n2 { background: #d97706; } .slk-note.n3 { background: #16a34a; } .slk-note.n4 { background: #2563eb; }
 .slk-hilfe { margin: 0; text-align: center; font-size: .75rem; color: rgba(232,245,238,.45); }
 @media (prefers-reduced-motion: reduce) { .slk-karte { transition: none; } }
+/* Augenmaß: faire Linienenden, Griffe neben der Linie, Schätzen */
+.ag-flaeche line { stroke-linecap: butt; }
+.ag-du-linie { stroke-width: 4; }
+.ag-griff { fill: rgba(255,181,71,.28); stroke: #ffb547; stroke-width: 3; }
+.ag-fuehrung { stroke: #ffb547; stroke-width: 1.5; stroke-dasharray: 3 4; opacity: .8; }
+.ag-du-strich { stroke: #ffb547; stroke-width: 3.5; }
+.ag-ok-strich { stroke: #5eead4; stroke-width: 3; }
+.ag-ref { stroke: #93c5fd !important; stroke-width: 5 !important; }
+.ag-ref-form { fill: rgba(147,197,253,.25); stroke: #93c5fd; stroke-width: 3; }
+.ag-stueck { fill: rgba(255,181,71,.55); stroke: #ffb547; stroke-width: 2; }
+.ag-mensch circle { fill: none; stroke: #93c5fd; stroke-width: 3; } .ag-mensch line { stroke: #93c5fd !important; stroke-width: 3 !important; stroke-linecap: round !important; }
+.ag-boden { stroke: rgba(232,241,255,.35) !important; stroke-width: 2 !important; }
+.ag-text { fill: #e8f1ff; font: 700 17px system-ui, sans-serif; } .ag-text.ref { fill: #93c5fd; } .ag-text.ok { fill: #5eead4; font-size: 19px; } .ag-text.mitte { text-anchor: middle; } .ag-text.gross { font-size: 30px; }
+.ag-modi { grid-template-columns: 1fr 1fr; margin-bottom: 8px; }
+.ag-schaetzen { display: grid; gap: 10px; padding: 12px; border-radius: 16px; background: rgba(255,255,255,.06); }
+.ag-schaetzen[hidden] { display: none; }
+.ag-wert { display: grid; grid-template-columns: 52px 1fr 52px; align-items: center; text-align: center; }
+.ag-wert output { font-size: 1.7rem; font-weight: 800; color: #ffb547; }
+.ag-pm { appearance: none; border: 0; height: 48px; border-radius: 14px; background: rgba(255,255,255,.1); color: #fff; font-size: 1.6rem; font-weight: 700; cursor: pointer; }
+#agRegler { width: 100%; accent-color: #ffb547; height: 34px; }
+/* 🔤 Slowenisch-Übersetzer */
+.slp-tabs { grid-template-columns: repeat(5, 1fr) !important; }
+.slp-tabs button { font-size: .68rem; }
+.slp-eingabe { width: 100%; box-sizing: border-box; margin-top: 10px; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,.18); background: rgba(0,0,0,.25); color: inherit; font: 600 1.05rem "Outfit", system-ui, sans-serif; resize: vertical; }
+.slp-zeichen { margin-top: 6px; }
+.slp-knoepfe { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 10px; }
+.slp-roh { font-size: 1.05rem; line-height: 1.5; margin: 0; } .slp-roh i { color: #fca5a5; }
+.slp-woerter-u { display: grid; gap: 8px; }
+.slp-u-wort { appearance: none; text-align: left; display: grid; gap: 3px; padding: 12px 14px; border-radius: 16px; border: 1px solid rgba(255,255,255,.1); background: rgba(9,22,30,.84); color: inherit; font: inherit; cursor: pointer; }
+.slp-u-wort > b { font-size: 1.1rem; color: #fff; } .slp-u-wort span { color: rgba(232,245,238,.85); } .slp-u-wort em { color: #86efac; font-style: normal; font-weight: 700; }
+.slp-u-wort small { display: block; color: rgba(232,245,238,.55); font-size: .78rem; }
+.slp-u-wort.unbekannt { border-style: dashed; } .slp-u-wort.unbekannt span { color: #fca5a5; }
+.slp-u-gruppe { display: grid; gap: 6px; padding: 10px; border-radius: 18px; background: rgba(9,22,30,.6); } .slp-u-gruppe > b { color: #86efac; }
+.slp-richtung { display: grid; grid-template-columns: 1fr 1fr; } .slp-richtung .slp-chip { font-size: 1.05rem; }
