@@ -828,3 +828,21 @@ unangetastet; bereits verdiente Erfolge bleiben sichtbar. Wieder einblenden = Ei
 - Speicher: zusätzliche Felder in `walquiz.slo.v1` (`srs`, `srsNeu`, `srsZiel`, `gram`, `gespr`); alte Stände bleiben unverändert.
 - Lizenzen: Formen/Häufigkeit aus UD SSJ, UniMorph/Wiktionary, FrequencyWords (alle CC BY-SA) → `slo-lex.json` CC BY-SA 4.0.
 - Test: `tests/slo-pro.test.js` (Formen-Stichproben, SRS-Ablauf mit Zeitreise, 400 Aufgaben je Grammatik-Thema, Dialoge).
+
+**🃏 Karteikarten wie Anki + Kernwortschatz 3.150 (v138):**
+- **Kernwortschatz** (wie die „Oxford 3000“): 3.122 Wörter + Reise-Wörter = **3.150**, eingeteilt in **A1 751 · A2 674 · B1 739 · B2 985**.
+  Lernreihenfolge: eigene Karten → A1 (Reise-Wörter in Stationsreihenfolge, dann Alltags-Grundwortschatz wie Zahlen, Essen,
+  Familie, Wohnung, Körper, Wetter, Floskeln, dann nach Häufigkeit) → A2 → B1 → B2. Einstufung: Häufigkeitsrang im Korpus
+  (A1 < 400, A2 < 1.100, B1 < 2.000, sonst B2), Alltagswortschatz von Hand auf A1/A2 gesetzt.
+- **Karteikarten:** Vorderseite (Slowenisch, Deutsch oder gemischt) → antippen/„Antwort zeigen“ → Rückseite mit Übersetzung,
+  wichtigsten Formen (Geschlecht, Genitiv, Mehrzahl; ich-/sie-Form, Vergangenheit, Aspekt) und einem **echten Beispielsatz**
+  (1.264 Wörter; kurze Sätze aus UD SSJ, nur Standardsprache, ohne Eigennamen/Zahlen/Gewalt). Bewertung **Nochmal · Schwer ·
+  Gut · Einfach** mit angezeigtem nächsten Termin; **Wischen** links = Nochmal, rechts = Gut; Tastatur Leertaste/1–4.
+- **Planung wie Anki (SM-2):** neu: Gut 1 Tag, Einfach 4 Tage, Nochmal/Schwer = in dieser Sitzung noch einmal;
+  Wiederholung: Nochmal → 1 Tag, Leichtigkeit −0,2, Patzer +1 (und heute noch einmal); Schwer → ×1,2 (−0,15);
+  Gut → × Leichtigkeit (Start 2,5); Einfach → × Leichtigkeit × 1,3 (+0,15). Zähler neu/noch einmal/fällig wie bei Anki.
+- **Einstellungen:** neue Wörter pro Tag (5–30), Vorderseite, neue Wörter nur aus einem Niveau, **eigene Karten**.
+  Statistik: Fortschritt je Niveau, Prognose für 7 Tage, „gewusst“ der letzten 30 Tage. Das Quiz-Training bleibt als
+  Alternative und nutzt denselben Plan (richtig = Gut, falsch = Nochmal).
+- Speicher: `srs[wort]` jetzt `[Stufe, fällig, Intervall, Leichtigkeit, Patzer]` – alte Einträge `[Stufe, fällig]` gelten
+  weiter (Intervall aus der alten Stufentabelle); neu `eigene`, `kRichtung`, `kNiveau`, `srsLog`.

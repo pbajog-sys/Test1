@@ -4152,3 +4152,43 @@ a.bb-datei { text-decoration: none; }
 .slp-blase.neu { border: 1px solid rgba(134,239,172,.45); }
 .slo-titel.klein { font-size: .9rem; opacity: .8; }
 @media (prefers-reduced-motion: reduce) { .slp-rein-links, .slp-rein-rechts { animation: none; } }
+/* 🃏 Karteikarten (Slowenisch) */
+.slp-quizknopf { width: 100%; background: rgba(9, 22, 30, .84) !important; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px); border: 1px solid rgba(255,255,255,.12) !important; }
+.slp-zahlen .neu b { color: #60a5fa; } .slp-zahlen .wdh b { color: #4ade80; }
+.slp-label { margin: 12px 0 6px; font-size: .82rem; font-weight: 700; color: rgba(232,245,238,.7); }
+.slp-niveaus { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.slp-niveaus div { display: grid; gap: 4px; text-align: center; } .slp-niveaus b { font-size: 1rem; } .slp-niveaus small { font-size: .72rem; color: rgba(232,245,238,.6); }
+.slp-niveaus i { height: 7px; border-radius: 4px; background: rgba(255,255,255,.1); position: relative; overflow: hidden; } .slp-niveaus i::after { content: ''; position: absolute; inset: 0 auto 0 0; width: var(--p); background: linear-gradient(90deg, #4ade80, #38bdf8); }
+.slp-prognose { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; height: 92px; align-items: end; }
+.slp-prognose div { height: 100%; display: grid; grid-template-rows: 1fr auto auto; justify-items: center; gap: 2px; font-size: .7rem; color: rgba(232,245,238,.6); }
+.slp-prognose i { align-self: end; width: 100%; height: max(3px, var(--h)); border-radius: 6px; background: linear-gradient(#4ade80, #16a34a); } .slp-prognose b { color: #fff; font-size: .8rem; }
+.slp-eigen { display: grid; gap: 8px; } .slp-eigen input { padding: 11px 12px; border-radius: 12px; border: 1px solid rgba(255,255,255,.16); background: rgba(0,0,0,.2); color: inherit; font: 600 1rem inherit; font-family: inherit; }
+.slp-niv { font-style: normal; font-size: .7rem; font-weight: 800; color: #93c5fd; }
+.slp-wort { grid-template-columns: auto 1fr auto auto; }
+.slp-beispiel { margin: 10px 0 0; padding: 10px 12px; border-radius: 14px; background: rgba(255,255,255,.06); font-style: italic; line-height: 1.45; display: grid; gap: 4px; } .slp-beispiel small { font-style: normal; font-size: .72rem; color: rgba(232,245,238,.5); }
+.slk-teil { min-height: calc(100dvh - 120px); grid-template-rows: auto 1fr auto; }
+.slk-kopf { display: flex; align-items: center; gap: 12px; }
+.slk-zahlen { display: flex; gap: 12px; font-weight: 800; font-size: 1.05rem; } .slk-zahlen .neu { color: #60a5fa; } .slk-zahlen .lern { color: #f87171; } .slk-zahlen .wdh { color: #4ade80; }
+.slk-niv { margin-left: auto; font-size: .8rem; font-weight: 700; color: rgba(232,245,238,.6); }
+.slk-buehne { perspective: 1200px; display: grid; align-items: center; min-height: 340px; }
+.slk-karte { position: relative; min-height: 320px; transform-style: preserve-3d; transition: transform .45s cubic-bezier(.2,.85,.25,1); cursor: pointer; outline: none; transform: translateX(var(--dx, 0px)) rotateY(0deg); }
+.slk-karte.um { transform: translateX(var(--dx, 0px)) rotateY(180deg); }
+.slk-karte.zieht { transition: none; }
+.slk-karte.links .hinten { box-shadow: 0 0 0 3px #f87171, 0 20px 50px rgba(0,0,0,.45); } .slk-karte.rechts .hinten { box-shadow: 0 0 0 3px #4ade80, 0 20px 50px rgba(0,0,0,.45); }
+.slk-seite { position: absolute; inset: 0; backface-visibility: hidden; -webkit-backface-visibility: hidden; border-radius: 28px; padding: 26px 22px; display: grid; align-content: center; justify-items: center; gap: 10px; text-align: center;
+  background: linear-gradient(160deg, rgba(255,255,255,.14), rgba(255,255,255,.04)), #0f2230; border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 20px 50px rgba(0,0,0,.45); }
+.slk-seite.hinten { transform: rotateY(180deg); align-content: start; overflow-y: auto; }
+.slk-wort { font-size: 2.1rem; line-height: 1.15; color: #fff; overflow-wrap: anywhere; } .slk-wort.de { font-size: 1.8rem; }
+.slk-de { margin: 0; font-size: 1.35rem; font-weight: 700; color: #86efac; }
+.slk-formen { margin: 0; font-size: .92rem; color: rgba(232,245,238,.7); }
+.slk-tipp { color: rgba(232,245,238,.45); font-size: .8rem; margin-top: 18px; }
+.slk-seite .slp-beispiel { text-align: left; width: 100%; box-sizing: border-box; }
+.slk-unten { display: grid; gap: 8px; }
+.slk-noten { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
+.slk-noten[hidden] { display: none; }
+.slk-note { appearance: none; border: 0; border-radius: 16px; padding: 10px 4px 12px; display: grid; gap: 2px; justify-items: center; color: #fff; font: 800 .95rem "Outfit", system-ui, sans-serif; cursor: pointer; box-shadow: 0 4px 0 rgba(0,0,0,.35); }
+.slk-note small { font-size: .7rem; font-weight: 600; opacity: .85; }
+.slk-note:active { transform: translateY(3px); box-shadow: 0 1px 0 rgba(0,0,0,.35); }
+.slk-note.n1 { background: #dc2626; } .slk-note.n2 { background: #d97706; } .slk-note.n3 { background: #16a34a; } .slk-note.n4 { background: #2563eb; }
+.slk-hilfe { margin: 0; text-align: center; font-size: .75rem; color: rgba(232,245,238,.45); }
+@media (prefers-reduced-motion: reduce) { .slk-karte { transition: none; } }

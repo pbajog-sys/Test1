@@ -17,6 +17,7 @@ const SLP_SUBJ = [[0, 0, 'jaz (Mann)'], [0, 1, 'jaz (Frau)'], [1, 0, 'ti (Mann)'
 let slpLex = null, slpLaedt = null, slpSeite = 'karte';
 
 // ---------- Daten ----------
+const SLP_NIVEAUS = ['A1', 'A2', 'B1', 'B2'];
 function slpLaden() {
   if (slpLex) return Promise.resolve(slpLex);
   if (!slpLaedt) slpLaedt = fetch('slo-lex.json').then((r) => r.json()).then((d) => {
@@ -25,6 +26,7 @@ function slpLaden() {
       if (w.F) w.F = w.F.split(' ');
       if (w.pr) w.pr = w.pr.split(' ');
       if (w.lp) w.lp = w.lp.split(' ');
+      w.n = w.n || 4; w.r = w.r == null ? 99999 : w.r;
       return w;
     });
     return slpLex;
@@ -39,40 +41,76 @@ function slpStore() {
   st.srsZiel = [5, 10, 15, 20, 30].includes(st.srsZiel) ? st.srsZiel : 10;
   st.gram = st.gram && typeof st.gram === 'object' ? st.gram : {};
   st.gespr = st.gespr && typeof st.gespr === 'object' ? st.gespr : {};
+  st.eigene = Array.isArray(st.eigene) ? st.eigene.filter((k) => k && typeof k.sl === 'string' && typeof k.de === 'string' && k.sl.trim() && k.de.trim()) : [];
+  st.kRichtung = ['sl', 'de', 'mix'].includes(st.kRichtung) ? st.kRichtung : 'sl';
+  st.kNiveau = [0, 1, 2, 3, 4].includes(st.kNiveau) ? st.kNiveau : 0;   // 0 = alle in Reihenfolge A1 → B2
+  st.srsLog = st.srsLog && typeof st.srsLog === 'object' ? st.srsLog : {};
   return st;
 }
-// Wörter aus den Reise-Stationen gehören auch ins Wortschatz-Deck (wer sie schon gut kann, startet weiter oben)
+// Kernwortschatz: Reise-Wörter + 3.100 Wörter. Neue Karten kommen in Lernreihenfolge: eigene Karten, dann A1 (erst die
+// Reise-Wörter, dann der Alltags-Grundwortschatz, dann nach Häufigkeit), dann A2, B1, B2.
+let slpDeckCache = null;
 function slpDeck() {
-  const schon = new Set(slpLex.map((w) => w.sl.toLowerCase()));
-  const extra = SLO_EINHEITEN.flatMap((u) => u.W).filter((w) => { const k = w.sl.toLowerCase(); if (schon.has(k)) return false; schon.add(k); return true; })
-    .map((w, j) => ({ sl: w.sl, de: w.de, e: w.e, p: 'x', i: slpLex.length + j, reise: w.u }));
-  return slpLex.concat(extra);
+  const st = slpStore(), sig = slpLex.length + '|' + st.eigene.length;
+  if (slpDeckCache && slpDeckCache.sig === sig) return slpDeckCache.deck;
+  const reise = new Map(); SLO_EINHEITEN.forEach((u, ui) => u.W.forEach((w, wi) => { const k = w.sl.toLowerCase(); if (!reise.has(k)) reise.set(k, { w, o: ui * 100 + wi }); }));
+  const schon = new Set();
+  const deck = [];
+  st.eigene.forEach((k, j) => { const key = k.sl.toLowerCase(); if (schon.has(key)) return; schon.add(key); deck.push({ sl: k.sl, de: k.de, p: 'x', e: '', eigen: true, n: 0, ord: j }); });
+  slpLex.forEach((w) => { const k = w.sl.toLowerCase(); if (schon.has(k)) return; schon.add(k); const r = reise.get(k); if (r) { w.reise = r.w.u; w.e = w.e || r.w.e; w.n = 1; } w.ord = (r ? r.o : w.r < 99999 ? 1e5 + w.r : 5e4 + w.i); deck.push(w); });
+  reise.forEach((r, k) => { if (schon.has(k)) return; schon.add(k); deck.push({ sl: r.w.sl, de: r.w.de, e: r.w.e, p: 'x', reise: r.w.u, n: 1, ord: r.o }); });
+  deck.sort((a, b) => a.n - b.n || a.ord - b.ord);
+  deck.forEach((w, i) => { w.d = i; });
+  slpDeckCache = { sig, deck };
+  return deck;
 }
+// Kartenzustand (rückwärtskompatibel): st.srs[wort] = [Stufe 1–9, fällig (Tag-Nr.), Intervall in Tagen, Leichtigkeit, Patzer]
+function slpZustand(st, sl) {
+  const c = st.srs[sl]; if (!c) return null;
+  return { s: c[0], f: c[1], ivl: c[2] != null ? c[2] : SLP_INTERVALL[Math.min(c[0], 9)], e: c[3] || 2.5, l: c[4] || 0 };
+}
+const slpStufe = (ivl) => { let s = 1; SLP_INTERVALL.forEach((x, i) => { if (i && ivl >= x) s = i; }); return s; };
+// Planen wie Anki (SM-2): note 1 = Nochmal, 2 = Schwer, 3 = Gut, 4 = Einfach → neuer Zustand
+function slpPlan(z, note) {
+  if (!z) return note === 1 ? { ivl: 0, e: 2.5, l: 0 } : note === 2 ? { ivl: 1, e: 2.35, l: 0 } : note === 3 ? { ivl: 1, e: 2.5, l: 0 } : { ivl: 4, e: 2.65, l: 0 };
+  let { ivl, e, l } = z; ivl = Math.max(1, ivl);
+  if (note === 1) return { ivl: 1, e: Math.max(1.3, e - 0.2), l: l + 1 };
+  if (note === 2) return { ivl: Math.min(3650, Math.max(ivl + 1, Math.round(ivl * 1.2))), e: Math.max(1.3, e - 0.15), l };
+  if (note === 3) return { ivl: Math.min(3650, Math.max(ivl + 1, Math.round(ivl * e))), e, l };
+  return { ivl: Math.min(3650, Math.max(ivl + 2, Math.round(ivl * e * 1.3))), e: e + 0.15, l };
+}
+function slpBewerte(sl, note) {
+  const st = slpStore(), heute = slpTagNr(), alt = slpZustand(st, sl), neu = slpPlan(alt, note);
+  if (!alt && note > 1) st.srsNeu[heute] = (st.srsNeu[heute] || 0) + 1;
+  if (note > 1 || alt) st.srs[sl] = [slpStufe(Math.max(1, neu.ivl)), heute + Math.max(1, neu.ivl), Math.max(1, neu.ivl), Math.round(neu.e * 100) / 100, neu.l];
+  const log = st.srsLog[heute] || [0, 0]; log[0]++; if (note > 1) log[1]++; st.srsLog[heute] = log;
+  Object.keys(st.srsNeu).forEach((t) => { if (+t < heute - 30) delete st.srsNeu[t]; });
+  Object.keys(st.srsLog).forEach((t) => { if (+t < heute - 60) delete st.srsLog[t]; });
+  saveJson(SLO_KEY, st);
+}
+const slpDauer = (t) => (t <= 0 ? '< 10 Min' : t === 1 ? '1 Tag' : t < 30 ? t + ' Tage' : t < 365 ? Math.round(t / 30) + ' Mon.' : (Math.round(t / 36.5) / 10).toString().replace('.', ',') + ' J.');
 function slpSrsStand(st, deck) {
   const heute = slpTagNr();
   let gelernt = 0, sicher = 0, faellig = 0;
-  deck.forEach((w) => { const c = st.srs[w.sl]; if (!c) return; gelernt++; if (c[0] >= 5) sicher++; if (c[1] <= heute) faellig++; });
+  const proNiveau = [0, 0, 0, 0, 0], gesamtNiveau = [0, 0, 0, 0, 0];
+  deck.forEach((w) => { gesamtNiveau[w.n] = (gesamtNiveau[w.n] || 0) + 1; const c = st.srs[w.sl]; if (!c) return; gelernt++; proNiveau[w.n]++; if (c[0] >= 5) sicher++; if (c[1] <= heute) faellig++; });
   const neuHeute = st.srsNeu[heute] || 0;
-  return { gelernt, sicher, faellig, neuHeute, neuOffen: Math.max(0, st.srsZiel - neuHeute), gesamt: deck.length };
+  return { gelernt, sicher, faellig, neuHeute, neuOffen: Math.max(0, st.srsZiel - neuHeute), gesamt: deck.length, proNiveau, gesamtNiveau };
 }
 function slpNiveau(n) {
-  if (n >= 2500) return ['B1+', 'Du verstehst die meisten Alltagstexte.'];
+  if (n >= 2500) return ['B2', 'Du verstehst die meisten Alltags- und Zeitungstexte.'];
   if (n >= 1500) return ['B1', 'Gespräche über Arbeit, Reisen, Pläne.'];
   if (n >= 800) return ['A2', 'Alltag, Einkaufen, über dich erzählen.'];
   if (n >= 300) return ['A1', 'Einfache Sätze und Fragen.'];
   return ['Start', 'Die ersten Wörter.'];
 }
-// Antwort im Wortschatz-Training: Stufe hoch oder zurück (nur die erste Antwort je Wort und Sitzung zählt)
+// Antwort im Quiz-Training: richtig = „Gut“, falsch = „Nochmal“ (nur die erste Antwort je Wort und Sitzung zählt)
 function slpSrsAntwort(w, ok) {
   if (!slo || slo.art !== 'srs' || slo.srsGezaehlt.has(w.sl)) return;
   slo.srsGezaehlt.add(w.sl);
-  const st = slpStore(), heute = slpTagNr(), c = st.srs[w.sl];
-  let s = c ? c[0] : 0;
-  if (!c) st.srsNeu[heute] = (st.srsNeu[heute] || 0) + 1;
-  s = ok ? Math.min(SLP_INTERVALL.length - 1, s + 1) : 1;
-  st.srs[w.sl] = [s, heute + (ok ? SLP_INTERVALL[s] : 1)];
-  Object.keys(st.srsNeu).forEach((t) => { if (+t < heute - 30) delete st.srsNeu[t]; });
-  saveJson(SLO_KEY, st);
+  const st = slpStore();
+  if (!ok && !st.srs[w.sl]) { st.srs[w.sl] = [1, slpTagNr() + 1, 1, 2.3, 0]; st.srsNeu[slpTagNr()] = (st.srsNeu[slpTagNr()] || 0) + 1; saveJson(SLO_KEY, st); return; }
+  slpBewerte(w.sl, ok ? 3 : 1);
 }
 
 // ---------- Rahmen: vier Seiten mit Tab-Leiste und Wischen ----------
@@ -121,65 +159,193 @@ function slpTabsMarkieren() {
 }
 
 // ---------- Seite: Wortschatz ----------
+function slpNeueKarten(st, deck, n) {
+  const filt = st.kNiveau ? (w) => w.n === st.kNiveau || (w.eigen && true) : () => true;
+  return deck.filter((w) => !st.srs[w.sl] && filt(w)).slice(0, n);
+}
+function slpFaellige(st, deck, max = 200) {
+  const heute = slpTagNr();
+  return deck.filter((w) => st.srs[w.sl] && st.srs[w.sl][1] <= heute).sort((a, b) => st.srs[a.sl][1] - st.srs[b.sl][1]).slice(0, max);
+}
 function slpWortschatz() {
-  const st = slpStore(), deck = slpDeck(), S = slpSrsStand(st, deck), [niv, nivText] = slpNiveau(S.gelernt);
-  const anteil = S.gelernt / S.gesamt, kannLernen = S.faellig + Math.min(S.neuOffen, deck.filter((w) => !st.srs[w.sl]).length) > 0;
+  const st = slpStore(), deck = slpDeck(), S = slpSrsStand(st, deck), [niv, nivText] = slpNiveau(S.gelernt), heute = slpTagNr();
+  const neu = slpNeueKarten(st, deck, S.neuOffen).length, anteil = S.gelernt / S.gesamt, kannLernen = S.faellig + neu > 0;
+  const prognose = [...Array(7)].map((_, i) => deck.filter((w) => st.srs[w.sl] && (i === 0 ? st.srs[w.sl][1] <= heute : st.srs[w.sl][1] === heute + i)).length);
+  const pmax = Math.max(1, ...prognose), log = Object.entries(st.srsLog).filter(([t]) => +t > heute - 30).reduce((a, [, v]) => [a[0] + v[0], a[1] + v[1]], [0, 0]);
   const box = $('slo-wortschatz');
   box.innerHTML = '<div class="slp-karte slp-held"><div class="slo-ring slp-ring" style="--a:' + anteil.toFixed(3) + '"><b>' + S.gelernt + '</b><small>von ' + fmt(S.gesamt) + '</small></div>'
-    + '<div class="slp-held-text"><b>Niveau ' + niv + '</b><span>' + nivText + '</span><small>' + S.sicher + ' Wörter sitzen sicher (≥ 1 Monat)</small></div></div>'
-    + '<div class="slp-zahlen"><div><b>' + S.faellig + '</b><small>heute fällig</small></div><div><b>' + S.neuHeute + '/' + st.srsZiel + '</b><small>neue heute</small></div><div><b>' + fmt(S.gesamt - S.gelernt) + '</b><small>noch neu</small></div></div>'
-    + '<button type="button" class="btn slo-gross" id="slpLernen"' + (kannLernen ? '' : ' disabled') + '>' + (kannLernen ? '▶ Lernen' + (S.faellig ? ' · ' + Math.min(S.faellig, 30) + ' Wiederholungen' : '') + (S.neuOffen ? ' · ' + S.neuOffen + ' neue' : '') : '✓ Für heute geschafft – morgen geht’s weiter') + '</button>'
-    + '<div class="slp-karte"><h3>Neue Wörter pro Tag</h3><div class="slp-chips">' + [5, 10, 15, 20, 30].map((n) => '<button type="button" class="slp-chip' + (st.srsZiel === n ? ' an' : '') + '" data-ziel="' + n + '">' + n + '</button>').join('') + '</div>'
-    + '<p class="slp-klein">Die Wörter kommen nach Häufigkeit: zuerst die, die man ständig hört und liest. Was du gut kannst, kommt immer seltener – erst nach Tagen, dann Wochen, dann Monaten.</p></div>'
+    + '<div class="slp-held-text"><b>Niveau ' + niv + '</b><span>' + nivText + '</span><small>' + S.sicher + ' Wörter sitzen sicher (≥ 2 Wochen)' + (log[0] ? ' · ' + Math.round((log[1] / log[0]) * 100) + ' % gewusst (30 Tage)' : '') + '</small></div></div>'
+    + '<div class="slp-zahlen"><div class="neu"><b>' + neu + '</b><small>neu heute</small></div><div class="wdh"><b>' + S.faellig + '</b><small>fällig</small></div><div><b>' + S.neuHeute + '/' + st.srsZiel + '</b><small>neue gelernt</small></div></div>'
+    + '<button type="button" class="btn slo-gross" id="slpKarten"' + (kannLernen ? '' : ' disabled') + '>' + (kannLernen ? '🃏 Karteikarten' : '✓ Für heute geschafft – morgen geht’s weiter') + '</button>'
+    + (kannLernen ? '<button type="button" class="btn secondary slp-quizknopf" id="slpLernen">🎯 Lieber als Quiz (Antworten wählen und tippen)</button>' : '')
+    + '<div class="slp-karte"><h3>Kernwortschatz ' + fmt(S.gesamt) + '</h3><div class="slp-niveaus">' + SLP_NIVEAUS.map((n, i) => '<div><b>' + n + '</b><i style="--p:' + ((S.proNiveau[i + 1] || 0) / Math.max(1, S.gesamtNiveau[i + 1] || 1) * 100).toFixed(1) + '%"></i><small>' + (S.proNiveau[i + 1] || 0) + '/' + (S.gesamtNiveau[i + 1] || 0) + '</small></div>').join('') + '</div>'
+    + '<p class="slp-klein">Die wichtigsten Wörter fürs Slowenische – wie die „Oxford 3000“ im Englischen: Reise-Wörter und Alltagswortschatz zuerst, dann nach Häufigkeit in echten Texten und Gesprächen.</p></div>'
+    + '<div class="slp-karte"><h3>Die nächsten 7 Tage</h3><div class="slp-prognose">' + prognose.map((n, i) => '<div><i style="--h:' + Math.round((n / pmax) * 100) + '%"></i><b>' + n + '</b><small>' + (i === 0 ? 'heute' : i === 1 ? 'morgen' : '+' + i) + '</small></div>').join('') + '</div></div>'
+    + '<div class="slp-karte"><h3>Einstellungen</h3><p class="slp-label">Neue Wörter pro Tag</p><div class="slp-chips">' + [5, 10, 15, 20, 30].map((n) => '<button type="button" class="slp-chip' + (st.srsZiel === n ? ' an' : '') + '" data-ziel="' + n + '">' + n + '</button>').join('') + '</div>'
+    + '<p class="slp-label">Vorderseite</p><div class="slp-chips">' + [['sl', 'Slowenisch'], ['de', 'Deutsch'], ['mix', 'Gemischt']].map(([k, n]) => '<button type="button" class="slp-chip' + (st.kRichtung === k ? ' an' : '') + '" data-richtung="' + k + '">' + n + '</button>').join('') + '</div>'
+    + '<p class="slp-label">Neue Wörter aus</p><div class="slp-chips">' + ['Alle (A1 → B2)', 'A1', 'A2', 'B1', 'B2'].map((n, i) => '<button type="button" class="slp-chip' + (st.kNiveau === i ? ' an' : '') + '" data-niveau="' + i + '">' + n + '</button>').join('') + '</div>'
+    + '<p class="slp-klein">Was du gut kannst, kommt immer seltener: erst nach Tagen, dann Wochen, dann Monaten – wie bei Anki.</p></div>'
+    + '<div class="slp-karte"><h3>✍️ Eigene Karte</h3><form class="slp-eigen" id="slpEigen"><input id="slpEigenSl" placeholder="slowenisch, z. B. sladoled" autocomplete="off" autocapitalize="off" spellcheck="false" maxlength="60"><input id="slpEigenDe" placeholder="deutsch, z. B. Eis" autocomplete="off" maxlength="80"><button type="submit" class="slp-chip an">＋ Hinzufügen</button></form>'
+    + (st.eigene.length ? '<p class="slp-klein">' + st.eigene.length + ' eigene Karten – sie kommen als Nächstes dran.</p>' : '<p class="slp-klein">Wörter, die du unterwegs aufschnappst. Sie kommen als Nächstes dran.</p>') + '</div>'
     + '<div class="slp-karte"><h3>📖 Wörterbuch</h3><input class="slp-suche" id="slpSuche" type="search" placeholder="Suchen: slowenisch oder deutsch …" autocomplete="off" autocapitalize="off" spellcheck="false"><div class="slp-liste" id="slpListe"></div></div>'
-    + '<p class="slp-klein slp-quelle">Wortformen: Universal Dependencies SSJ (CC BY-SA 4.0) und UniMorph/Wiktionary (CC BY-SA); Häufigkeit zusätzlich aus OpenSubtitles (FrequencyWords, CC BY-SA 4.0). Übersetzungen: eigene.</p>';
-  $('slpLernen').addEventListener('click', slpSrsStart);
-  box.querySelectorAll('[data-ziel]').forEach((b) => b.addEventListener('click', () => { const s2 = slpStore(); s2.srsZiel = +b.dataset.ziel; saveJson(SLO_KEY, s2); slpWortschatz(); }));
+    + '<p class="slp-klein slp-quelle">Wortformen und Beispielsätze: Universal Dependencies SSJ (CC BY-SA 4.0) und UniMorph/Wiktionary (CC BY-SA); Häufigkeit zusätzlich aus OpenSubtitles (FrequencyWords, CC BY-SA 4.0). Übersetzungen: eigene.</p>';
+  if ($('slpKarten') && kannLernen) $('slpKarten').addEventListener('click', slkStart);
+  if ($('slpLernen')) $('slpLernen').addEventListener('click', slpSrsStart);
+  const setze = (k, v) => { const s2 = slpStore(); s2[k] = v; saveJson(SLO_KEY, s2); slpWortschatz(); };
+  box.querySelectorAll('[data-ziel]').forEach((b) => b.addEventListener('click', () => setze('srsZiel', +b.dataset.ziel)));
+  box.querySelectorAll('[data-richtung]').forEach((b) => b.addEventListener('click', () => setze('kRichtung', b.dataset.richtung)));
+  box.querySelectorAll('[data-niveau]').forEach((b) => b.addEventListener('click', () => setze('kNiveau', +b.dataset.niveau)));
+  $('slpEigen').addEventListener('submit', (e) => {
+    e.preventDefault(); const sl = $('slpEigenSl').value.trim(), de = $('slpEigenDe').value.trim();
+    if (!sl || !de) { $('slpEigenSl').focus(); return; }
+    const s2 = slpStore(); if (!s2.eigene.some((k) => k.sl.toLowerCase() === sl.toLowerCase())) s2.eigene.push({ sl, de }); saveJson(SLO_KEY, s2); slpDeckCache = null; slpWortschatz();
+  });
   const liste = () => {
     const q = sloNorm($('slpSuche').value), qo = sloOhneZeichen($('slpSuche').value);
     const treffer = (q ? deck.filter((w) => sloOhneZeichen(w.sl).includes(qo) || sloNorm(w.de).includes(q)) : deck).slice(0, q ? 80 : 40);
-    $('slpListe').innerHTML = treffer.map((w) => { const c = st.srs[w.sl]; return '<button type="button" class="slp-wort" data-w="' + w.i + '"><b>' + sloEsc(w.sl) + '</b><span>' + sloEsc(w.de) + '</span><i class="slp-stufe" style="--s:' + (c ? c[0] / 9 : 0) + '" title="' + (c ? 'Stufe ' + c[0] : 'neu') + '"></i></button>'; }).join('')
-      + (!q ? '<p class="slp-klein">Die ersten 40 von ' + fmt(deck.length) + ' – oben suchen findet alle.</p>' : treffer.length ? '' : '<p class="slp-klein">Nichts gefunden.</p>');
+    $('slpListe').innerHTML = treffer.map((w) => { const c = st.srs[w.sl]; return '<button type="button" class="slp-wort" data-w="' + w.d + '"><b>' + sloEsc(w.sl) + '</b><span>' + sloEsc(w.de) + '</span><em class="slp-niv">' + (w.eigen ? '✍️' : SLP_NIVEAUS[w.n - 1] || '') + '</em><i class="slp-stufe" style="--s:' + (c ? c[0] / 9 : 0) + '" title="' + (c ? 'Stufe ' + c[0] : 'neu') + '"></i></button>'; }).join('')
+      + (!q ? '<p class="slp-klein">Die ersten 40 von ' + fmt(deck.length) + ' in Lernreihenfolge – oben suchen findet alle.</p>' : treffer.length ? '' : '<p class="slp-klein">Nichts gefunden.</p>');
     $('slpListe').querySelectorAll('[data-w]').forEach((b) => b.addEventListener('click', () => slpWortKarte(deck[+b.dataset.w])));
   };
   $('slpSuche').addEventListener('input', liste); liste();
   slpTabsMarkieren();
 }
+// Quiz-Variante (Antworten wählen und tippen) mit demselben Wiederholungsplan
 function slpSrsStart() {
   const st = slpStore(), deck = slpDeck(), heute = slpTagNr();
-  // Wörter, die man in der Reise schon gut kann, starten auf Stufe 3
-  deck.forEach((w) => { if (!st.srs[w.sl] && (st.wort[w.sl] || 0) >= 3) st.srs[w.sl] = [3, heute + 2]; });
+  deck.forEach((w) => { if (!st.srs[w.sl] && (st.wort[w.sl] || 0) >= 3) st.srs[w.sl] = [3, heute + 2, 4, 2.5, 0]; });
   saveJson(SLO_KEY, st);
-  const faellig = deck.filter((w) => st.srs[w.sl] && st.srs[w.sl][1] <= heute).sort((a, b) => st.srs[a.sl][1] - st.srs[b.sl][1]).slice(0, 30);
-  const S = slpSrsStand(st, deck), neu = deck.filter((w) => !st.srs[w.sl]).slice(0, Math.min(S.neuOffen, 30 - Math.min(faellig.length, 20)));
+  const faellig = slpFaellige(st, deck, 30);
+  const S = slpSrsStand(st, deck), neu = slpNeueKarten(st, deck, Math.min(S.neuOffen, 30 - Math.min(faellig.length, 20)));
   if (!faellig.length && !neu.length) return;
   const ton = sloTonDa(), A = [];
   const typ = (w, i) => { const s = st.srs[w.sl] ? st.srs[w.sl][0] : 0; if (s >= 5) return i % 3 === 0 && ton ? 'hoeren' : 'tippen'; if (s >= 3) return i % 2 ? 'desl' : 'tippen'; return i % 2 ? 'slde' : 'desl'; };
-  neu.forEach((w) => { A.push({ typ: 'neu', w }); A.push({ typ: 'slde', w }); });
-  faellig.forEach((w, i) => A.push({ typ: typ(w, i), w }));
-  const liste = sloMisch(A.filter((a) => a.typ !== 'neu' && a.typ !== 'slde' || !neu.includes(a.w)));
-  // neue Wörter bleiben als Paar (Vorstellen → gleich abfragen), Wiederholungen dazwischen gemischt
-  const neuPaare = neu.map((w) => A.filter((a) => a.w === w));
+  const wiederholen = sloMisch(faellig.map((w, i) => ({ typ: typ(w, i), w })));
   const ergebnis = []; let k = 0;
-  neuPaare.forEach((p) => { ergebnis.push(...p); for (let j = 0; j < 2 && k < liste.length; j++) ergebnis.push(liste[k++]); });
-  while (k < liste.length) ergebnis.push(liste[k++]);
+  neu.forEach((w) => { ergebnis.push({ typ: 'neu', w }, { typ: 'slde', w }); for (let j = 0; j < 2 && k < wiederholen.length; j++) ergebnis.push(wiederholen[k++]); });
+  while (k < wiederholen.length) ergebnis.push(wiederholen[k++]);
   if (neu.length >= 4) ergebnis.push({ typ: 'paare', liste: sloMisch(neu).slice(0, 5) });
   slpLektion('srs', '🧠 Wortschatz', ergebnis, deck);
 }
-
+// Formen kurz (Rückseite der Karte und Wortkarte)
+function slpKurzformen(w) {
+  const t = [];
+  if (w.p === 'n') { if (w.g) t.push({ m: 'männlich', f: 'weiblich', n: 'sächlich' }[w.g]); if (w.F) { if (w.F[1]) t.push('Gen. ' + w.F[1]); if (w.F[12]) t.push('Mz. ' + w.F[12]); } }
+  if (w.p === 'v') { if (w.pr && w.pr[0]) t.push('jaz ' + w.pr[0]); if (w.pr && w.pr[8]) t.push('oni ' + w.pr[8]); if (w.lp && w.lp[0]) t.push('Verg. ' + w.lp[0] + (w.lp[1] ? '/' + w.lp[1] : '')); if (w.asp) t.push(w.asp === 'pf' ? 'vollendet' : 'unvollendet'); }
+  if (w.p === 'a' && w.F) t.push([w.F[0], w.F[18], w.F[36]].filter(Boolean).join(' · '));
+  return t.join(' · ');
+}
 // Wortkarte mit allen Formen
 function slpWortKarte(w) {
   const st = slpStore(), c = st.srs[w.sl];
-  const art = { n: 'Nomen' + (w.g ? ' · ' + { m: 'männlich', f: 'weiblich', n: 'sächlich' }[w.g] : ''), v: 'Verb' + (w.asp ? ' · ' + (w.asp === 'pf' ? 'vollendet' : 'unvollendet') : ''), a: 'Adjektiv', d: 'Adverb', p: 'Präposition', o: 'Pronomen', k: 'Bindewort', t: 'Partikel', i: 'Ausruf', x: w.reise ? 'aus der Reise' : '' }[w.p] || '';
+  const art = { n: 'Nomen' + (w.g ? ' · ' + { m: 'männlich', f: 'weiblich', n: 'sächlich' }[w.g] : ''), v: 'Verb' + (w.asp ? ' · ' + (w.asp === 'pf' ? 'vollendet' : 'unvollendet') : ''), a: 'Adjektiv', d: 'Adverb', p: 'Präposition', o: 'Pronomen', k: 'Bindewort', t: 'Partikel', i: 'Ausruf', z: 'Zahl', x: w.eigen ? 'eigene Karte' : w.reise ? 'aus der Reise' : '' }[w.p] || '';
   let tab = '';
   if (w.p === 'n' && w.F) tab = '<table class="slp-tabelle"><tr><th></th>' + SLP_ZAHL.map((z) => '<th>' + z + '</th>').join('') + '</tr>' + SLP_KASUS.map((k, ki) => '<tr><th>' + k + '</th>' + [0, 1, 2].map((z) => '<td>' + sloEsc(w.F[z * 6 + ki] || '–') + '</td>').join('') + '</tr>').join('') + '</table>';
   if (w.p === 'v' && (w.pr || w.lp)) tab = (w.pr ? '<h4>Gegenwart</h4><table class="slp-tabelle"><tr><th></th><th>Einzahl</th><th>Dual</th><th>Mehrzahl</th></tr>' + ['1.', '2.', '3.'].map((p, pi) => '<tr><th>' + p + '</th>' + [0, 1, 2].map((z) => '<td>' + sloEsc(w.pr[z * 3 + pi] || '–') + '</td>').join('') + '</tr>').join('') + '</table>' : '')
     + (w.lp ? '<h4>Vergangenheit (mit sem, si, je …)</h4><table class="slp-tabelle"><tr><th></th><th>m</th><th>w</th><th>s</th></tr>' + SLP_ZAHL.map((z, zi) => '<tr><th>' + z + '</th>' + [0, 1, 2].map((g) => '<td>' + sloEsc(w.lp[zi * 3 + g] || '–') + '</td>').join('') + '</tr>').join('') + '</table>' : '')
     + (w.imp ? '<p class="slp-klein">Befehlsform: <b>' + sloEsc(w.imp) + '!</b></p>' : '');
   if (w.p === 'a' && w.F) tab = '<table class="slp-tabelle"><tr><th></th><th>m</th><th>w</th><th>s</th></tr>' + SLP_KASUS.map((k, ki) => '<tr><th>' + k + '</th>' + [0, 1, 2].map((g) => '<td>' + sloEsc((ki === 3 && g === 0 ? (w.F[0] + ' / ' + w.F[1]) : w.F[g * 18 + ki]) || '–') + '</td>').join('') + '</tr>').join('') + '</table><p class="slp-klein">Einzahl; Akkusativ männlich: unbelebt wie Nominativ, belebt wie Genitiv.</p>';
-  skDialog('<div class="slp-wk"><div class="slp-wk-kopf"><b>' + sloEsc(w.sl) + '</b>' + sloLaut(w.sl) + '</div><p class="slp-wk-de">' + sloEsc(w.de) + '</p><p class="slp-klein">' + art + (c ? ' · Lernstufe ' + c[0] + ' von 9' : ' · noch nicht gelernt') + '</p>' + tab
+  skDialog('<div class="slp-wk"><div class="slp-wk-kopf"><b>' + sloEsc(w.sl) + '</b>' + sloLaut(w.sl) + '</div><p class="slp-wk-de">' + sloEsc(w.de) + '</p><p class="slp-klein">' + art + (w.n ? ' · ' + SLP_NIVEAUS[w.n - 1] : '') + (c ? ' · nächste Wiederholung in ' + slpDauer(c[1] - slpTagNr()) : ' · noch nicht gelernt') + '</p>'
+    + (w.b ? '<p class="slp-beispiel">„' + sloEsc(w.b) + '“ ' + sloLaut(w.b) + '<small>Beispiel aus echten Texten</small></p>' : '') + tab
     + (tab ? '<p class="slp-klein">Leere Felder (–): Form nicht sicher belegt, darum hier weggelassen.</p>' : '') + '</div>');
   document.querySelectorAll('#skDlg [data-sprich]').forEach((b) => b.addEventListener('click', () => sloSprich(b.dataset.sprich)));
+}
+
+// ---------- 🃏 Karteikarten wie Anki ----------
+let slk = null;
+function slkStart() {
+  const st = slpStore(), deck = slpDeck(), heute = slpTagNr();
+  deck.forEach((w) => { if (!st.srs[w.sl] && (st.wort[w.sl] || 0) >= 3) st.srs[w.sl] = [3, heute + 2, 4, 2.5, 0]; });
+  saveJson(SLO_KEY, st);
+  const faellig = slpFaellige(st, deck), neu = slpNeueKarten(st, deck, slpSrsStand(st, deck).neuOffen);
+  if (!faellig.length && !neu.length) return;
+  // neue Karten gleichmäßig zwischen die Wiederholungen verteilen
+  const q = faellig.map((w) => ({ w, neu: false })), schritt = neu.length ? Math.max(1, Math.floor(q.length / neu.length)) : 1;
+  neu.forEach((w, i) => q.splice(Math.min(q.length, i * (schritt + 1)), 0, { w, neu: true }));
+  slk = { q, i: 0, start: Date.now(), gesehen: 0, gut: 0, umgedreht: false };
+  if (!$('slo-karten')) { const d = document.createElement('div'); d.className = 'slo-teil slk-teil'; d.id = 'slo-karten'; d.hidden = true; document.querySelector('.slo-buehne').appendChild(d); sloTeile2.push('karten'); }
+  zeigeSloTeil('karten'); slpTabsMarkieren();
+  slkZeigen();
+}
+function slkZaehler() {
+  const rest = slk.q.slice(slk.i);
+  return { neu: rest.filter((k) => k.neu && !k.lernen).length, lernen: rest.filter((k) => k.lernen).length, wdh: rest.filter((k) => !k.neu && !k.lernen).length };
+}
+function slkZeigen() {
+  if (!slk || slk.i >= slk.q.length) { slkEnde(); return; }
+  const st = slpStore(), k = slk.q[slk.i], w = k.w, z = slpZustand(st, w.sl);
+  const richtung = st.kRichtung === 'mix' ? (((w.d || 0) + slk.i) % 2 ? 'de' : 'sl') : st.kRichtung;
+  k.richtung = richtung; slk.umgedreht = false;
+  const Z = slkZaehler(), vorn = richtung === 'sl' ? '<b class="slk-wort">' + sloEsc(w.sl) + '</b>' + sloLaut(w.sl) : '<b class="slk-wort de">' + sloEsc(w.de) + '</b>';
+  const kurz = slpKurzformen(w);
+  const hinten = '<b class="slk-wort">' + sloEsc(w.sl) + '</b>' + sloLaut(w.sl) + '<p class="slk-de">' + sloEsc(w.de) + '</p>' + (kurz ? '<p class="slk-formen">' + sloEsc(kurz) + '</p>' : '')
+    + (w.b ? '<p class="slp-beispiel">„' + sloEsc(w.b) + '“ ' + sloLaut(w.b) + '<small>Beispiel aus echten Texten</small></p>' : '');
+  const noten = [1, 2, 3, 4].map((n) => { const p = slpPlan(k.lernen ? null : z, n); return { n, t: n === 1 ? '< 1 Min' : slpDauer(Math.max(1, p.ivl)) }; });
+  $('slo-karten').innerHTML = '<div class="slk-kopf"><button type="button" class="slo-x" id="slkZu" aria-label="Beenden">×</button><div class="slk-zahlen"><span class="neu" title="neu">' + Z.neu + '</span><span class="lern" title="noch einmal">' + Z.lernen + '</span><span class="wdh" title="Wiederholung">' + Z.wdh + '</span></div><span class="slk-niv">' + (w.eigen ? '✍️ eigene' : SLP_NIVEAUS[w.n - 1] || '') + (k.neu ? ' · neu' : '') + '</span></div>'
+    + '<div class="slk-buehne"><div class="slk-karte" id="slkKarte" role="button" tabindex="0" aria-label="Karte umdrehen"><div class="slk-seite vorn">' + vorn + '<small class="slk-tipp">Überlegen – dann antippen</small></div><div class="slk-seite hinten">' + hinten + '</div></div></div>'
+    + '<div class="slk-unten"><button type="button" class="btn slo-gross" id="slkZeigen">Antwort zeigen</button><div class="slk-noten" id="slkNoten" hidden>'
+    + noten.map(({ n, t }) => '<button type="button" class="slk-note n' + n + '" data-note="' + n + '"><small>' + t + '</small><b>' + ['Nochmal', 'Schwer', 'Gut', 'Einfach'][n - 1] + '</b></button>').join('') + '</div><p class="slk-hilfe" id="slkHilfe" hidden>Wischen: ← Nochmal · Gut →</p></div>';
+  $('slkZu').addEventListener('click', slkEnde);
+  $('slkKarte').addEventListener('click', () => { if (!slk.umgedreht) slkUmdrehen(); else { const b = $('slkKarte').querySelector('.hinten [data-sprich]'); if (b) sloSprich(b.dataset.sprich); } });
+  $('slkZeigen').addEventListener('click', slkUmdrehen);
+  $('slo-karten').querySelectorAll('[data-note]').forEach((b) => b.addEventListener('click', () => slkNote(+b.dataset.note)));
+  $('slo-karten').querySelectorAll('[data-sprich]').forEach((b) => b.addEventListener('click', (e) => { e.stopPropagation(); sloSprich(b.dataset.sprich); }));
+  slkWischen($('slkKarte'));
+  if (richtung === 'sl') setTimeout(() => sloSprich(w.sl), 150);
+}
+function slkUmdrehen() {
+  if (!slk || slk.umgedreht) return;
+  slk.umgedreht = true;
+  $('slkKarte').classList.add('um'); $('slkZeigen').hidden = true; $('slkNoten').hidden = false; $('slkHilfe').hidden = false;
+  if (slk.q[slk.i].richtung === 'de') sloSprich(slk.q[slk.i].w.sl);
+}
+function slkNote(n) {
+  if (!slk || !slk.umgedreht) return;
+  const k = slk.q[slk.i];
+  slk.gesehen++; if (n > 1) slk.gut++;
+  if (n === 1 && k.lernen && !k.neu) slk.q.splice(Math.min(slk.q.length, slk.i + 4), 0, { ...k });
+  else if (n === 1 || (n === 2 && k.neu && !k.lernen)) {
+    // noch einmal in dieser Sitzung (nach ein paar anderen Karten) – wie Anki-Lernschritte
+    if (!k.lernen && !k.neu) slpBewerte(k.w.sl, 1);
+    slk.q.splice(Math.min(slk.q.length, slk.i + 4), 0, { ...k, lernen: true });
+  } else if (!(k.lernen && !k.neu)) slpBewerte(k.w.sl, n);   // vergessene Wiederholung: Plan steht schon (morgen wieder)
+  slk.i++;
+  if (navigator.vibrate) navigator.vibrate(n === 1 ? 20 : 8);
+  slkZeigen();
+}
+// Wischen auf der umgedrehten Karte: links = Nochmal, rechts = Gut
+function slkWischen(el) {
+  let x0 = null, y0 = 0;
+  el.addEventListener('touchstart', (e) => { if (!slk || !slk.umgedreht || e.touches.length !== 1) { x0 = null; return; } x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; el.classList.add('zieht'); }, { passive: true });
+  el.addEventListener('touchmove', (e) => { if (x0 == null) return; const dx = e.touches[0].clientX - x0; el.style.setProperty('--dx', dx + 'px'); el.classList.toggle('links', dx < -60); el.classList.toggle('rechts', dx > 60); }, { passive: true });
+  el.addEventListener('touchend', (e) => {
+    if (x0 == null) return; const dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0; x0 = null;
+    el.classList.remove('zieht', 'links', 'rechts'); el.style.removeProperty('--dx');
+    if (Math.abs(dx) > 90 && Math.abs(dy) < Math.abs(dx)) slkNote(dx < 0 ? 1 : 3);
+  });
+}
+document.addEventListener('keydown', (e) => {
+  if (!slk || !$('slo-karten') || $('slo-karten').hidden || e.target.closest('input, textarea')) return;
+  if (e.key === ' ' || e.key === 'Enter') { e.preventDefault(); slkUmdrehen(); }
+  else if (['1', '2', '3', '4'].includes(e.key)) slkNote(+e.key);
+});
+function slkEnde() {
+  if (!slk) { slpZeige('wortschatz'); return; }
+  const sek = Math.round((Date.now() - slk.start) / 1000), quote = slk.gesehen ? slk.gut / slk.gesehen : 1, fertig = slk.i >= slk.q.length;
+  if (slk.gesehen) {
+    const st = slpStore(), xp = Math.min(30, 5 + Math.floor(slk.gesehen / 4));
+    st.xp += xp; st.tage[tagSchluessel()] = (st.tage[tagSchluessel()] || 0) + xp; saveJson(SLO_KEY, st);
+    if (typeof merkeVerlauf === 'function') merkeVerlauf('slo', Math.round(quote * 100), 100, 'Karteikarten · ' + slk.gesehen);
+    const S = slpSrsStand(st, slpDeck());
+    $('slo-ende').innerHTML = '<div class="slo-ende-drache slo-ende-flug">' + sloDrache('jubel') + '</div>'
+      + '<h2 class="slo-ende-titel">' + (fertig ? 'Čestitke!' : 'Odmor!') + '</h2><p class="slo-ende-sub">' + (fertig ? 'Glückwunsch – alle Karten für heute geschafft.' : 'Pause – der Rest wartet auf dich.') + '</p>'
+      + '<div class="slo-ende-werte"><div><b>' + slk.gesehen + '</b>Karten</div><div><b>' + Math.round(quote * 100) + ' %</b>gewusst</div><div><b>' + Math.floor(sek / 60) + ':' + String(sek % 60).padStart(2, '0') + '</b>Zeit</div></div>'
+      + '<p class="slo-ende-ziel">🧠 ' + S.gelernt + ' Wörter im Kopf · Niveau ' + slpNiveau(S.gelernt)[0] + ' · +' + xp + ' XP</p>'
+      + '<button type="button" class="btn slo-gross" id="sloEndeWeiter">Weiter</button>';
+    $('sloEndeWeiter').addEventListener('click', () => slpZeige('wortschatz'));
+    slk = null; zeigeSloTeil('ende'); slpTabsMarkieren();
+    if (fertig) konfetti(24, ['🐉', '⭐', '🇸🇮', '🃏']);
+  } else { slk = null; slpZeige('wortschatz'); }
 }
 
 // ---------- Lektionen von Wortschatz und Grammatik laufen im vorhandenen Aufgaben-Motor ----------
@@ -511,5 +677,6 @@ function slpGespraeche() {
 }
 // Zurück-Knopf: von Wortschatz/Grammatik/Gespräche direkt zum Hub
 $('sloZurueck').addEventListener('click', (e) => {
+  if ($('slo-karten') && !$('slo-karten').hidden) { e.stopImmediatePropagation(); slkEnde(); return; }
   if (['wortschatz', 'grammatik', 'gespraeche'].some((t) => $('slo-' + t) && !$('slo-' + t).hidden)) { e.stopImmediatePropagation(); if ('speechSynthesis' in window) speechSynthesis.cancel(); zeigeHub(); }
 }, true);

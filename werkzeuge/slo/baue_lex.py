@@ -2,17 +2,25 @@ import paradigma as P, json, collections, sys
 pos={}
 for r in open('liste_uniq.txt').read().split('\n'):
     l,u=r.split(':'); pos.setdefault(l,u)
-gl={}
+gl={}; herkunft={}
+rang={r.split(':')[0]:i for i,r in reversed(list(enumerate(open('liste_uniq.txt').read().split('\n'))))}
 for f in sys.argv[1:]:
+    alltag=False
     for line in open(f):
         line=line.rstrip('\n')
+        if line.startswith('# Alltag'): alltag=True
         if '=' in line and not line.startswith('#'):
             l,d=line.split('=',1)
             if ':' in l: l,u=l.split(':'); pos[l]=u
             gl[l]=d
+            if l not in herkunft or 'glossen5' in f or 'glossen3' in f: herkunft[l]=('A1' if ('glossen5' in f or 'glossen3' in f) else 'A2' if alltag else None)
 st=collections.Counter(); lex=[]
 for l,d in gl.items():
     u=pos.get(l,'?'); e={'l':l,'p':u,'de':d}
+    r=rang.get(l); e['r']=r if r is not None else 9999
+    lv=herkunft.get(l) or ('A1' if r is not None and r<400 else 'A2' if r is not None and r<1100 else 'B1' if r is not None and r<2000 else 'B2')
+    if herkunft.get(l)=='A1' and r is not None and r>=400: lv='A1'
+    e['n']=lv
     if u=='NOU':
         r=P.nomen(l)
         if r: e['g']=r['g'][0].lower()

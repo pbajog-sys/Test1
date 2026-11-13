@@ -21,7 +21,7 @@ const ordner = process.argv[2] || '.';
   await wisch(330, 500, 70, 505); await p.waitForTimeout(1200);
   ck('Wischen nach links → Wortschatz', await p.evaluate(() => !$('slo-wortschatz').hidden && slpSeite === 'wortschatz' && !!document.querySelector('#slpLernen')));
   const stand = await p.evaluate(() => ({ n: slpLex.length, deck: slpDeck().length, nomen: slpLex.filter((w) => w.p === 'n' && w.F).length, verben: slpLex.filter((w) => w.p === 'v' && w.pr).length, xp: sloStore().xp, stufe: sloStore().stufe.pozdravi }));
-  ck('Wortschatz geladen: > 1.600 Wörter, Formen für > 600 Nomen und > 250 Verben; alter Stand (XP 120, Station gemeistert) erhalten', stand.n > 1600 && stand.nomen > 600 && stand.verben > 250 && stand.xp === 120 && stand.stufe === 3, JSON.stringify(stand));
+  ck('Kernwortschatz geladen: > 3.000 Wörter (+ Reise = ≥ 3.150), Formen für > 1.100 Nomen und > 400 Verben; alter Stand (XP 120, Station gemeistert) erhalten', stand.n > 3000 && stand.deck >= 3150 && stand.nomen > 1100 && stand.verben > 400 && stand.xp === 120 && stand.stufe === 3, JSON.stringify(stand));
   await bild('slp-wortschatz');
   // Stichproben: bekannte richtige Formen
   const formen = await p.evaluate(() => {
@@ -69,15 +69,56 @@ const ordner = process.argv[2] || '.';
   ck('Alles richtig: 10 neue Wörter auf Stufe 1 (+2 aus der Reise übernommen), morgen wieder fällig, Endbildschirm, XP dazu', schritte > 0 && nach.n === 12 && nach.stufe1 === 10 && nach.faellig === 10 && nach.neuHeute === 10 && nach.ende && nach.xp > 120, JSON.stringify(nach));
   await bild('slp-ende');
   await p.click('#sloEndeWeiter'); await p.waitForTimeout(400);
-  ck('Weiter → zurück zum Wortschatz, „für heute geschafft“', await p.evaluate(() => !$('slo-wortschatz').hidden) && /geschafft/.test(await p.textContent('#slpLernen')));
+  ck('Weiter → zurück zum Wortschatz, „für heute geschafft“', await p.evaluate(() => !$('slo-wortschatz').hidden) && /geschafft/.test(await p.textContent('#slpKarten')));
   // Zeitreise: zwei Tage später sind die Wörter fällig; eins falsch → Stufe 1, Rest Stufe 2
   await p.evaluate(() => { const st = slpStore(); Object.values(st.srs).forEach((c) => { c[1] = slpTagNr() - 1; }); st.srsNeu = { [slpTagNr()]: st.srsZiel }; saveJson(SLO_KEY, st); slpWortschatz(); });
   await p.click('#slpLernen'); await p.waitForTimeout(300);
   await p.evaluate(() => { const a = slo.liste[0]; const inp = document.querySelector('#sloEingabe'); if (inp) { inp.value = 'falsch'; inp.dispatchEvent(new Event('input')); } else { const o = [...document.querySelectorAll('.slo-opt')].find((x) => sloNorm(x.textContent) !== sloNorm(a.typ === 'slde' ? a.w.de : a.w.sl)); o.click(); } sloPruefen(); sloPruefen(); });
   await spiele(true, 80);
-  const nach2 = await p.evaluate(() => { const w = Object.values(slpStore().srs); return { s1: w.filter((c) => c[0] === 1).length, s2: w.filter((c) => c[0] === 2).length, s2tage: w.filter((c) => c[0] === 2 && c[1] === slpTagNr() + 2).length }; });
-  ck('Wiederholung: 1 Fehler → Stufe 1 (morgen), 9 richtig → Stufe 2 (in 2 Tagen); die Wiederholung am Ende zählt nicht doppelt', nach2.s1 === 1 && nach2.s2 === 9 && nach2.s2tage === 9, JSON.stringify(nach2));
+  const nach2 = await p.evaluate(() => { const w = Object.values(slpStore().srs); return { s1: w.filter((c) => c[0] === 1).length, s2: w.filter((c) => c[0] === 2).length, s2tage: w.filter((c) => c[0] === 2 && c[1] === slpTagNr() + 3).length }; });
+  ck('Wiederholung: 1 Fehler → Stufe 1 (morgen), 9 richtig → in 3 Tagen wieder (Intervall × Leichtigkeit 2,5); die Wiederholung am Ende zählt nicht doppelt', nach2.s1 === 1 && nach2.s2 === 9 && nach2.s2tage === 9, JSON.stringify(nach2));
   await p.click('#sloEndeWeiter'); await p.waitForTimeout(300);
+  // ---------- 🃏 Karteikarten wie Anki ----------
+  const plan = await p.evaluate(() => [slpPlan({ ivl: 4, e: 2.5, l: 0 }, 1), slpPlan({ ivl: 4, e: 2.5, l: 0 }, 2), slpPlan({ ivl: 4, e: 2.5, l: 0 }, 3), slpPlan({ ivl: 4, e: 2.5, l: 0 }, 4), slpPlan(null, 3), slpPlan(null, 4)].map((x) => x.ivl + '/' + Math.round(x.e * 100) / 100 + '/' + x.l).join(' '));
+  ck('Planung wie Anki: Intervall 4 → Nochmal 1 (Leichtigkeit −0,2, Patzer +1), Schwer 5, Gut 10, Einfach 13; neu: Gut 1, Einfach 4', plan === '1/2.3/1 5/2.35/0 10/2.5/0 13/2.65/0 1/2.5/0 4/2.65/0', plan);
+  const alt137 = await p.evaluate(() => { const z = slpZustand({ srs: { a: [4, 100] } }, 'a'); return z.ivl === 7 && z.e === 2.5 && z.f === 100; });
+  ck('Alter Lernstand (Stufe 4) wird übernommen: Intervall 7 Tage', alt137);
+  await p.evaluate(() => { const st = slpStore(); st.srs = {}; st.srsNeu = {}; st.wort = {}; saveJson(SLO_KEY, st); slpDeckCache = null; slpWortschatz(); });
+  const reihe = await p.evaluate(() => slpDeck().slice(0, 3).map((w) => w.sl + ':' + w.n).join(' ') + ' | ' + slpDeck().filter((w) => w.n === 2)[0].sl);
+  ck('Lernreihenfolge: A1 zuerst, beginnend mit den Reise-Wörtern (zdravo …), dann A2', /^zdravo:1 /.test(reihe), reihe);
+  await p.click('#slpKarten'); await p.waitForTimeout(400);
+  const k1 = await p.evaluate(() => ({ teil: !$('slo-karten').hidden, tabs: $('sloTabs').hidden, neu: +document.querySelector('.slk-zahlen .neu').textContent, vorn: document.querySelector('.slk-seite.vorn .slk-wort').textContent, noten: $('slkNoten').hidden }));
+  ck('Karteikarten: 10 neue, Vorderseite slowenisch („zdravo“), Bewertung erst nach dem Umdrehen', k1.teil && k1.tabs && k1.neu === 10 && k1.vorn === 'zdravo' && k1.noten, JSON.stringify(k1));
+  await bild('slk-vorn');
+  await p.click('#slkKarte'); await p.waitForTimeout(500);
+  const k2 = await p.evaluate(() => ({ um: $('slkKarte').classList.contains('um'), noten: [...document.querySelectorAll('.slk-note')].map((b) => b.textContent).join(' | ') }));
+  ck('Antippen dreht die Karte um; Knöpfe zeigen den Plan (< 1 Min · 1 Tag · 1 Tag · 4 Tage)', k2.um && k2.noten === '< 1 MinNochmal | 1 TagSchwer | 1 TagGut | 4 TageEinfach', k2.noten);
+  await bild('slk-hinten');
+  await p.click('.slk-note.n1'); await p.waitForTimeout(200);
+  ck('„Nochmal“ → Karte kommt in dieser Sitzung wieder (rot gezählt), wird noch nicht gespeichert', await p.evaluate(() => +document.querySelector('.slk-zahlen .lern').textContent === 1 && !slpStore().srs.zdravo));
+  // Wischen nach rechts = Gut
+  await p.click('#slkKarte'); await p.waitForTimeout(500);
+  const box = await p.evaluate(() => { const r = $('slkKarte').getBoundingClientRect(); return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; });
+  const zweite = await p.evaluate(() => slk.q[slk.i].w.sl);
+  await wisch(box.x - 80, box.y, box.x + 120, box.y + 5); await p.waitForTimeout(300);
+  ck('Wischen nach rechts auf der Rückseite = Gut (morgen wieder)', await p.evaluate((w) => { const c = slpStore().srs[w]; return !!c && c[1] === slpTagNr() + 1; }, zweite), zweite);
+  // Rest mit „Gut“
+  for (let k = 0; k < 40; k++) { const weiter = await p.evaluate(() => { if (!slk) return false; slkUmdrehen(); slkNote(3); return true; }); if (!weiter) break; }
+  const k3 = await p.evaluate(() => ({ ende: !$('slo-ende').hidden, n: Object.keys(slpStore().srs).length, zdravo: slpStore().srs.zdravo }));
+  ck('Alle Karten durch: 10 Wörter gespeichert (auch die „Nochmal“-Karte nach dem zweiten Mal), Endbildschirm', k3.ende && k3.n === 10 && k3.zdravo && k3.zdravo[1] === (await p.evaluate(() => slpTagNr())) + 1, JSON.stringify(k3));
+  await p.click('#sloEndeWeiter'); await p.waitForTimeout(300);
+  // Eigene Karte, Richtung, Niveau
+  await p.fill('#slpEigenSl', 'sladoled'); await p.fill('#slpEigenDe', 'Eis'); await p.click('#slpEigen button'); await p.waitForTimeout(200);
+  ck('Eigene Karte steht vorn im Stapel', await p.evaluate(() => slpDeck()[0].sl === 'sladoled' && slpDeck()[0].eigen));
+  await p.click('[data-richtung="de"]'); await p.click('[data-niveau="3"]'); await p.waitForTimeout(200);
+  await p.evaluate(() => { const st = slpStore(); st.srsNeu = {}; saveJson(SLO_KEY, st); slpWortschatz(); });
+  await p.click('#slpKarten'); await p.waitForTimeout(300);
+  const k4 = await p.evaluate(() => ({ vorn: document.querySelector('.slk-seite.vorn .slk-wort').textContent, erst: slk.q[0].w.sl, niveaus: [...new Set(slk.q.filter((k) => k.neu && !k.w.eigen).map((k) => k.w.n))].join() }));
+  ck('Vorderseite Deutsch („Eis“ – eigene Karte zuerst); neue Wörter nur aus B1', k4.vorn === 'Eis' && k4.erst === 'sladoled' && k4.niveaus === '3', JSON.stringify(k4));
+  await p.click('#sloZurueck'); await p.waitForTimeout(400);
+  ck('Zurück in den Karteikarten → Ende/Wortschatz, nicht Hub', await p.evaluate(() => document.querySelector('.screen.active').id === 'screen-slo'));
+  await p.evaluate(() => slpZeige('wortschatz')); await p.waitForTimeout(300);
+  await bild('slp-wortschatz-anki');
   // Grammatik
   await wisch(330, 500, 70, 505); await p.waitForTimeout(1000);
   ck('Wischen → Grammatik mit 13 Themen', await p.evaluate(() => !$('slo-grammatik').hidden) && (await p.locator('.slp-thema').count()) === 13);
