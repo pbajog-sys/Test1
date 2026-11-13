@@ -1,0 +1,2365 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Spielekiste</title>
+<meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
+<meta name="theme-color" content="#141210">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="stylesheet" href="fonts/fonts.css?v=141">
+<link rel="icon" href="icons/favicon-64.png?v=3" type="image/png">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/828x1792.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1125x2436.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1242x2688.png">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1170x2532.png">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1284x2778.png">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1179x2556.png">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1290x2796.png">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1206x2622.png">
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1320x2868.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Spielekiste">
+<meta name="application-name" content="Spielekiste">
+<meta name="format-detection" content="telephone=no">
+<style>
+  :root {
+    --bg1: #0b2a4a;
+    --bg2: #06182c;
+    --card: rgba(255,255,255,0.08);
+    --card-strong: rgba(255,255,255,0.14);
+    --text: #eaf4ff;
+    --muted: #9fb9d4;
+    --accent: #4fc3f7;
+    --accent-ink: #04223a;
+    --ok: #3ddc97;
+    --bad: #ff6b6b;
+    --gold: #ffd166;
+    --radius: 16px;
+  }
+  [hidden] { display: none !important; }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  html, body { margin: 0; height: 100%; }
+  body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text);
+    background: linear-gradient(180deg, var(--bg1), var(--bg2)) fixed;
+    background-color: var(--bg2);
+    min-height: 100dvh;
+    padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left);
+  }
+  .app { max-width: 560px; margin: 0 auto; padding: 16px; display: flex; flex-direction: column; min-height: 100dvh; }
+  header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+  header h1 { font-size: 1.15rem; margin: 0; flex: 1; }
+  .icon-btn {
+    border: 0; background: var(--card); color: var(--text); border-radius: 12px;
+    width: 44px; height: 44px; font-size: 1.2rem; cursor: pointer;
+  }
+  .screen { display: none; flex: 1; flex-direction: column; }
+  .screen.active { display: flex; }
+  .muted { color: var(--muted); }
+
+  /* Start */
+  .hero { text-align: center; padding: 16px 8px 8px; }
+  .hero .logo { width: 88px; height: 88px; }
+  .hero .hero-emoji { font-size: 72px; line-height: 88px; }
+  .hero h2 { font-size: 1.8rem; margin: 10px 0 6px; }
+  .hero p { color: var(--muted); margin: 0 auto; max-width: 34ch; line-height: 1.45; }
+  .menu { display: grid; gap: 12px; margin-top: 24px; }
+  .menu-btn {
+    display: flex; align-items: center; gap: 14px; text-align: left; width: 100%;
+    border: 0; border-radius: var(--radius); padding: 16px; cursor: pointer;
+    background: var(--card); color: var(--text); font: inherit;
+  }
+  .menu-btn .emoji { font-size: 2rem; width: 2.4rem; text-align: center; flex: none; }
+  .menu-btn .txt { flex: 1; }
+  .menu-btn strong { display: block; font-size: 1.1rem; }
+  .menu-btn span.sub { color: var(--muted); font-size: 0.9rem; }
+  .menu-btn.primary { background: var(--accent); color: var(--accent-ink); }
+  .menu-btn.primary span.sub { color: #0b3a5c; }
+  .menu-btn .right { color: var(--muted); font-size: 0.85rem; text-align: right; flex: none; }
+  .menu-btn.earned { box-shadow: inset 0 0 0 2px var(--gold); }
+  .badges { display: flex; justify-content: center; gap: 14px; margin-top: 22px; }
+  .badge { text-align: center; font-size: 0.75rem; color: var(--muted); width: 72px; }
+  .badge .b-icon { font-size: 2rem; display: block; filter: grayscale(1) opacity(0.35); }
+  .badge.earned { color: var(--gold); }
+  .badge.earned .b-icon { filter: none; }
+  .pick-title { font-size: 1.05rem; margin: 4px 0 12px; color: var(--muted); }
+
+  /* Quiz */
+  .progress { display: flex; justify-content: space-between; color: var(--muted); font-size: 0.95rem; margin-bottom: 8px; }
+  .bar { height: 6px; background: var(--card); border-radius: 3px; overflow: hidden; margin-bottom: 12px; }
+  .bar > div { height: 100%; background: var(--accent); width: 0; transition: width .3s; }
+  .gallery-wrap { position: relative; }
+  .gallery {
+    display: flex; overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none;
+    border-radius: var(--radius); background: var(--card); aspect-ratio: 4 / 3;
+  }
+  .gallery::-webkit-scrollbar { display: none; }
+  .gallery .slide { flex: 0 0 100%; scroll-snap-align: center; position: relative; }
+  .gallery img { width: 100%; height: 100%; object-fit: cover; display: block; opacity: 0; transition: opacity .25s; }
+  .gallery img.loaded { opacity: 1; }
+  .gallery .slide::before {
+    content: ""; position: absolute; inset: 0; margin: auto; width: 36px; height: 36px; border-radius: 50%;
+    border: 4px solid var(--card-strong); border-top-color: var(--accent); animation: spin 1s linear infinite;
+  }
+  .gallery .slide.done::before { display: none; }
+  .gal-msg {
+    position: absolute; inset: 0; display: flex; flex-direction: column; gap: 12px;
+    align-items: center; justify-content: center; text-align: center; padding: 16px; color: var(--muted);
+  }
+  .gal-arrow {
+    position: absolute; top: 50%; transform: translateY(-50%); width: 36px; height: 36px; border-radius: 50%;
+    border: 0; background: rgba(0,0,0,0.45); color: #fff; font-size: 1.1rem; cursor: pointer;
+  }
+  .gal-arrow.prev { left: 8px; } .gal-arrow.next { right: 8px; }
+  .gal-flag {
+    position: absolute; top: 8px; right: 8px; min-width: 36px; height: 36px; padding: 0 10px; border-radius: 18px;
+    border: 0; background: rgba(0,0,0,0.45); color: #fff; font: inherit; font-size: 1rem; cursor: pointer;
+  }
+  .slide.gemeldet img { opacity: 0.35 !important; filter: grayscale(1); }
+  .slide.gemeldet .gal-flag { background: rgba(255,107,107,0.9); font-size: 0.85rem; font-weight: 600; }
+  .dots { display: flex; justify-content: center; gap: 8px; margin-top: 8px; min-height: 10px; }
+  .dots button { width: 10px; height: 10px; border-radius: 50%; border: 0; padding: 0; background: var(--card-strong); cursor: pointer; }
+  .dots button.on { background: var(--accent); }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .credit { font-size: 0.75rem; color: var(--muted); margin-top: 4px; min-height: 1.2em; text-align: center; }
+  .credit a { color: var(--muted); }
+  .q-row { display: flex; align-items: center; gap: 10px; margin: 12px 0 10px; }
+  .question { font-size: 1.15rem; font-weight: 600; flex: 1; }
+  .tip-btn {
+    border: 0; border-radius: 12px; padding: 10px 14px; font: inherit; font-size: 0.95rem;
+    background: rgba(255,209,102,0.15); color: var(--gold); cursor: pointer;
+  }
+  .tip-btn:disabled { opacity: .45; cursor: default; }
+  .tips { list-style: none; margin: 0 0 12px; padding: 0; display: grid; gap: 6px; }
+  .tips li { background: rgba(255,209,102,0.1); border-radius: 10px; padding: 8px 12px; font-size: 0.95rem; line-height: 1.35; }
+  .tips li b { color: var(--gold); font-weight: 600; }
+
+  .choices { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+  .choice {
+    border: 2px solid transparent; border-radius: 14px; padding: 12px 8px; min-height: 56px;
+    background: var(--card); color: var(--text); font: inherit; font-size: 0.98rem; cursor: pointer;
+    overflow-wrap: anywhere; hyphens: auto;
+  }
+  .choice:disabled { cursor: default; }
+  .choice.correct { background: rgba(61,220,151,0.22); border-color: var(--ok); }
+  .choice.wrong { background: rgba(255,107,107,0.22); border-color: var(--bad); }
+
+  .answer-form { display: flex; gap: 10px; }
+  .answer-form input {
+    flex: 1; min-width: 0; font: inherit; font-size: 1.1rem; padding: 14px;
+    border-radius: 14px; border: 2px solid var(--card-strong); background: var(--card); color: var(--text);
+  }
+  .answer-form input:focus { outline: none; border-color: var(--accent); }
+  .btn {
+    border: 0; border-radius: 14px; padding: 14px 18px; font: inherit; font-weight: 600; font-size: 1rem;
+    background: var(--accent); color: var(--accent-ink); cursor: pointer;
+  }
+  .btn.secondary { background: var(--card-strong); color: var(--text); }
+  .btn:disabled { opacity: .5; }
+
+  .feedback { margin-top: 14px; padding: 14px; border-radius: 14px; display: none; line-height: 1.4; }
+  .feedback.show { display: block; }
+  .feedback.ok { background: rgba(61,220,151,0.15); }
+  .feedback.bad { background: rgba(255,107,107,0.15); }
+  .feedback .title { font-weight: 700; margin-bottom: 2px; }
+  .feedback .sub { color: var(--muted); font-size: 0.9rem; margin-bottom: 8px; }
+  .facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 10px; font-size: 0.93rem; margin: 0; }
+  .facts dt { color: var(--muted); }
+  .facts dd { margin: 0; }
+  .next-row { margin-top: 14px; display: none; }
+  .next-row.show { display: block; }
+  .next-row .btn { width: 100%; }
+
+  /* Result */
+  .result { text-align: center; padding-top: 12px; }
+  .result .big { font-size: 3rem; font-weight: 800; margin: 8px 0; }
+  .certificate {
+    margin: 16px 0; padding: 20px; border-radius: var(--radius);
+    border: 2px dashed var(--gold); background: rgba(255,209,102,0.1); color: var(--gold);
+  }
+  .certificate .seal { font-size: 3rem; }
+  .certificate h3 { margin: 6px 0; font-size: 1.3rem; }
+  .review { list-style: none; padding: 0; margin: 16px 0; text-align: left; display: grid; gap: 8px; }
+  .review li { display: flex; gap: 10px; align-items: center; background: var(--card); border-radius: 12px; padding: 8px; }
+  .review img { width: 64px; height: 48px; object-fit: cover; border-radius: 8px; background: var(--card-strong); flex: none; }
+  .review .r-text { flex: 1; font-size: 0.95rem; }
+  .review .r-text small { color: var(--muted); display: block; }
+  .review .mark { font-size: 1.3rem; }
+  .result-actions { display: grid; gap: 10px; margin-top: 8px; }
+
+  /* Lexikon */
+  .pruef-open { width: 100%; margin-top: 16px; }
+  .pruef-intro { margin: 0 0 10px; line-height: 1.4; font-size: 0.95rem; }
+  .pruef-bar { display: flex; justify-content: space-between; align-items: center; gap: 10px; color: var(--muted); font-size: 0.9rem; margin-bottom: 10px; }
+  .pruef { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .pruef > li { background: var(--card); border-radius: var(--radius); padding: 12px; }
+  .pruef h3 { margin: 0 0 2px; font-size: 1.05rem; }
+  .pruef .latin { color: var(--muted); font-style: italic; font-size: 0.85rem; margin-bottom: 8px; }
+  .pruef .fotos { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .pruef .foto img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; border-radius: 10px; background: var(--card-strong); display: block; }
+  .pruef .foto .info { font-size: 0.75rem; color: var(--muted); margin: 4px 0; }
+  .pruef .foto .info a { color: var(--muted); }
+  .pruef .foto .btns { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+  .pruef .foto .btns button { border: 0; border-radius: 10px; padding: 10px 0; font: inherit; font-size: 1.1rem; cursor: pointer; background: var(--card-strong); color: var(--text); }
+  .pruef .foto.ok img { outline: 3px solid var(--ok); }
+  .pruef .foto .btns .yes.on { background: rgba(61,220,151,0.35); }
+  .pruef .leer { color: var(--muted); font-size: 0.9rem; }
+  .lex-tools { display: grid; gap: 8px; margin-bottom: 12px; }
+  .lex-tools input, .lex-tools select {
+    font: inherit; font-size: 1rem; padding: 12px; border-radius: 12px; width: 100%;
+    border: 2px solid var(--card-strong); background: var(--card); color: var(--text);
+  }
+  .lex-tools select option { color: #000; }
+  .lex { list-style: none; padding: 0; margin: 0; display: grid; gap: 12px; }
+  .lex li { background: var(--card); border-radius: var(--radius); overflow: hidden; }
+  .lex .pic { width: 100%; aspect-ratio: 16 / 9; background: var(--card-strong); display: block; object-fit: cover; }
+  .lex .body { padding: 12px 14px 14px; }
+  .lex h3 { margin: 0 0 2px; display: flex; justify-content: space-between; gap: 8px; }
+  .lex .latin { color: var(--muted); font-style: italic; font-size: 0.9rem; margin-bottom: 8px; }
+  .lex .merkmal { margin: 8px 0 0; line-height: 1.4; }
+  .lex .credit { text-align: left; }
+  .count { color: var(--muted); font-size: 0.9rem; }
+
+  .welt-switch { display: grid; grid-template-columns: repeat(5, 1fr); gap: 4px; padding: 4px; border-radius: 14px; background: var(--card); }
+  .welt-switch button {
+    border: 0; border-radius: 10px; padding: 6px 0; font: inherit; font-size: 0.72rem; cursor: pointer; white-space: nowrap;
+    display: flex; flex-direction: column; align-items: center; gap: 1px;
+    background: transparent; color: var(--muted);
+  }
+  .welt-switch button span { font-size: 1.35rem; line-height: 1.2; }
+  .choice.gone { display: none; }
+  .choices.list { grid-template-columns: 1fr; }
+  .choices.list .choice { text-align: left; padding: 14px 16px; }
+  .welt-switch button.on { background: var(--accent); color: var(--accent-ink); font-weight: 600; }
+  .learn { margin-top: 20px; }
+  .learn .muted { font-size: 0.9rem; margin-bottom: 6px; text-align: center; }
+  .challenge {
+    margin-top: 16px; padding: 16px; border-radius: var(--radius);
+    background: rgba(255,209,102,0.12); border: 2px solid var(--gold);
+  }
+  .challenge p { margin: 0 0 12px; line-height: 1.4; }
+  .challenge .row { display: flex; gap: 10px; }
+  .challenge .row .btn { flex: 1; }
+  .sound-box { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 28px 16px; border-radius: var(--radius); background: var(--card); }
+  .play {
+    width: 96px; height: 96px; border-radius: 50%; border: 0; font-size: 2.4rem; cursor: pointer;
+    background: var(--accent); color: var(--accent-ink);
+  }
+  .play.playing { animation: pulse 1.2s ease-in-out infinite; }
+  .play.playing::after { content: ""; }
+  .play:disabled { opacity: .5; }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 14px rgba(79,195,247,0.2); } }
+  .sound-btn {
+    border: 0; border-radius: 12px; padding: 10px 14px; font: inherit; font-size: 0.95rem; margin-top: 10px;
+    background: var(--card-strong); color: var(--text); cursor: pointer;
+  }
+  .sound-btn.playing { background: var(--accent); color: var(--accent-ink); }
+  .sound-btn:disabled { opacity: .6; cursor: default; }
+  .size-svg { display: block; width: 100%; height: auto; max-height: 160px; margin-top: 10px; font-family: inherit; }
+  .tips .size-svg { max-height: 110px; }
+  .vs { font-size: 1.1rem; font-weight: 600; margin: 4px 0 12px; }
+  .share { margin: 18px 0 8px; padding: 14px; border-radius: var(--radius); background: var(--card); text-align: left; }
+  .share label { display: block; color: var(--muted); font-size: 0.9rem; margin-bottom: 6px; }
+  .share .row { display: flex; gap: 10px; }
+  .share input {
+    flex: 1; min-width: 0; font: inherit; font-size: 1rem; padding: 12px; border-radius: 12px;
+    border: 2px solid var(--card-strong); background: var(--card); color: var(--text);
+  }
+  .share .msg { color: var(--muted); font-size: 0.85rem; margin-top: 8px; word-break: break-all; }
+
+
+  /* ---------- Dackel-Welt: rosa, verspielt, mit Gretchen ---------- */
+  body.theme-dackel {
+    --bg1: #fdf1f4; --bg2: #f6d6e1;
+    --card: rgba(255,255,255,0.75); --card-strong: rgba(194,87,122,0.14);
+    --text: #5a3428; --muted: #9b6f6a;
+    --accent: #e0839f; --accent-ink: #ffffff;
+    --ok: #2f9e6e; --bad: #d4545b; --gold: #c2577a;
+    font-family: "Nunito", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  }
+  body.theme-dackel .hero h2 { font-family: "Caveat", cursive; font-size: 3.2rem; font-weight: 600; margin: 4px 0; color: #6b3d2e; }
+  body.theme-dackel header h1 { font-family: "Caveat", cursive; font-size: 1.8rem; font-weight: 600; }
+  body.theme-dackel .menu-btn.primary span.sub { color: rgba(255,255,255,0.9); }
+  body.theme-dackel .choice { background: #fff; border-color: rgba(224,131,159,0.35); box-shadow: 0 2px 8px rgba(194,87,122,0.08); }
+  body.theme-dackel .feedback.ok { background: rgba(47,158,110,0.12); }
+  body.theme-dackel .feedback.bad { background: rgba(212,84,91,0.12); }
+  body.theme-dackel .certificate { border-color: #e0839f; background: #fff; color: #c2577a; }
+  body.theme-dackel .badge.earned { color: #c2577a; }
+  body.theme-dackel .tip-btn { background: #fff; color: #c2577a; }
+  body.theme-dackel::before {
+    content: "🐾"; position: fixed; right: -10px; bottom: 40px; font-size: 140px; opacity: 0.06; transform: rotate(-20deg); pointer-events: none;
+  }
+  .ig-ring { display: inline-block; padding: 4px; border-radius: 50%; background: linear-gradient(45deg, #f9ce34, #ee2a7b, #6228d7); }
+  .ig-ring img { display: block; width: 116px; height: 116px; border-radius: 50%; object-fit: cover; border: 4px solid var(--bg1); }
+  .ig-ring.small img { width: 64px; height: 64px; border-width: 3px; }
+  .ig-ring:has(img[hidden]) { display: none; }
+  .gretchen-start { display: grid; gap: 12px; margin-top: 18px; }
+  .g-card { background: var(--card); border-radius: var(--radius); padding: 14px; }
+  .g-title { font-family: "Caveat", cursive; font-size: 1.9rem; color: #c2577a; line-height: 1; margin-bottom: 8px; }
+  .g-chips { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+  .g-chips li { background: #fff; border: 1px solid rgba(224,131,159,0.4); border-radius: 999px; padding: 5px 11px; font-size: 0.88rem; }
+  .g-feed { display: flex; gap: 10px; overflow-x: auto; scroll-snap-type: x mandatory; padding-bottom: 4px; scrollbar-width: none; }
+  .g-feed::-webkit-scrollbar { display: none; }
+  .g-feed figure { margin: 0; flex: 0 0 150px; scroll-snap-align: start; background: #fff; border-radius: 14px; overflow: hidden; box-shadow: 0 2px 10px rgba(194,87,122,0.12); }
+  .g-feed img { width: 150px; height: 170px; object-fit: cover; display: block; }
+  .g-feed figcaption { font-size: 0.78rem; padding: 6px 8px 8px; line-height: 1.25; }
+  .g-insta { text-align: center; font-size: 0.9rem; color: #c2577a; font-weight: 600; text-decoration: none; padding: 8px; }
+  .gretchen-box { display: flex; align-items: center; gap: 12px; margin: 4px 0 6px; }
+  .bubble {
+    position: relative; background: #fff; color: var(--text); border-radius: 18px; padding: 10px 14px;
+    font-weight: 600; box-shadow: 0 2px 10px rgba(194,87,122,0.12); line-height: 1.3;
+  }
+  .gretchen-box .bubble::before {
+    content: ""; position: absolute; left: -8px; top: 50%; transform: translateY(-50%);
+    border: 8px solid transparent; border-right-color: #fff; border-left: 0;
+  }
+  .gretchen-box.froh .bubble { background: #e9f7f0; } .gretchen-box.froh .bubble::before { border-right-color: #e9f7f0; }
+  .gretchen-box.traurig .bubble { background: #fdeef0; } .gretchen-box.traurig .bubble::before { border-right-color: #fdeef0; }
+  .gretchen-moment { margin-top: 12px; border-radius: 16px; overflow: hidden; position: relative; }
+  .gretchen-moment img { width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block; }
+  .gretchen-moment span {
+    position: absolute; left: 10px; bottom: 10px; background: rgba(255,255,255,0.92); color: #5a3428;
+    border-radius: 999px; padding: 4px 10px; font-size: 0.8rem; font-weight: 600;
+  }
+  .gretchen-result { display: grid; gap: 10px; justify-items: center; margin: 8px 0 16px; }
+  .gretchen-result img { width: 100%; max-width: 360px; aspect-ratio: 1; object-fit: cover; border-radius: 22px; box-shadow: 0 6px 20px rgba(194,87,122,0.25); }
+  .gretchen-result .btn { width: 100%; }
+  .gretchen-result .msg { color: var(--muted); font-size: 0.9rem; }
+  .konfetti { position: fixed; inset: 0; pointer-events: none; overflow: hidden; z-index: 50; }
+  .konfetti span { position: absolute; top: -40px; animation-name: fall; animation-timing-function: linear; animation-fill-mode: forwards; }
+  @keyframes fall { to { transform: translateY(110vh) rotate(380deg); } }
+
+
+  /* ---------- Melden ---------- */
+  .melde-link { display: block; margin: 18px auto 0; border: 0; background: none; color: var(--muted); font: inherit; font-size: 0.9rem; text-decoration: underline; cursor: pointer; }
+  .melde-btn { border: 0; background: none; color: var(--muted); font: inherit; font-size: 0.85rem; cursor: pointer; padding: 8px 0 0; text-decoration: underline; }
+  .share .row .btn.secondary { white-space: nowrap; }
+  dialog.melde {
+    width: min(92vw, 460px); border: 0; border-radius: 20px; padding: 18px; color: var(--text);
+    background: var(--bg1); box-shadow: 0 20px 60px rgba(0,0,0,0.45);
+  }
+  dialog.melde::backdrop { background: rgba(0,0,0,0.5); }
+  dialog.melde h3 { margin: 0 0 2px; }
+  dialog.melde { padding: 14px 16px; }
+  dialog.melde .muted { font-size: 0.9rem; margin-bottom: 10px; }
+  .melde-arten { display: grid; gap: 6px; margin-bottom: 10px; }
+  .melde-art { display: flex; gap: 10px; align-items: flex-start; background: var(--card); border-radius: 12px; padding: 8px 12px; cursor: pointer; }
+  .melde-art small { font-size: 0.8rem; }
+  .melde-art input { margin-top: 4px; }
+  .melde-art b { display: block; font-weight: 600; }
+  .melde-art small { color: var(--muted); }
+  .melde-fotos { display: flex; gap: 8px; margin-bottom: 12px; }
+  .melde-foto { position: relative; flex: 1; cursor: pointer; }
+  .melde-foto img { width: 100%; height: 84px; object-fit: cover; border-radius: 10px; display: block; }
+  .melde-foto input { position: absolute; top: 8px; left: 8px; width: 20px; height: 20px; }
+  .melde-foto span { font-size: 0.8rem; color: var(--muted); }
+  #meldeVorschlag {
+    width: 100%; font: inherit; font-size: 0.95rem; padding: 10px; border-radius: 12px; margin-bottom: 4px;
+    border: 2px solid var(--card-strong); background: var(--card); color: var(--text);
+  }
+  .melde-hinweis { color: var(--bad); font-size: 0.82rem; margin-bottom: 8px; min-height: 0; }
+  dialog.melde textarea {
+    width: 100%; font: inherit; font-size: 1rem; padding: 10px; border-radius: 12px; resize: vertical;
+    border: 2px solid var(--card-strong); background: var(--card); color: var(--text);
+  }
+  .melde-info { font-size: 0.8rem; color: var(--muted); line-height: 1.4; }
+  dialog.melde .row { display: grid; grid-template-columns: 1fr 1.4fr; gap: 10px; }
+  dialog.melde .row .btn { white-space: nowrap; }
+  dialog.melde { max-height: 92dvh; overflow: auto; }
+
+  /* ---------- Profile ---------- */
+  .hub-ds { display: block; text-align: center; color: var(--muted); font-size: 0.8rem; opacity: .6; margin-bottom: 12px; }
+  .hub-zeile { display: flex; align-items: center; justify-content: space-between; gap: 8px; min-height: 40px; }
+  .profil-btn {
+    flex: 0 1 auto; min-width: 0; max-width: 46vw; display: flex; align-items: center; gap: 8px; cursor: pointer;
+    border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; background: rgba(255,255,255,0.08);
+    color: var(--text); font: inherit; font-size: 0.9rem; font-weight: 600; padding: 4px 12px 4px 4px;
+  }
+  .profil-btn .pb-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .pk-bild { display: grid; place-items: center; border-radius: 22%; flex: 0 0 auto; }
+  .profil-btn .pk-bild { width: 30px; height: 30px; font-size: 1.05rem; border-radius: 50%; }
+
+  .profil-wahl {
+    position: fixed; inset: 0; z-index: 60; overflow: auto; background: #141414; color: #fff;
+    font-family: "Outfit", system-ui, sans-serif; padding: max(28px, env(safe-area-inset-top)) 16px 40px;
+    animation: einblenden .35s ease-out;
+  }
+  .pw-inhalt { max-width: 560px; margin: 0 auto; text-align: center; }
+  .pw-zu { position: absolute; top: max(14px, env(safe-area-inset-top)); right: 14px; border: 0; background: none; color: #aaa; font-size: 1.8rem; cursor: pointer; }
+  .profil-wahl h1 { font-size: 2.2rem; font-weight: 600; margin: 9vh 0 26px; letter-spacing: -0.01em; }
+  .pw-grid { display: flex; flex-wrap: wrap; justify-content: center; gap: 22px 18px; }
+  .profil-kachel { width: 104px; border: 0; background: none; color: #b3b3b3; font: inherit; cursor: pointer; padding: 0; position: relative; }
+  .profil-kachel .pk-bild { width: 104px; height: 104px; font-size: 3.2rem; border: 3px solid transparent; transition: border-color .15s, transform .15s; }
+  .profil-kachel .pk-name { display: block; margin-top: 8px; font-size: 1rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .profil-kachel:hover .pk-bild, .profil-kachel:focus-visible .pk-bild { border-color: #fff; transform: scale(1.04); }
+  .profil-kachel:hover .pk-name { color: #fff; }
+  .profil-kachel.aktiv .pk-name { color: #fff; font-weight: 600; }
+  .profil-kachel.neu .pk-bild { background: transparent; color: #808080; font-size: 3.4rem; border: 3px solid #333; }
+  .profil-wahl.bearbeiten .profil-kachel:not(.neu) .pk-bild { filter: brightness(.45); }
+  .profil-wahl.bearbeiten .profil-kachel:not(.neu)::after { content: "✏️"; position: absolute; top: 34px; left: 0; right: 0; font-size: 1.9rem; }
+  .pw-verwalten { margin-top: 40px; border: 1px solid #808080; background: none; color: #b3b3b3; font: inherit; letter-spacing: 0.12em; text-transform: uppercase; font-size: 0.9rem; padding: 9px 22px; cursor: pointer; }
+  .profil-wahl.bearbeiten .pw-verwalten { background: #fff; color: #141414; border-color: #fff; }
+  .pw-form { max-width: 380px; margin: 6vh auto 0; text-align: center; }
+  .pw-form .pk-bild { width: 96px; height: 96px; font-size: 3rem; margin: 0 auto 18px; }
+  .pw-form input {
+    width: 100%; font: inherit; font-size: 1.1rem; padding: 12px; border-radius: 6px; border: 2px solid #444;
+    background: #2a2a2a; color: #fff; text-align: center;
+  }
+  .pw-form input:focus { outline: none; border-color: #fff; }
+  .pw-avatare { display: grid; grid-template-columns: repeat(8, 1fr); gap: 6px; margin: 16px 0; }
+  .pw-avatare button { aspect-ratio: 1; border: 2px solid transparent; border-radius: 10px; background: #2a2a2a; font-size: 1.35rem; cursor: pointer; padding: 0; }
+  .pw-avatare button.an { border-color: #fff; background: #3a3a3a; }
+  .pw-farben { display: flex; justify-content: center; gap: 10px; margin-bottom: 18px; }
+  .pw-farben button { width: 30px; height: 30px; border-radius: 50%; border: 3px solid transparent; cursor: pointer; padding: 0; }
+  .pw-farben button.an { border-color: #fff; }
+  .pw-knoepfe { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+  .pw-knoepfe button { font: inherit; font-size: 1rem; font-weight: 600; padding: 10px 22px; cursor: pointer; border-radius: 6px; }
+  .pw-ok { background: #fff; color: #141414; border: 2px solid #fff; }
+  .pw-ab { background: none; color: #b3b3b3; border: 2px solid #808080; }
+  .pw-weg { display: block; margin: 22px auto 0; background: none; border: 0; color: #e87c03; font: inherit; cursor: pointer; text-decoration: underline; }
+  .pw-hinweis { color: #e87c03; min-height: 1.3em; margin: 10px 0 0; font-size: 0.9rem; }
+  .familie-liste { list-style: none; margin: 0; padding: 6px 12px; border-radius: 18px; background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); }
+  .familie-liste li { display: grid; grid-template-columns: minmax(0, 1fr) repeat(4, 2.6em); gap: 2px; padding: 8px 0; align-items: center; text-align: center; font-variant-numeric: tabular-nums; }
+  .familie-liste li + li { border-top: 1px solid rgba(255,255,255,0.07); }
+  .familie-liste li .fn { text-align: left; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .familie-liste li.kopf { font-size: 0.85rem; padding: 4px 0; }
+  .familie-liste li.ich { color: var(--accent); }
+
+  .shake { animation: shake .35s; }
+  @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
+</style>
+<link rel="stylesheet" href="stil.css?v=141">
+<link rel="stylesheet" href="ansichten.css?v=141">
+</head>
+<body>
+<div id="ambient" aria-hidden="true"></div>
+<div class="app">
+  <header>
+    <button class="icon-btn" id="homeBtn" aria-label="Zur Startseite" hidden>←</button>
+    <h1 id="headerTitle">Wal-Quiz</h1>
+  </header>
+
+  <!-- Startseite -->
+  <!-- Dashboard -->
+  <section class="screen active" id="screen-hub">
+    <h1 class="nur-sr">Spiele</h1>
+    <div class="buehne" id="hubBuehne">
+      <span class="hub-knoepfe"><button class="vollbild-btn" id="sicherungBtn" type="button" aria-label="Sicherung" title="Sicherung">💾</button><button class="vollbild-btn ton-check-btn" id="tonCheckBtn" type="button" aria-label="Ton-Check" title="Ton-Check">🔊</button><button class="vollbild-btn" id="vollbildBtn" type="button" aria-label="Vollbild" title="Vollbild" hidden>⛶</button><button class="profil-btn" id="profilBtn" type="button" hidden></button></span>
+      <span class="bu-nebel" aria-hidden="true"></span>
+      <span class="bu-sterne" aria-hidden="true"></span>
+      <span class="bu-sterne bu-sterne2" aria-hidden="true"></span>
+      <span class="bu-schnuppe" aria-hidden="true"></span>
+      <svg class="bu-bahnen" aria-hidden="true"><ellipse/><ellipse/><ellipse/></svg>
+      <span class="bu-sonne" aria-hidden="true"><i></i></span>
+      <button class="bu-ding bu-farben" type="button" data-ziel="hubFarben" aria-label="Farb-Gedächtnis"><i></i><i></i><i></i><i></i><i></i></button>
+      <button class="bu-ding bu-cello" type="button" data-ziel="hubCello" aria-label="Noten &amp; Griffe"><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span></button>
+      <button class="bu-ding bu-toene" type="button" data-ziel="hubToene" aria-label="Ton-Gedächtnis"><span class="bu-ton"><svg viewBox="0 0 400 40" preserveAspectRatio="none"><path d="M0 20 Q 12.5 2 25 20 Q 37.5 38 50 20 Q 62.5 2 75 20 Q 87.5 38 100 20 Q 112.5 2 125 20 Q 137.5 38 150 20 Q 162.5 2 175 20 Q 187.5 38 200 20 Q 212.5 2 225 20 Q 237.5 38 250 20 Q 262.5 2 275 20 Q 287.5 38 300 20 Q 312.5 2 325 20 Q 337.5 38 350 20 Q 362.5 2 375 20 Q 387.5 38 400 20"/></svg></span></button>
+      <button class="bu-ding bu-krimi" type="button" data-ziel="hubKrimi" aria-label="Wer war’s?"><span class="bu-licht"></span><img src="img/krimi/lupe.webp" alt=""></button>
+      <button class="bu-ding bu-takt" type="button" data-ziel="hubTakt" aria-label="Takt-Gefühl"><svg class="metronom" viewBox="0 0 60 80" aria-hidden="true"><path class="mt-korpus" d="M17 76h26l-7-66q-6-6-12 0z"/><path class="mt-skala" d="M24 22h12M23 30h14M22 38h16M21 46h18"/><g class="mt-arm"><path d="M30 66V12"/><rect x="25" y="24" width="10" height="7" rx="2"/></g><path class="mt-fuss" d="M14 76h32"/></svg></button>
+      <button class="bu-ding bu-punkte" type="button" data-ziel="hubPunkte" aria-label="Punktwolke"><svg class="pw-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="pm-linie" d="M8 50L52 10"/><circle cx="10" cy="46" r="3.2" style="--k:0"/><circle cx="16" cy="40" r="3.2" style="--k:1"/><circle cx="19" cy="47" r="3.2" style="--k:2"/><circle cx="24" cy="34" r="3.2" style="--k:3"/><circle cx="28" cy="38" r="3.2" style="--k:4"/><circle cx="33" cy="27" r="3.2" style="--k:5"/><circle cx="36" cy="32" r="3.2" style="--k:6"/><circle cx="41" cy="22" r="3.2" style="--k:7"/><circle cx="45" cy="25" r="3.2" style="--k:8"/><circle cx="50" cy="13" r="3.2" style="--k:9"/></svg></button>
+      <button class="bu-ding bu-augen" type="button" data-ziel="hubAugen" aria-label="Augenmaß"><svg class="ag-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="am-basis" d="M10 48H52"/><g class="am-arm"><path d="M10 48L46 14"/><circle cx="46" cy="14" r="4"/></g><path class="am-bogen" d="M26 48A16 16 0 0 0 21.7 37.1"/><circle class="am-ecke" cx="10" cy="48" r="3"/></svg></button>
+      <button class="bu-ding bu-karte" type="button" data-ziel="hubKarte" aria-label="Karten-Gefühl"><svg class="kt-mini" viewBox="0 0 60 60" aria-hidden="true"><circle class="km-rand" cx="30" cy="30" r="25"/><path class="km-striche" d="M30 7v6M30 47v6M7 30h6M47 30h6"/><g class="km-nadel"><path class="km-nord" d="M30 10l6 20h-12z"/><path class="km-sued" d="M30 50l-6-20h12z"/></g><circle cx="30" cy="30" r="3" class="km-mitte"/></svg></button>
+      <button class="bu-ding bu-funktion" type="button" data-ziel="hubFunktion" aria-label="Funktions-Detektiv"><svg class="fd-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="fm-achse" d="M4 40H56M30 56V4"/><path class="fm-kurve" d="M10 8Q30 72 50 8"/><circle class="fm-punkt" cx="30" cy="40" r="3.5"/></svg></button>
+      <button class="bu-ding bu-zufall" type="button" data-ziel="hubZufall" aria-label="Zufalls-Gefühl"><span>⚄</span><span>⚂</span></button>
+      <button class="bu-ding bu-planet bu-ring" type="button" data-ziel="hubTiefgang" aria-label="Tiefgang" style="--p1:#38bdf8;--p2:#0c4a6e"><span>🤿</span></button>
+      <button class="bu-ding bu-planet" type="button" data-ziel="hubTierleben" aria-label="Tierleben" style="--p1:#86efac;--p2:#14532d"><span>🐔</span></button>
+      <button class="bu-ding bu-planet bu-ring" type="button" data-ziel="hubZahlen" aria-label="Du in Zahlen" style="--p1:#fde68a;--p2:#92400e"><span>🎂</span></button>
+      <button class="bu-ding bu-planet" type="button" data-ziel="hubSlo" aria-label="Slowenisch" style="--p1:#4ade80;--p2:#1e3a8a"><span>🐉</span></button>
+      <button class="bu-ding bu-planet bu-klassiker" type="button" data-ziel="hubKlassiker" aria-label="Klassiker" style="--p1:#fca5a5;--p2:#14532d"><span>🂡</span></button>
+      <button class="bu-ding bu-planet bu-falten" type="button" data-ziel="hubFalten" aria-label="Falten bis zum Mars" style="--p1:#fb923c;--p2:#7c2d12"><span>📄</span></button>
+      <button class="bu-ding bu-planet bu-zoom" type="button" data-ziel="hubZoom" aria-label="Zoom durchs Universum" style="--p1:#f472b6;--p2:#312e81"><span>🔭</span></button>
+      <button class="bu-ding bu-planet bu-glas" type="button" data-ziel="hubGlas" aria-label="Verdopplung im Glas" style="--p1:#86efac;--p2:#064e3b"><span>🦠</span></button>
+      <button class="bu-ding bu-planet bu-beat" type="button" data-ziel="hubBeat" aria-label="Beat-Bahnen" style="--p1:#c084fc;--p2:#831843"><span>🎸</span></button>
+      <button class="bu-ding bu-planet bu-wunder" type="button" data-ziel="hubWunder" aria-label="Wundermuster" style="--p1:#67e8f9;--p2:#4c1d95"><span>🌀</span></button>
+      <button class="bu-ding bu-planet bu-studio" type="button" data-ziel="hubStudio" aria-label="Beat-Studio" style="--p1:#fbbf24;--p2:#7c2d12"><span>🎛️</span></button>
+      <button class="bu-ding bu-planet bu-stimmen" type="button" data-ziel="hubStimmen" aria-label="Stimmgerät" style="--p1:#a3e635;--p2:#164e63"><span>🎚️</span></button>
+      <button class="bu-ding bu-planet bu-fitness" type="button" data-ziel="hubFitness" aria-label="Fitness" style="--p1:#fb923c;--p2:#7f1d1d"><span>💪</span></button>
+      <button class="bu-ding bu-planet bu-scan" type="button" data-ziel="hubScan" aria-label="Zutaten-Check" style="--p1:#34d399;--p2:#064e3b"><span>🔎</span></button>
+      <button class="bu-ding bu-planet bu-songs" type="button" data-ziel="hubSongs" aria-label="Song-Rätsel" style="--p1:#4ade80;--p2:#3b0764"><span>💿</span></button>
+      <button class="bu-ding bu-planet" type="button" data-ziel="hubRiff" aria-label="Riffbau" style="--p1:#f9a8d4;--p2:#831843"><span>🪸</span></button>
+    </div>
+    <div class="install-karte" id="installKarte" hidden>
+      <img src="icons/apple-touch-icon.png?v=3" alt="" class="install-icon">
+      <div class="install-text"><b>Als App installieren</b><span id="installSchritte"></span></div>
+      <button class="install-los" id="installLos" type="button" hidden>Installieren</button>
+      <button class="install-zu" id="installZu" type="button" aria-label="Hinweis schließen">×</button>
+    </div>
+
+    <div class="spalten hub-spalten">
+    <div class="spalte spalte-a">
+    <button class="hub-verlauf" id="hubVerlauf" type="button">
+      <span class="hv-serie" id="hubVerlaufSerie">🔥 0</span>
+      <span class="hv-text"><b>Dein Verlauf</b><small id="hubVerlaufText"></small></span>
+      <span class="hv-woche" id="hubVerlaufWoche" aria-hidden="true"></span>
+    </button>
+    <div class="hub-liste">
+    <button class="hub-game hub-quizzeile" id="hubQuizzes" type="button" data-regen="🐋,🦈,🐾,🏎️,🌊">
+      <span class="hg-av hg-av-quiz" aria-hidden="true"><span class="hg-in" id="hubQuizStapel"></span></span>
+      <span class="hg-text"><span class="hg-titel">Quizzes</span><span class="hg-sub">Wale, Haie, Porsche und Dackel erkennen.</span><span class="hg-best" id="hubQuizStand"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game" id="hubFarben" type="button" data-regen="🎨,🖌️,🌈,💧">
+      <span class="hg-av hg-av-farben" aria-hidden="true"><span class="hg-in"><span class="farb-logo"><span></span><span></span><span></span><span></span><span></span></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Farb-Gedächtnis</span><span class="hg-sub">Farbe merken. Nachmischen. Mitte finden.</span><span class="hg-best" id="hubFarbBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-cello" id="hubCello" type="button" data-regen="🎵,🎶,🎻">
+      <span class="hg-av hg-av-cello" aria-hidden="true"><span class="hg-in"><span class="hc-cello-icon inst-wechsel"><i>🎻</i><i>🎹</i><i>🎸</i><i>🪕</i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Noten &amp; Griffe</span><span class="hg-sub">Cello, Klavier, Gitarre und Ukulele.</span><span class="hg-best" id="hubCelloBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-fitness" id="hubFitness" type="button" data-regen="💪,🏋️,🏃,🏆">
+      <span class="hg-av hg-av-fitness" aria-hidden="true"><span class="hg-in"><span class="fi-mini-av">💪</span></span></span>
+      <span class="hg-text"><span class="hg-titel">Fitness</span><span class="hg-sub">Kraft & Ausdauer schnell eintragen – Bestwerte, Kurven, Pausen-Timer.</span><span class="hg-best" id="hubFitnessBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-scan" id="hubScan" type="button" data-regen="🔎,🛒,🧴,🥫">
+      <span class="hg-av hg-av-scan" aria-hidden="true"><span class="hg-in"><span class="sc-mini"><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Zutaten-Check</span><span class="hg-sub">Kalorien, Eiweiß &amp; Co. tracken – Barcode scannen, Ampel für Lebensmittel &amp; Kosmetik.</span><span class="hg-best" id="hubScanBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-stimmen" id="hubStimmen" type="button" data-regen="🎚️,🎸,🎻,🪕">
+      <span class="hg-av hg-av-stimmen" aria-hidden="true"><span class="hg-in"><span class="sg-mini"><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Stimmgerät</span><span class="hg-sub">Gitarre, Bass, Ukulele, Geige, Bratsche, Cello – oder chromatisch.</span><span class="hg-best" id="hubStimmenBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-toene" id="hubToene" type="button" data-regen="🎧,🔊,🎵,〰️">
+      <span class="hg-av hg-av-toene" aria-hidden="true"><span class="hg-in"><span class="hc-toene-icon"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Ton-Gedächtnis</span><span class="hg-sub">Ton hören. Nachbauen. Wie gut ist dein Gehör?</span><span class="hg-best" id="hubToeneBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-songs" id="hubSongs" type="button" data-regen="🎵,💿,📼,🎤">
+      <span class="hg-av hg-av-songs" aria-hidden="true"><span class="hg-in"><span class="sr-mini"><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Song-Rätsel</span><span class="hg-sub">80er Pop, Rock, Hits: Song erkennen, Jahr schätzen – direkt im Browser.</span><span class="hg-best" id="hubSongsBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-studio" id="hubStudio" type="button" data-regen="🎛️,🥁,🎹,🔢">
+      <span class="hg-av hg-av-studio" aria-hidden="true"><span class="hg-in"><span class="st-mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Beat-Studio</span><span class="hg-sub">Eigene Beats bauen: Rhythmus, Melodie, Song, Mixer, Binär-Generator – und als WAV speichern.</span><span class="hg-best" id="hubStudioBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-beat" id="hubBeat" type="button" data-regen="🎸,🎵,⭐,🥁">
+      <span class="hg-av hg-av-beat" aria-hidden="true"><span class="hg-in"><span class="bb-mini"><i></i><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Beat-Bahnen</span><span class="hg-sub">Noten fallen, du tippst im Takt – eigene Songs oder deine MP3s.</span><span class="hg-best" id="hubBeatBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-takt" id="hubTakt" type="button" data-regen="⏱️,🥁,🎼,⏳">
+      <span class="hg-av hg-av-takt" aria-hidden="true"><span class="hg-in"><svg class="metronom" viewBox="0 0 60 80" aria-hidden="true"><path class="mt-korpus" d="M17 76h26l-7-66q-6-6-12 0z"/><path class="mt-skala" d="M24 22h12M23 30h14M22 38h16M21 46h18"/><g class="mt-arm"><path d="M30 66V12"/><rect x="25" y="24" width="10" height="7" rx="2"/></g><path class="mt-fuss" d="M14 76h32"/></svg></span></span>
+      <span class="hg-text"><span class="hg-titel">Takt-Gefühl</span><span class="hg-sub">Zeit, Tempo &amp; Taktart – wie gut ist deine innere Uhr?</span><span class="hg-best" id="hubTaktBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-punkte" id="hubPunkte" type="button" data-regen="📈,📊,🔵,🎯">
+      <span class="hg-av hg-av-punkte" aria-hidden="true"><span class="hg-in"><svg class="pw-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="pm-linie" d="M8 50L52 10"/><circle cx="10" cy="46" r="3.2" style="--k:0"/><circle cx="16" cy="40" r="3.2" style="--k:1"/><circle cx="19" cy="47" r="3.2" style="--k:2"/><circle cx="24" cy="34" r="3.2" style="--k:3"/><circle cx="28" cy="38" r="3.2" style="--k:4"/><circle cx="33" cy="27" r="3.2" style="--k:5"/><circle cx="36" cy="32" r="3.2" style="--k:6"/><circle cx="41" cy="22" r="3.2" style="--k:7"/><circle cx="45" cy="25" r="3.2" style="--k:8"/><circle cx="50" cy="13" r="3.2" style="--k:9"/></svg></span></span>
+      <span class="hg-text"><span class="hg-titel">Punktwolke</span><span class="hg-sub">Wie stark hängt das zusammen? Schätzen und sortieren.</span><span class="hg-best" id="hubPunkteBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-augen" id="hubAugen" type="button" data-regen="📐,📏,🦅,👁️">
+      <span class="hg-av hg-av-augen" aria-hidden="true"><span class="hg-in"><svg class="ag-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="am-basis" d="M10 48H52"/><g class="am-arm"><path d="M10 48L46 14"/><circle cx="46" cy="14" r="4"/></g><path class="am-bogen" d="M26 48A16 16 0 0 0 21.7 37.1"/><circle class="am-ecke" cx="10" cy="48" r="3"/></svg></span></span>
+      <span class="hg-text"><span class="hg-titel">Augenmaß</span><span class="hg-sub">Halbieren, Winkel, Längen – und echte Sinnestäuschungen.</span><span class="hg-best" id="hubAugenBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-karte" id="hubKarte" type="button" data-regen="🧭,🌍,📍,✈️">
+      <span class="hg-av hg-av-karte" aria-hidden="true"><span class="hg-in"><svg class="kt-mini" viewBox="0 0 60 60" aria-hidden="true"><circle class="km-rand" cx="30" cy="30" r="25"/><path class="km-striche" d="M30 7v6M30 47v6M7 30h6M47 30h6"/><g class="km-nadel"><path class="km-nord" d="M30 10l6 20h-12z"/><path class="km-sued" d="M30 50l-6-20h12z"/></g><circle cx="30" cy="30" r="3" class="km-mitte"/></svg></span></span>
+      <span class="hg-text"><span class="hg-titel">Karten-Gefühl</span><span class="hg-sub">Wo liegt das? Deutschland, Europa und die Welt.</span><span class="hg-best" id="hubKarteBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-tiefgang" id="hubTiefgang" type="button" data-regen="🤿,🫧,🐚,💰">
+      <span class="hg-av hg-av-tiefgang" aria-hidden="true"><span class="hg-in"><span class="tg-mini"><i></i><i></i><i></i><b>🤿</b></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Tiefgang</span><span class="hg-sub">Tauch tiefer für Schätze – aber zweimal dieselbe Gefahr, und alles ist weg.</span><span class="hg-best" id="hubTiefgangBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-funktion" id="hubFunktion" type="button" data-regen="📈,🕵️,✏️,🔍">
+      <span class="hg-av hg-av-funktion" aria-hidden="true"><span class="hg-in"><svg class="fd-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="fm-achse" d="M4 40H56M30 56V4"/><path class="fm-kurve" d="M10 8Q30 72 50 8"/><circle class="fm-punkt" cx="30" cy="40" r="3.5"/></svg></span></span>
+      <span class="hg-text"><span class="hg-titel">Funktions-Detektiv</span><span class="hg-sub">Kurven lesen: Gerade, Parabel, Welle. Formel finden oder nachbauen.</span><span class="hg-best" id="hubFunktionBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-zufall" id="hubZufall" type="button" data-regen="🎲,🍀,🪙,🃏">
+      <span class="hg-av hg-av-zufall" aria-hidden="true"><span class="hg-in"><span class="zf-mini" aria-hidden="true"><i>⚄</i><i>⚁</i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Zufalls-Gefühl</span><span class="hg-sub">Wie wahrscheinlich ist das? Schätzen – dann 1000-mal live würfeln.</span><span class="hg-best" id="hubZufallBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-zoom" id="hubZoom" type="button" data-regen="🔭,⚛️,🌌,✨">
+      <span class="hg-av hg-av-zoom" aria-hidden="true"><span class="hg-in"><span class="zm-mini"><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Zoom durchs Universum</span><span class="hg-sub">×10 heraus, ÷10 hinein – vom Proton bis zum Rand des Universums.</span><span class="hg-best" id="hubZoomBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-wunder" id="hubWunder" type="button" data-regen="🐜,🐉,🔢,📈">
+      <span class="hg-av hg-av-wunder" aria-hidden="true"><span class="hg-in"><span class="wu-mini">🌀</span></span></span>
+      <span class="hg-text"><span class="hg-titel">Wundermuster</span><span class="hg-sub">Ameise, Binär-Beat, Drachen-Streifen, 27 → 1: winzige Regeln, irre Muster.</span><span class="hg-best" id="hubWunderBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-glas" id="hubGlas" type="button" data-regen="🦠,🧫,🕐,✨">
+      <span class="hg-av hg-av-glas" aria-hidden="true"><span class="hg-in"><span class="gl-mini"><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Verdopplung im Glas</span><span class="hg-sub">Um 12 Uhr ist das Glas voll. Wann war es halb voll?</span><span class="hg-best" id="hubGlasBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-falten" id="hubFalten" type="button" data-regen="📄,🚀,🔴,✨">
+      <span class="hg-av hg-av-falten" aria-hidden="true"><span class="hg-in"><span class="ft-mini"><i></i><i></i><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Falten bis zum Mars</span><span class="hg-sub">Wie oft muss man ein Blatt Papier falten? Schätzen, falten, staunen – mit Happy-Hardcore-Beat.</span><span class="hg-best" id="hubFaltenBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-zahlen" id="hubZahlen" type="button" data-regen="📊,🎂,🌍,✨">
+      <span class="hg-av hg-av-zahlen" aria-hidden="true"><span class="hg-in"><span class="zl-mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Du in Zahlen</span><span class="hg-sub">Dein Leben in Wochen, Herzschlägen, Lichtjahren – mit echten Daten.</span><span class="hg-best">Kein Spiel, sondern Staunen</span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-rage" id="hubRage" type="button" data-regen="😡,🤬,📣,🔥">
+      <span class="hg-av hg-av-rage" aria-hidden="true"><span class="hg-in"><span class="rb-mini">😡</span></span></span>
+      <span class="hg-text"><span class="hg-titel">Ragebait-Fabrik</span><span class="hg-sub">Satire: Bau den perfekten Wut-Post – und lerne die Tricks dahinter erkennen.</span><span class="hg-best" id="hubRageBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-dopamin" id="hubDopamin" type="button" data-regen="🧠,💥,🎰,🔥">
+      <span class="hg-av hg-av-dopamin" aria-hidden="true"><span class="hg-in"><span class="dp-mini">🎰<i>+100</i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Dopamin-Maschine</span><span class="hg-sub">Drei Spiele gleichzeitig plus Parkour-Video. Und am Ende die Wahrheit.</span><span class="hg-best" id="hubDopaminBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-tierleben" id="hubTierleben" type="button" data-regen="🐾,🐔,🐋,🦧">
+      <span class="hg-av hg-av-tierleben" aria-hidden="true"><span class="hg-in"><span class="tl-mini"><i>🐔</i><i>🐖</i><i>🐋</i><i>🦧</i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Ein Tierleben</span><span class="hg-sub">Geboren als Nutztier – oder als eine der letzten ihrer Art. Mit echten Zahlen.</span><span class="hg-best" id="hubTierlebenBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-slo" id="hubSlo" type="button" data-regen="🐉,🇸🇮,🏔️,💬">
+      <span class="hg-av hg-av-slo" aria-hidden="true"><span class="hg-in"><span class="slo-mini">🐉<i>Živjo!</i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Slowenisch</span><span class="hg-sub">Mit Zmajček, dem kleinen Drachen, durch Slowenien: Wörter, Sätze, Aussprache.</span><span class="hg-best" id="hubSloBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-piranha" id="hubPiranha" type="button" data-regen="🐟,🍒,🌿,💧">
+      <span class="hg-av hg-av-piranha" aria-hidden="true"><span class="hg-in"><span class="pr-mini"><i></i><i></i><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Piranha-Schwarm</span><span class="hg-sub">Lass die Schwärme in der richtigen Reihenfolge los – jeder will zu seiner Frucht.</span><span class="hg-best" id="hubPiranhaBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-riff" id="hubRiff" type="button" data-regen="🎲,🪸,🐠,🟥">
+      <span class="hg-av hg-av-riff" aria-hidden="true"><span class="hg-in"><span class="rf-mini"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Riffbau</span><span class="hg-sub">Würfeln, drehen, bauen – ein buntes Korallenriff für satte Fische.</span><span class="hg-best" id="hubRiffBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-klassiker" id="hubKlassiker" type="button" data-regen="🂡,🔢,💣,🔴">
+      <span class="hg-av hg-av-klassiker" aria-hidden="true"><span class="hg-in"><span class="kl-mini-icon"><i>🂡</i><i>🔢</i><i>💣</i><i>🔴</i><i>🟫</i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">Klassiker</span><span class="hg-sub">Solitär, Sudoku, Darts, Planeten-Fusion und mehr.</span><span class="hg-best" id="hubKlassikerBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-krimi" id="hubKrimi" type="button" data-regen="🔎,🕵️,🗝️,🕯️">
+      <span class="hg-av hg-av-krimi" aria-hidden="true"><span class="hg-in"><img class="hc-krimi-icon" src="img/krimi/lupe.webp" alt=""></span></span>
+      <span class="hg-text"><span class="hg-titel">Wer war’s?</span><span class="hg-sub">Ermittlungsakte, Murdoku, Queens &amp; mehr</span><span class="hg-best" id="hubKrimiBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    </div>
+    </div>
+    <div class="spalte spalte-b">
+    <div class="hub-familie" id="hubFamilie" hidden>
+      <h2 class="hub-h"><span>🏆</span> Bestenliste</h2>
+      <ul class="familie-liste" id="familieListe"></ul>
+    </div>
+    <div class="hub-mehr">Bald mehr Games ✨</div>
+    </div>
+    </div>
+    <a class="hub-ds" href="datenschutz.html">Datenschutz</a>
+  </section>
+
+  <section class="screen" id="screen-quizze">
+    <div class="hub-kopf">
+      <div class="hub-zeile"><button class="qz-zurueck" id="quizzeZurueck" type="button">‹ Spiele</button></div>
+      <h1 class="hub-titel">Quizzes</h1>
+      <div class="hub-gruss">Welche Welt heute? 🌍</div>
+    </div>
+    <div class="hub-quiz" id="hubQuiz"></div>
+  </section>
+
+  <section class="screen" id="screen-start">
+    <div class="welt-switch" role="tablist" aria-label="Welt wählen">
+      <span class="welt-pill" id="weltPill"></span>
+      <button data-welt="wale" type="button"><span>🐋</span>Wale</button>
+      <button data-welt="haie" type="button"><span>🦈</span>Haie</button>
+      <button data-welt="beide" type="button"><span>🌊</span>Beide</button>
+      <button data-welt="porsche" type="button"><span>🏎️</span>Porsche</button>
+      <button data-welt="dackel" type="button"><span>🐕</span>Dackel</button>
+    </div>
+    <div class="spalten start-spalten">
+    <div class="spalte spalte-a">
+    <div class="hero">
+      <img class="logo" id="heroLogo" src="icons/icon.svg" alt="">
+      <div class="hero-emoji" id="heroEmoji" hidden>🏎️</div>
+      <span class="ig-ring" id="heroAvatarRing"><img id="heroAvatar" alt="Gretchen" hidden></span>
+      <h2 id="heroTitle">Wal-Quiz</h2>
+      <p id="heroText">Erkennst du die Wale an ihren Fotos? Übe in Ruhe und mach dann deine Abzeichen – vom Seepferdchen bis Gold.</p>
+    </div>
+    <div class="gretchen-start" id="gretchenStart" hidden>
+      <div class="g-card">
+        <div class="g-title">Das ist Gretchen 💕</div>
+        <ul class="g-chips" id="gretchenSteckbrief"></ul>
+      </div>
+      <div class="g-feed" id="gretchenFeed"></div>
+      <a class="g-insta" id="gretchenInsta" target="_blank" rel="noopener">📸 Gretchen auf Instagram folgen · @chrissi_und_gretchen</a>
+    </div>
+    <div class="challenge" id="challengeBox" hidden>
+      <p id="challengeText"></p>
+      <div class="row"><button class="btn" id="challengeGo">Annehmen 💪</button><button class="btn secondary" id="challengeNo">Später</button></div>
+    </div>
+    </div>
+    <div class="spalte spalte-b">
+    <div class="menu">
+      <button class="menu-btn" data-go="pick-practice">
+        <span class="emoji" id="practiceEmoji">🐋</span>
+        <span class="txt"><strong>Üben</strong><span class="sub" id="practiceSub">2 Fotos ansehen, aus 6 Antworten wählen – was du falsch hast, kommt öfter</span></span>
+      </button>
+      <button class="menu-btn primary" data-go="pick-test">
+        <span class="emoji">🎖️</span>
+        <span class="txt"><strong>Abzeichen-Test</strong><span class="sub" id="testSub">10 Wale, Namen selbst eintippen</span></span>
+      </button>
+      <button class="menu-btn" data-go="sound" id="soundMenu">
+        <span class="emoji">🔊</span>
+        <span class="txt"><strong>Wer ruft da?</strong><span class="sub">Wale an ihren Rufen und Gesängen erkennen</span></span>
+      </button>
+      <button class="menu-btn" data-go="lexikon">
+        <span class="emoji">📖</span>
+        <span class="txt"><strong>Lexikon</strong><span class="sub" id="lexSub"></span></span>
+      </button>
+    </div>
+    <div class="learn"><div class="muted" id="learnText"></div><div class="bar"><div id="learnBar"></div></div></div>
+    <div class="badges" id="badges"></div>
+    </div>
+    </div>
+    <button class="melde-link" id="meldeAllgemein" type="button">🐞 Fehler oder Idee melden</button>
+  </section>
+
+  <!-- Stufe wählen -->
+  <section class="screen" id="screen-pick">
+    <div class="pick-title" id="pickTitle"></div>
+    <div class="menu" id="pickList" style="margin-top:0"></div>
+  </section>
+
+  <!-- Quiz (Üben und Test) -->
+  <section class="screen" id="screen-quiz">
+    <div class="progress"><span id="qCounter"></span><span id="qScore"></span></div>
+    <div class="bar"><div id="qBar"></div></div>
+    <div class="spalten quiz-spalten">
+    <div class="spalte spalte-a">
+    <div class="gretchen-box" id="gretchenBox" hidden>
+      <span class="ig-ring small"><img id="gretchenImg" alt="Gretchen"></span>
+      <div class="bubble" id="gretchenBubble"></div>
+    </div>
+    <div class="sound-box" id="soundBox" hidden>
+      <button class="play" id="playBtn" type="button" aria-label="Abspielen">▶</button>
+      <div class="muted" id="soundHint"></div>
+    </div>
+    <div id="galleryArea">
+    <div class="gallery-wrap">
+      <div class="gallery" id="gallery"></div>
+      <button class="gal-arrow prev" id="galPrev" aria-label="Vorheriges Foto">‹</button>
+      <button class="gal-arrow next" id="galNext" aria-label="Nächstes Foto">›</button>
+      <div class="gal-msg" id="galMsg" hidden></div>
+    </div>
+    <div class="dots" id="dots"></div>
+    </div>
+    <div class="credit" id="qCredit"></div>
+
+    </div>
+    <div class="spalte spalte-b">
+    <div class="q-row">
+      <div class="question" id="questionText">Welcher Wal ist das?</div>
+      <button class="tip-btn" id="tipBtn" type="button">💡 Tipp</button>
+    </div>
+    <ul class="tips" id="tips"></ul>
+
+    <div class="choices" id="choices"></div>
+
+    <form class="answer-form" id="answerForm" autocomplete="off">
+      <input id="answerInput" type="text" placeholder="Name der Walart" autocapitalize="words" autocorrect="off" spellcheck="false" enterkeyhint="done">
+      <button class="btn" type="submit">OK</button>
+    </form>
+
+    <div class="feedback" id="feedback">
+      <div class="title" id="fbTitle"></div>
+      <div class="sub" id="fbSub"></div>
+      <dl class="facts" id="fbFacts"></dl>
+      <div id="fbExtra"></div>
+    </div>
+    <div class="next-row" id="nextRow"><button class="btn" id="nextBtn">Weiter</button></div>
+    </div>
+    </div>
+  </section>
+
+  <!-- Ergebnis -->
+  <section class="screen" id="screen-result">
+    <div class="result">
+      <div class="spalten result-spalten">
+      <div class="spalte spalte-a">
+      <div id="resultHead"></div>
+      <div class="big" id="resultScore"></div>
+      <div class="vs" id="resultVs" hidden></div>
+      <div id="resultCert"></div>
+      <div class="gretchen-result" id="gretchenResult" hidden>
+        <img id="gretchenResultImg" alt="Gretchen">
+        <div class="bubble" id="gretchenResultText"></div>
+        <button class="btn" id="storyBtn" type="button">📸 Story-Bild für Instagram</button>
+        <div class="msg" id="storyMsg"></div>
+      </div>
+      </div>
+      <div class="spalte spalte-b">
+      <div class="share">
+        <label for="nameInput" id="shareLabel">Fordere Freunde mit denselben Walen heraus:</label>
+        <div class="row">
+          <input id="nameInput" type="text" placeholder="Dein Name" maxlength="30" autocomplete="nickname">
+          <button class="btn" id="shareBtn" type="button">📤 Teilen</button>
+        </div>
+        <div class="msg" id="shareMsg"></div>
+      </div>
+      <ul class="review" id="review"></ul>
+      </div>
+      </div>
+      <div class="result-actions">
+        <button class="btn" id="againBtn">Nochmal versuchen</button>
+        <button class="btn secondary" id="practiceBtn">Diese Stufe üben</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Lexikon -->
+  <section class="screen" id="screen-lexikon">
+    <div class="lex-tools">
+      <input id="lexSearch" type="search" placeholder="Suchen …" autocomplete="off">
+      <select id="lexGroup"></select>
+    </div>
+    <div class="count" id="lexCount"></div>
+    <ul class="lex" id="lexList"></ul>
+    <button class="btn secondary pruef-open" id="pruefOpen" type="button">🔎 Fotos prüfen</button>
+  </section>
+
+  <!-- Fotos prüfen -->
+  <section class="screen" id="screen-pruefen">
+    <p class="muted pruef-intro">Passt das Foto zur Art? ✓ = passt, ✗ = falsche Art, Zeichnung, totes Tier o. Ä. – es wird sofort durch das nächste ersetzt.</p>
+    <div class="pruef-bar">
+      <span id="pruefCount"></span>
+      <label><input type="checkbox" id="pruefOffen" checked> nur ungeprüfte</label>
+    </div>
+    <ul class="pruef" id="pruefList"></ul>
+    <div class="share">
+      <label>Aussortierte Fotos (<span id="sperrCount">0</span>) – kopieren und an Claude schicken, dann werden sie fest gesperrt:</label>
+      <div class="row"><button class="btn" id="sperrCopy" type="button">📋 Liste kopieren</button><button class="btn secondary" id="sperrMelden" type="button">📮 Auf GitHub melden</button></div>
+      <div class="msg" id="sperrMsg"></div>
+    </div>
+  </section>
+
+  <!-- Farb-Gedächtnis -->
+  <section class="screen" id="screen-farben">
+    <div class="farb-buehne" id="farbBuehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="farbZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="farbRunde"></span>
+      </div>
+
+      <div class="farb-teil" id="farb-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="farb-logo" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+        <h2>Farb-Gedächtnis</h2>
+        <p id="farbIntroText">Eine Farbe blitzt kurz auf. Dann mischst du sie aus dem Kopf nach. Fünf Farben, bis zu 50 Punkte.</p>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="farb-challenge" id="farbChallenge" hidden></div>
+        <div class="farb-wahl" id="farbArtWahl">
+          <span>Spiel:</span><button type="button" data-art="merken">🧠 Merken</button><button type="button" data-art="mitte">🎯 Mitte finden</button>
+        </div>
+        <div class="farb-wahl" id="farbReglerWahl">
+          <span>Mischen:</span><button type="button" data-regler="rgb">Rot · Grün · Blau</button><button type="button" data-regler="hsb">Farbton · Sättigung · Helligkeit</button><button type="button" data-regler="topf">🪣 Farbtopf</button>
+        </div>
+        <div class="farb-stufen" id="farbStufen">
+          <button type="button" data-stufe="leicht">Leicht<small>5 Sek.</small></button>
+          <button type="button" data-stufe="mittel">Mittel<small>3 Sek.</small></button>
+          <button type="button" data-stufe="profi">Profi<small>1,5 Sek.</small></button>
+        </div>
+        <button class="btn farb-gross" id="farbLos" type="button">Los geht’s 🎨</button>
+        <button class="btn secondary" id="farbTagBtn" type="button">📅 Tagesfarben</button>
+        <div class="muted farb-best" id="farbBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="farb-teil farb-mitte" id="farb-zeigen" hidden>
+        <div class="farb-merk" id="farbMerkText">Merk dir diese Farbe</div>
+        <div class="farb-countdown" id="farbCountdown"></div>
+      </div>
+
+      <div class="farb-teil" id="farb-mischen" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="farb-mitte-leiste" id="farbMitteLeiste" hidden><span id="farbMitteA"></span><b>← Mitte →</b><span id="farbMitteB"></span></div>
+        <div class="farb-vorschau" id="farbVorschau"><span>Deine Farbe</span></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="farb-reglergruppe" id="farbReglerRgb">
+          <label class="farb-regler rgb-r"><span>Rot <b id="farbWert-r"></b></span><input type="range" id="farbRegler-r" min="0" max="255" step="1"></label>
+          <label class="farb-regler rgb-g"><span>Grün <b id="farbWert-g"></b></span><input type="range" id="farbRegler-g" min="0" max="255" step="1"></label>
+          <label class="farb-regler rgb-b"><span>Blau <b id="farbWert-b"></b></span><input type="range" id="farbRegler-b" min="0" max="255" step="1"></label>
+        </div>
+        <div class="farb-reglergruppe" id="farbReglerHsb" hidden>
+          <label class="farb-regler">Farbton<input type="range" id="farbRegler-h" min="0" max="360" step="1"></label>
+          <label class="farb-regler">Sättigung<input type="range" id="farbRegler-s" min="0" max="100" step="1"></label>
+          <label class="farb-regler">Helligkeit<input type="range" id="farbRegler-v" min="0" max="100" step="1"></label>
+        </div>
+        <div class="farb-topf" id="farbTopf" hidden>
+          <div class="topf-hinweis" id="farbTopfHinweis"></div>
+          <div class="topf-tuben" id="farbTuben"></div>
+          <div class="topf-knoepfe"><button type="button" id="topfRueck">Rückgängig</button><button type="button" id="topfLeer">Ausleeren</button></div>
+        </div>
+        <button class="btn farb-gross" id="farbFertig" type="button">Fertig ✓</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="farb-teil" id="farb-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="farb-vergleich">
+          <div class="farb-halb" id="farbZiel"><span>Original<small id="farbZielHex"></small></span></div>
+          <div class="farb-halb" id="farbDein"><span>Deine<small id="farbDeinHex"></small></span></div>
+        </div>
+        <div class="farb-punkte" id="farbPunkte"></div>
+        <div class="farb-kommentar" id="farbKommentar"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="farb-mitte-erg" id="farbMitteErg" hidden>
+          <span><i id="farbMEa"></i><small>Farbe 1</small></span><span><i id="farbMEz"></i><small>Mitte</small></span><span><i id="farbMEd"></i><small>Deine</small></span><span><i id="farbMEb"></i><small>Farbe 2</small></span>
+        </div>
+        <div class="farb-analyse">
+          <div class="farb-rezept" id="farbRezept" hidden></div>
+          <div class="farb-tipp" id="farbTipp"></div>
+          <table class="farb-tabelle" id="farbRgb"></table>
+          <div id="farbHsbBlock"><div class="farb-abschnitt">So weit lagen deine Regler daneben</div>
+          <div class="farb-regler-chips" id="farbRegler"></div></div>
+          <div class="farb-deltae" id="farbDeltaE"></div>
+        </div>
+        <button class="btn farb-gross" id="farbWeiter" type="button">Nächste Farbe</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="farb-teil" id="farb-ende" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="farb-summe" id="farbSumme"></div>
+        <div class="farb-rekord" id="farbRekord"></div>
+        <div class="farb-rekord" id="farbVergleich" hidden></div>
+        </div>
+        <div class="spalte spalte-b">
+        <ul class="farb-liste" id="farbListe"></ul>
+        <button class="btn farb-gross" id="farbTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="farbTeilenMsg"></div>
+        <button class="btn secondary" id="farbNochmal" type="button">Nochmal spielen</button>
+        </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Cello-Noten -->
+  <section class="screen" id="screen-tiefgang">
+    <div class="tg-buehne" id="tgSpielBuehne">
+      <div class="tg-blasen" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i></div>
+      <div class="farb-kopf">
+        <button class="icon-btn" id="tgZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="tgRunde"></span>
+      </div>
+
+      <div class="tg-teil" id="tg-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="tg-logo" aria-hidden="true">🤿</div>
+        <h2 class="tg-titel">Tiefgang</h2>
+        <p class="tg-lead">Fünf Tauchgänge. Mit jedem Schritt tauchst du 10 m tiefer und findest etwas: Muscheln, Perlen, Schätze – oder Tiere fürs Logbuch. Je tiefer, desto wertvoller.</p>
+        <div class="tg-regeln">
+          <div><span>🪼🌀💢</span><p>Kommt <b>dieselbe Gefahr zweimal</b> im selben Tauchgang, ist die Beute dieses Tauchgangs verloren.</p></div>
+          <div><span>⬆️</span><p><b>Auftauchen</b> sichert alles, was du dabeihast. Die Luft reicht nur für ein paar Schritte.</p></div>
+          <div><span>🐋</span><p>Jede <b>neue Tierart</b> im Logbuch gibt +2 Punkte am Ende.</p></div>
+        </div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge tg-challenge" id="tgChallenge" hidden></div>
+        <div class="farb-stufen" id="tgStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn tg-gross-btn" id="tgLos" type="button">Abtauchen 🤿</button>
+        <button class="btn secondary" id="tgTagBtn" type="button"></button>
+        <div class="tg-best" id="tgBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="tg-teil" id="tg-spiel" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="tg-anzeige">
+          <div class="tg-tiefe"><b id="tgTiefe">0 m</b><small id="tgZone"></small></div>
+          <div class="tg-gefahren" id="tgGefahren"></div>
+        </div>
+        <div class="tg-luft" id="tgLuft" aria-label="Luft"></div>
+        <div class="tg-meldung" id="tgMeldung"></div>
+        <div class="tg-risiko" id="tgRisiko" hidden></div>
+        <div class="tg-knoepfe">
+          <button class="btn tg-gross-btn" id="tgTiefer" type="button">Tiefer ⬇️</button>
+          <button class="btn tg-auf-btn" id="tgAuf" type="button">Auftauchen ⬆️</button>
+          <button class="btn tg-gross-btn" id="tgWeiter" type="button" hidden>Nächster Tauchgang</button>
+        </div>
+        <div class="tg-stand"><span id="tgBeute"></span><span id="tgGesichert"></span></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="tg-karten" id="tgKarten"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="tg-teil" id="tg-ende" hidden>
+        <div class="farb-summe" id="tgSumme"></div>
+        <div class="farb-rekord" id="tgRekord"></div>
+        <div class="farb-rekord" id="tgVergleich" hidden></div>
+        <ul class="ton-liste tg-liste" id="tgListe"></ul>
+        <button class="btn tg-gross-btn" id="tgTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="tgTeilenMsg"></div>
+        <button class="btn secondary" id="tgNochmal" type="button">Nochmal tauchen</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-riff">
+    <div class="rf-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="rfZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="rfRunde"></span>
+      </div>
+
+      <div class="rf-teil" id="rf-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="rf-logo" aria-hidden="true">🎲🪸</div>
+        <h2 class="rf-titel">Riffbau</h2>
+        <p class="rf-lead">Zehn Runden, zwei Würfel: einer zeigt die Form, einer die Korallenfarbe. Dreh die Form und setz sie ins Riff – Felsen 🪨 und belegte Felder sind tabu.</p>
+        <div class="rf-regeln">
+          <div><span>🪸</span><p>Jede zusammenhängende <b>Farbfläche ab 3 Feldern</b> zählt so viele Punkte, wie sie groß ist.</p></div>
+          <div><span>➖</span><p>Jede <b>volle Reihe oder Spalte</b> +4.</p></div>
+          <div><span>🐠</span><p>Ein <b>Fisch</b>, dessen Feld mit seiner Lieblingsfarbe bedeckt ist, +4.</p></div>
+          <div><span>⭐</span><p>Beim <b>Joker</b> suchst du die Farbe selbst aus.</p></div>
+        </div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge rf-challenge" id="rfChallenge" hidden></div>
+        <button class="btn rf-gross-btn" id="rfLos" type="button">Riff bauen 🎲</button>
+        <button class="btn secondary" id="rfTagBtn" type="button"></button>
+        <div class="rf-best" id="rfBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="rf-teil" id="rf-spiel" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="rf-brett" id="rfBrett"></div>
+        <div class="rf-punkte"><b id="rfPunkte">0</b><small id="rfAufteilung"></small></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="rf-wuerfel">
+          <div class="rf-w"><div class="rf-w-form" id="rfWuerfelForm"></div><small id="rfWuerfelFormName"></small></div>
+          <div class="rf-w"><div class="rf-w-farbe" id="rfWuerfelFarbe"></div><small id="rfWuerfelFarbeName"></small></div>
+        </div>
+        <div class="rf-joker" id="rfJoker" hidden><button type="button" style="--f:#f43f5e" aria-label="Rot"></button><button type="button" style="--f:#facc15" aria-label="Gelb"></button><button type="button" style="--f:#38bdf8" aria-label="Blau"></button><button type="button" style="--f:#a78bfa" aria-label="Lila"></button><button type="button" style="--f:#4ade80" aria-label="Grün"></button></div>
+        <div class="rf-hinweis" id="rfHinweis"></div>
+        <div class="rf-knoepfe">
+          <button class="btn secondary" id="rfDrehen" type="button">↻ Drehen</button>
+          <button class="btn rf-gross-btn" id="rfSetzen" type="button" disabled>Setzen ✓</button>
+        </div>
+        <button class="btn secondary" id="rfPassen" type="button" hidden>Passen ➜</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="rf-teil rf-sheet" id="rf-ende" hidden>
+        <div class="rf-griff" aria-hidden="true"></div>
+        <div class="farb-summe" id="rfSumme"></div>
+        <div class="farb-rekord" id="rfRekord"></div>
+        <div class="farb-rekord" id="rfVergleich" hidden></div>
+        <ul class="rf-wertung" id="rfEndWertung"></ul>
+        <button class="btn rf-gross-btn" id="rfTeilen" type="button">📤 Riff teilen</button>
+        <div class="muted" id="rfTeilenMsg"></div>
+        <button class="btn secondary" id="rfNochmal" type="button">Neues Riff</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-verlauf">
+    <div class="vl-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="vlZurueck" type="button" aria-label="Zurück">←</button>
+        <span>📅 Verlauf</span>
+      </div>
+      <div class="spalten">
+      <div class="spalte spalte-a">
+      <h2 class="vl-titel">Dein Verlauf</h2>
+      <div class="vl-zahlen">
+        <div class="vl-zahl gross"><b id="vlSerie">0</b><small id="vlSerieText">Tage in Folge</small><span class="vl-flamme" aria-hidden="true">🔥</span></div>
+        <div class="vl-zahl"><b id="vlHeute">0</b><small>heute</small></div>
+        <div class="vl-zahl"><b id="vlGesamt">0</b><small>Runden gesamt</small></div>
+        <div class="vl-zahl"><b id="vlLaengste">0</b><small>längste Serie</small></div>
+      </div>
+      <div class="vl-karte">
+        <div class="vl-kopf"><b>Letzte 15 Wochen</b><small>Tippe einen Tag an</small></div>
+        <div class="vl-kal-rahmen"><div class="vl-wt" aria-hidden="true"><span>Mo</span><span></span><span>Mi</span><span></span><span>Fr</span><span></span><span>So</span></div><div class="vl-kalender" id="vlKalender"></div></div>
+      </div>
+      <div class="vl-karte">
+        <div class="vl-kopf"><b id="vlTagTitel">Heute</b></div>
+        <ul class="vl-tagliste" id="vlTagListe"></ul>
+      </div>
+      </div>
+      <div class="spalte spalte-b">
+      <div class="vl-karte">
+        <div class="vl-kopf"><b>Deine Spiele</b><small>Kurve = letzte 15 Ergebnisse</small></div>
+        <div class="vl-spiele" id="vlSpiele"></div>
+        <p class="vl-leer" id="vlLeer">Noch keine Runden – spiel ein Spiel zu Ende, dann erscheint es hier.</p>
+      </div>
+      </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-cello">
+    <div class="cello-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="celloZurueck" type="button" aria-label="Zurück">←</button>
+        <span>🎻 Cello-Noten</span>
+      </div>
+
+      <div class="cello-teil" id="cello-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="inst-wahl" id="celloInstWahl"></div>
+        <h2 class="cello-titel">Cello-Noten</h2>
+        <p class="cello-lead">Lerne die Lagen auf dem Griffbrett – mit den Fingern, die man dort wirklich nimmt. Jeder Ton erklingt.</p>
+        <div class="cello-stufen" id="celloStufen"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="cello-modi" id="celloModi">
+          <button type="button" data-modus="finden"><span>🎻</span><b>Griff finden</b><small>Note sehen – Saite und Finger in der Lage tippen</small></button>
+          <button type="button" data-modus="benennen"><span>🔎</span><b>Griff lesen</b><small>Finger auf dem Griffbrett sehen – Ton nennen</small></button>
+          <button type="button" data-modus="lesen"><span>📖</span><b>Noten lesen</b><small>Note sehen – Namen tippen</small></button>
+          <button type="button" data-modus="test"><span>🎖️</span><b>Abzeichen-Test</b><small>10 gemischte Aufgaben, 8 richtig = Abzeichen</small></button>
+        </div>
+        <div class="cello-optionen">
+          <div id="celloLagenZeile"><div class="cello-label">Lage</div><div class="cello-chips cello-lagen" id="celloLagen"></div></div>
+          <label class="cello-schalter"><input type="checkbox" id="celloVz"><span></span>Vorzeichen (♯ ♭)</label>
+          <label class="cello-schalter" id="celloSpeedZeile"><input type="checkbox" id="celloSpeed"><span></span>60-Sekunden-Runde</label>
+        </div>
+        <button class="btn cello-los" id="celloLos" type="button">Los geht’s 🎵</button>
+        <div class="cello-best" id="celloBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="cello-teil" id="cello-spiel" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="cello-leiste"><span id="celloModusTitel"></span><span id="celloStand"></span></div>
+        <div class="cello-zeit" id="celloZeitBox"><div class="cello-zeitbar"><i id="celloZeitBar"></i></div><span id="celloZeit"></span></div>
+        <div class="cello-papier"><div id="celloNoten"></div><div class="cello-schluesselname" id="celloSchluesselName"></div></div>
+        <div class="cello-feedback" id="celloFeedback"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="cello-lagename" id="celloLageName"></div>
+        <div class="cello-griff" id="celloGriff"></div>
+        <div class="cello-legende" id="celloLegende" hidden></div>
+        <div class="cello-tasten" id="celloTasten"></div>
+        <button class="btn secondary" id="celloStopp" type="button">Beenden</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="cello-teil" id="cello-ende" hidden>
+        <div class="cello-ergebnis" id="celloErgebnis"></div>
+        <div class="cello-best" id="celloErgebnisText"></div>
+        <button class="btn cello-los" id="celloNochmal" type="button">Nochmal 🎵</button>
+        <button class="btn secondary" id="celloMenue" type="button">Andere Übung</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-instrument">
+    <div class="cello-buehne inst-buehne" id="instBuehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="instZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="instKopf"></span>
+      </div>
+
+      <div class="cello-teil" id="inst-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="inst-wahl" id="instWahl"></div>
+        <h2 class="cello-titel" id="instTitel"></h2>
+        <p class="cello-lead" id="instLead"></p>
+        <div class="cello-stufen" id="instStufen"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="cello-modi" id="instModi">
+          <button type="button" data-modus="finden"><span></span><b></b><small></small></button>
+          <button type="button" data-modus="benennen"><span></span><b></b><small></small></button>
+          <button type="button" data-modus="lesen"><span></span><b></b><small></small></button>
+          <button type="button" data-modus="akkorde"><span></span><b></b><small></small></button>
+          <button type="button" data-modus="test"><span></span><b></b><small></small></button>
+        </div>
+        <div class="cello-optionen">
+          <label class="cello-schalter" id="instVzZeile"><input type="checkbox" id="instVz"><span></span>Vorzeichen (♯ ♭)</label>
+          <label class="cello-schalter" id="instSpeedZeile"><input type="checkbox" id="instSpeed"><span></span>60-Sekunden-Runde</label>
+        </div>
+        <button class="btn cello-los" id="instLos" type="button">Los geht’s 🎵</button>
+        <div class="cello-best" id="instBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="cello-teil" id="inst-spiel" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="cello-leiste"><span id="instModusTitel"></span><span id="instStand"></span></div>
+        <div class="cello-zeit" id="instZeitBox"><div class="cello-zeitbar"><i id="instZeitBar"></i></div><span id="instZeit"></span></div>
+        <div class="cello-papier"><div id="instNoten"></div><div class="cello-schluesselname" id="instSchluessel"></div></div>
+        <div class="cello-feedback" id="instFeedback"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="cello-griff inst-griff" id="instGriff"></div>
+        <div class="cello-legende" id="instLegende" hidden></div>
+        <div class="cello-tasten" id="instTasten"></div>
+        <button class="btn secondary" id="instStopp" type="button">Beenden</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="cello-teil" id="inst-ende" hidden>
+        <div class="cello-ergebnis" id="instErgebnis"></div>
+        <div class="cello-best" id="instErgebnisText"></div>
+        <button class="btn cello-los" id="instNochmal" type="button">Nochmal 🎵</button>
+        <button class="btn secondary" id="instMenue" type="button">Andere Übung</button>
+      </div>
+    </div>
+  </section>
+
+  <!-- Ton-Gedächtnis -->
+  <section class="screen" id="screen-krimi">
+    <div class="krimi-buehne" id="krimiBuehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="krimiZurueck" type="button" aria-label="Zurück">←</button>
+        <span class="k-kopf-rechts"><span id="krimiRunde"></span><button class="icon-btn k-hilfe-btn" id="krimiHilfeBtn" type="button" aria-label="Spielregeln" hidden>?</button></span>
+      </div>
+
+      <div class="krimi-teil" id="krimi-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="villa-szene" aria-hidden="true">
+          <div class="vs-himmel"><i class="vs-mond"></i></div>
+          <div class="vs-blitz"></div>
+          <div class="vs-haus">
+            <img src="img/krimi/villa.webp" alt="" decoding="async">
+            <i class="vs-glanz" style="left:35.2%;top:28.2%;--g:7%;--d:-1s"></i>
+            <i class="vs-glanz" style="left:56.8%;top:36.6%;--g:10%;--d:-3s"></i>
+            <i class="vs-glanz" style="left:23.2%;top:56.6%;--g:9%;--d:-2s"></i>
+            <i class="vs-glanz" style="left:35%;top:56.6%;--g:9%;--d:-4s"></i>
+            <i class="vs-glanz" style="left:84.5%;top:60%;--g:15%;--d:0s"></i>
+            <i class="vs-glanz" style="left:56.8%;top:66%;--g:9%;--d:-2.5s"></i>
+            <i class="vs-laterne" style="left:45.5%;top:62.5%"></i>
+            <i class="vs-laterne" style="left:69.4%;top:62.5%;--d:-.7s"></i>
+            <i class="vs-laterne klein" style="left:22.3%;top:78.6%;--d:-1.3s"></i>
+            <i class="vs-laterne klein" style="left:37.3%;top:82.6%;--d:-.4s"></i>
+            <i class="vs-laterne klein" style="left:79.7%;top:84.6%;--d:-1.9s"></i>
+            <span class="vs-fenster-aus" style="left:33.1%;top:24.5%;width:4.3%;height:8.4%"></span>
+            <span class="vs-erker" style="left:79.3%;top:46.5%;width:10.9%;height:27%"><i class="vs-gestalt"></i></span>
+            <i class="vs-funkeln" style="left:84.5%;top:56.6%"></i>
+            <i class="vs-gluehwurm" style="left:20%;top:84%"></i>
+            <i class="vs-gluehwurm" style="left:28%;top:88%;--d:-2s"></i>
+            <i class="vs-gluehwurm" style="left:88%;top:86%;--d:-3.5s"></i>
+            <i class="vs-gluehwurm" style="left:72%;top:80%;--d:-1.2s"></i>
+          </div>
+          <div class="vs-nebel"></div>
+          <div class="vs-nebel n2"></div>
+        </div>
+        <h2 class="krimi-titel">Wer war’s?</h2>
+        <p class="krimi-lead">Mord in der Villa! Die Krimi-Rätsel für echte Ermittler.</p>
+        </div>
+        <div class="spalte spalte-b">
+        <div id="krimiAkteKarte"></div>
+        <h3 class="krimi-h km-h">Einzeln üben</h3>
+        <div class="krimi-modi" id="krimiModi"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="krimi-teil" id="krimi-setup" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ks-kopf"><span class="ks-bild" id="ksBild"></span><div><h2 class="ks-titel" id="ksTitel"></h2><div class="ks-unter" id="ksUnter"></div><p class="krimi-lead" id="ksLead"></p></div></div>
+        <ol class="krimi-regeln" id="ksRegeln"></ol>
+        <details class="ks-anleitung"><summary>So gehst du vor</summary><ol id="ksAnleitung"></ol></details>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="farb-stufen" id="ksStufen"></div>
+        <button class="btn krimi-gross" id="ksLos" type="button"></button>
+        <button class="btn secondary" id="ksTag" type="button"></button>
+        <div class="krimi-best" id="ksBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="krimi-teil" id="krimi-spiel" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="krimi-sterne" id="krimiSterne"></div>
+        <div class="krimi-brett" id="krimiBrett"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="krimi-opfer" id="krimiOpfer"></div>
+        <div class="krimi-status" id="krimiStatus"></div>
+        <div class="krimi-tipp" id="krimiTippText" hidden></div>
+        <div class="krimi-modus">
+          <button type="button" id="krimiSetzen"><i class="mini" data-k-icon="alibi"></i> Setzen</button>
+          <button type="button" id="krimiKreuz"><i class="mini" data-k-icon="falsch"></i> Ausschließen</button>
+          <button type="button" id="krimiTippBtn"><i class="mini" data-k-icon="tipp"></i> Tipp</button>
+        </div>
+        <div class="krimi-personen" id="krimiPersonen"></div>
+        <h3 class="krimi-h"><i class="mini" data-k-icon="notizen"></i> Hinweise</h3>
+        <ul class="krimi-hinweise" id="krimiHinweise"></ul>
+        <button class="krimi-aufgeben" id="krimiAufgeben" type="button">Aufgeben und Lösung zeigen</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="krimi-teil" id="krimi-wachen" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="krimi-sterne" id="wachenSterne"></div>
+        <div class="krimi-brett wachen-brett" id="wachenBrett"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="krimi-status" id="wachenStatus"></div>
+        <div class="krimi-tipp" id="wachenTipp" hidden></div>
+        <div class="krimi-modus">
+          <button type="button" id="wachenRueck">Rückgängig</button>
+          <button type="button" id="wachenLeeren">Leeren</button>
+          <button type="button" id="wachenTippBtn"><i class="mini" data-k-icon="tipp"></i> Tipp</button>
+        </div>
+        <p class="krimi-regel-kurz">Je Reihe, Spalte und Raum eine Wache · nie berühren · Tippen: ✕ → Wache → leer</p>
+        </div>
+        </div>
+      </div>
+
+      <div class="krimi-teil" id="krimi-verhoer" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="vh-raum">
+          <div class="vh-lampe" aria-hidden="true"><i></i></div>
+          <div class="krimi-opfer" id="verhoerOpfer"></div>
+          <div class="vh-regel" id="verhoerRegel"></div>
+        </div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="vh-karten" id="verhoerKarten"></div>
+        <div class="krimi-tipp" id="verhoerTipp" hidden></div>
+        <div class="krimi-modus vh-modus">
+          <button type="button" id="verhoerTippBtn"><i class="mini" data-k-icon="tipp"></i> Tipp: jemanden ausschließen</button>
+        </div>
+        </div>
+        </div>
+      </div>
+
+      <div class="krimi-teil" id="krimi-alibi" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="krimi-sterne" id="alibiSterne"></div>
+        <div class="ar-rahmen"><table class="alibi-raster" id="alibiRaster"></table></div>
+        <div class="krimi-tipp" id="alibiTipp" hidden></div>
+        <div class="krimi-modus ar-modus">
+          <button type="button" id="alibiLeeren">Leeren</button>
+          <button type="button" id="alibiTippBtn"><i class="mini" data-k-icon="tipp"></i> Tipp</button>
+        </div>
+        </div>
+        <div class="spalte spalte-b">
+        <h3 class="krimi-h"><i class="mini" data-k-icon="notizen"></i> Hinweise</h3>
+        <ul class="krimi-hinweise ar-hinweise" id="alibiHinweise"></ul>
+        </div>
+        </div>
+      </div>
+
+      <div class="krimi-teil akte" id="krimi-akte" hidden></div>
+
+      <div class="krimi-hilfe" id="krimiHilfe" hidden>
+        <div class="kh-blatt" role="dialog" aria-labelledby="khTitel">
+          <div class="kh-kopf"><span class="kh-bild" id="khBild"></span><div><h3 id="khTitel"></h3><div class="ks-unter" id="khUnter"></div></div></div>
+          <h4>Die Regeln</h4>
+          <ol class="kh-liste" id="khRegeln"></ol>
+          <h4>So gehst du vor</h4>
+          <ol class="kh-liste kh-schritte" id="khAnleitung"></ol>
+          <button class="btn krimi-gross" id="khOk" type="button">Verstanden – los geht’s!</button>
+        </div>
+      </div>
+
+      <div class="krimi-teil krimi-mitte" id="krimi-ende" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="krimi-orden"><i data-k-icon="geloest"></i><span class="krimi-stempel" id="krimiStempelText">Fall gelöst</span></div>
+        <div class="krimi-taeter" id="krimiTaeter"></div>
+        <div class="krimi-war" id="krimiTaeterWar"></div>
+        <div class="krimi-name" id="krimiTaeterName"></div>
+        <div class="krimi-tatort" id="krimiTatort"></div>
+        <div class="krimi-zeit" id="krimiZeit"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="krimi-brett krimi-endbrett" id="krimiEndBrett" aria-hidden="true"></div>
+        <button class="btn krimi-gross" id="krimiNochmal" type="button">Nächstes Rätsel</button>
+        <button class="btn secondary" id="krimiMenue" type="button">Zum Menü</button>
+        </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-toene">
+    <div class="ton-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="tonZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="tonRunde"></span>
+      </div>
+
+      <div class="ton-teil" id="ton-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-logo" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
+        <h2 class="ton-titel">Ton-Gedächtnis</h2>
+        <p class="ton-lead">Ein Ton erklingt kurz. Danach suchst du ihn mit dem Schieber – solange du ihn festhältst, hörst du deinen Ton. Fünf Töne, bis zu 50 Punkte.</p>
+        <p class="ton-hinweis">🔔 iPhone: Stumm-Schalter ausschalten und Lautstärke hoch.</p>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge" id="tonChallenge" hidden></div>
+        <div class="farb-stufen ton-stufen" id="tonStufen">
+          <button type="button" data-stufe="leicht">Leicht<small>3 Sek. · 2× hören</small></button>
+          <button type="button" data-stufe="mittel">Mittel<small>2 Sek.</small></button>
+          <button type="button" data-stufe="profi">Profi<small>1 Sek.</small></button>
+        </div>
+        <button class="btn ton-gross" id="tonLos" type="button">Los geht’s 🎧</button>
+        <button class="btn secondary" id="tonTagBtn" type="button">📅 Tagestöne</button>
+        <div class="ton-best" id="tonBest"></div>
+        <button type="button" class="btn secondary sr-verweis" data-zu-songs>🎵 Song-Rätsel – jetzt als eigene App →</button>
+        <div class="gb-einstieg">
+          <h3>🎼 Gehörbildung</h3>
+          <div class="gb-einstieg-knoepfe">
+            <button type="button" data-gb="intervall"><span>↕️</span>Intervalle<small>relatives Hören</small></button>
+            <button type="button" data-gb="benennen"><span>🏷️</span>Töne benennen<small>Welcher Ton ist das?</small></button>
+            <button type="button" data-gb="einstellen"><span>🎯</span>Ton einstellen<small>Stell ein C ein</small></button>
+          </div>
+        </div>
+        </div>
+        </div>
+      </div>
+
+      <div class="ton-teil" id="ton-gb" hidden></div>
+
+      <div class="ton-teil ton-mitte" id="ton-hoeren" hidden>
+        <div class="ton-merk">Hör gut zu …</div>
+        <div class="ton-welle" id="tonWelle"></div>
+        <div class="ton-countdown" id="tonCountdown"></div>
+        <button class="btn secondary" id="tonNochmal" type="button" hidden>🔁 Nochmal anhören</button>
+        <button class="btn ton-gross" id="tonWeiterHoeren" type="button" hidden>Jetzt nachbauen →</button>
+      </div>
+
+      <div class="ton-teil" id="ton-treffen" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-merk">Finde den Ton</div>
+        <div class="ton-welle klein" id="tonWelleMix"></div>
+        <div class="ton-hz" id="tonMixHz"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <input class="ton-regler" type="range" id="tonRegler" min="0" max="1000" step="1" aria-label="Tonhöhe">
+        <div class="ton-skala"><span>tief</span><span>hoch</span></div>
+        <div class="ton-tipp-klein">Schieber festhalten = Ton hören</div>
+        <button class="btn secondary" id="tonProbe" type="button">🔊 Meinen Ton kurz anhören</button>
+        <button class="btn ton-gross" id="tonFertig" type="button">Fertig ✓</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="ton-teil" id="ton-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-punkte" id="tonPunkte"></div>
+        <div class="ton-kommentar" id="tonKommentar"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-analyse">
+          <div class="farb-tipp" id="tonTipp"></div>
+          <div class="ton-skala-bild"><i class="tz" id="tonSkalaZiel"></i><i class="tm" id="tonSkalaMix"></i></div>
+          <div class="ton-legende"><span>◆ Original</span><span>● Deiner</span></div>
+          <table class="farb-tabelle ton-tabelle" id="tonTabelle"></table>
+          <div class="ton-hoer">
+            <button type="button" id="tonHoerZiel">▶ Original</button>
+            <button type="button" id="tonHoerMix">▶ Deiner</button>
+            <button type="button" id="tonHoerBeide">▶ Beide</button>
+          </div>
+          <div class="farb-deltae">100 Cent = ein Halbton. Unter etwa 10 Cent hören die meisten keinen Unterschied.</div>
+        </div>
+        <button class="btn ton-gross" id="tonWeiter" type="button">Nächster Ton</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="ton-teil" id="ton-ende" hidden>
+        <div class="farb-summe" id="tonSumme"></div>
+        <div class="farb-rekord" id="tonRekord"></div>
+        <div class="farb-rekord" id="tonVergleich" hidden></div>
+        <ul class="ton-liste" id="tonListe"></ul>
+        <div class="ton-tipp-klein">Tippe eine Zeile an, um beide Töne zu hören.</div>
+        <button class="btn ton-gross" id="tonTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="tonTeilenMsg"></div>
+        <button class="btn secondary" id="tonNochmalSpiel" type="button">Nochmal spielen</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-takt">
+    <div class="takt-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="taktZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="taktRunde"></span>
+      </div>
+
+      <div class="takt-teil" id="takt-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="takt-logo"><svg class="metronom" viewBox="0 0 60 80" aria-hidden="true"><path class="mt-korpus" d="M17 76h26l-7-66q-6-6-12 0z"/><path class="mt-skala" d="M24 22h12M23 30h14M22 38h16M21 46h18"/><g class="mt-arm"><path d="M30 66V12"/><rect x="25" y="24" width="10" height="7" rx="2"/></g><path class="mt-fuss" d="M14 76h32"/></svg></div>
+        <h2 class="takt-titel">Takt-Gefühl</h2>
+        <div class="takt-modi" id="taktModi">
+          <button type="button" data-modus="dauer"><span>⏱️</span>Zeitgefühl</button>
+          <button type="button" data-modus="tempo"><span>🥁</span>Tempo</button>
+          <button type="button" data-modus="takt"><span>🎼</span>Taktart</button>
+        </div>
+        <p class="takt-lead" id="taktLead"></p>
+        <p class="ton-hinweis">🔔 iPhone: Stumm-Schalter ausschalten und Lautstärke hoch. Fünf Runden, bis zu 50 Punkte.</p>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge" id="taktChallenge" hidden></div>
+        <div class="farb-stufen takt-stufen" id="taktStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn takt-gross" id="taktLos" type="button">Los geht’s ⏱️</button>
+        <button class="btn secondary" id="taktTagBtn" type="button">📅 Tages-Mix</button>
+        <div class="ton-best" id="taktBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="takt-teil takt-mitte" id="takt-spiel" hidden>
+        <div class="ton-merk" id="taktMerk"></div>
+        <div class="takt-bild" id="taktBild"></div>
+        <div class="takt-aktion" id="taktAktion"></div>
+      </div>
+
+      <div class="takt-teil" id="takt-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-punkte" id="taktPunkte"></div>
+        <div class="ton-kommentar" id="taktKommentar"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-analyse takt-analyse" id="taktAnalyse"></div>
+        <button class="btn takt-gross" id="taktWeiter" type="button">Nächste Runde</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="takt-teil" id="takt-ende" hidden>
+        <div class="farb-summe" id="taktSumme"></div>
+        <div class="farb-rekord" id="taktRekord"></div>
+        <div class="farb-rekord" id="taktVergleich" hidden></div>
+        <ul class="ton-liste takt-liste" id="taktListe"></ul>
+        <button class="btn takt-gross" id="taktTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="taktTeilenMsg"></div>
+        <button class="btn secondary" id="taktNochmalSpiel" type="button">Nochmal spielen</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-punkte">
+    <div class="pw-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="pwZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="pwRunde"></span>
+        <button class="icon-btn pw-hilfe-btn" id="pwHilfeBtn" type="button" aria-label="Hilfe: so schätzt du r" title="Hilfe">?</button>
+      </div>
+
+      <div class="pw-teil" id="pw-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="pw-logo"><svg class="pw-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="pm-linie" d="M8 50L52 10"/><circle cx="10" cy="46" r="3.2" style="--k:0"/><circle cx="16" cy="40" r="3.2" style="--k:1"/><circle cx="19" cy="47" r="3.2" style="--k:2"/><circle cx="24" cy="34" r="3.2" style="--k:3"/><circle cx="28" cy="38" r="3.2" style="--k:4"/><circle cx="33" cy="27" r="3.2" style="--k:5"/><circle cx="36" cy="32" r="3.2" style="--k:6"/><circle cx="41" cy="22" r="3.2" style="--k:7"/><circle cx="45" cy="25" r="3.2" style="--k:8"/><circle cx="50" cy="13" r="3.2" style="--k:9"/></svg></div>
+        <h2 class="pw-titel">Punktwolke</h2>
+        <div class="takt-modi pw-modi" id="pwModi">
+          <button type="button" data-modus="schaetzen"><span>🎯</span>Schätzen</button>
+          <button type="button" data-modus="sortieren"><span>📊</span>Sortieren</button>
+        </div>
+        <p class="pw-lead" id="pwLead"></p>
+        <p class="pw-hinweis">Der Korrelationskoeffizient <b>r</b> misst, wie eng die Punkte an einer Geraden liegen. Fünf Runden, bis zu 50 Punkte.</p>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge pw-challenge" id="pwChallenge" hidden></div>
+        <div class="farb-stufen pw-stufen" id="pwStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn pw-gross-btn" id="pwLos" type="button">Los geht’s 📈</button>
+        <button class="btn secondary" id="pwTagBtn" type="button">📅 Tages-Wolken</button>
+        <button class="btn secondary pw-lernen-btn" id="pwLernenBtn" type="button">🧑‍🏫 Geführte Lernrunde: so schätzt du r</button>
+        <div class="pw-best" id="pwBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="pw-teil" id="pw-spiel" hidden>
+        <div class="pw-frage" id="pwFrage"></div>
+        <div class="spalten pw-spiel-spalten">
+        <div class="spalte spalte-a"><div id="pwBild"></div></div>
+        <div class="spalte spalte-b"><div class="pw-aktion" id="pwAktion"></div></div>
+        </div>
+      </div>
+
+      <div class="pw-teil" id="pw-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-punkte" id="pwPunkte"></div>
+        <div class="ton-kommentar" id="pwKommentar"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="pw-analyse" id="pwAnalyse"></div>
+        <button class="btn pw-gross-btn" id="pwWeiter" type="button">Nächste Runde</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="pw-teil" id="pw-lernen" hidden>
+        <div class="pl-schritte" id="plSchritte" aria-hidden="true"></div>
+        <h3 class="pl-titel" id="plTitel"></h3>
+        <div class="spalten">
+        <div class="spalte spalte-a"><div class="pl-bild" id="plBild"></div></div>
+        <div class="spalte spalte-b">
+        <div class="pl-text" id="plText"></div>
+        <div class="pl-aktion" id="plAktion"></div>
+        <div class="pl-nav"><button class="btn secondary" id="plZurueck" type="button">‹ Zurück</button><button class="btn pw-gross-btn" id="plWeiter" type="button">Weiter ›</button></div>
+        </div>
+        </div>
+      </div>
+
+      <dialog class="pl-dialog" id="pwHilfe" aria-label="Hilfe zur Punktwolke">
+        <div id="pwHilfeInhalt"></div>
+        <button class="btn pw-gross-btn" id="pwHilfeLernen" type="button">🧑‍🏫 Geführte Lernrunde starten</button>
+        <button class="btn secondary" id="pwHilfeZu" type="button">Schließen</button>
+      </dialog>
+
+      <div class="pw-teil" id="pw-ende" hidden>
+        <div class="farb-summe" id="pwSumme"></div>
+        <div class="farb-rekord" id="pwRekord"></div>
+        <div class="farb-rekord" id="pwVergleich" hidden></div>
+        <ul class="ton-liste pw-liste" id="pwErgListe"></ul>
+        <button class="btn pw-gross-btn" id="pwTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="pwTeilenMsg"></div>
+        <button class="btn secondary" id="pwNochmalSpiel" type="button">Nochmal spielen</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-funktion">
+    <div class="fd-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="fdZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="fdRunde"></span>
+        <button class="icon-btn pw-hilfe-btn" id="fdHilfeBtn" type="button" aria-label="Hilfe" title="Hilfe">?</button>
+      </div>
+
+      <div class="fd-teil" id="fd-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="fd-logo"><svg class="fd-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="fm-achse" d="M4 40H56M30 56V4"/><path class="fm-kurve" d="M10 8Q30 72 50 8"/><circle class="fm-punkt" cx="30" cy="40" r="3.5"/></svg></div>
+        <h2 class="fd-titel">Funktions-Detektiv</h2>
+        <div class="takt-modi fd-modi" id="fdModi">
+          <button type="button" data-modus="formel"><span>🔍</span>Formel finden</button>
+          <button type="button" data-modus="graph"><span>🖼️</span>Graph finden</button>
+          <button type="button" data-modus="bauen"><span>🎛️</span>Nachbauen</button>
+        </div>
+        <p class="fd-lead" id="fdLead"></p>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge fd-challenge" id="fdChallenge" hidden></div>
+        <div class="farb-stufen fd-stufen" id="fdStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn fd-gross-btn" id="fdLos" type="button">Los geht’s 🕵️</button>
+        <button class="btn secondary" id="fdTagBtn" type="button">📅 Tages-Fall</button>
+        <button class="btn secondary fd-lernen-btn" id="fdLernenBtn" type="button">🧑‍🏫 Geführte Lernrunde: Funktionen verstehen</button>
+        <div class="fd-best" id="fdBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="fd-teil" id="fd-spiel" hidden>
+        <div class="fd-frage" id="fdFrage"></div>
+        <div class="spalten fd-spiel-spalten">
+        <div class="spalte spalte-a"><div id="fdBild"></div></div>
+        <div class="spalte spalte-b"><div class="fd-aktion" id="fdAktion"></div></div>
+        </div>
+      </div>
+
+      <div class="fd-teil" id="fd-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-punkte" id="fdPunkte"></div>
+        <div class="ton-kommentar" id="fdKommentar"></div>
+        <div id="fdLoesBild"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="fd-analyse" id="fdAnalyse"></div>
+        <button class="btn fd-gross-btn" id="fdWeiter" type="button">Nächste Runde</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="fd-teil" id="fd-ende" hidden>
+        <div class="farb-summe" id="fdSumme"></div>
+        <div class="farb-rekord" id="fdRekord"></div>
+        <div class="farb-rekord" id="fdVergleich" hidden></div>
+        <ul class="ton-liste fd-liste" id="fdErgListe"></ul>
+        <button class="btn fd-gross-btn" id="fdTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="fdTeilenMsg"></div>
+        <button class="btn secondary" id="fdNochmal" type="button">Nochmal spielen</button>
+      </div>
+
+      <div class="fd-teil" id="fd-lernen" hidden>
+        <div class="pl-schritte" id="fdlSchritte" aria-hidden="true"></div>
+        <h3 class="pl-titel" id="fdlTitel"></h3>
+        <div class="spalten">
+        <div class="spalte spalte-a"><div class="fd-lernbild" id="fdlBild"></div></div>
+        <div class="spalte spalte-b">
+        <div class="fd-lerntext" id="fdlText"></div>
+        <div class="fd-lernaktion" id="fdlAktion"></div>
+        <div class="pl-nav"><button class="btn secondary" id="fdlZurueck" type="button">‹ Zurück</button><button class="btn fd-gross-btn" id="fdlWeiter" type="button">Weiter ›</button></div>
+        </div>
+        </div>
+      </div>
+
+      <dialog class="pl-dialog fd-dialog" id="fdHilfe" aria-label="Hilfe zum Funktions-Detektiv">
+        <div id="fdHilfeInhalt"></div>
+        <button class="btn pw-gross-btn" id="fdHilfeLernen" type="button">🧑‍🏫 Geführte Lernrunde starten</button>
+        <button class="btn secondary" id="fdHilfeZu" type="button">Schließen</button>
+      </dialog>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-zufall">
+    <div class="zf-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="zfZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="zfRunde"></span>
+        <button class="icon-btn pw-hilfe-btn" id="zfHilfeBtn" type="button" aria-label="Hilfe" title="Hilfe">?</button>
+      </div>
+
+      <div class="zf-teil" id="zf-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="zf-logo"><span>⚄</span><span>⚁</span></div>
+        <h2 class="zf-titel">Zufalls-Gefühl</h2>
+        <p class="zf-lead">Wie wahrscheinlich ist das? Schätz es mit dem Regler – dann wird es <b>1000-mal live</b> ausprobiert, und du siehst den Rechenweg mit Bild.</p>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge zf-challenge" id="zfChallenge" hidden></div>
+        <div class="farb-stufen zf-stufen" id="zfStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn zf-gross-btn" id="zfLos" type="button">Los geht’s 🎲</button>
+        <button class="btn secondary" id="zfTagBtn" type="button">📅 Tages-Zufall</button>
+        <button class="btn secondary zf-lernen-btn" id="zfLernenBtn" type="button">🧑‍🏫 Geführte Lernrunde: so rechnet man Zufall</button>
+        <div class="zf-best" id="zfBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="zf-teil" id="zf-spiel" hidden>
+        <div class="zf-karte">
+          <div class="zf-emoji" id="zfEmoji"></div>
+          <div class="zf-frage" id="zfFrage"></div>
+        </div>
+        <div class="zf-wert" id="zfWert"></div>
+        <input class="zf-regler" id="zfRegler" type="range" min="0" max="100" step="1" value="50" aria-label="Geschätzte Wahrscheinlichkeit in Prozent">
+        <div class="zf-skala"><span>0 % nie</span><span>50 %</span><span>100 % sicher</span></div>
+        <button class="btn zf-gross-btn" id="zfTippen" type="button">Tipp abgeben ✓</button>
+      </div>
+
+      <div class="zf-teil" id="zf-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="zf-auf-frage" id="zfAufFrage"></div>
+        <div id="zfSim"></div>
+        <button class="btn secondary" id="zfUeberspringen" type="button">⏩ Sofort fertig</button>
+        </div>
+        <div class="spalte spalte-b">
+        <div id="zfErgebnis" hidden>
+          <div class="ton-punkte" id="zfPunkte"></div>
+          <div class="ton-kommentar" id="zfKommentar"></div>
+          <div class="zf-analyse">
+            <table class="farb-tabelle" id="zfTabelle"></table>
+            <div class="zf-bild" id="zfBild"></div>
+            <ol class="zf-schritte" id="zfSchritte"></ol>
+          </div>
+        </div>
+        <button class="btn zf-gross-btn" id="zfWeiter" type="button" hidden>Nächste Runde</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="zf-teil" id="zf-ende" hidden>
+        <div class="farb-summe" id="zfSumme"></div>
+        <div class="farb-rekord" id="zfRekord"></div>
+        <div class="farb-rekord" id="zfVergleich" hidden></div>
+        <ul class="ton-liste zf-liste" id="zfErgListe"></ul>
+        <button class="btn zf-gross-btn" id="zfTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="zfTeilenMsg"></div>
+        <button class="btn secondary" id="zfNochmal" type="button">Nochmal spielen</button>
+      </div>
+
+      <div class="zf-teil" id="zf-lernen" hidden>
+        <div class="pl-schritte" id="zflSchritte" aria-hidden="true"></div>
+        <h3 class="pl-titel" id="zflTitel"></h3>
+        <div class="spalten">
+        <div class="spalte spalte-a"><div class="zf-lerntext" id="zflText"></div><div class="zf-geschafft" id="zflGeschafft" hidden></div></div>
+        <div class="spalte spalte-b">
+        <div class="zf-lernbox" id="zflBox"></div>
+        <div class="pl-nav"><button class="btn secondary" id="zflZurueck" type="button">‹ Zurück</button><button class="btn zf-gross-btn" id="zflWeiter" type="button">Weiter ›</button></div>
+        </div>
+        </div>
+      </div>
+
+      <dialog class="pl-dialog zf-dialog" id="zfHilfe" aria-label="Hilfe zum Zufalls-Gefühl">
+        <div id="zfHilfeInhalt"></div>
+        <button class="btn pw-gross-btn" id="zfHilfeLernen" type="button">🧑‍🏫 Geführte Lernrunde starten</button>
+        <button class="btn secondary" id="zfHilfeZu" type="button">Schließen</button>
+      </dialog>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-zahlen">
+    <div class="zl-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="zlZurueck" type="button" aria-label="Zurück">←</button>
+        <span>📊 Du in Zahlen</span>
+      </div>
+      <div class="zl-kopf">
+        <h2 class="zl-titel">Du in Zahlen</h2>
+        <p class="zl-lead">Wie viele Wochen, Herzschläge und Kilometer durchs All steckt in deinem Leben? Gib deinen Geburtstag ein – alles wird nur auf diesem Gerät gerechnet.</p>
+        <div class="zl-eingabe">
+          <label>Geburtstag<input type="date" id="zlDatum" min="1900-01-01"></label>
+          <label>Uhrzeit <small>(optional)</small><input type="time" id="zlZeit"></label>
+        </div>
+        <div class="zl-chips" id="zlGeschlecht"><span>Für die Lebenserwartung:</span><button type="button" data-g="w">weiblich</button><button type="button" data-g="m">männlich</button><button type="button" data-g="x">keine Angabe</button></div>
+        <div class="zl-hinweis" id="zlHinweis"></div>
+      </div>
+      <div class="zl-ergebnis" id="zlErgebnis" hidden>
+        <section class="zl-abschnitt"><h3>⏱️ So lange lebst du schon</h3><div id="zlAlter"></div><ul class="zl-meilen" id="zlMeilen"></ul></section>
+        <section class="zl-abschnitt"><h3>🗓️ Dein Leben in Wochen</h3><canvas class="zl-wochen" id="zlWochenBild"></canvas><p class="zl-text" id="zlWochenText"></p></section>
+        <section class="zl-abschnitt"><h3>🫀 Dein Körper <span class="zl-marke">Schätzung</span></h3><div class="zl-karten" id="zlKoerper"></div></section>
+        <section class="zl-abschnitt"><h3>🌌 Deine Reise durchs All</h3><div class="zl-karten" id="zlKosmos"></div></section>
+        <section class="zl-abschnitt"><h3>🌍 Die Welt seit deiner Geburt</h3><div class="zl-karten" id="zlWelt"></div></section>
+        <section class="zl-abschnitt"><h3>🗺️ Wärst du woanders geboren</h3><div id="zlLaender"></div></section>
+        <section class="zl-abschnitt zl-quellen"><h3>📚 Quellen &amp; Methode</h3><p class="zl-text">Exakt gerechnet: Alter, Tage, Meilensteine, Erdumlauf, Erddrehung, Licht. <span class="zl-marke">Schätzung</span> = Durchschnittswerte, du persönlich weichst davon ab. Weltzahlen sind amtliche Jahreswerte, dazwischen interpoliert und für 2025/26 mit den letzten Raten fortgeschrieben.</p><ul id="zlQuellen"></ul></section>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-tierleben">
+    <div class="tl-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="tlZurueck" type="button" aria-label="Zurück">←</button>
+        <span>🐾 Ein Tierleben</span>
+      </div>
+
+      <div class="tl-teil" id="tl-intro">
+        <h2 class="tl-titel">Ein Tierleben</h2>
+        <p class="tl-lead">Was wäre, wenn du heute als Tier geboren würdest? Erlebe ein Leben – mit belegten Fakten aus amtlichen Statistiken und Artenschutz-Berichten.</p>
+        <div class="tl-zaehler"><b id="tlZaehler">0</b><span>Tiere wurden in Deutschland geschlachtet, seit du diese Seite geöffnet hast<br><small>rechnerisch aus 744,6 Mio. Schlachtungen 2025 (Destatis) – rund 24 pro Sekunde</small></span></div>
+        <div class="tl-modus" id="tlModus"><span>Darstellung:</span><button type="button" data-m="text">📖 Erzählt</button><button type="button" data-m="pixel">👾 Pixel-Abenteuer</button></div>
+        <button class="tl-weg" id="tlLotterieBtn" type="button"><span>🎲</span><b>Als Nutztier geboren werden</b><small>Zufall nach den echten Schlachtzahlen in Deutschland</small></button>
+        <h3 class="tl-h">🐄 Oder ein bestimmtes Nutztier</h3>
+        <div class="tl-arten" id="tlNutzWahl"></div>
+        <h3 class="tl-h">🌍 Oder: als eine der letzten ihrer Art</h3>
+        <div class="tl-arten" id="tlWild"></div>
+        <div class="tl-logbuch" id="tlLogbuch" hidden><b>📖 Deine gelebten Leben</b><p id="tlLogbuchText"></p><div class="tl-logbuch-liste" id="tlLogbuchListe"></div></div>
+      </div>
+
+      <div class="tl-teil" id="tl-los" hidden>
+        <h3 class="tl-h">Welches Tier wirst du?</h3>
+        <p class="tl-lead">Jedes Tier, das 2025 in Deutschland geschlachtet wurde, hat ein Los. Je mehr Tiere einer Art, desto mehr Lose.</p>
+        <div class="tl-los-balken" id="tlLosBalken"></div>
+        <div class="tl-los-legende" id="tlLosLegende"></div>
+        <div class="tl-los-ergebnis" id="tlLosErgebnis" hidden></div>
+      </div>
+
+      <div class="tl-teil" id="tl-leben" hidden>
+        <div class="tl-leben-kopf" id="tlLebenKopf"></div>
+        <div class="tl-kapitel" id="tlKapitel"></div>
+        <button class="btn tl-gross" id="tlWeiter" type="button">Weiter ▶</button>
+      </div>
+
+      <div class="tl-teil" id="tl-pixel" hidden>
+        <div class="tp-kopf"><span id="tlLebenKopfP"></span><small id="tpKapitel"></small></div>
+        <div class="tp-schirm"><canvas id="tpBild" width="160" height="144"></canvas><div class="tp-box" id="tpBox" hidden></div></div>
+        <div class="tp-steuer">
+          <div class="tp-pad" id="tpPad"><button type="button" data-dir="hoch" aria-label="hoch">▲</button><button type="button" data-dir="links" aria-label="links">◀</button><button type="button" data-dir="rechts" aria-label="rechts">▶</button><button type="button" data-dir="runter" aria-label="runter">▼</button></div>
+          <button type="button" class="tp-a" id="tpA" aria-label="Ansehen / Weiter">A</button>
+        </div>
+        <p class="tp-hilfe">Steuerkreuz oder Pfeiltasten zum Laufen · A oder Leertaste: ansehen und weiterlesen</p>
+      </div>
+
+      <div class="tl-teil" id="tl-ende" hidden>
+        <div class="tl-ende" id="tlEndeInhalt"></div>
+        <button class="btn tl-gross" id="tlNochmal" type="button">Noch ein Leben</button>
+        <button class="btn secondary" id="tlAndere" type="button">Anderes Tier wählen ↓</button>
+        <div class="tl-ende-wahl" id="tlEndeWahlBox"><h3 class="tl-h">Ein anderes Leben leben</h3><div class="tl-arten" id="tlEndeWahl"></div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Fitness -->
+  <section class="screen" id="screen-fitness">
+    <div class="ft-buehne fi-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="fiZurueck" type="button" aria-label="Zurück">←</button><span id="fiTitel">💪 Fitness</span><span></span></div>
+      <div id="fiInhalt" class="fi-inhalt"></div>
+    </div>
+  </section>
+
+  <!-- Zutaten-Check -->
+  <section class="screen" id="screen-scan">
+    <div class="ft-buehne sc-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="scZurueck" type="button" aria-label="Zurück">←</button><span>🔎 Zutaten-Check</span><span></span></div>
+      <div id="scInhalt" class="sc-inhalt"></div>
+    </div>
+  </section>
+
+  <!-- Stimmgerät -->
+  <section class="screen" id="screen-stimmen">
+    <div class="ft-buehne sg-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="sgZurueck" type="button" aria-label="Zurück">←</button><span>🎚️ Stimmgerät</span><span></span></div>
+      <div id="sgInhalt" class="sg-inhalt"></div>
+    </div>
+  </section>
+
+  <!-- Beat-Studio -->
+  <section class="screen" id="screen-studio">
+    <div class="ft-buehne st-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="stZurueck" type="button" aria-label="Zurück">←</button><span id="stTitel">🎛️ Beat-Studio</span><span></span></div>
+      <div class="st-kopfzeile" id="stKopfzeile"></div>
+      <div class="st-tabs" id="stTabs"></div>
+      <div id="stInhalt" class="st-inhalt"></div>
+    </div>
+  </section>
+
+  <!-- Wundermuster -->
+  <section class="screen" id="screen-wunder">
+    <div class="ft-buehne wu-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="wuZurueck" type="button" aria-label="Zurück">←</button><span id="wuTitel">🌀 Wundermuster</span><span></span></div>
+      <div id="wuInhalt" class="ft-inhalt"></div>
+    </div>
+  </section>
+
+  <!-- Beat-Bahnen -->
+  <section class="screen" id="screen-beat">
+    <div class="ft-buehne bb-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="bbZurueck" type="button" aria-label="Zurück">←</button><span>🎸 Beat-Bahnen</span><span></span></div>
+      <div id="bbInhalt" class="ft-inhalt"></div>
+    </div>
+  </section>
+
+  <!-- Zoom durchs Universum -->
+  <section class="screen" id="screen-zoom">
+    <div class="ft-buehne zm-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="zmZurueck" type="button" aria-label="Zurück">←</button><span>🔭 Zoom</span><span></span></div>
+      <div id="zmInhalt" class="ft-inhalt"></div>
+    </div>
+  </section>
+
+  <!-- Verdopplung im Glas -->
+  <section class="screen" id="screen-glas">
+    <div class="ft-buehne gl-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="glZurueck" type="button" aria-label="Zurück">←</button><span>🦠 Im Glas</span><span></span></div>
+      <div id="glInhalt" class="ft-inhalt"></div>
+    </div>
+  </section>
+
+  <!-- Falten bis zum Mars -->
+  <section class="screen" id="screen-falten">
+    <div class="ft-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="ftZurueck" type="button" aria-label="Zurück">←</button><span>📄 Bis zum Mars</span><span></span></div>
+      <div id="ftInhalt" class="ft-inhalt"></div>
+    </div>
+  </section>
+
+  <!-- Klassiker -->
+  <section class="screen" id="screen-klassiker">
+    <div class="kl-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="klZurueck" type="button" aria-label="Zurück">←</button><span id="klTitel">🃏 Klassiker</span><span id="klInfo" class="kl-info"></span></div>
+      <div id="klInhalt" class="kl-inhalt"></div>
+    </div>
+  </section>
+
+  <!-- Song-Rätsel -->
+  <section class="screen" id="screen-songs">
+    <div class="ton-buehne sr-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="srAppZurueck" type="button" aria-label="Zurück">←</button><span>🎵 Song-Rätsel</span></div>
+      <div class="ton-teil" id="ton-song"></div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-rage">
+    <div class="ft-buehne rb-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="rbZurueck" type="button" aria-label="Zurück">←</button><span>😡 Ragebait-Fabrik</span><span></span></div>
+      <div id="rbInhalt" class="rb-inhalt"></div>
+    </div>
+  </section>
+  <section class="screen" id="screen-dopamin">
+    <div class="dp-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="dpZurueck" type="button" aria-label="Zurück">←</button><span>🧠 Dopamin-Maschine</span></div>
+      <div id="dpInhalt" class="dp-inhalt"></div>
+    </div>
+  </section>
+  <section class="screen" id="screen-sk">
+    <div class="sk-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="skZurueck" type="button" aria-label="Zurück">←</button><span>🧬 Dein Profil</span></div>
+      <div id="skInhalt"></div>
+    </div>
+  </section>
+  <section class="screen" id="screen-labor">
+    <div class="lab-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="labZurueck" type="button" aria-label="Zurück">←</button><span>🧪 Das Experiment</span></div>
+      <div id="labInhalt"></div>
+    </div>
+  </section>
+  <section class="screen" id="screen-slo">
+    <div class="slo-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="sloZurueck" type="button" aria-label="Zurück">←</button>
+        <span>🐉 Slowenisch</span>
+      </div>
+      <div class="slo-teil" id="slo-karte">
+        <div class="slo-kopfleiste">
+          <div class="slo-status" id="sloStatus"></div>
+          <div class="slo-aktionen"><button class="btn secondary" id="sloUeben" type="button">💪 Üben</button><button class="btn secondary" id="sloWoerterBtn" type="button">📖 Wörter</button></div>
+        </div>
+        <div class="slo-pfad" id="sloPfad"></div>
+        <p class="slo-stimme" id="sloStimme"></p>
+      </div>
+      <div class="slo-teil" id="slo-lektion" hidden>
+        <div class="slo-lk-kopf"><button class="slo-x" id="sloAbbruch" type="button" aria-label="Lektion abbrechen">×</button><div class="slo-balken"><i id="sloBalken"></i></div><span class="slo-kopfdrache" id="sloKopfDrache" aria-hidden="true"></span></div>
+        <div class="slo-aufgabe" id="sloAufgabe"></div>
+        <div class="slo-fuss" id="sloFuss"><div class="slo-urteil" id="sloUrteil"></div><div class="slo-fuss-knoepfe"><button class="btn secondary slo-weissnicht" id="sloWeissNicht" type="button">Ich weiß es nicht</button><button class="btn slo-gross" id="sloPruefen" type="button" disabled>Prüfen</button></div></div>
+      </div>
+      <div class="slo-teil" id="slo-ende" hidden></div>
+      <div class="slo-teil" id="slo-woerter" hidden></div>
+    </div>
+  </section>
+  <section class="screen" id="screen-piranha">
+    <div class="pr-buehne">
+      <canvas class="pr-unten" id="prUnten" aria-hidden="true"></canvas>
+      <div class="farb-kopf">
+        <button class="icon-btn" id="prZurueck" type="button" aria-label="Zurück">←</button>
+        <span>🐟 Piranha-Schwarm</span>
+      </div>
+      <div class="pr-teil" id="pr-intro">
+        <div class="pr-logo">🐟🐟🐟</div>
+        <h2 class="pr-titel">Piranha-Schwarm</h2>
+        <p class="pr-lead">Oben schwimmt ein großes Pixelbild auf dem Amazonas, unten warten Piranha-Schwärme in ihren Wurzelhöhlen. Schick sie in der richtigen Reihenfolge los – sie knabbern das Bild von unten Pixel für Pixel weg.</p>
+        <ul class="pr-regeln">
+          <li>🐟 Ein Schwarm frisst nur Pixel <b>seiner Farbe</b>, die von unten erreichbar sind.</li>
+          <li>🪨 Antippen geht nur bei Höhlen mit freiem Weg zum Fluss – die vorderste Reihe oder Höhlen neben einem leeren Feld.</li>
+          <li>⏳ Was ein Schwarm nicht fressen kann, wartet in einer <b>Bucht</b> und frisst automatisch weiter, sobald seine Farbe frei wird.</li>
+          <li>🚫 Alle Buchten voll? Dann ist der Fluss verstopft – mit ↶ nimmst du den Zug zurück.</li>
+          <li>🪨 <b>Steine und Algen</b> sperren Teile des Bildes. Sie lösen sich erst, wenn die Farbe im Kreis darauf <b>ganz</b> weggefressen ist.</li>
+          <li>⭐ Drei Sterne, wenn höchstens die Hälfte der Buchten gleichzeitig belegt war. Ab Level 3 gibt es versteckte Höhlen ❓.</li>
+        </ul>
+        <p class="pr-wusstest">Wusstest du? Viele Piranha-Arten fressen auch Früchte und Samen, die in der Regenzeit ins Wasser fallen.</p>
+        <button class="btn pr-gross" id="prLos" type="button">Spielen · <span id="prLevelText">Level 1</span></button>
+        <button class="btn secondary" id="prTagBtn" type="button">📅 Tagesfluss</button>
+        <div class="pr-sterne" id="prSterne"></div>
+      </div>
+      <div class="pr-teil" id="pr-spiel" hidden>
+        <div class="pr-zeile"><b id="prKopf"></b><span id="prZuege"></span></div>
+        <div class="pr-feld"><canvas id="prBild"></canvas>
+          <div class="pr-fertig" id="prFertig" hidden>
+            <h3>Geschafft!</h3>
+            <div class="pr-f-sterne" id="prFSterne"></div>
+            <div class="pr-f-werte">
+              <div><b id="prFZuege"></b>Züge<small id="prFMin"></small></div>
+              <div><b id="prFBuchten"></b>Buchten<small>max. belegt</small></div>
+              <div><b id="prFFische"></b>Fische<small>satt im Untergrund</small></div>
+            </div>
+            <p class="pr-f-lob" id="prFLob"></p>
+            <div class="pr-f-knoepfe"><button class="btn secondary" id="prFNochmal" type="button">↺ Nochmal</button><button class="btn pr-gross" id="prFWeiter" type="button">Weiter ▶</button></div>
+          </div>
+        </div>
+        <div class="pr-meldung" id="prMeldung"></div>
+        <div class="pr-knoepfe"><button class="btn secondary" id="prRueck" type="button">↶ Zurück</button><button class="btn secondary" id="prHinweis" type="button">💡 Tipp</button><button class="btn secondary" id="prNeu" type="button">↺ Neu</button></div>
+        <button class="btn pr-gross" id="prWeiterBtn" type="button" hidden>Nächstes Level ▶</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-augen">
+    <div class="ag-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="agZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="agRunde"></span>
+      </div>
+
+      <div class="ag-teil" id="ag-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ag-logo"><svg class="ag-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="am-basis" d="M10 48H52"/><g class="am-arm"><path d="M10 48L46 14"/><circle cx="46" cy="14" r="4"/></g><path class="am-bogen" d="M26 48A16 16 0 0 0 21.7 37.1"/><circle class="am-ecke" cx="10" cy="48" r="3"/></svg></div>
+        <h2 class="ag-titel">Augenmaß</h2>
+        <p class="ag-lead">Fünf Aufgaben für dein Auge – jede einmal: eine Linie halbieren, den Mittelpunkt finden, einen Winkel einstellen, eine Länge nachziehen und eine Linie parallel drehen. Ganz ohne Lineal.</p>
+        <div class="ag-typen"><span>✂️ Halbieren</span><span>🎯 Mittelpunkt</span><span>📐 Winkel</span><span>📏 Länge</span><span>🛤️ Parallel</span></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge ag-challenge" id="agChallenge" hidden></div>
+        <div class="farb-stufen ag-modi" id="agModi">
+          <button type="button" data-modus="ziehen">✍️ Ziehen &amp; Tippen<small>Halbieren, Winkel, Länge …</small></button>
+          <button type="button" data-modus="schaetzen">🔎 Schätzen<small>Wie groß ist das wohl?</small></button>
+        </div>
+        <div class="farb-stufen" id="agStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn ag-gross-btn" id="agLos" type="button">Los geht’s</button>
+        <button class="btn secondary" id="agTagBtn" type="button"></button>
+        <div class="ag-best" id="agBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="ag-teil" id="ag-spiel" hidden>
+        <div class="ag-frage" id="agFrage"></div>
+        <div class="spalten ag-spalten">
+        <div class="spalte spalte-a"><svg class="ag-flaeche" id="agFlaeche" viewBox="0 0 400 400"></svg></div>
+        <div class="spalte spalte-b">
+        <div class="ag-hinweis" id="agHinweis"></div>
+        <div class="ag-schaetzen" id="agSchaetzen" hidden>
+          <div class="ag-wert"><button type="button" class="ag-pm" data-pm="-1" aria-label="weniger">−</button><output id="agWert">–</output><button type="button" class="ag-pm" data-pm="1" aria-label="mehr">+</button></div>
+          <input type="range" id="agRegler" min="0" max="1000" step="1" aria-label="Schätzung">
+        </div>
+        <button class="btn ag-gross-btn" id="agFertig" type="button">Fertig ✓</button>
+        </div>
+        </div>
+      </div>
+
+      <div class="ag-teil" id="ag-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-punkte" id="agPunkte"></div>
+        <div class="ton-kommentar" id="agKommentar"></div>
+        <svg class="ag-flaeche klein" id="agErgebnis" viewBox="0 0 400 400"></svg>
+        <div class="ag-legende"><span><i class="du"></i>Deins</span><span><i class="ok"></i>Richtig</span></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ag-text" id="agText"></div>
+        <div class="ag-erkl" id="agErkl" hidden></div>
+        <button class="btn ag-gross-btn" id="agWeiter" type="button">Nächste Aufgabe</button>
+        </div>
+        </div>
+      </div>
+      <div class="ag-teil" id="ag-ende" hidden>
+        <div class="farb-summe" id="agSumme"></div>
+        <div class="farb-rekord" id="agRekord"></div>
+        <div class="farb-rekord" id="agVergleich" hidden></div>
+        <ul class="ton-liste ag-liste" id="agListe"></ul>
+        <button class="btn ag-gross-btn" id="agTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="agTeilenMsg"></div>
+        <button class="btn secondary" id="agNochmalSpiel" type="button">Nochmal spielen</button>
+      </div>
+    </div>
+  </section>
+
+  <section class="screen" id="screen-karte">
+    <div class="kt-buehne">
+      <div class="farb-kopf">
+        <button class="icon-btn" id="ktZurueck" type="button" aria-label="Zurück">←</button>
+        <span id="ktRunde"></span>
+      </div>
+
+      <div class="kt-teil" id="kt-intro">
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="kt-logo"><svg class="kt-mini" viewBox="0 0 60 60" aria-hidden="true"><circle class="km-rand" cx="30" cy="30" r="25"/><path class="km-striche" d="M30 7v6M30 47v6M7 30h6M47 30h6"/><g class="km-nadel"><path class="km-nord" d="M30 10l6 20h-12z"/><path class="km-sued" d="M30 50l-6-20h12z"/></g><circle cx="30" cy="30" r="3" class="km-mitte"/></svg></div>
+        <h2 class="kt-titel">Karten-Gefühl</h2>
+        <div class="takt-modi kt-modi" id="ktModi">
+          <button type="button" data-modus="deutschland"><span>🇩🇪</span>Deutschland</button>
+          <button type="button" data-modus="europa"><span>🇪🇺</span>Europa</button>
+          <button type="button" data-modus="welt"><span>🌍</span>Welt</button>
+        </div>
+        <p class="kt-lead" id="ktLead"></p>
+        <p class="kt-hinweis">Punkte nach Kilometern daneben. Fünf Orte, bis zu 50 Punkte.</p>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="ton-challenge kt-challenge" id="ktChallenge" hidden></div>
+        <div class="farb-stufen" id="ktStufen">
+          <button type="button" data-stufe="leicht">Leicht<small></small></button>
+          <button type="button" data-stufe="mittel">Mittel<small></small></button>
+          <button type="button" data-stufe="profi">Profi<small></small></button>
+        </div>
+        <button class="btn kt-gross-btn" id="ktLos" type="button">Los geht’s</button>
+        <button class="btn secondary" id="ktTagBtn" type="button"></button>
+        <div class="kt-best" id="ktBest"></div>
+        </div>
+        </div>
+      </div>
+
+      <div class="kt-teil" id="kt-spiel" hidden>
+        <div class="kt-frage" id="ktFrage"></div>
+        <div class="kt-karte" id="ktKarte"></div>
+        <div class="kt-knoepfe">
+          <div class="kt-tipp-klein">Tippen setzt die Nadel · zwei Finger oder Doppeltippen zoomt · ziehen verschiebt</div>
+          <button class="btn kt-gross-btn" id="ktFertig" type="button" disabled>Hier! 📍</button>
+        </div>
+      </div>
+
+      <div class="kt-teil" id="kt-aufloesung" hidden>
+        <div class="spalten">
+        <div class="spalte spalte-a">
+        <div class="ton-punkte" id="ktPunkte"></div>
+        <div class="ton-kommentar" id="ktKommentar"></div>
+        <div class="kt-karte ergebnis" id="ktErgebnisKarte"></div>
+        </div>
+        <div class="spalte spalte-b">
+        <div class="kt-text" id="ktText"></div>
+        <div class="kt-info" id="ktInfo" hidden></div>
+        <button class="btn kt-gross-btn" id="ktWeiter" type="button">Nächster Ort</button>
+        </div>
+        </div>
+      </div>
+      <div class="kt-teil" id="kt-ende" hidden>
+        <div class="farb-summe" id="ktSumme"></div>
+        <div class="farb-rekord" id="ktRekord"></div>
+        <div class="farb-rekord" id="ktVergleich" hidden></div>
+        <div class="farb-rekord kt-gesamt" id="ktGesamtKm"></div>
+        <ul class="ton-liste kt-liste" id="ktListe"></ul>
+        <button class="btn kt-gross-btn" id="ktTeilen" type="button">📤 Ergebnis teilen</button>
+        <div class="muted" id="ktTeilenMsg"></div>
+        <button class="btn secondary" id="ktNochmalSpiel" type="button">Nochmal spielen</button>
+      </div>
+    </div>
+  </section>
+</div>
+
+<dialog class="melde" id="meldeDialog" aria-labelledby="meldeTitel">
+  <h3 id="meldeTitel">Melden</h3>
+  <div class="muted" id="meldeBetrifft"></div>
+  <div class="melde-arten" id="meldeArten"></div>
+  <div id="meldeFotoWahl"><div class="muted">Welches Foto?</div><div class="melde-fotos" id="meldeFotos"></div>
+    <input id="meldeVorschlag" type="url" inputmode="url" placeholder="Besseres Foto: Link von commons.wikimedia.org (optional)" autocomplete="off">
+    <div class="melde-hinweis" id="meldeVorschlagHinweis"></div></div>
+  <textarea id="meldeText" rows="2" placeholder="Was ist dir aufgefallen? (optional)"></textarea>
+  <p class="melde-info">Öffnet eine fertige Meldung auf GitHub – dort nur noch „Create“ tippen. Braucht ein GitHub-Konto, die Meldung ist öffentlich.</p>
+  <div class="row"><button class="btn secondary" id="meldeAbbrechen" type="button">Abbrechen</button><button class="btn" id="meldeSenden" type="button">Zu GitHub ↗</button></div>
+</dialog>
+<div class="profil-wahl" id="profilWahl" hidden>
+  <button class="pw-zu" id="pwZu" type="button" aria-label="Schließen">×</button>
+  <div class="pw-inhalt" id="pwListe">
+    <h1 id="pwTitel">Wer spielt?</h1>
+    <div class="pw-grid" id="pwGrid"></div>
+    <button class="pw-verwalten" id="pwVerwalten" type="button">Profile verwalten</button>
+    <button class="pw-verwalten pw-sicherung" id="pwSicherung" type="button">📂 Sicherung einspielen</button>
+  </div>
+  <div class="pw-form" id="pwForm" hidden>
+    <h1 id="pwFormTitel">Neues Profil</h1>
+    <div class="pk-bild" id="pwVorschau"></div>
+    <input id="pwName" type="text" maxlength="20" autocomplete="off" autocapitalize="words" placeholder="Name">
+    <div class="pw-avatare" id="pwAvatare"></div>
+    <div class="pw-farben" id="pwFarben"></div>
+    <div class="pw-knoepfe"><button class="pw-ok" id="pwSpeichern" type="button">Speichern</button><button class="pw-ab" id="pwAbbrechen" type="button">Abbrechen</button></div>
+    <p class="pw-hinweis" id="pwHinweis"></p>
+    <button class="pw-verwalten pw-sicherung" id="pwSicherungNeu" type="button" hidden>📂 Ich habe eine Sicherung – einspielen</button>
+    <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
+  </div>
+</div>
+<script src="wale.js?v=141"></script>
+<script src="haie.js?v=141"></script>
+<script src="porsche.js?v=141"></script>
+<script src="dackel.js?v=141"></script>
+<script src="groesse.js?v=141"></script>
+<script src="gretchen.js?v=141"></script>
+<script src="effekte.js?v=141"></script>
+<script src="app.js?v=141"></script>
+<script src="melden.js?v=141"></script>
+<script src="verlauf.js?v=141"></script>
+<script src="hub.js?v=141"></script>
+<script src="farben.js?v=141"></script>
+<script src="cello.js?v=141"></script>
+<script src="instrumente.js?v=141"></script>
+<script src="stimmen-pro.js?v=141"></script>
+<script src="stimmen.js?v=141"></script>
+<script src="fitness-daten.js?v=141"></script>
+<script src="fitness-plaene.js?v=141"></script>
+<script src="fitness.js?v=141"></script>
+<script src="scan.js?v=141"></script>
+<script src="gesten.js?v=141"></script>
+<script src="toene.js?v=141"></script>
+<script src="gehoer.js?v=141"></script>
+<script src="songs.js?v=141"></script>
+<script src="spotify.js?v=141"></script>
+<script src="deezer.js?v=141"></script>
+<script src="klassiker.js?v=141"></script>
+<script src="falten.js?v=141"></script>
+<script src="zoom.js?v=141"></script>
+<script src="glas.js?v=141"></script>
+<script src="beat.js?v=141"></script>
+<script src="wunder.js?v=141"></script>
+<script src="studio.js?v=141"></script>
+<script src="takt.js?v=141"></script>
+<script src="punkte.js?v=141"></script>
+<script src="funktion.js?v=141"></script>
+<script src="zufall.js?v=141"></script>
+<script src="zahlen.js?v=141"></script>
+<script src="tierleben.js?v=141"></script>
+<script src="tierpixel.js?v=141"></script>
+<script src="piranha.js?v=141"></script>
+<script src="slo.js?v=141"></script>
+<script src="slo-pro.js?v=141"></script>
+<script src="augen.js?v=141"></script>
+<script src="karten-daten.js?v=141"></script>
+<script src="karte.js?v=141"></script>
+<script src="tiefgang.js?v=141"></script>
+<script src="riff.js?v=141"></script>
+<script src="krimi-grafik.js?v=141"></script>
+<script src="krimi.js?v=141"></script>
+<script src="krimi-wachen.js?v=141"></script>
+<script src="krimi-verhoer.js?v=141"></script>
+<script src="krimi-alibi.js?v=141"></script>
+<script src="krimi-akte.js?v=141"></script>
+<script src="krimi-zentrale.js?v=141"></script>
+<script src="profile.js?v=141"></script>
+<script src="fuehrung.js?v=141"></script>
+<script src="dopamin.js?v=141"></script>
+<script src="rage.js?v=141"></script>
+<script src="experimente.js?v=141"></script>
+<script src="plattform.js?v=141"></script>
+<script src="sicherung.js?v=141"></script>
+</body>
+</html>
