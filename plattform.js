@@ -42,7 +42,7 @@ const SK_KATEGORIEN = [
   { id: 'zahlen', name: 'Zahlen & Welt', emoji: '🔢', karten: ['hubPunkte', 'hubZufall', 'hubKarte', 'hubTiefgang', 'hubZahlen', 'hubFalten', 'hubZoom', 'hubGlas', 'hubWunder'] },
   { id: 'wissen', name: 'Wissen & Sprache', emoji: '📚', karten: ['hubCello', 'hubStimmen', 'hubSlo'] },
   { id: 'alltag', name: 'Alltag & Fitness', emoji: '💪', karten: ['hubFitness', 'hubScan'] },
-  { id: 'perspektive', name: 'Perspektivwechsel', emoji: '🪞', karten: ['hubTierleben', 'hubDopamin'] },
+  { id: 'perspektive', name: 'Perspektivwechsel', emoji: '🪞', karten: ['hubTierleben', 'hubDopamin', 'hubRage'] },
 ];
 
 // ---------- Verlauf lesen: jeder Eintrag bekommt Leistung q (0–1) und Schwierigkeit d ----------

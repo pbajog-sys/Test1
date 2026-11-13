@@ -864,3 +864,17 @@ er das Gerät; in der Datenschutzerklärung ergänzt). Antippen eines Worts öff
   (Größen logarithmisch) und ±. Wertung: 10 Punkte genau, 0 ab ±35 % (Länge/Höhe), ±50 % (Fläche), ±25° bzw. ±15 Prozentpunkte.
   Nach jeder Aufgabe steht die richtige Größe in der Zeichnung, dazu ein Tipp (z. B. warum man Flächen unterschätzt).
   Challenge-Links tragen den Modus mit. Test: `tests/augen.test.js` (600 Schätzrunden auf Gültigkeit).
+
+## 😡 Ragebait-Fabrik (Satire, v141)
+`rage.js`, Kategorie „Perspektivwechsel“. Satire über Empörungs-Posts – gespottet wird über Haltungen, Phrasen und Tricks,
+nicht über Gruppen; alle Lager kriegen ihr Fett weg: Haltungs-Aktivist:in, Früher-war-alles-besser, Die Jugend von heute,
+Hustle-Bro, Krypto-Prophet, Wellness-Influencerin, Eltern-Polizei, Food-Puristin.
+- **Generator:** Lager (oder Zufall) und Empörungsgrad 1–5 (😐 → 💥 Weltuntergang: Ausrufezeichen, GROSS, Emojis, mehr Tricks).
+  Ergebnis als Post-Karte mit **SATIRE-Stempel**, hochzählenden Fake-Reaktionen (👍 😡 💬 🔁 – sie wachsen mit der Wut, nicht
+  mit der Wahrheit) und den eingebauten Tricks. Kopieren hängt immer „(Satire – aus der Ragebait-Fabrik)“ an.
+- **Baukasten:** 3 Runden, je 4 Plätze (Einstieg, Aufreger, Steigerung, Schluss) mit je 3 Karten – eine davon sachlich.
+  Punkte je Trick (Schock-Einstieg, vage Quelle, Wir gegen die, Strohmann, Untergang, Einzelfall, Kommentar-Köder,
+  Dringlichkeit, moralische Überlegenheit, GROSSBUCHSTABEN; sachlich −20) plus Kombos (Feindbild komplett, Panik mit „Beweis“,
+  Kommentar-Magnet, Gut gegen Böse). Am Ende ein Titel und „Und jetzt im Ernst“: Tricks erkennen, nicht reagieren.
+- **Detektor:** echten Post einfügen – Muster für alle Tricks, GROSS-Anteil, Ausrufezeichen, Wut-Emojis und „immer/nie/alle“
+  ergeben einen Wert 0–100 mit Belegstellen. Offline, nichts wird gesendet. Test: `tests/rage.test.js`.

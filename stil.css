@@ -89,7 +89,7 @@ header h1 { font-weight: 800; letter-spacing: -0.01em; }
 @keyframes einblenden { from { opacity: 0; } to { opacity: 1; } }
 /* Die Spiele haben eine eigene Vollbild-Bühne (position: fixed). Eine Animation mit transform auf dem
    Bildschirm würde Safari dazu bringen, die Bühne nur innerhalb des Bildschirms zu zeichnen („Fenster im Fenster“). */
-#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-funktion.active, #screen-zufall.active, #screen-zahlen.active, #screen-tierleben.active, #screen-piranha.active, #screen-slo.active, #screen-sk.active, #screen-dopamin.active, #screen-songs.active, #screen-klassiker.active, #screen-falten.active, #screen-zoom.active, #screen-glas.active, #screen-beat.active, #screen-wunder.active, #screen-studio.active, #screen-stimmen.active, #screen-fitness.active, #screen-scan.active, #screen-labor.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-riff.active, #screen-krimi.active { animation: none; }
+#screen-farben.active, #screen-cello.active, #screen-instrument.active, #screen-toene.active, #screen-takt.active, #screen-punkte.active, #screen-funktion.active, #screen-zufall.active, #screen-zahlen.active, #screen-tierleben.active, #screen-piranha.active, #screen-slo.active, #screen-sk.active, #screen-dopamin.active, #screen-songs.active, #screen-klassiker.active, #screen-falten.active, #screen-zoom.active, #screen-glas.active, #screen-beat.active, #screen-wunder.active, #screen-studio.active, #screen-stimmen.active, #screen-fitness.active, #screen-scan.active, #screen-rage.active, #screen-labor.active, #screen-augen.active, #screen-karte.active, #screen-verlauf.active, #screen-tiefgang.active, #screen-riff.active, #screen-krimi.active { animation: none; }
 @keyframes reinGleiten { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
 
 .screen.active .menu > *, .screen.active .badges > *, .screen.active .g-card, .screen.active .g-feed {
@@ -4226,3 +4226,48 @@ a.bb-datei { text-decoration: none; }
 .slp-u-wort.unbekannt { border-style: dashed; } .slp-u-wort.unbekannt span { color: #fca5a5; }
 .slp-u-gruppe { display: grid; gap: 6px; padding: 10px; border-radius: 18px; background: rgba(9,22,30,.6); } .slp-u-gruppe > b { color: #86efac; }
 .slp-richtung { display: grid; grid-template-columns: 1fr 1fr; } .slp-richtung .slp-chip { font-size: 1.05rem; }
+
+/* 😡 Ragebait-Fabrik */
+.hub-rage { background: linear-gradient(#1a0606, #1a0606) padding-box, linear-gradient(90deg, #ef4444, #f97316, #facc15, #ef4444) border-box; background-size: 100% 100%, 300% 100%; }
+.hub-rage .hg-titel { background: linear-gradient(90deg, #fca5a5, #fdba74); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.hg-av-rage { --ring: conic-gradient(#ef4444, #f97316, #facc15, #ef4444); } .hg-av-rage > .hg-in { background: #170404; display: grid; place-items: center; }
+.rb-mini { font-size: 1.9rem; display: inline-block; animation: rbBrodeln 1.4s ease-in-out infinite; } @keyframes rbBrodeln { 0%, 100% { transform: rotate(-6deg); } 50% { transform: rotate(6deg) scale(1.08); } }
+.rb-buehne { background: radial-gradient(110% 60% at 50% 0%, #4c0d0d 0%, #170606 55%, #0b0303 100%); }
+.rb-inhalt { padding: 4px 16px calc(28px + env(safe-area-inset-bottom)); max-width: 560px; margin: 0 auto; display: grid; grid-template-columns: minmax(0, 1fr); gap: 14px; color: #fde8e8; }
+.rb-inhalt *, .rb-inhalt *::before, .rb-inhalt *::after { box-sizing: border-box; }
+.rb-held { text-align: center; padding: 10px 6px 0; } .rb-held h2 { margin: 6px 0; font-size: 1.6rem; } .rb-held p { margin: 0; color: rgba(253,232,232,.75); line-height: 1.45; }
+.rb-logo { font-size: 3rem; }
+.rb-modi { display: grid; gap: 10px; }
+.rb-modus { appearance: none; text-align: left; display: grid; grid-template-columns: auto 1fr; grid-template-rows: auto auto; column-gap: 12px; align-items: center; padding: 14px 16px; border-radius: 22px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.06); color: inherit; font: inherit; cursor: pointer; }
+.rb-modus span { grid-row: 1 / 3; font-size: 2rem; } .rb-modus b { font-size: 1.1rem; } .rb-modus small { color: rgba(253,232,232,.65); }
+.rb-karte { padding: 14px 16px; border-radius: 22px; background: rgba(255,255,255,.05); border: 1px solid rgba(255,255,255,.1); }
+.rb-karte h3 { margin: 0 0 10px; font-size: 1rem; color: #fca5a5; } .rb-karte h3 small { color: rgba(253,232,232,.55); font-weight: 600; }
+.rb-h3 { margin-top: 14px !important; } .rb-h3 b { color: #fde68a; }
+.rb-tricks { display: grid; gap: 8px; } .rb-trick { display: grid; gap: 2px; } .rb-trick small { color: rgba(253,232,232,.6); font-size: .82rem; line-height: 1.35; } .rb-trick.gut b { color: #86efac; }
+.rb-hinweis, .rb-klein { font-size: .82rem; color: rgba(253,232,232,.6); line-height: 1.45; margin: 6px 0 0; } .rb-hinweis { text-align: center; padding: 0 8px; }
+.rb-chips { display: flex; flex-wrap: wrap; gap: 8px; }
+.rb-lchip, .rb-chip { appearance: none; border: 1px solid rgba(255,255,255,.16); background: rgba(255,255,255,.05); color: inherit; border-radius: 999px; padding: 7px 12px; font: 650 .88rem inherit; font-family: inherit; cursor: pointer; }
+.rb-lchip.an { background: rgba(239,68,68,.3); border-color: #ef4444; color: #fff; }
+.rb-chip { background: rgba(239,68,68,.16); border-color: rgba(239,68,68,.45); } .rb-chip.gut { background: rgba(74,222,128,.16); border-color: rgba(74,222,128,.5); }
+#rbGrad { width: 100%; accent-color: #ef4444; height: 32px; }
+.rb-gross { width: 100%; font-size: 1.1rem; padding: 15px; background: linear-gradient(135deg, #ef4444, #f97316); color: #fff; border: 0; border-radius: 18px; font-weight: 800; box-shadow: 0 5px 0 #7f1d1d; }
+.rb-gross:disabled { opacity: .45; }
+.rb-knoepfe { display: grid; gap: 8px; }
+.rb-post { padding: 14px 16px; border-radius: 20px; background: #f8fafc; color: #0f172a; box-shadow: 0 16px 40px rgba(0,0,0,.45); border-top: 5px solid var(--f); animation: aufploppen .4s var(--ease-spring); }
+.rb-post-kopf { display: flex; align-items: center; gap: 10px; } .rb-post-kopf > span:nth-child(2) { flex: 1; display: grid; } .rb-post-kopf small { color: #64748b; font-size: .76rem; }
+.rb-ava { width: 42px; height: 42px; border-radius: 50%; display: grid; place-items: center; font-size: 1.4rem; background: color-mix(in srgb, var(--f) 25%, #fff); }
+.rb-satire { font-style: normal; font-size: .62rem; font-weight: 900; letter-spacing: .08em; color: #fff; background: #0f172a; padding: 3px 7px; border-radius: 6px; transform: rotate(-4deg); }
+.rb-text { margin: 10px 0 6px; font-size: 1.02rem; line-height: 1.45; overflow-wrap: anywhere; } .rb-hash { margin: 0; color: #2563eb; font-size: .9rem; overflow-wrap: anywhere; }
+.rb-zahlen { display: flex; justify-content: space-between; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid #e2e8f0; font-size: .88rem; color: #475569; } .rb-zahlen b { color: #0f172a; }
+.rb-kombo { margin: 10px 0 0; color: #fde68a; font-weight: 700; font-size: .9rem; }
+.rb-runde { text-align: center; font-size: .95rem; color: rgba(253,232,232,.8); }
+.rb-slot { display: grid; gap: 8px; } .rb-slot h3 { margin-bottom: 2px; }
+.rb-option { appearance: none; text-align: left; padding: 11px 13px; border-radius: 14px; border: 1.5px solid rgba(255,255,255,.14); background: rgba(0,0,0,.2); color: inherit; font: 600 .95rem inherit; font-family: inherit; line-height: 1.35; cursor: pointer; }
+.rb-option.an { border-color: #f97316; background: rgba(249,115,22,.2); color: #fff; }
+.rb-vorschau { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; font-size: .95rem; } .rb-vorschau b { color: #fde68a; }
+.rb-eingabe { width: 100%; padding: 12px 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,.16); background: rgba(0,0,0,.25); color: inherit; font: 600 1rem inherit; font-family: inherit; margin: 8px 0; resize: vertical; }
+.rb-score { display: grid; grid-template-columns: auto 1fr; gap: 14px; align-items: center; } .rb-score small { display: block; color: rgba(253,232,232,.6); }
+.rb-ring { width: 84px; height: 84px; border-radius: 50%; background: conic-gradient(#ef4444 var(--p), rgba(255,255,255,.1) 0); display: grid; place-items: center; position: relative; }
+.rb-ring::before { content: ''; position: absolute; inset: 9px; border-radius: 50%; background: #1a0606; } .rb-ring b, .rb-ring small { position: relative; } .rb-ring b { font-size: 1.5rem; margin-top: 8px; } .rb-ring small { font-size: .62rem; margin-top: -18px; }
+.rb-fund { display: grid; gap: 2px; padding: 8px 0; border-top: 1px solid rgba(255,255,255,.07); } .rb-fund:first-of-type { border-top: 0; } .rb-fund small { color: rgba(253,232,232,.65); line-height: 1.35; }
+@media (prefers-reduced-motion: reduce) { .rb-mini, .rb-post { animation: none; } }
