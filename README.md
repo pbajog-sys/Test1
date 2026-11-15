@@ -815,6 +815,13 @@ Hub) oder der runde ↑-Knopf, der ab ~1 Bildschirmhöhe erscheint, scrollt nach
 den Tagesaufgaben und den offenen Erfolgen verschwunden (`SK_AUSSORTIERT` in `plattform.js`). Code und Spielstände bleiben
 unangetastet; bereits verdiente Erfolge bleiben sichtbar. Wieder einblenden = Eintrag aus `SK_AUSSORTIERT` entfernen.
 
+## 🎯 Lernplan, ✍️ Diktat, 🔁 Übersetzung, English bis C2 (v145)
+- **Lernplan** (beide Sprachen): Ziel-Niveau (Slowenisch bis B2, Englisch bis C2), 10/20/30/45 Minuten pro Tag, Start per Auswahl oder **Einstufungstest** (je Niveau 5 Wörter, ab 4/5 gilt es als sicher). Jeden Tag Missionen: Karteikarten des aktuellen Niveaus, Diktat und/oder Übersetzung, ab 20 Min. ein wechselndes Spiel, ab 30 Min. Grammatik-Duell + Rollenspiel, ab 45 Min. Sprech-Arena. Erledigtes wird automatisch abgehakt (Wochenleiste). Aufstieg, wenn 70 % eines Niveaus sicher sitzen (Karteikarten-Stufe ≥ 3). Die Wochen-Schätzung bezieht sich ehrlich nur auf den App-Wortschatz.
+- **Diktat** (Spiel): Satz hören (auch langsam), tippen; Wort für Wort geprüft – exakt grün, Häkchen-/Tippfehler gelb (halbe Punkte), falsch rot mit deiner Version. Braucht eine Stimme der Sprache auf dem Gerät (sonst ehrlich gesperrt).
+- **Übersetzung** (Spiel): Deutsch → Zielsprache (70 %) oder zurück, Sätze und ganze **Texte** (E-Mail, SOP, Studie, Presse). Abgleich mit Musterlösung und erlaubten Varianten; „Meine Version stimmt auch“ für freie, aber richtige Übersetzungen.
+- **English C1/C2** (`en-c1c2.js`): C1 (50), C2 (50), Idioms (26) mit Beispielsätzen; +28 Grammatik-Fragen (Mixed Conditionals, Inversion, Subjunctive, Cleft Sentences, Participle Clauses, Passive Reporting, Concession); 22 Übersetzungsaufgaben inkl. 4 Texten; 4 neue Spickzettel.
+- Slowenisch: Decks jetzt nach Niveau A1/A2/B1/B2 (aus dem Korpus-Wortschatz) + Alltag, Business, Pharma.
+
 ## 🎙️ Echte Spracherkennung, 🎮 Lernhalle und 🇬🇧 English Pro (v144)
 **Spracherkennung (`sprech-ki.js`)** – vorher hat das Nachsprechen ohne Browser-Erkennung nur Lautstärke und Silben gemessen und fast alles als richtig gewertet. Jetzt:
 - **Whisper auf dem Gerät** (transformers.js 3.7.6 + `onnx-community/whisper-base` bzw. `-tiny`, 8-Bit, WASM): einmalig nach Zustimmung laden (≈ 80 / 40 MB von Hugging Face + jsDelivr), danach offline (Service Worker merkt sich das Programm, transformers.js das Modell). Aufnahme als rohes PCM (16 kHz), Pegel-Erkennung stoppt nach Stille, Stille wird nie an das Modell gegeben (Whisper würde sonst Text erfinden).

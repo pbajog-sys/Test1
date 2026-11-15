@@ -475,5 +475,5 @@ LH.paket({
 // Eigener Bildschirm im Hub
 $('hubEng').addEventListener('click', () => { merkeZuletzt('eng'); zoomZu($('hubEng'), () => { show('eng', '🇬🇧 English Pro'); LH.start('en', $('engInhalt')); engHubText(); }); });
 $('engZurueck').addEventListener('click', () => { if ($('engInhalt').classList.contains('lh-im-spiel')) { LH.stop(); LH.home(); return; } LH.stop(); if ('speechSynthesis' in window) speechSynthesis.cancel(); zeigeHub(); engHubText(); });
-function engHubText() { const el = $('hubEngBest'); if (!el) return; const s = loadJson('walquiz.lernhalle.en.v1'); el.textContent = s && s.xp ? 'Level ' + LH._intern.level(s.xp).l + ' · ' + s.xp + ' XP' : 'B1/B2 · Business · Pharma · Spiele · Sprechen'; }
+function engHubText() { const el = $('hubEngBest'); if (!el) return; const s = loadJson('walquiz.lernhalle.en.v1'); el.textContent = s && s.xp ? 'Level ' + LH._intern.level(s.xp).l + ' · ' + s.xp + ' XP' : 'B1 → C2 · Lernplan · Diktat · Übersetzen · Spiele'; }
 engHubText();

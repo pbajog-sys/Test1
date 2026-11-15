@@ -19,7 +19,7 @@ const LH = (() => {
     const s = loadJson(P.key), ok = s && typeof s === 'object';
     const obj = (x) => (x && typeof x === 'object' && !Array.isArray(x) ? x : {});
     return { xp: ok && Number.isFinite(s.xp) ? s.xp : 0, best: obj(ok && s.best), tage: obj(ok && s.tage), srs: obj(ok && s.srs), falsch: obj(ok && s.falsch),
-      deck: ok && typeof s.deck === 'string' ? s.deck : null, ton: ok && s.ton === false ? false : true, richtung: ok && s.richtung === 'de' ? 'de' : 'z', spiele: ok && Number.isFinite(s.spiele) ? s.spiele : 0, rollen: obj(ok && s.rollen), sprechen: ok && s.sprechen === true };
+      deck: ok && typeof s.deck === 'string' ? s.deck : null, ton: ok && s.ton === false ? false : true, richtung: ok && s.richtung === 'de' ? 'de' : 'z', spiele: ok && Number.isFinite(s.spiele) ? s.spiele : 0, rollen: obj(ok && s.rollen), sprechen: ok && s.sprechen === true, plan: ok && s.plan && typeof s.plan === 'object' && s.plan.ziel ? { tage: {}, ...s.plan, tage: obj(s.plan.tage) } : null };
   }
   const speichern = (s) => saveJson(P.key, s);
   function xpDazu(n, s = store()) {
@@ -109,6 +109,7 @@ const LH = (() => {
     const root = rahmen(
       '<div class="lh-hero"><div class="lh-hero-l"><span class="lh-flagge">' + P.flagge + '</span><div><h2>' + esc(P.titel) + '</h2><small>Level <b>' + L.l + '</b> · ' + zahl(s.xp) + ' XP</small><div class="lh-xpbar"><i style="width:' + Math.round((L.rest / L.need) * 100) + '%"></i></div></div></div>'
       + '<div class="lh-hero-r">' + ring(heuteXp / TAGESZIEL, heuteXp >= TAGESZIEL ? '✓' : Math.round(heuteXp), heuteXp >= TAGESZIEL ? 'voll' : '') + '<span class="lh-serie">🔥 ' + serie(s) + '</span></div></div>'
+      + planKarte(s)
       + '<div class="lh-decks" role="tablist">' + deckListe.map((x) => { const m = x.items.length ? meister(s, x) / x.items.length : 0; return '<button type="button" class="lh-deck' + (x.id === d.id ? ' an' : '') + '" data-deck="' + x.id + '"><span>' + x.e + '</span><b>' + esc(x.n) + '</b><small>' + x.items.length + '</small><i style="--m:' + Math.round(m * 100) + '%"></i></button>'; }).join('') + '</div>'
       + '<button type="button" class="lh-cta" data-lh="karten"><span class="lh-cta-ic">🃏</span><span><b>Karteikarten</b><small>' + (faellig ? faellig + ' fällig · ' : '') + Math.min(neu, 10) + ' neu · ' + esc(d.n) + '</small></span><span class="lh-cta-pfeil">›</span></button>'
       + '<h3 class="lh-h3">🎮 Spiele</h3><div class="lh-spiele">' + SPIELE.map((g) => {
@@ -120,6 +121,7 @@ const LH = (() => {
       + '<div class="lh-fuss"><button type="button" class="lh-klein" data-lh="sprache">🎙️ ' + esc(typeof SprechKI !== 'undefined' ? SprechKI.statusText(P.lang) : 'Spracherkennung') + '</button><button type="button" class="lh-klein" data-lh="ton">' + (s.ton ? '🔊 Töne an' : '🔈 Töne aus') + '</button><button type="button" class="lh-klein" data-lh="richtung">' + (s.richtung === 'de' ? '🇩🇪 → ' + P.flagge : P.flagge + ' → 🇩🇪') + ' Karten</button></div>');
     root.querySelectorAll('[data-deck]').forEach((b) => b.addEventListener('click', () => { const s2 = store(); s2.deck = b.dataset.deck; speichern(s2); home(); }));
     root.querySelector('[data-lh="karten"]').addEventListener('click', () => karten());
+    planBinden(root);
     root.querySelectorAll('[data-spiel]').forEach((b) => b.addEventListener('click', () => starteSpiel(b.dataset.spiel)));
     root.querySelectorAll('[data-rolle]').forEach((b) => b.addEventListener('click', () => rolle(P.rollen.find((r) => r.id === b.dataset.rolle))));
     root.querySelector('[data-lh="ton"]').addEventListener('click', () => { const s2 = store(); s2.ton = !s2.ton; speichern(s2); home(); });
@@ -137,6 +139,7 @@ const LH = (() => {
     if (!q.length) { rahmen('<div class="lh-karte lh-mitte"><div class="lh-gross-ic">🎉</div><h3>Alles erledigt!</h3><p>In „' + esc(d.n) + '“ ist heute nichts mehr fällig.</p><button type="button" class="btn" data-lh="raus">Zur Lernhalle</button></div>'); bindRaus(el); return; }
     const zeichnen = () => {
       if (i >= q.length) {
+        if (gemacht) planErledigt('karten');
         const s2 = xpDazu(gemacht * 2);
         rahmen('<div class="lh-karte lh-mitte"><div class="lh-gross-ic">🃏</div><h3>' + gemacht + ' Karten geschafft</h3><p>+' + gemacht * 2 + ' XP · Level ' + level(s2.xp).l + '</p><button type="button" class="btn" data-lh="raus">Zur Lernhalle</button></div>');
         bindRaus(el); if (typeof konfetti === 'function' && gemacht >= 10) konfetti(20, ['🃏', '⭐', '✨']); return;
@@ -187,7 +190,7 @@ const LH = (() => {
     lauf++;
     const s = store(), alt = s.best[sp.g.id] || 0, rekord = sp.punkte > alt;
     if (rekord) s.best[sp.g.id] = sp.punkte;
-    s.spiele++; speichern(s);
+    s.spiele++; speichern(s); planErledigt(sp.g.id);
     const xp = Math.min(60, Math.round(sp.punkte / 10) + sp.richtig);
     const s2 = xpDazu(xp);
     const sterne = sp.punkte >= sterneGrenzen[2] ? 3 : sp.punkte >= sterneGrenzen[1] ? 2 : sp.punkte >= sterneGrenzen[0] ? 1 : 0;
@@ -405,7 +408,197 @@ const LH = (() => {
         };
         runde();
       } },
+    { id: 'diktat', e: '✍️', n: 'Diktat', sub: 'Hören und schreiben – jedes Wort geprüft', f: ['#475569', '#0ea5e9'],
+      geht: (d) => (!P.hatTon((satzPool(d)[0] || {}).text) ? 'Auf diesem Gerät gibt es keine ' + P.sprache + '-Stimme' : satzPool(d).length >= 3 ? true : 'Zu wenig Sätze in diesem Deck'),
+      start(sp, box, hudBox) {
+        const pool = misch(satzPool(sp.d)).slice(0, 6); let r = 0;
+        const runde = () => {
+          if (!aktiv(sp)) return;
+          if (r >= pool.length) { ende(sp, [90, 150, 190]); return; }
+          const x = pool[r++];
+          hud(hudBox, sp, '<span class="lh-zuege">' + r + ' / ' + pool.length + '</span>');
+          box.innerHTML = '<div class="lh-hoer"><button type="button" class="lh-hoer-knopf" data-lh="nochmal">🔊</button><button type="button" class="lh-klein" data-lh="langsam">🐢 langsam</button></div><p class="lh-fein lh-zentriert">Schreib, was du hörst. Groß/klein und Satzzeichen zählen nicht, Rechtschreibung schon.</p>'
+            + '<textarea class="lh-text" data-lh="ein" rows="3" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="…"></textarea>' + zeichenLeiste() + '<div class="lh-knoepfe"><button type="button" class="btn secondary" data-lh="skip">Lösung zeigen</button><button type="button" class="btn" data-lh="ok">Prüfen</button></div><div data-lh="erg"></div>';
+          const ein = box.querySelector('[data-lh="ein"]');
+          bindZeichen(box, ein);
+          box.querySelector('[data-lh="nochmal"]').addEventListener('click', () => P.sprich(x.text));
+          box.querySelector('[data-lh="langsam"]').addEventListener('click', () => P.sprich(x.text, true));
+          setTimeout(() => P.sprich(x.text), 250);
+          const fertig = (aufgeben) => {
+            const v = aufgeben ? { quote: 0, woerter: woerterVon(x.text).map((w) => ({ w, status: 'fehlt' })) } : diktatWert(ein.value, x.text);
+            treffer(sp, x.item, v.quote >= 0.9, Math.round(v.quote * 30));
+            ein.disabled = true; box.querySelectorAll('[data-lh="ok"], [data-lh="skip"]').forEach((b) => { b.disabled = true; });
+            box.querySelector('[data-lh="erg"]').innerHTML = '<div class="lh-erk ' + (v.quote >= 0.9 ? 'gut' : 'schlecht') + '"><b>' + (v.quote >= 0.99 ? '✓ Fehlerfrei!' : v.quote >= 0.9 ? '✓ Fast perfekt' : '✗ ' + Math.round(v.quote * 100) + ' %') + '</b><div class="ski-woerter links">' + v.woerter.map((w) => '<span class="ski-w ' + w.status + '"' + (w.h && w.status !== 'ok' ? ' title="du: ' + esc(w.h) + '"' : '') + '>' + esc(w.w) + (w.h && w.status !== 'ok' ? ' <small>(' + esc(w.h) + ')</small>' : '') + '</span>').join(' ') + '</div><p class="lh-bsp"><b>' + esc(x.text) + '</b>' + (x.de ? '<i>' + esc(x.de) + '</i>' : '') + '</p></div><button type="button" class="btn" data-lh="weiter">Weiter ›</button>';
+            box.querySelector('[data-lh="weiter"]').addEventListener('click', runde);
+          };
+          box.querySelector('[data-lh="ok"]').addEventListener('click', () => { if (ein.value.trim()) fertig(false); });
+          box.querySelector('[data-lh="skip"]').addEventListener('click', () => fertig(true));
+        };
+        runde();
+      } },
+    { id: 'uebersetzen', e: '🔁', n: 'Übersetzung', sub: 'Sätze & Texte – mit Musterlösung', f: ['#d97706', '#65a30d'], geht: (d) => (uePool(d).length >= 3 ? true : 'Zu wenig Sätze in diesem Deck'),
+      start(sp, box, hudBox) {
+        const pool = misch(uePool(sp.d)), auswahl = pool.filter((x) => x.text).slice(0, 1).concat(pool.filter((x) => !x.text)).slice(0, 5); let r = 0;
+        const runde = () => {
+          if (!aktiv(sp)) return;
+          if (r >= auswahl.length) { ende(sp, [90, 140, 180]); return; }
+          const x = auswahl[r++], nachZiel = x.text || Math.random() < 0.7;
+          const quelle = nachZiel ? x.de : x.z, refs = nachZiel ? [x.z].concat(x.alt || []) : [x.de].concat(x.deAlt || []), lang = nachZiel ? P.lang : 'de';
+          hud(hudBox, sp, '<span class="lh-zuege">' + r + ' / ' + auswahl.length + '</span>');
+          box.innerHTML = '<div class="lh-frage"><small>' + (x.text ? '📄 Text · ' : '') + (nachZiel ? 'Übersetze ins ' + esc(P.sprache) + 'e' : 'Übersetze ins Deutsche') + '</small><b class="satz' + (x.text ? ' text' : '') + '">' + esc(quelle) + '</b>' + (!nachZiel ? laut(quelle) : '') + '</div>'
+            + '<textarea class="lh-text" data-lh="ein" rows="' + (x.text ? 6 : 3) + '" autocomplete="off" spellcheck="false" placeholder="Deine Übersetzung …"></textarea>' + (nachZiel ? zeichenLeiste() : '') + '<div class="lh-knoepfe"><button type="button" class="btn secondary" data-lh="skip">Musterlösung</button><button type="button" class="btn" data-lh="ok">Prüfen</button></div><div data-lh="erg"></div>';
+          bindLaut(box);
+          const ein = box.querySelector('[data-lh="ein"]'); bindZeichen(box, ein);
+          const fertig = (aufgeben) => {
+            const v = aufgeben ? { quote: 0, woerter: [], text: refs[0] } : besteRef(ein.value, refs, lang);
+            const gut = v.quote >= 0.85, fast = v.quote >= 0.6;
+            let punkte = Math.round(v.quote * 40);
+            treffer(sp, x.item || null, gut, punkte);
+            ein.disabled = true; box.querySelectorAll('[data-lh="ok"], [data-lh="skip"]').forEach((b) => { b.disabled = true; });
+            const erg = box.querySelector('[data-lh="erg"]');
+            erg.innerHTML = '<div class="lh-erk ' + (gut ? 'gut' : 'schlecht') + '"><b>' + (aufgeben ? '📘 Musterlösung' : gut ? '✓ Sehr gut (' + Math.round(v.quote * 100) + ' %)' : fast ? '≈ Nah dran (' + Math.round(v.quote * 100) + ' %)' : '✗ Weicht stark ab (' + Math.round(v.quote * 100) + ' %)') + '</b>'
+              + (v.woerter.length ? '<div class="ski-woerter links">' + v.woerter.map((w) => '<span class="ski-w ' + w.status + '">' + esc(w.w) + '</span>').join(' ') + '</div><small class="lh-fein">Farben = Wörter der Musterlösung, die in deiner Version vorkommen.</small>' : '')
+              + '<p class="lh-bsp"><b>' + esc(refs[0]) + '</b>' + (nachZiel ? laut(refs[0]) : '') + (refs.length > 1 ? '<i>Auch richtig: ' + refs.slice(1).map(esc).join(' · ') + '</i>' : '') + '</p></div>'
+              + '<div class="lh-knoepfe">' + (!gut && !aufgeben && ein.value.trim() ? '<button type="button" class="btn secondary" data-lh="auch">✔ Meine Version stimmt auch</button>' : '') + '<button type="button" class="btn" data-lh="weiter">Weiter ›</button></div>';
+            bindLaut(erg);
+            const auch = erg.querySelector('[data-lh="auch"]');
+            if (auch) auch.addEventListener('click', () => { sp.punkte += Math.max(0, 30 - punkte); sp.richtig++; sp.falsch = Math.max(0, sp.falsch - 1); if (x.item) { sp.fehler = sp.fehler.filter((y) => y !== x.item); fehlerMerken(x.item, true); fehlerMerken(x.item, true); } hud(hudBox, sp, sp.hudExtra); auch.disabled = true; auch.textContent = '✔ Als richtig gezählt'; });
+            erg.querySelector('[data-lh="weiter"]').addEventListener('click', runde);
+          };
+          box.querySelector('[data-lh="ok"]').addEventListener('click', () => { if (ein.value.trim()) fertig(false); });
+          box.querySelector('[data-lh="skip"]').addEventListener('click', () => fertig(true));
+        };
+        runde();
+      } },
   ];
+  // ---------- Hilfen für Diktat & Übersetzung ----------
+  function satzPool(d) {
+    return d.items.filter((x) => x.bsp && x.bsp.split(' ').length >= 3).map((x) => ({ text: x.bsp, de: x.bspDe, item: x }))
+      .concat(d.items.filter((x) => !x.bsp && x.z.split(' ').length >= 3).map((x) => ({ text: x.z, de: x.de, item: x })));
+  }
+  function uePool(d) {
+    const extra = (P.uebersetzung || []).filter((x) => d.id === 'mix' || d.id === 'fehler' || x.deck === d.id);
+    const saetze = d.items.filter((x) => x.bsp && x.bspDe && x.bsp.split(' ').length >= 3).map((x) => ({ de: x.bspDe, z: x.bsp, item: x }))
+      .concat(d.items.filter((x) => !x.bsp && x.z.split(' ').length >= 3).map((x) => ({ de: x.de, z: x.z, alt: x.alt, deAlt: x.deAlt, item: x })));
+    const schon = new Set(extra.map((x) => norm(x.z)));
+    return extra.concat(saetze.filter((x) => !schon.has(norm(x.z))));
+  }
+  const woerterVon = (t) => (typeof SprechKI !== 'undefined' ? SprechKI.norm(t, P.lang).split(' ').filter(Boolean) : norm(t).split(' '));
+  function diktatWert(eingabe, ziel) {
+    const v = SprechKI.vergleiche(eingabe, ziel, P.lang);
+    const W = v.woerter.map((w) => ({ ...w, status: w.s === 1 ? 'ok' : w.s >= 0.75 ? 'fast' : 'fehlt' }));
+    const roh = W.reduce((a, w) => a + (w.status === 'ok' ? 1 : w.status === 'fast' ? 0.5 : 0), 0) / Math.max(1, W.length);
+    return { quote: Math.max(0, roh - v.extra * 0.05), woerter: W };
+  }
+  function besteRef(eingabe, refs, lang) {
+    let best = null;
+    refs.filter(Boolean).forEach((r) => { const v = SprechKI.vergleiche(eingabe, r, lang); if (!best || v.quote > best.quote) best = { ...v, text: r }; });
+    return best;
+  }
+  const zeichenLeiste = () => (P.zeichen ? '<div class="lh-zeichen">' + P.zeichen.map((c) => '<button type="button" data-c="' + c + '">' + c + '</button>').join('') + '</div>' : '');
+  function bindZeichen(box, ein) {
+    box.querySelectorAll('[data-c]').forEach((b) => {
+      b.addEventListener('mousedown', (e) => e.preventDefault());
+      b.addEventListener('click', () => { const p = ein.selectionStart != null ? ein.selectionStart : ein.value.length; ein.value = ein.value.slice(0, p) + b.dataset.c + ein.value.slice(p); ein.focus(); ein.setSelectionRange(p + 1, p + 1); });
+    });
+  }
+
+  // ---------- 🎯 Lernplan ----------
+  function planErledigt(id) { const s = store(); if (!s.plan) return; const k = tagKey(); s.plan.tage[k] = { ...(s.plan.tage[k] || {}), [id]: true }; speichern(s); }
+  function niveauStand(s, niv) {
+    const items = decks.filter((d) => niv.decks.includes(d.id)).flatMap((d) => d.items);
+    const m = items.filter((x) => s.srs[x.k] && s.srs[x.k][0] >= 3).length;
+    return { m, n: items.length, q: items.length ? m / items.length : 0 };
+  }
+  function aktuellesNiveau(s) {
+    const N = P.niveaus, zi = Math.max(0, N.findIndex((n) => n.id === s.plan.ziel));
+    for (let i = Math.max(0, N.findIndex((n) => n.id === s.plan.start)); i < zi; i++) if (niveauStand(s, N[i]).q < 0.7) return N[i];
+    return N[zi];
+  }
+  const deckVon = (id) => decks.find((d) => d.id === id);
+  const spielGeht = (id, deckId) => { const g = SPIELE.find((x) => x.id === id), d = deckVon(deckId); return !!(g && d && (!g.geht || g.geht(d) === true)); };
+  function planMissionen(s) {
+    const niv = aktuellesNiveau(s), min = s.plan.minuten, tag = tagNr();
+    const haupt = niv.decks[tag % niv.decks.length], neben = niv.decks[(tag + 1) % niv.decks.length];
+    const M = [{ id: 'karten', ic: '🃏', n: 'Karteikarten', sub: deckVon(haupt).n + ' · fällige + neue', deck: haupt }];
+    const schreib = (tag % 2 ? ['diktat', 'uebersetzen'] : ['uebersetzen', 'diktat']).filter((id) => spielGeht(id, neben));
+    if (schreib[0]) M.push({ id: schreib[0], ic: schreib[0] === 'diktat' ? '✍️' : '🔁', n: schreib[0] === 'diktat' ? 'Diktat' : 'Übersetzung', sub: deckVon(neben).n, deck: neben });
+    if (min >= 20) {
+      if (schreib[1]) M.push({ id: schreib[1], ic: schreib[1] === 'diktat' ? '✍️' : '🔁', n: schreib[1] === 'diktat' ? 'Diktat' : 'Übersetzung', sub: deckVon(haupt).n, deck: spielGeht(schreib[1], haupt) ? haupt : neben });
+      const rot = ['blitz', 'regen', 'satz', 'tippen', 'memory', 'hoeren'].filter((id) => spielGeht(id, haupt));
+      if (rot.length) { const g = SPIELE.find((x) => x.id === rot[tag % rot.length]); M.push({ id: g.id, ic: g.e, n: g.n, sub: deckVon(haupt).n, deck: haupt }); }
+    }
+    if (min >= 30) {
+      if (P.grammatik && P.grammatik.length >= 12) M.push({ id: 'grammatik', ic: '🧬', n: 'Grammatik-Duell', sub: '12 Lücken', deck: haupt });
+      if (P.rollen && P.rollen.length) { const R = P.rollen[tag % P.rollen.length]; M.push({ id: 'rolle', ic: '🎭', n: 'Rollenspiel', sub: R.titel, rolle: R.id }); }
+    }
+    if (min >= 45) M.push({ id: 'sprechen', ic: '🎙️', n: 'Sprech-Arena', sub: deckVon(haupt).n, deck: haupt });
+    return { niv, M };
+  }
+  function planKarte(s) {
+    if (!P.niveaus) return '';
+    if (!s.plan) return '<button type="button" class="lh-plan-neu" data-lh="plan-neu"><span>🎯</span><span><b>Lernplan erstellen</b><small>Ziel-Niveau wählen' + (P.niveaus.length ? ' (bis ' + P.niveaus[P.niveaus.length - 1].id + ')' : '') + ', Minuten pro Tag – mit Einstufungstest</small></span><span class="lh-cta-pfeil">›</span></button>';
+    const { niv, M } = planMissionen(s), heute = s.plan.tage[tagKey()] || {}, N = P.niveaus, zi = N.findIndex((n) => n.id === s.plan.ziel);
+    const erledigt = M.filter((m) => heute[m.id]).length;
+    const woche = Array.from({ length: 7 }, (_, i) => { const d = new Date(); d.setDate(d.getDate() - 6 + i); const t = s.plan.tage[tagKey(d)] || {}; const n = Object.keys(t).length; return '<i class="' + (n >= M.length ? 'voll' : n ? 'halb' : '') + (i === 6 ? ' heute' : '') + '" title="' + tagKey(d) + '">' + 'MDMDFSS'[(d.getDay() + 6) % 7] + '</i>'; }).join('');
+    let rest = 0; for (let i = N.findIndex((n) => n.id === niv.id); i <= zi; i++) { const st = niveauStand(s, N[i]); rest += Math.max(0, Math.ceil(st.n * 0.7) - st.m); }
+    const proTag = s.plan.minuten >= 30 ? 15 : 10, wochen = Math.ceil(rest / proTag / 7);
+    return '<div class="lh-plan"><div class="lh-plan-kopf"><b>🎯 Weg zu ' + esc(s.plan.ziel) + '</b><button type="button" class="lh-klein" data-lh="plan-neu">⚙︎</button></div>'
+      + '<div class="lh-niveaus">' + N.slice(0, zi + 1).map((n) => { const st = niveauStand(s, n); return '<span class="' + (n.id === niv.id ? 'jetzt' : st.q >= 0.7 ? 'fertig' : '') + '"><b>' + n.id + '</b><i style="--q:' + Math.round(Math.min(1, st.q / 0.7) * 100) + '%"></i></span>'; }).join('') + '</div>'
+      + '<div class="lh-plan-info"><span>Jetzt: <b>' + niv.id + '</b> · ' + s.plan.minuten + ' Min./Tag</span><span>' + (rest ? 'App-Wortschatz bis ' + esc(s.plan.ziel) + ': ≈ ' + wochen + ' Woche' + (wochen === 1 ? '' : 'n') + '*' : 'App-Wortschatz bis ' + esc(s.plan.ziel) + ' geschafft 🎉') + '</span></div>'
+      + '<div class="lh-woche">' + woche + '</div>'
+      + '<div class="lh-missionen">' + M.map((m, i) => '<button type="button" class="lh-mission' + (heute[m.id] ? ' fertig' : '') + '" data-mission="' + i + '"><span>' + (heute[m.id] ? '✅' : m.ic) + '</span><b>' + esc(m.n) + '</b><small>' + esc(m.sub) + '</small></button>').join('') + '</div>'
+      + '<p class="lh-fein">Heute ' + erledigt + ' / ' + M.length + ' erledigt · *nur der Wortschatz dieser App (70 % je Niveau sicher). Echtes ' + esc(s.plan.ziel) + ' braucht zusätzlich viel Lesen, Hören und Sprechen – das dauert eher Monate.</p></div>';
+  }
+  function planBinden(root) {
+    root.querySelectorAll('[data-lh="plan-neu"]').forEach((b) => b.addEventListener('click', planEinrichten));
+    const s = store(); if (!s.plan || !P.niveaus) return;
+    const { M } = planMissionen(s);
+    root.querySelectorAll('[data-mission]').forEach((b) => b.addEventListener('click', () => {
+      const m = M[+b.dataset.mission];
+      if (m.rolle) { rolle(P.rollen.find((r) => r.id === m.rolle)); return; }
+      const s2 = store(); s2.deck = m.deck; speichern(s2);
+      if (m.id === 'karten') karten(); else starteSpiel(m.id);
+    }));
+  }
+  function planEinrichten() {
+    const s = store(), N = P.niveaus, wahl = { ziel: (s.plan && s.plan.ziel) || N[N.length - 1].id, minuten: (s.plan && s.plan.minuten) || 20, start: (s.plan && s.plan.start) || N[0].id };
+    const zeichnen = () => {
+      const root = rahmen('<div class="lh-karte lh-setup"><h3>🎯 Dein Lernplan</h3>'
+        + '<b>Ziel</b><div class="lh-chips">' + N.map((n) => '<button type="button" class="' + (wahl.ziel === n.id ? 'an' : '') + '" data-z="' + n.id + '">' + n.id + '<small>' + esc(n.n) + '</small></button>').join('') + '</div>'
+        + '<b>Zeit pro Tag</b><div class="lh-chips">' + [10, 20, 30, 45].map((m) => '<button type="button" class="' + (wahl.minuten === m ? 'an' : '') + '" data-m="' + m + '">' + m + ' Min.</button>').join('') + '</div>'
+        + '<b>Start</b><div class="lh-chips">' + N.map((n) => '<button type="button" class="' + (wahl.start === n.id ? 'an' : '') + '" data-st="' + n.id + '">' + n.id + '</button>').join('') + '</div>'
+        + '<button type="button" class="btn secondary" data-lh="test">🧪 Einstufungstest (≈ 2 Min.)</button>'
+        + '<p class="lh-fein">' + { 10: 'Karteikarten + Diktat oder Übersetzung.', 20: '+ zweite Schreibaufgabe + ein Spiel.', 30: '+ Grammatik-Duell + Rollenspiel.', 45: '+ Sprech-Arena.' }[wahl.minuten] + ' Jeden Tag andere Decks und Spiele; wer ein Niveau zu 70 % sicher kann, steigt automatisch auf.</p>'
+        + '<div class="lh-knoepfe"><button type="button" class="btn" data-lh="speichern">Plan starten</button></div></div>', spielKopf('🎯 Lernplan'));
+      bindRaus(root);
+      root.querySelectorAll('[data-z]').forEach((b) => b.addEventListener('click', () => { wahl.ziel = b.dataset.z; if (N.findIndex((n) => n.id === wahl.start) > N.findIndex((n) => n.id === wahl.ziel)) wahl.start = wahl.ziel; zeichnen(); }));
+      root.querySelectorAll('[data-m]').forEach((b) => b.addEventListener('click', () => { wahl.minuten = +b.dataset.m; zeichnen(); }));
+      root.querySelectorAll('[data-st]').forEach((b) => b.addEventListener('click', () => { wahl.start = b.dataset.st; if (N.findIndex((n) => n.id === wahl.start) > N.findIndex((n) => n.id === wahl.ziel)) wahl.ziel = wahl.start; zeichnen(); }));
+      root.querySelector('[data-lh="test"]').addEventListener('click', () => einstufung(wahl, zeichnen));
+      root.querySelector('[data-lh="speichern"]').addEventListener('click', () => { const s2 = store(); s2.plan = { ...wahl, seit: tagKey(), tage: (s2.plan && s2.plan.tage) || {} }; speichern(s2); home(); });
+    };
+    zeichnen();
+  }
+  // Einstufung: je Niveau 5 Wörter (Bedeutung wählen); ab 4/5 gilt das Niveau als sicher
+  function einstufung(wahl, zurueck) {
+    const N = P.niveaus, fragen = N.flatMap((n) => { const pool = decks.filter((d) => n.decks.includes(d.id)).flatMap((d) => d.items).filter((x) => x.z.split(' ').length <= 3); return misch(pool).slice(0, 5).map((x) => ({ x, n, pool })); });
+    let i = 0; const richtig = {};
+    const frage = () => {
+      if (i >= fragen.length) {
+        let start = N[N.length - 1];
+        for (const n of N) if ((richtig[n.id] || 0) < 4) { start = n; break; }
+        wahl.start = start.id; if (N.findIndex((n) => n.id === wahl.ziel) < N.findIndex((n) => n.id === start.id)) wahl.ziel = start.id;
+        const root = rahmen('<div class="lh-ende"><div class="lh-ende-ic">🧪</div><h3>Einstufung: ' + start.id + '</h3><div class="lh-stats">' + N.map((n) => '<span><b>' + (richtig[n.id] || 0) + '/5</b>' + n.id + '</span>').join('') + '</div><p class="lh-fein">Dein Plan startet bei ' + start.id + '. Du kannst das jederzeit ändern.</p><div class="lh-knoepfe"><button type="button" class="btn" data-lh="weiter">Weiter zum Plan</button></div></div>', spielKopf('🧪 Einstufung'));
+        bindRaus(root); root.querySelector('[data-lh="weiter"]').addEventListener('click', zurueck); return;
+      }
+      const f = fragen[i++], opt = misch([f.x].concat(ablenker(f.x, 'de', 3, f.pool)));
+      const root = rahmen('<div class="lh-frage"><small>' + i + ' / ' + fragen.length + ' · Was heißt …</small><b>' + esc(f.x.z) + '</b></div><div class="lh-optionen">' + opt.map((o, k) => '<button type="button" class="lh-opt" data-i="' + k + '">' + esc(o.de) + '</button>').join('') + '<button type="button" class="lh-opt leise" data-i="-1">🤷 Weiß ich nicht</button></div>', spielKopf('🧪 Einstufung'));
+      bindRaus(root);
+      root.querySelectorAll('[data-i]').forEach((b) => b.addEventListener('click', () => { if (+b.dataset.i >= 0 && opt[+b.dataset.i] === f.x) richtig[f.n.id] = (richtig[f.n.id] || 0) + 1; frage(); }));
+    };
+    frage();
+  }
 
   // ---------- Rollenspiele ----------
   function rolle(R) {
@@ -425,7 +618,7 @@ const LH = (() => {
     const weiter = () => {
       if (meinLauf !== lauf) return;
       if (i >= R.z.length) {
-        const sterne = fehler === 0 ? 3 : fehler <= 2 ? 2 : 1, s = store(); s.rollen[R.id] = Math.max(s.rollen[R.id] || 0, sterne); speichern(s); xpDazu(15 + sterne * 5);
+        const sterne = fehler === 0 ? 3 : fehler <= 2 ? 2 : 1, s = store(); s.rollen[R.id] = Math.max(s.rollen[R.id] || 0, sterne); speichern(s); xpDazu(15 + sterne * 5); planErledigt('rolle');
         wahl.innerHTML = '<div class="lh-ende klein"><div class="lh-sterne">' + [0, 1, 2].map((k) => '<span class="' + (k < sterne ? 'an' : '') + '" style="--i:' + k + '">★</span>').join('') + '</div><p>' + (fehler ? fehler + ' Fehlversuch' + (fehler > 1 ? 'e' : '') : 'Fehlerfrei!') + ' · +' + (15 + sterne * 5) + ' XP</p><div class="lh-knoepfe"><button type="button" class="btn" data-lh="nochmal">🔁 Nochmal</button><button type="button" class="btn secondary" data-lh="raus2">Lernhalle</button></div></div>';
         wahl.querySelector('[data-lh="nochmal"]').addEventListener('click', () => rolle(R));
         wahl.querySelector('[data-lh="raus2"]').addEventListener('click', home);
@@ -453,9 +646,10 @@ const LH = (() => {
   // ---------- öffentlich ----------
   return {
     paket(p) { PAKETE[p.id] = p; },
+    _paket: (id) => PAKETE[id],
     start(id, container) { if (P !== PAKETE[id]) decks = null; P = PAKETE[id]; el = container; home(); },
     stop() { lauf++; spiel = null; if (typeof SprechKI !== 'undefined') SprechKI.stopp(); },
     home: () => home(),
-    _intern: { tippWert, level, store: () => store(), SPIELE, aktivesDeck: () => aktivesDeck(), decks: () => decks, xpDazu: (n) => xpDazu(n), tagNr },
+    _intern: { tippWert, level, diktatWert: (a, b) => diktatWert(a, b), planMissionen: () => planMissionen(store()), aktuellesNiveau: () => aktuellesNiveau(store()), store: () => store(), SPIELE, aktivesDeck: () => aktivesDeck(), decks: () => decks, xpDazu: (n) => xpDazu(n), tagNr },
   };
 })();

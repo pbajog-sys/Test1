@@ -242,14 +242,25 @@ LH.paket({
   sprich: (t, langsam) => sloSprich(t, langsam), hatTon: (t) => !!t && sloHatTon(t),
   rollen: SLF_ROLLEN, grammatik: SLF_GRAMMATIK,
   async decks() {
-    const alltag = SLO_EINHEITEN.flatMap((u) => u.W.map((w) => ({ z: w.sl, de: w.de, e: w.e })).concat(u.S.map((s) => ({ z: s.sl, de: s.de, bsp: s.sl, bspDe: s.de }))));
+    const alltag = SLO_EINHEITEN.flatMap((u) => u.W.map((w) => ({ z: w.sl, de: w.de, e: w.e })).concat(u.S.map((x) => ({ z: x.sl, de: x.de, bsp: x.sl, bspDe: x.de, alt: x.slAlt, deAlt: x.deAlt }))));
     const lex = await slpLaden().catch(() => []);
-    const kern = lex.filter((w) => w.r < 1500 && w.de && w.sl.length > 1).sort((a, b) => a.r - b.r).map((w) => ({ z: w.sl, de: w.de, info: w.b ? 'Beleg: ' + w.b : '' }));
+    const stufe = (n) => lex.filter((w) => w.n === n && w.de && w.sl.length > 1).sort((a, b) => a.r - b.r).map((w) => ({ z: w.sl, de: w.de, info: w.b ? 'Beleg: ' + w.b : '' }));
     return [
       { id: 'alltag', n: 'Alltag', e: '🐉', items: alltag },
-      { id: 'kern', n: 'Top 1.500', e: '🧠', items: kern },
+      { id: 'a1', n: 'A1', e: '🌱', items: stufe(1) },
+      { id: 'a2', n: 'A2', e: '🌿', items: stufe(2) },
+      { id: 'b1', n: 'B1', e: '🌳', items: stufe(3) },
+      { id: 'b2', n: 'B2', e: '🏔️', items: stufe(4) },
       { id: 'business', n: 'Business', e: '💼', items: SLF_BUSINESS },
       { id: 'pharma', n: 'Pharma', e: '💊', items: SLF_PHARMA },
     ];
   },
+  niveaus: [
+    { id: 'A1', n: 'Einstieg', decks: ['alltag', 'a1'] },
+    { id: 'A2', n: 'Grundlagen', decks: ['a2'] },
+    { id: 'B1', n: 'Selbstständig', decks: ['b1', 'business'] },
+    { id: 'B2', n: 'Fließend im Beruf', decks: ['b2', 'pharma'] },
+  ],
+  // Übersetzen: Reise-Sätze mit allen erlaubten Varianten (Deck „Alltag“)
+  get uebersetzung() { return SLO_EINHEITEN.flatMap((u) => u.S.map((x) => ({ de: x.de, z: x.sl, alt: x.slAlt, deAlt: x.deAlt, deck: 'alltag' }))); },
 });
