@@ -821,6 +821,7 @@ unangetastet; bereits verdiente Erfolge bleiben sichtbar. Wieder einblenden = Ei
 - **Übersetzung** (Spiel): Deutsch → Zielsprache (70 %) oder zurück, Sätze und ganze **Texte** (E-Mail, SOP, Studie, Presse). Abgleich mit Musterlösung und erlaubten Varianten; „Meine Version stimmt auch“ für freie, aber richtige Übersetzungen.
 - **English C1/C2** (`en-c1c2.js`): C1 (50), C2 (50), Idioms (26) mit Beispielsätzen; +28 Grammatik-Fragen (Mixed Conditionals, Inversion, Subjunctive, Cleft Sentences, Participle Clauses, Passive Reporting, Concession); 22 Übersetzungsaufgaben inkl. 4 Texten; 4 neue Spickzettel.
 - Slowenisch: Decks jetzt nach Niveau A1/A2/B1/B2 (aus dem Korpus-Wortschatz) + Alltag, Business, Pharma.
+- **Memory** (v146) nimmt nur Wörter, die du schon kannst (Reise-Lektionen, Wortschatz- und Lernhallen-Karteikarten); reicht das nicht, kommen die leichtesten Wörter der ersten Reise-Stationen dazu – nie unbekannte Fachwörter.
 
 ## 🎙️ Echte Spracherkennung, 🎮 Lernhalle und 🇬🇧 English Pro (v144)
 **Spracherkennung (`sprech-ki.js`)** – vorher hat das Nachsprechen ohne Browser-Erkennung nur Lautstärke und Silben gemessen und fast alles als richtig gewertet. Jetzt:

@@ -240,6 +240,9 @@ LH.paket({
   id: 'slo', key: 'walquiz.lernhalle.slo.v1', lang: 'sl', titel: 'Slovenščina · Spielhalle', sprache: 'Slowenisch', flagge: '🇸🇮', farbe1: '#22c55e', farbe2: '#0ea5e9', verlauf: 'slo',
   zeichen: ['č', 'š', 'ž'],
   sprich: (t, langsam) => sloSprich(t, langsam), hatTon: (t) => !!t && sloHatTon(t),
+  // schon gelernt: Reise-Lektionen (Wortstärke) oder Wortschatz-Karteikarten
+  bekannt: (z) => (sloStore().wort[z] || 0) > 0 || !!(typeof slpStore === 'function' && slpStore().srs[z]),
+  leichtDeck: 'alltag',
   rollen: SLF_ROLLEN, grammatik: SLF_GRAMMATIK,
   async decks() {
     const alltag = SLO_EINHEITEN.flatMap((u) => u.W.map((w) => ({ z: w.sl, de: w.de, e: w.e })).concat(u.S.map((x) => ({ z: x.sl, de: x.de, bsp: x.sl, bspDe: x.de, alt: x.slAlt, deAlt: x.deAlt }))));

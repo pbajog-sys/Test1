@@ -277,9 +277,9 @@ const LH = (() => {
         };
         zeig(); neueWelle();
       } },
-    { id: 'memory', e: '🧠', n: 'Memory', sub: '6 Paare finden – so wenig Züge wie möglich', f: ['#a855f7', '#ec4899'], geht: (d) => (d.items.length >= 6 ? true : 'Mind. 6 Wörter nötig'),
+    { id: 'memory', e: '🧠', n: 'Memory', sub: '6 Paare aus Wörtern, die du schon kannst', f: ['#a855f7', '#ec4899'], geht: (d) => (d.items.length >= 6 ? true : 'Mind. 6 Wörter nötig'),
       start(sp, box, hudBox) {
-        const paare = misch(sp.d.items).filter((x, i, a) => a.findIndex((y) => norm(y.de) === norm(x.de) || norm(y.z) === norm(x.z)) === i).slice(0, 6);
+        const paare = misch(bekannteItems(sp.d).filter((x) => x.z.split(' ').length <= 3)).filter((x, i, a) => a.findIndex((y) => norm(y.de) === norm(x.de) || norm(y.z) === norm(x.z)) === i).slice(0, 6);
         const karten = misch(paare.flatMap((x) => [{ x, t: x.z, s: 'z' }, { x, t: x.de, s: 'de' }]));
         let offen = [], zuege = 0, gefunden = 0, sperre = false; const t0 = performance.now();
         box.innerHTML = '<div class="lh-memory">' + karten.map((k, i) => '<button type="button" class="lh-mk ' + k.s + '" data-i="' + i + '"><span class="r">' + P.flagge + '</span><span class="v">' + esc(k.t) + '</span></button>').join('') + '</div>';
@@ -471,6 +471,15 @@ const LH = (() => {
         runde();
       } },
   ];
+  // Wörter, die man schon kann: Karteikarten (ab Stufe 1) + was das Paket kennt (z. B. Reise-Lektionen).
+  // Reicht das nicht, kommen die leichtesten (häufigsten) des Decks dazu – nie die schwersten.
+  function bekannteItems(d) {
+    const s = store(), kann = (x) => (s.srs[x.k] && s.srs[x.k][0] >= 1) || (P.bekannt && P.bekannt(x.z));
+    let pool = d.items.filter(kann);
+    if (pool.length < 8) { const alle = decks.flatMap((x) => x.items).filter(kann); pool = pool.concat(alle.filter((x) => !pool.includes(x))); }
+    if (pool.length < 8) { const leicht = (decks.find((x) => x.id === (P.leichtDeck || d.id)) || d).items; pool = pool.concat(leicht.filter((x) => !pool.includes(x)).slice(0, 12 - pool.length)); }
+    return pool;
+  }
   // ---------- Hilfen für Diktat & Übersetzung ----------
   function satzPool(d) {
     return d.items.filter((x) => x.bsp && x.bsp.split(' ').length >= 3).map((x) => ({ text: x.bsp, de: x.bspDe, item: x }))
@@ -650,6 +659,6 @@ const LH = (() => {
     start(id, container) { if (P !== PAKETE[id]) decks = null; P = PAKETE[id]; el = container; home(); },
     stop() { lauf++; spiel = null; if (typeof SprechKI !== 'undefined') SprechKI.stopp(); },
     home: () => home(),
-    _intern: { tippWert, level, diktatWert: (a, b) => diktatWert(a, b), planMissionen: () => planMissionen(store()), aktuellesNiveau: () => aktuellesNiveau(store()), store: () => store(), SPIELE, aktivesDeck: () => aktivesDeck(), decks: () => decks, xpDazu: (n) => xpDazu(n), tagNr },
+    _intern: { bekannteItems: (d) => bekannteItems(d), tippWert, level, diktatWert: (a, b) => diktatWert(a, b), planMissionen: () => planMissionen(store()), aktuellesNiveau: () => aktuellesNiveau(store()), store: () => store(), SPIELE, aktivesDeck: () => aktivesDeck(), decks: () => decks, xpDazu: (n) => xpDazu(n), tagNr },
   };
 })();

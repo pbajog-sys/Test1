@@ -95,10 +95,20 @@ const ordner = process.argv[2] || '.';
   ck('Blitz-Duell: richtige Antworten → Punkte + Serien-Bonus', blitz.punkte >= 100 && /×/.test(blitz.combo || ''), JSON.stringify(blitz));
   await bild('lh-blitz');
   await p.evaluate(() => { document.querySelector('[data-lh="raus"]').click(); }); await p.waitForTimeout(300);
+  // Memory nur mit bekannten Wörtern
+  const memPool = await p.evaluate(() => {
+    const st = sloStore(); st.wort = {}; ['hvala', 'prosim', 'kruh', 'voda', 'mačka', 'pes', 'sir', 'čaj'].forEach((w) => { st.wort[w] = 2; }); saveJson(SLO_KEY, st);
+    const pharma = LH._intern.decks().find((d) => d.id === 'pharma'), pool = LH._intern.bekannteItems(pharma);
+    const karten = Object.keys(LH._intern.store().srs);
+    return { n: pool.length, alleBekannt: pool.every((x) => st.wort[x.z] || karten.includes(x.k)), bsp: pool.slice(0, 4).map((x) => x.z).join(',') };
+  });
+  ck('Memory (Pharma-Deck): nur Wörter aus Lektionen/Karteikarten – keine unbekannten', memPool.n >= 8 && memPool.alleBekannt, JSON.stringify(memPool));
+  const leicht = await p.evaluate(() => { const st = sloStore(); st.wort = {}; saveJson(SLO_KEY, st); const s2 = LH._intern.store(); s2.srs = {}; saveJson('walquiz.lernhalle.slo.v1', s2); return LH._intern.bekannteItems(LH._intern.decks().find((d) => d.id === 'b2')).slice(0, 6).map((x) => x.z); });
+  ck('Noch nichts gelernt → leichteste Wörter (erste Reise-Lektion), nicht B2', leicht.includes('zdravo') && leicht.includes('hvala'), leicht.join(','));
   // Memory komplett lösen
   await p.click('[data-spiel="memory"]'); await p.waitForTimeout(300);
   await p.evaluate(async () => {
-    const D = LH._intern.aktivesDeck().items, K = [...document.querySelectorAll('.lh-mk')];
+    const D = LH._intern.decks().flatMap((d) => d.items), K = [...document.querySelectorAll('.lh-mk')];
     const paarVon = (t) => D.find((x) => x.z === t || x.de === t);
     const erledigt = new Set();
     for (const a of K) {
