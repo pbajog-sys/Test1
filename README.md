@@ -815,6 +815,23 @@ Hub) oder der runde ↑-Knopf, der ab ~1 Bildschirmhöhe erscheint, scrollt nach
 den Tagesaufgaben und den offenen Erfolgen verschwunden (`SK_AUSSORTIERT` in `plattform.js`). Code und Spielstände bleiben
 unangetastet; bereits verdiente Erfolge bleiben sichtbar. Wieder einblenden = Eintrag aus `SK_AUSSORTIERT` entfernen.
 
+## 🎙️ Echte Spracherkennung, 🎮 Lernhalle und 🇬🇧 English Pro (v144)
+**Spracherkennung (`sprech-ki.js`)** – vorher hat das Nachsprechen ohne Browser-Erkennung nur Lautstärke und Silben gemessen und fast alles als richtig gewertet. Jetzt:
+- **Whisper auf dem Gerät** (transformers.js 3.7.6 + `onnx-community/whisper-base` bzw. `-tiny`, 8-Bit, WASM): einmalig nach Zustimmung laden (≈ 80 / 40 MB von Hugging Face + jsDelivr), danach offline (Service Worker merkt sich das Programm, transformers.js das Modell). Aufnahme als rohes PCM (16 kHz), Pegel-Erkennung stoppt nach Stille, Stille wird nie an das Modell gegeben (Whisper würde sonst Text erfinden).
+- **Browser-Erkennung** (Web Speech) als Alternative; für Slowenisch hat Whisper Vorrang, für Englisch die Browser-Erkennung (auf dem iPhone über Siri gut).
+- **Bewertung Wort für Wort**: Diff-Ausrichtung mit Levenshtein, č/š/ž ≈ c/s/z, Zahlen → Wörter, englische Kurzformen (I'm = I am), kurze Wörter (in/on, je/se) müssen exakt stimmen; Füllwörter kosten etwas. Bestanden ab 75 %. Jedes Wort grün/gelb/rot.
+- **Ohne Erkennung** wird nichts mehr behauptet: Aufnahme ↔ Original anhören und selbst entscheiden (als „selbst verglichen“ markiert). Mikrofon-Check zeigt, was aktiv ist.
+- Ehrlich: Whisper-base erkennt Slowenisch brauchbar, aber nicht perfekt – bei einzelnen Wörtern kann es auch richtige Aussprache verfehlen; dann „So lassen“ oder nochmal.
+
+**Lernhalle (`lernhalle.js`)** – Spielhalle für Sprachpakete. Slowenisch: neuer Tab „🎮 Spiele“; Englisch: eigene App „🇬🇧 English Pro“.
+- Hero mit Level/XP, Tagesziel-Ring (60 XP), Serie 🔥; Decks als Chips (Fortschritt = Karten ab Stufe 3) + Mix + „🎯 Meine Fehler“ (ab 4 Fehlern).
+- **Karteikarten** mit Spaced Repetition (0/1/3/7/14/30/60/120/240 Tage), Umdreh-Animation, Wischen = Nochmal/Gut, Richtung umschaltbar.
+- **8 Spiele**: ⚡ Blitz-Duell (60 s, Serien- und Tempobonus, Fehler −3 s), 🌧️ Wort-Regen (fallende Wörter, 3 Leben, wird schneller), 🧠 Memory (6 Paare), 🧩 Satz-Sprint (Sätze bauen), ⌨️ Tipp-Turbo (Akzent- und Tippfehler-Toleranz, č/š/ž-Tasten), 🎧 Hör-Jagd (wenn eine Stimme da ist), 🎙️ Sprech-Arena (SprechKI), 🧬 Grammatik-Duell (Zeitbonus + Erklärung).
+- **Rollenspiele** als Chat mit DE-Übersetzung auf Tipp, falsche Antworten erklären warum; optional jede Antwort laut sprechen. Sterne, Rekorde, Ergebnis-Karte mit „Üben“-Liste → „In die Karteikarten“.
+- **Slowenisch (`slo-fach.js`)**: Decks Alltag (Reise), Top 1.500 (Korpus), 💼 Business (66), 💊 Pharma (78, inkl. GMP, Validierung, Pharmakovigilanz, Zulassung) – alle Fachwörter mit Beispielsatz und Übersetzung; 5 Rollenspiele (Apotheke, Arzt, Meeting, Preisverhandlung, GMP-Audit); 26 Grammatik-Lücken.
+- **English Pro (`en-daten.js`)**: B1 (74), B2 (57), Business (59), Pharma (60), Phrasal Verbs (32), False Friends (24) – alle mit Beispielsatz; 48 Grammatik-Fragen (Conditionals, Zeiten, Passiv, Reported Speech, Gerund/Infinitiv, Modalverben, Relativsätze, Präpositionen, Inversion); 6 Rollenspiele (Interview, Business Call, Pharmacy, GMP Inspection, Negotiation, Small Talk) mit typischen Germanismen; 8 Spickzettel.
+- Speicher: `walquiz.lernhalle.slo.v1`, `walquiz.lernhalle.en.v1`, `walquiz.sprechki.v1` (im Profil). Tests: `tests/lernhalle.test.js`, angepasst `tests/slo.test.js`, `tests/slo-pro.test.js`.
+
 ## 🐉 Slowenisch – großer Ausbau (v137)
 `slo-pro.js` + `slo-lex.json`. Das Slowenisch-Spiel hat jetzt **vier Seiten** mit Tab-Leiste, zwischen denen man wischt:
 **Reise** (die bisherigen 20 Stationen, A1) · **Wortschatz** · **Grammatik** · **Gespräche**.

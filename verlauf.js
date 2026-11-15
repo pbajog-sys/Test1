@@ -22,6 +22,7 @@ const VERLAUF_SPIELE = {
   tierleben: { name: 'Ein Tierleben', emoji: '🐾', farbe: '#a3a380' },
   piranha: { name: 'Piranha-Schwarm', emoji: '🐟', farbe: '#ef4444' },
   slo: { name: 'Slowenisch', emoji: '🐉', farbe: '#4ade80' },
+  eng: { name: 'English Pro', emoji: '🇬🇧', farbe: '#60a5fa' },
   dopamin: { name: 'Dopamin-Maschine', emoji: '🧠', farbe: '#f472b6' },
   rage: { name: 'Ragebait-Fabrik', emoji: '😡', farbe: '#ef4444' },
   naehen: { name: 'Nähstube', emoji: '🧵', farbe: '#f472b6' },

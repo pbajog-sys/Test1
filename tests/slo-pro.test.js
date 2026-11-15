@@ -16,7 +16,7 @@ const ordner = process.argv[2] || '.';
   // alter Spielstand (vor dem Ausbau) bleibt erhalten
   await p.evaluate(() => saveJson(SLO_KEY, { stufe: { pozdravi: 3, jaz: 1 }, tage: {}, wort: { hvala: 4, prosim: 3 }, xp: 120 }));
   await p.evaluate(() => { show('slo', '🐉 Slowenisch'); sloKarte(); }); await p.waitForTimeout(600);
-  ck('Reise wie gewohnt + Tab-Leiste mit 5 Seiten', !!(await p.$('.slo-station.jetzt')) && (await p.locator('#sloTabs button').count()) === 5 && await p.evaluate(() => !$('sloTabs').hidden && document.querySelector('#sloTabs .an').dataset.slp === 'karte'));
+  ck('Reise wie gewohnt + Tab-Leiste mit 6 Seiten', !!(await p.$('.slo-station.jetzt')) && (await p.locator('#sloTabs button').count()) === 6 && await p.evaluate(() => !$('sloTabs').hidden && document.querySelector('#sloTabs .an').dataset.slp === 'karte'));
   await bild('slp-reise');
   await wisch(330, 500, 70, 505); await p.waitForTimeout(1200);
   ck('Wischen nach links → Wortschatz', await p.evaluate(() => !$('slo-wortschatz').hidden && slpSeite === 'wortschatz' && !!document.querySelector('#slpLernen')));
@@ -175,7 +175,7 @@ const ordner = process.argv[2] || '.';
   // ---------- Übersetzer ----------
   await p.evaluate(() => { show('slo', '🐉 Slowenisch'); sloKarte(); }); await p.waitForTimeout(400);
   await p.click('#sloTabs [data-slp="uebersetzer"]'); await p.waitForTimeout(800);
-  ck('Fünf Tabs, „Übersetzen“ öffnet den Übersetzer', (await p.locator('#sloTabs button').count()) === 5 && await p.evaluate(() => !$('slo-uebersetzer').hidden));
+  ck('Sechs Tabs, „Übersetzen“ öffnet den Übersetzer', (await p.locator('#sloTabs button').count()) === 6 && await p.evaluate(() => !$('slo-uebersetzer').hidden));
   await p.fill('#slpUText', 'Vidim psa in hiše. Midva sva bila doma.'); await p.waitForTimeout(500);
   const an = await p.evaluate(() => [...document.querySelectorAll('.slp-u-wort')].map((b) => b.textContent));
   const finde = (w) => an.find((t) => t.startsWith(w)) || '';

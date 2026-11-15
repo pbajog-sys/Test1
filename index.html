@@ -7,7 +7,7 @@
 <meta name="description" content="Quizzes, Krimi-Rätsel, Farb- und Ton-Gedächtnis und Cello-Noten – für die ganze Familie.">
 <meta name="theme-color" content="#141210">
 <link rel="manifest" href="manifest.webmanifest">
-<link rel="stylesheet" href="fonts/fonts.css?v=143">
+<link rel="stylesheet" href="fonts/fonts.css?v=144">
 <link rel="icon" href="icons/favicon-64.png?v=3" type="image/png">
 <link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=3">
 <link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
@@ -434,8 +434,8 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=143">
-<link rel="stylesheet" href="ansichten.css?v=143">
+<link rel="stylesheet" href="stil.css?v=144">
+<link rel="stylesheet" href="ansichten.css?v=144">
 </head>
 <body>
 <div id="ambient" aria-hidden="true"></div>
@@ -632,6 +632,11 @@
     <button class="hub-game hub-slo" id="hubSlo" type="button" data-regen="🐉,🇸🇮,🏔️,💬">
       <span class="hg-av hg-av-slo" aria-hidden="true"><span class="hg-in"><span class="slo-mini">🐉<i>Živjo!</i></span></span></span>
       <span class="hg-text"><span class="hg-titel">Slowenisch</span><span class="hg-sub">Mit Zmajček, dem kleinen Drachen, durch Slowenien: Wörter, Sätze, Aussprache.</span><span class="hg-best" id="hubSloBest"></span></span>
+      <span class="hg-pfeil">▶</span>
+    </button>
+    <button class="hub-game hub-eng" id="hubEng" type="button" data-regen="🇬🇧,💼,💊,🎙️">
+      <span class="hg-av hg-av-eng" aria-hidden="true"><span class="hg-in"><span class="en-mini">🇬🇧<i>B2</i></span></span></span>
+      <span class="hg-text"><span class="hg-titel">English Pro</span><span class="hg-sub">B1/B2 mit Business & Pharma: Karteikarten, 8 Spiele, Rollenspiele, Sprechen mit echter Erkennung.</span><span class="hg-best" id="hubEngBest"></span></span>
       <span class="hg-pfeil">▶</span>
     </button>
     <button class="hub-game hub-piranha" id="hubPiranha" type="button" data-regen="🐟,🍒,🌿,💧">
@@ -2089,6 +2094,12 @@
       <div class="slo-teil" id="slo-woerter" hidden></div>
     </div>
   </section>
+  <section class="screen" id="screen-eng">
+    <div class="eng-buehne">
+      <div class="farb-kopf"><button class="icon-btn" id="engZurueck" type="button" aria-label="Zurück">←</button><span>🇬🇧 English Pro</span><span></span></div>
+      <div id="engInhalt"></div>
+    </div>
+  </section>
   <section class="screen" id="screen-piranha">
     <div class="pr-buehne">
       <canvas class="pr-unten" id="prUnten" aria-hidden="true"></canvas>
@@ -2312,69 +2323,73 @@
     <button class="pw-weg" id="pwLoeschen" type="button">Profil löschen</button>
   </div>
 </div>
-<script src="wale.js?v=143"></script>
-<script src="haie.js?v=143"></script>
-<script src="porsche.js?v=143"></script>
-<script src="dackel.js?v=143"></script>
-<script src="groesse.js?v=143"></script>
-<script src="gretchen.js?v=143"></script>
-<script src="effekte.js?v=143"></script>
-<script src="app.js?v=143"></script>
-<script src="melden.js?v=143"></script>
-<script src="verlauf.js?v=143"></script>
-<script src="hub.js?v=143"></script>
-<script src="farben.js?v=143"></script>
-<script src="cello.js?v=143"></script>
-<script src="instrumente.js?v=143"></script>
-<script src="stimmen-pro.js?v=143"></script>
-<script src="stimmen.js?v=143"></script>
-<script src="fitness-daten.js?v=143"></script>
-<script src="fitness-plaene.js?v=143"></script>
-<script src="fitness.js?v=143"></script>
-<script src="scan.js?v=143"></script>
-<script src="gesten.js?v=143"></script>
-<script src="toene.js?v=143"></script>
-<script src="gehoer.js?v=143"></script>
-<script src="songs.js?v=143"></script>
-<script src="spotify.js?v=143"></script>
-<script src="deezer.js?v=143"></script>
-<script src="klassiker.js?v=143"></script>
-<script src="falten.js?v=143"></script>
-<script src="zoom.js?v=143"></script>
-<script src="glas.js?v=143"></script>
-<script src="beat.js?v=143"></script>
-<script src="wunder.js?v=143"></script>
-<script src="studio.js?v=143"></script>
-<script src="takt.js?v=143"></script>
-<script src="punkte.js?v=143"></script>
-<script src="funktion.js?v=143"></script>
-<script src="zufall.js?v=143"></script>
-<script src="zfrechen.js?v=143"></script>
-<script src="zahlen.js?v=143"></script>
-<script src="tierleben.js?v=143"></script>
-<script src="tierpixel.js?v=143"></script>
-<script src="piranha.js?v=143"></script>
-<script src="slo.js?v=143"></script>
-<script src="slo-pro.js?v=143"></script>
-<script src="augen.js?v=143"></script>
-<script src="karten-daten.js?v=143"></script>
-<script src="karte.js?v=143"></script>
-<script src="tiefgang.js?v=143"></script>
-<script src="riff.js?v=143"></script>
-<script src="krimi-grafik.js?v=143"></script>
-<script src="krimi.js?v=143"></script>
-<script src="krimi-wachen.js?v=143"></script>
-<script src="krimi-verhoer.js?v=143"></script>
-<script src="krimi-alibi.js?v=143"></script>
-<script src="krimi-akte.js?v=143"></script>
-<script src="krimi-zentrale.js?v=143"></script>
-<script src="profile.js?v=143"></script>
-<script src="fuehrung.js?v=143"></script>
-<script src="dopamin.js?v=143"></script>
-<script src="rage.js?v=143"></script>
-<script src="naehen.js?v=143"></script>
-<script src="experimente.js?v=143"></script>
-<script src="plattform.js?v=143"></script>
-<script src="sicherung.js?v=143"></script>
+<script src="wale.js?v=144"></script>
+<script src="haie.js?v=144"></script>
+<script src="porsche.js?v=144"></script>
+<script src="dackel.js?v=144"></script>
+<script src="groesse.js?v=144"></script>
+<script src="gretchen.js?v=144"></script>
+<script src="effekte.js?v=144"></script>
+<script src="app.js?v=144"></script>
+<script src="melden.js?v=144"></script>
+<script src="verlauf.js?v=144"></script>
+<script src="hub.js?v=144"></script>
+<script src="farben.js?v=144"></script>
+<script src="cello.js?v=144"></script>
+<script src="instrumente.js?v=144"></script>
+<script src="stimmen-pro.js?v=144"></script>
+<script src="stimmen.js?v=144"></script>
+<script src="fitness-daten.js?v=144"></script>
+<script src="fitness-plaene.js?v=144"></script>
+<script src="fitness.js?v=144"></script>
+<script src="scan.js?v=144"></script>
+<script src="gesten.js?v=144"></script>
+<script src="toene.js?v=144"></script>
+<script src="gehoer.js?v=144"></script>
+<script src="songs.js?v=144"></script>
+<script src="spotify.js?v=144"></script>
+<script src="deezer.js?v=144"></script>
+<script src="klassiker.js?v=144"></script>
+<script src="falten.js?v=144"></script>
+<script src="zoom.js?v=144"></script>
+<script src="glas.js?v=144"></script>
+<script src="beat.js?v=144"></script>
+<script src="wunder.js?v=144"></script>
+<script src="studio.js?v=144"></script>
+<script src="takt.js?v=144"></script>
+<script src="punkte.js?v=144"></script>
+<script src="funktion.js?v=144"></script>
+<script src="zufall.js?v=144"></script>
+<script src="zfrechen.js?v=144"></script>
+<script src="zahlen.js?v=144"></script>
+<script src="tierleben.js?v=144"></script>
+<script src="tierpixel.js?v=144"></script>
+<script src="piranha.js?v=144"></script>
+<script src="sprech-ki.js?v=144"></script>
+<script src="lernhalle.js?v=144"></script>
+<script src="slo.js?v=144"></script>
+<script src="slo-pro.js?v=144"></script>
+<script src="slo-fach.js?v=144"></script>
+<script src="en-daten.js?v=144"></script>
+<script src="augen.js?v=144"></script>
+<script src="karten-daten.js?v=144"></script>
+<script src="karte.js?v=144"></script>
+<script src="tiefgang.js?v=144"></script>
+<script src="riff.js?v=144"></script>
+<script src="krimi-grafik.js?v=144"></script>
+<script src="krimi.js?v=144"></script>
+<script src="krimi-wachen.js?v=144"></script>
+<script src="krimi-verhoer.js?v=144"></script>
+<script src="krimi-alibi.js?v=144"></script>
+<script src="krimi-akte.js?v=144"></script>
+<script src="krimi-zentrale.js?v=144"></script>
+<script src="profile.js?v=144"></script>
+<script src="fuehrung.js?v=144"></script>
+<script src="dopamin.js?v=144"></script>
+<script src="rage.js?v=144"></script>
+<script src="naehen.js?v=144"></script>
+<script src="experimente.js?v=144"></script>
+<script src="plattform.js?v=144"></script>
+<script src="sicherung.js?v=144"></script>
 </body>
 </html>

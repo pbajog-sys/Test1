@@ -1,5 +1,5 @@
 // Service Worker: App offline verfügbar machen. Walfotos werden beim ersten Anzeigen zwischengespeichert.
-const VERSION = 'walquiz-v143';
+const VERSION = 'walquiz-v144';
 const SHELL = [
   './',
   'index.html',
@@ -53,6 +53,10 @@ const SHELL = [
   'piranha.js',
   'slo.js',
   'slo-pro.js',
+  'sprech-ki.js',
+  'lernhalle.js',
+  'slo-fach.js',
+  'en-daten.js',
   'slo-lex.json',
   'plattform.js',
   'dopamin.js',
@@ -143,7 +147,7 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
-      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION).map((k) => caches.delete(k))))
+      .then((keys) => Promise.all(keys.filter((k) => k !== VERSION && k !== 'sprechki-cdn' && !/transformers/i.test(k)).map((k) => caches.delete(k))))
       .then(() => self.clients.claim())
   );
 });
@@ -164,6 +168,15 @@ self.addEventListener('fetch', (event) => {
           return res;
         })
         .catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || caches.match('index.html')))
+    );
+    return;
+  }
+
+  // Whisper (Spracherkennung auf dem Gerät): Programm von jsDelivr dauerhaft merken → danach offline.
+  // Die Modelldateien speichert transformers.js selbst im Cache „transformers-cache“.
+  if (url.hostname === 'cdn.jsdelivr.net' && url.pathname.includes('@huggingface/transformers')) {
+    event.respondWith(
+      caches.open('sprechki-cdn').then((c) => c.match(req).then((cached) => cached || fetch(req).then((res) => { if (res.ok) c.put(req, res.clone()); return res; })))
     );
     return;
   }

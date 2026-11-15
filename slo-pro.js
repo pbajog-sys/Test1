@@ -114,19 +114,19 @@ function slpSrsAntwort(w, ok) {
 }
 
 // ---------- Rahmen: vier Seiten mit Tab-Leiste und Wischen ----------
-const SLP_SEITEN = [['karte', '🗺️', 'Reise'], ['wortschatz', '🧠', 'Wörter'], ['grammatik', '🧩', 'Grammatik'], ['gespraeche', '💬', 'Gespräche'], ['uebersetzer', '🔤', 'Übersetzen']];
+const SLP_SEITEN = [['karte', '🗺️', 'Reise'], ['wortschatz', '🧠', 'Wörter'], ['grammatik', '🧩', 'Grammatik'], ['gespraeche', '💬', 'Gespräche'], ['spiele', '🎮', 'Spiele'], ['uebersetzer', '🔤', 'Übersetzen']];
 const SLP_TABSEITEN = SLP_SEITEN.map((x) => x[0]);
 function slpRahmen() {
   if ($('sloTabs')) return;
   const b = document.querySelector('.slo-buehne');
-  ['wortschatz', 'grammatik', 'gespraeche', 'uebersetzer'].forEach((t) => { const d = document.createElement('div'); d.className = 'slo-teil slp-seite'; d.id = 'slo-' + t; d.hidden = true; b.appendChild(d); sloTeile2.push(t); });
+  ['wortschatz', 'grammatik', 'gespraeche', 'spiele', 'uebersetzer'].forEach((t) => { const d = document.createElement('div'); d.className = 'slo-teil slp-seite'; d.id = 'slo-' + t; d.hidden = true; b.appendChild(d); sloTeile2.push(t); });
   const nav = document.createElement('nav'); nav.className = 'slp-tabs'; nav.id = 'sloTabs'; nav.setAttribute('role', 'tablist');
   nav.innerHTML = SLP_SEITEN.map(([id, ic, n]) => '<button type="button" role="tab" data-slp="' + id + '"><b aria-hidden="true">' + ic + '</b>' + n + '</button>').join('');
   b.appendChild(nav);
   nav.querySelectorAll('[data-slp]').forEach((x) => x.addEventListener('click', () => slpZeige(x.dataset.slp)));
   // Wischen links/rechts wechselt die Seite (nicht vom Rand – der gehört der Zurück-Geste)
   let x0 = null, y0 = 0;
-  b.addEventListener('touchstart', (e) => { x0 = null; if (e.touches.length !== 1 || nav.hidden) return; const t = e.touches[0]; if (t.clientX < 30 || t.clientX > innerWidth - 30) return; if (e.target.closest('input, textarea, select, .slo-paare, .slp-tabelle')) return; x0 = t.clientX; y0 = t.clientY; }, { passive: true });
+  b.addEventListener('touchstart', (e) => { x0 = null; if (e.touches.length !== 1 || nav.hidden) return; const t = e.touches[0]; if (t.clientX < 30 || t.clientX > innerWidth - 30) return; if (e.target.closest('input, textarea, select, .slo-paare, .slp-tabelle, .lh-im-spiel, .lh-decks')) return; x0 = t.clientX; y0 = t.clientY; }, { passive: true });
   b.addEventListener('touchend', (e) => {
     if (x0 == null || nav.hidden) return; const t = e.changedTouches[0], dx = t.clientX - x0, dy = t.clientY - y0; x0 = null;
     if (Math.abs(dx) < 70 || Math.abs(dy) > Math.abs(dx) * 0.6) return;
@@ -141,7 +141,7 @@ function slpZeige(id, richtung) {
     zeigeSloTeil(id);
     const box = $('slo-' + id);
     box.innerHTML = '<div class="slp-laden"><i></i><p>Lade Wortschatz …</p></div>';
-    slpLaden().then(() => { if (slpSeite !== id) return; ({ wortschatz: slpWortschatz, grammatik: slpGrammatik, gespraeche: slpGespraeche, uebersetzer: slpUebersetzer })[id](); })
+    slpLaden().then(() => { if (slpSeite !== id) return; ({ wortschatz: slpWortschatz, grammatik: slpGrammatik, gespraeche: slpGespraeche, spiele: () => { LH.start('slo', $('slo-spiele')); slpTabsMarkieren(); }, uebersetzer: slpUebersetzer })[id](); })
       .catch(() => { box.innerHTML = '<div class="slp-karte"><p>Der Wortschatz konnte nicht geladen werden. Einmal online öffnen, dann geht es auch offline.</p></div>'; });
     document.querySelector('.slo-buehne').scrollTop = 0;
   }
@@ -679,7 +679,8 @@ function slpGespraeche() {
 // Zurück-Knopf: von Wortschatz/Grammatik/Gespräche direkt zum Hub
 $('sloZurueck').addEventListener('click', (e) => {
   if ($('slo-karten') && !$('slo-karten').hidden) { e.stopImmediatePropagation(); slkEnde(); return; }
-  if (['wortschatz', 'grammatik', 'gespraeche', 'uebersetzer'].some((t) => $('slo-' + t) && !$('slo-' + t).hidden)) { e.stopImmediatePropagation(); if ('speechSynthesis' in window) speechSynthesis.cancel(); zeigeHub(); }
+  if ($('slo-spiele') && !$('slo-spiele').hidden && $('slo-spiele').querySelector('.lh-spielkopf')) { e.stopImmediatePropagation(); LH.stop(); LH.home(); return; }
+  if (['wortschatz', 'grammatik', 'gespraeche', 'spiele', 'uebersetzer'].some((t) => $('slo-' + t) && !$('slo-' + t).hidden)) { e.stopImmediatePropagation(); LH.stop(); if ('speechSynthesis' in window) speechSynthesis.cancel(); zeigeHub(); }
 }, true);
 
 // ---------- 🔤 Übersetzer ----------
