@@ -4652,3 +4652,8 @@ a.bb-datei { text-decoration: none; }
 .ll-liste { display: grid; gap: 6px; } .ll-liste table { width: 100%; border-collapse: collapse; font-size: .84rem; font-variant-numeric: tabular-nums; }
 .ll-liste th, .ll-liste td { padding: 7px 6px; text-align: right; border-bottom: 1px solid rgba(255,255,255,.08); } .ll-liste th:first-child, .ll-liste td:first-child { text-align: left; } .ll-liste th { font-size: .72rem; opacity: .65; font-weight: 600; }
 .ll-liste tr.heute td { font-weight: 800; } .ll-fein { margin: 0; font-size: .76rem; opacity: .6; line-height: 1.4; }
+/* iOS-Safari: Inhalte ohne eigene Ebene rutschten hinter das feste Hintergrundbild (::before) der Bühne.
+   Eigene Ebene erzwingen, damit Karten, Texte und Knöpfe immer darüber liegen. */
+.slo-buehne > .slo-teil, .eng-buehne > #engInhalt { position: relative; z-index: 1; }
+.lh { position: relative; z-index: 1; transform: translateZ(0); -webkit-transform: translateZ(0); }
+.lh-verlauf > span:nth-child(2) { display: block; line-height: 1.35; }
