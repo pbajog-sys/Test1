@@ -201,6 +201,14 @@ EN_GRAMMATIK.push(...EN_GRAMMATIK_C);
 (() => {
   LH.paket(Object.assign(LH._paket('en'), {
     uebersetzung: EN_UEBERSETZUNG,
+    // Grundwörter, die man ab B1 sicher kennt (Artikel, Pronomen, Hilfsverben, Präpositionen …)
+    basisWoerter: ('a an the and or but if so because than then this that these those it its i you he she we they me him her us them my your his our their '
+      + 'is am are was were be been being have has had do does did will would can could should must may might shall not no yes '
+      + 'to of in on at by for with from about into over after before under up down out off as all some any every each more most very too also just only '
+      + 'what who which where when why how there here one two three four five six seven eight nine ten first next last new good well please thank thanks '
+      + 'mr ms mrs dear').split(' '),
+    // einfache Formen: tests → test, tested → test, testing → test, studies → study
+    wortForm: (t, set) => [t.replace(/'s$/, ''), t.replace(/s$/, ''), t.replace(/es$/, ''), t.replace(/ies$/, 'y'), t.replace(/ed$/, ''), t.replace(/d$/, ''), t.replace(/ing$/, ''), t.replace(/ing$/, 'e'), t.replace(/ied$/, 'y'), t.replace(/ly$/, '')].some((f) => f.length > 1 && f !== t && set.has(f)),
     // 🧩 Grammatik-Pfad: Reihenfolge + Voraussetzungen (vorherige Themen ≥ 70 %, gelernte Wörter, Wörter aus einem Niveau-Deck)
     gramPfad: [
       { id: 'zeiten', ic: '⏱️', titel: 'Zeiten: Present Perfect & Co.', stufe: 'B1', th: ['Tenses'], woerter: 20,

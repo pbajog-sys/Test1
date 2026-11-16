@@ -151,8 +151,17 @@ const ordner = process.argv[2] || '.';
   for (let i = 0; i < 3; i++) { await p.evaluate(() => { const de = document.querySelector('[data-lh="prompt"]').textContent, x = LH._intern.decks().flatMap((d) => d.items).find((y) => y.de === de); const t = [...document.querySelectorAll('.lh-tropfen:not([disabled])')].find((q) => q.textContent !== x.z); if (t) t.click(); }); await p.waitForTimeout(1250); }
   await p.waitForSelector('.lh-ende', { timeout: 4000 }).catch(() => {});
   ck('Wort-Regen: Treffer geben Punkte, 3 Fehlgriffe → Spielende', regen1 >= 30 && await p.evaluate(() => !!document.querySelector('.lh-ende')), 'Punkte ' + regen1);
+  // Satz-Spiele nur mit bekannten Wörtern
+  await p.click('[data-lh="raus"]'); await p.waitForTimeout(300);
+  await p.evaluate(() => { const st = sloStore(); st.stufe = {}; st.wort = { hvala: 1 }; saveJson(SLO_KEY, st); const s2 = LH._intern.store(); s2.srs = {}; saveJson('walquiz.lernhalle.slo.v1', s2); LH.home(); }); await p.waitForTimeout(400);
+  const sperre = await p.evaluate(() => ['satz', 'diktat', 'uebersetzen'].map((id) => { const b = document.querySelector('[data-spiel="' + id + '"]'); return b.disabled + ':' + b.querySelector('small').textContent; }));
+  ck('Fast nichts gelernt → Satz-Sprint, Diktat, Übersetzung gesperrt („Erst mehr Wörter lernen“)', sperre.every((x) => /^true:/.test(x)) && sperre.filter((x) => /mehr Wörter lernen/.test(x)).length >= 2, sperre.join(' | '));
+  await p.evaluate(() => { const st = sloStore(); SLO_EINHEITEN.slice(0, 6).forEach((u) => { st.stufe[u.id] = 1; u.W.forEach((w) => { st.wort[w.sl] = 2; }); }); saveJson(SLO_KEY, st); LH.home(); }); await p.waitForTimeout(400);
+  const frei = await p.evaluate(() => { const d = LH._intern.aktivesDeck(); const S = LH._intern.bekannteSaetze('satz', d), U = LH._intern.bekannteSaetze('uebersetzen', d); return { satz: S.length, ue: U.length, alleOk: S.every((x) => LH._intern.satzOk(x.bsp)) && U.every((x) => LH._intern.satzOk(x.z)), stationen: SLO_EINHEITEN.slice(6).flatMap((u) => u.S.map((x) => x.sl)).filter((t) => U.some((y) => y.z === t)).length, knopf: !document.querySelector('[data-spiel="satz"]').disabled }; });
+  ck('6 Stationen geschafft → Satz-Spiele frei, jeder Satz besteht nur aus bekannten Wörtern', frei.knopf && frei.satz >= 3 && frei.ue >= 3 && frei.alleOk, JSON.stringify(frei));
+  ck('Gebeugte Formen zählen als bekannt (kavo ← kava)', await p.evaluate(() => { const st = sloStore(); st.wort.kava = 1; saveJson(SLO_KEY, st); return LH._intern.satzOk('Eno kavo, prosim.') || !slpLex; }));
   // Satz-Sprint
-  await p.click('[data-lh="raus"]'); await p.waitForTimeout(300); await p.click('[data-spiel="satz"]'); await p.waitForTimeout(300);
+  await p.click('[data-spiel="satz"]'); await p.waitForTimeout(300);
   await p.evaluate(() => { const de = document.querySelector('.lh-frage b').textContent, x = LH._intern.decks().flatMap((d) => d.items).find((y) => y.bspDe === de); x.bsp.split(' ').forEach((w) => { const k = [...document.querySelectorAll('.lh-bank .lh-kachel:not(.weg)')].find((q) => q.textContent === w); k.click(); }); document.querySelector('[data-lh="ok"]').click(); });
   await p.waitForTimeout(150);
   ck('Satz-Sprint: Pharma-Satz richtig gebaut', await p.evaluate(() => /gut/.test(document.querySelector('.lh-loesung').className)));
@@ -215,6 +224,8 @@ const ordner = process.argv[2] || '.';
   const en = await p.evaluate(() => ({ decks: [...document.querySelectorAll('#engInhalt .lh-deck')].map((x) => x.dataset.deck), spick: document.querySelectorAll('#engInhalt .lh-spick details').length, rollen: document.querySelectorAll('#engInhalt .lh-rolle').length, groesse: LH._intern.decks().map((d) => d.items.length) }));
   ck('English Pro: B1, B2, C1, C2, Business, Pharma, Phrasal Verbs, Idioms, False Friends + Mix; 6 Rollenspiele; 12 Spickzettel', JSON.stringify(en.decks) === JSON.stringify(['b1', 'b2', 'c1', 'c2', 'business', 'pharma', 'phrasal', 'idiome', 'falsch', 'mix']) && en.rollen === 6 && en.spick === 12, JSON.stringify(en));
   ck('C1/C2: ≥ 45 Wörter je Stufe, ≥ 25 Idioms, ≥ 75 Grammatik-Fragen, ≥ 20 Übersetzungen inkl. Texte', await p.evaluate(() => { const D = Object.fromEntries(LH._intern.decks().map((d) => [d.id, d.items.length])); return D.c1 >= 45 && D.c2 >= 45 && D.idiome >= 25 && EN_GRAMMATIK.length >= 75 && EN_UEBERSETZUNG.length >= 20 && EN_UEBERSETZUNG.filter((x) => x.text).length >= 4; }));
+  // B1/B2-Wortschatz als gelernt markieren (C1/C2/Pharma/Idioms noch nicht)
+  await p.evaluate(() => { const s = LH._intern.store(); LH._intern.decks().filter((d) => ['b1', 'b2', 'business', 'phrasal', 'falsch'].includes(d.id)).forEach((d) => d.items.forEach((x) => { s.srs[x.k] = [3, LH._intern.tagNr() + 7]; })); saveJson('walquiz.lernhalle.en.v1', s); });
   // Lernplan mit Einstufungstest
   await p.click('#engInhalt [data-lh="plan-neu"]'); await p.waitForTimeout(200);
   await p.click('#engInhalt [data-z="C2"]'); await p.click('#engInhalt [data-m="30"]'); await p.click('#engInhalt [data-lh="test"]'); await p.waitForTimeout(200);
@@ -241,6 +252,10 @@ const ordner = process.argv[2] || '.';
   // Diktat (englische Stimme simuliert)
   await p.evaluate(() => { const P = LH._paket('en'); P.hatTon = () => true; P.sprich = (t) => { window.__gesprochen = t; }; LH.home(); }); await p.waitForTimeout(300);
   await p.click('#engInhalt [data-deck="pharma"]'); await p.waitForTimeout(300);
+  ck('Englisch: Diktat (Pharma-Deck) bietet nur Sätze aus gelernten Wörtern – Pharma-Sätze mit neuen Wörtern bleiben draußen', await p.evaluate(() => { const S = LH._intern.bekannteSaetze('diktat', LH._intern.aktivesDeck()); const ph = LH._intern.decks().find((d) => d.id === 'pharma').items.map((x) => x.bsp); return S.every((x) => LH._intern.satzOk(x.text)) && !S.some((x) => ph.includes(x.text)); }));
+  await p.evaluate(() => { const s = LH._intern.store(); LH._intern.decks().forEach((d) => d.items.forEach((x) => { s.srs[x.k] = [3, LH._intern.tagNr() + 7]; })); saveJson('walquiz.lernhalle.en.v1', s); LH.home(); }); await p.waitForTimeout(400);
+  await p.click('#engInhalt [data-deck="pharma"]'); await p.waitForTimeout(300);
+  ck('… alle Wörter gelernt → Diktat frei, Sätze nur aus bekannten Wörtern (+ Grundwörter, Formen wie tested → test)', await p.evaluate(() => { const S = LH._intern.bekannteSaetze('diktat', LH._intern.aktivesDeck()); return !document.querySelector('#engInhalt [data-spiel="diktat"]').disabled && S.length >= 3 && S.every((x) => LH._intern.satzOk(x.text)); }));
   await p.click('#engInhalt [data-spiel="diktat"]'); await p.waitForTimeout(500);
   const dik = await p.evaluate(async () => {
     const t = window.__gesprochen, w = t.split(' ').map((x) => x.replace(/[.,!?]/g, '')).filter((x) => x.length >= 5 && x[2] !== x[3]).sort((x, y) => y.length - x.length)[0], kaputt = w.slice(0, 2) + w[3] + w[2] + w.slice(4);
@@ -260,7 +275,7 @@ const ordner = process.argv[2] || '.';
   await bild('lh-en-grammatik');
   await p.click('[data-lh="raus"]'); await p.waitForTimeout(300);
   // 🧩 Grammatik-Pfad (Englisch): Start C1 aus der Einstufung → B-Themen offen, C1-Themen brauchen C1-Wörter
-  const gp = await p.evaluate(() => { const e = LH._intern.gramStatus(); return { zeiten: e.zeiten.status, cond: e.cond.status, c1: e['c1-unreal'].status, fehlt: e['c1-unreal'].fehlt.map((f) => f.art + ':' + f.text).join(' | '), c2: e.c2.fehlt.map((f) => f.art).join(','), karte: !!document.querySelector('#engInhalt .lh-gramkarte') }; });
+  const gp = await p.evaluate(() => { const s0 = LH._intern.store(); LH._intern.decks().find((d) => d.id === 'c1').items.forEach((x) => { delete s0.srs[x.k]; }); saveJson('walquiz.lernhalle.en.v1', s0); const e = LH._intern.gramStatus(); return { zeiten: e.zeiten.status, cond: e.cond.status, c1: e['c1-unreal'].status, fehlt: e['c1-unreal'].fehlt.map((f) => f.art + ':' + f.text).join(' | '), c2: e.c2.fehlt.map((f) => f.art).join(','), karte: !!document.querySelector('#engInhalt .lh-gramkarte') }; });
   ck('Grammatik-Pfad Englisch: B-Themen offen (Einstufung C1), C1 gesperrt bis 10 C1-Wörter, C2 braucht C1-Themen', gp.karte && gp.zeiten === 'offen' && gp.cond === 'offen' && gp.c1 === 'zu' && /deck/.test(gp.fehlt) && /thema/.test(gp.c2), JSON.stringify(gp));
   await p.click('#engInhalt .lh-pfad-link'); await p.waitForTimeout(300);
   ck('Pfad-Ansicht: 11 Themen, gesperrte mit „Was fehlt noch?“', await p.evaluate(() => document.querySelectorAll('#engInhalt .slp-pfad .slp-thema').length === 11 && !!document.querySelector('#engInhalt .slp-sperre')));

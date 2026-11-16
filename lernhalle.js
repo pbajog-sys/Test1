@@ -303,10 +303,9 @@ const LH = (() => {
         }));
         zeig();
       } },
-    { id: 'satz', e: '🧩', n: 'Satz-Sprint', sub: '90 Sekunden Sätze bauen', f: ['#10b981', '#0ea5e9'], geht: (d) => (d.items.filter((x) => x.bsp && x.bspDe).length >= 4 ? true : 'Dieses Deck hat zu wenig Beispielsätze'),
+    { id: 'satz', e: '🧩', n: 'Satz-Sprint', sub: '90 Sekunden Sätze bauen', f: ['#10b981', '#0ea5e9'], geht: (d) => { const n = bekannteSaetze(mitSatz, d).length; return n >= 3 ? true : '🔒 Erst mehr Wörter lernen: ' + n + ' von 3 Sätzen nur mit deinen Wörtern'; },
       start(sp, box, hudBox) {
-        const mitSatz = (d) => d.items.filter((x) => x.bsp && x.bspDe && x.bsp.split(' ').length <= 12);
-        const pool = misch(genug(mitSatz, sp.d)); let i = 0;
+        const pool = misch(bekannteSaetze(mitSatz, sp.d)); let i = 0;
         const runde = () => {
           if (!aktiv(sp)) return;
           const x = pool[i++ % pool.length], teile = x.bsp.split(' '), fremd = misch(sp.d.items.filter((y) => y !== x && y.bsp).flatMap((y) => y.bsp.split(' '))).filter((w) => !teile.includes(w)).slice(0, 2);
@@ -374,7 +373,7 @@ const LH = (() => {
         const runde = () => {
           if (!aktiv(sp)) return;
           if (r >= pool.length) { ende(sp, [60, 110, 140]); return; }
-          const x = pool[r++], text = x.bsp && x.bsp.split(' ').length <= 9 && Math.random() < 0.5 ? x.bsp : x.z, de = text === x.bsp ? x.bspDe || x.de : x.de;
+          const x = pool[r++], text = x.bsp && x.bsp.split(' ').length <= 9 && Math.random() < 0.5 && satzOk(x.bsp, bekannteTokens()) ? x.bsp : x.z, de = text === x.bsp ? x.bspDe || x.de : x.de;
           hud(hudBox, sp, '<span class="lh-zuege">' + r + ' / ' + pool.length + '</span>');
           box.innerHTML = '<div class="lh-frage"><small>Sag laut:</small><b class="satz">' + esc(text) + '</b>' + laut(text) + '<i>' + esc(de) + '</i></div><div data-lh="ski"></div><div class="lh-knoepfe"><button type="button" class="lh-klein" data-lh="skip">Überspringen ›</button></div>';
           bindLaut(box);
@@ -415,9 +414,9 @@ const LH = (() => {
         runde();
       } },
     { id: 'diktat', e: '✍️', n: 'Diktat', sub: 'Hören und schreiben – jedes Wort geprüft', f: ['#475569', '#0ea5e9'],
-      geht: (d) => (!P.hatTon((satzPool(d)[0] || {}).text) ? 'Auf diesem Gerät gibt es keine ' + P.sprache + '-Stimme' : satzPool(d).length >= 3 ? true : 'Zu wenig Sätze in diesem Deck'),
+      geht: (d) => (!P.hatTon((satzPool(d)[0] || {}).text) ? 'Auf diesem Gerät gibt es keine ' + P.sprache + '-Stimme' : (() => { const n = bekannteSaetze(satzPool, d).length; return n >= 3 ? true : '🔒 Erst mehr Wörter lernen: ' + n + ' von 3 Sätzen nur mit deinen Wörtern'; })()),
       start(sp, box, hudBox) {
-        const pool = misch(genug(satzPool, sp.d)).slice(0, 6); let r = 0;
+        const pool = misch(bekannteSaetze(satzPool, sp.d)).slice(0, 6); let r = 0;
         const runde = () => {
           if (!aktiv(sp)) return;
           if (r >= pool.length) { ende(sp, [90, 150, 190]); return; }
@@ -442,9 +441,9 @@ const LH = (() => {
         };
         runde();
       } },
-    { id: 'uebersetzen', e: '🔁', n: 'Übersetzung', sub: 'Sätze & Texte – mit Musterlösung', f: ['#d97706', '#65a30d'], geht: (d) => (uePool(d).length >= 3 ? true : 'Zu wenig Sätze in diesem Deck'),
+    { id: 'uebersetzen', e: '🔁', n: 'Übersetzung', sub: 'Sätze & Texte – mit Musterlösung', f: ['#d97706', '#65a30d'], geht: (d) => { const n = bekannteSaetze(uePool, d).length; return n >= 3 ? true : '🔒 Erst mehr Wörter lernen: ' + n + ' von 3 Sätzen nur mit deinen Wörtern'; },
       start(sp, box, hudBox) {
-        const pool = misch(genug(uePool, sp.d)), auswahl = pool.filter((x) => x.text).slice(0, 1).concat(pool.filter((x) => !x.text)).slice(0, 5); let r = 0;
+        const pool = misch(bekannteSaetze(uePool, sp.d)), auswahl = pool.filter((x) => x.text).slice(0, 1).concat(pool.filter((x) => !x.text)).slice(0, 5); let r = 0;
         const runde = () => {
           if (!aktiv(sp)) return;
           if (r >= auswahl.length) { ende(sp, [90, 140, 180]); return; }
@@ -510,11 +509,25 @@ const LH = (() => {
   // Grammatik bis zum aktuellen Niveau und nur freigeschaltete Themen (z. B. Grammatik-Pfad im Slowenischen)
   function grammatikPassend(d) { const st = stufeIndex(d); return (P.grammatik || []).filter((g) => grammatikStufe(g) <= st && (P.grammatikOffen ? P.grammatikOffen(g) : P.gramPfad ? gramThOffen(g.th) : true)); }
   const grammatikStufe = (g) => { const m = /\((A1|A2|B1|B2|C1|C2)\)/.exec(g.th || ''); const i = m && P.niveaus ? P.niveaus.findIndex((n) => n.id === m[1]) : -1; return Math.max(0, i); };
-  // Satz-Spiele: reichen die Sätze aus dem Niveau-Pool nicht, die kürzesten (= leichtesten) des ganzen Decks nehmen
-  function genug(f, d) {
-    const a = f(d); if (a.length >= 4 || !d.voll) return a;
-    const len = (x) => String(x.text || x.z || x.bsp || '').length;
-    return a.concat(f(d.voll).filter((x) => !a.some((y) => (y.text || y.z || y.bsp) === (x.text || x.z || x.bsp))).sort((x, y) => len(x) - len(y)).slice(0, 12));
+  // Satz-Spiele (Satz-Sprint, Diktat, Übersetzung): NUR Sätze, deren Wörter du alle schon gelernt hast.
+  // Bekannt = Wörter aus Karteikarten/Lektionen (+ deren Formen), Sätze aus erledigten Lektionen, ggf. Grundwörter des Pakets.
+  const mitSatz = (d) => d.items.filter((x) => x.bsp && x.bspDe && x.bsp.split(' ').length <= 12);
+  function bekannteTokens() {
+    const s = store(), kann = kannFn(s), set = new Set(), add = (t) => norm(t).split(' ').forEach((w) => { if (w) set.add(w); });
+    (decks || []).forEach((d) => d.items.forEach((x) => { if (kann(x)) add(x.z); }));
+    if (P.bekannteTexte) P.bekannteTexte().forEach(add);
+    (P.basisWoerter || []).forEach((w) => set.add(w));
+    return set;
+  }
+  function satzOk(text, set) {
+    const T = norm(text).split(' ').filter((t) => t && !/^\d+$/.test(t));
+    return T.length > 0 && T.every((t) => set.has(t) || (P.wortForm && P.wortForm(t, set)));
+  }
+  const satzText = (x) => x.text || x.z || x.bsp;
+  function bekannteSaetze(f, d) {
+    const set = bekannteTokens(), basis = d.voll || d, eigen = f(basis).filter((x) => satzOk(x.bsp && !x.text && f === mitSatz ? x.bsp : satzText(x), set));
+    const rest = (decks || []).filter((x) => x.id !== basis.id && x.id !== 'mix' && x.id !== 'fehler').flatMap((dd) => f(dd)).filter((x) => satzOk(f === mitSatz ? x.bsp : satzText(x), set) && !eigen.some((y) => satzText(y) === satzText(x)));
+    return eigen.concat(rest);
   }
   // ---------- Hilfen für Diktat & Übersetzung ----------
   function satzPool(d) {
@@ -784,6 +797,6 @@ const LH = (() => {
     start(id, container) { if (P !== PAKETE[id]) decks = null; P = PAKETE[id]; el = container; home(); },
     stop() { lauf++; spiel = null; if (typeof SprechKI !== 'undefined') SprechKI.stopp(); },
     home: () => home(),
-    _intern: { gramStatus: () => gramStatus(), gramLektion: (id) => gramLektion(id), gramPfad: () => gramPfad(), verlauf: () => verlauf(), spielPool: (d) => spielPool(d), stufeIndex: (d) => stufeIndex(d), bekannteItems: (d) => bekannteItems(d), tippWert, level, diktatWert: (a, b) => diktatWert(a, b), planMissionen: () => planMissionen(store()), aktuellesNiveau: () => aktuellesNiveau(store()), store: () => store(), SPIELE, aktivesDeck: () => aktivesDeck(), decks: () => decks, xpDazu: (n) => xpDazu(n), tagNr },
+    _intern: { bekannteSaetze: (f, d) => bekannteSaetze(f === 'satz' ? mitSatz : f === 'diktat' ? satzPool : uePool, d), satzOk: (t) => satzOk(t, bekannteTokens()), gramStatus: () => gramStatus(), gramLektion: (id) => gramLektion(id), gramPfad: () => gramPfad(), verlauf: () => verlauf(), spielPool: (d) => spielPool(d), stufeIndex: (d) => stufeIndex(d), bekannteItems: (d) => bekannteItems(d), tippWert, level, diktatWert: (a, b) => diktatWert(a, b), planMissionen: () => planMissionen(store()), aktuellesNiveau: () => aktuellesNiveau(store()), store: () => store(), SPIELE, aktivesDeck: () => aktivesDeck(), decks: () => decks, xpDazu: (n) => xpDazu(n), tagNr },
   };
 })();

@@ -243,6 +243,10 @@ LH.paket({
   // schon gelernt: Reise-Lektionen (Wortstärke) oder Wortschatz-Karteikarten
   bekannt: (z) => (sloStore().wort[z] || 0) > 0 || !!(typeof slpStore === 'function' && slpStore().srs[z]),
   leichtDeck: 'alltag',
+  // Sätze aus erledigten Reise-Stationen gelten als „gemacht“ (ihre Wörter sind bekannt)
+  bekannteTexte: () => { const st = sloStore(); return SLO_EINHEITEN.filter((u) => (st.stufe[u.id] || 0) >= 1).flatMap((u) => u.S.map((x) => x.sl)); },
+  // gebeugte Formen: kavo → kava (über die Formen-Tabellen des Wortschatzes)
+  wortForm: (t, set) => !!(typeof slpLex !== 'undefined' && slpLex && typeof slpFormIndex === 'function' && (slpFormIndex().get(t) || []).some((e) => set.has(String(e.w.sl).toLowerCase()))),
   gekonnt: () => (typeof slpGelernteWoerter === 'function' ? slpGelernteWoerter().size : 0),
   grammatikOffen: (g) => typeof slpGramOffen !== 'function' || slpGramOffen(g.th),
   rollen: SLF_ROLLEN, grammatik: SLF_GRAMMATIK,
