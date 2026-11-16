@@ -9,7 +9,8 @@ const SprechKI = (() => {
   const CDN = 'https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.7.6';
   const MODELLE = {
     tiny: { id: 'onnx-community/whisper-tiny', mb: 40, n: 'Kompakt', t: '≈ 40 MB · schnell, etwas ungenauer' },
-    base: { id: 'onnx-community/whisper-base', mb: 80, n: 'Genau', t: '≈ 80 MB · empfohlen' },
+    base: { id: 'onnx-community/whisper-base', mb: 80, n: 'Genau', t: '≈ 80 MB · gut für Englisch' },
+    small: { id: 'onnx-community/whisper-small', mb: 250, n: 'Sehr genau', t: '≈ 250 MB · empfohlen für Slowenisch, etwas langsamer' },
   };
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   let pipe = null, laedt = null, ladeStand = null, modellAktiv = null;
@@ -81,35 +82,72 @@ const SprechKI = (() => {
   }
 
   // ---------- Aufnahme (rohes PCM, Sprach-Erkennung per Pegel, Auto-Stopp nach Stille) ----------
-  let laufend = null;
-  async function aufnehmen({ maxMs = 9000, stilleMs = 1200, onPegel } = {}) {
+  // Das Mikrofon bleibt zwischen Versuchen offen (nach 45 s ohne Nutzung wird es freigegeben). So fehlt auf dem iPhone
+  // nicht mehr der Anfang: iOS liefert nach dem Einschalten oft bis zu ~1 s nur Stille. Wir warten, bis wirklich Ton
+  // kommt, zeigen erst dann „Jetzt sprechen“, nehmen ~0,5 s Vorlauf mit und schneiden am Ende Stille vorn/hinten ab.
+  let laufend = null, mik = null;
+  const BLOCK = 2048;
+  async function mikroAn() {
+    if (mik && mik.strom.getTracks().every((t) => t.readyState === 'live') && mik.ac.state !== 'closed') {
+      if (mik.ac.state === 'suspended') { try { await mik.ac.resume(); } catch (e) { /* egal */ } }
+      return mik;
+    }
     if (!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia)) throw Object.assign(new Error('kein Mikrofon'), { code: 'kein-mikro' });
     if (typeof ftAudioVorMikrofon === 'function') ftAudioVorMikrofon();
-    const strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, channelCount: 1 } });
+    const strom = await navigator.mediaDevices.getUserMedia({ audio: { echoCancellation: true, noiseSuppression: true, autoGainControl: true, channelCount: 1 } });
     const ac = new (window.AudioContext || window.webkitAudioContext)();
     if (ac.state === 'suspended') { try { await ac.resume(); } catch (e) { /* egal */ } }
-    const quelle = ac.createMediaStreamSource(strom), proz = ac.createScriptProcessor(4096, 1, 1), stumm = ac.createGain();
+    const quelle = ac.createMediaStreamSource(strom), proz = ac.createScriptProcessor(BLOCK, 1, 1), stumm = ac.createGain();
     stumm.gain.value = 0; quelle.connect(proz); proz.connect(stumm); stumm.connect(ac.destination);
-    const stuecke = [], rate = ac.sampleRate, t0 = performance.now();
-    let rausch = null, sprach = false, letzteSprache = 0, sprachMs = 0;
+    const m = { strom, ac, quelle, proz, rate: ac.sampleRate, ring: [], fliesst: false, onFrame: null, freiTimer: null };
+    proz.onaudioprocess = (e) => {
+      const d = new Float32Array(e.inputBuffer.getChannelData(0));
+      if (!m.fliesst) { let n = 0; for (let k = 0; k < d.length; k++) if (Math.abs(d[k]) > 1e-4) n++; if (n > d.length / 10) m.fliesst = true; }
+      m.ring.push(d); while (m.ring.length * BLOCK > m.rate * 1.2) m.ring.shift();
+      if (m.onFrame) m.onFrame(d);
+    };
+    mik = m;
+    return m;
+  }
+  function mikroAus() {
+    if (!mik) return; const m = mik; mik = null;
+    clearTimeout(m.freiTimer);
+    try { m.proz.disconnect(); m.quelle.disconnect(); } catch (e) { /* egal */ }
+    m.strom.getTracks().forEach((t) => t.stop()); try { m.ac.close(); } catch (e) { /* egal */ }
+    if (typeof ftAudioNachMikrofon === 'function') ftAudioNachMikrofon();
+  }
+  const rmsVon = (d) => { let s = 0; for (let k = 0; k < d.length; k++) s += d[k] * d[k]; return Math.sqrt(s / d.length); };
+  async function aufnehmen({ maxMs = 9000, stilleMs = 1300, onPegel, onBereit } = {}) {
+    const m = await mikroAn(); clearTimeout(m.freiTimer);
+    const tw = performance.now();
+    while (!m.fliesst && performance.now() - tw < 3000) await new Promise((r) => setTimeout(r, 40));
+    if (performance.now() - tw > 60) await new Promise((r) => setTimeout(r, 120));   // iOS: nach dem Anlaufen kurz einschwingen lassen
+    const rate = m.rate, vorlauf = m.ring.slice(-Math.ceil((0.5 * rate) / BLOCK));
+    // Rauschpegel aus dem Vorlauf (vor „Jetzt sprechen“), nicht aus den ersten Millisekunden der Aufnahme
+    const ruhe = vorlauf.map(rmsVon).filter((x) => x > 1e-4).sort((a, b) => a - b);
+    const rausch = ruhe.length ? ruhe[Math.floor(ruhe.length / 3)] : 0.004, schwelle = Math.max(0.012, Math.min(0.03, rausch * 3));   // gedeckelt: wer sofort losspricht, hebt den „Rausch“ sonst zu hoch
+    if (onBereit) onBereit();
+    const stuecke = vorlauf.slice(), t0 = performance.now();
+    let sprach = false, letzteSprache = 0, sprachMs = 0;
     return new Promise((fertig) => {
       const ende = () => {
-        if (!laufend) return; laufend = null;
-        try { proz.disconnect(); quelle.disconnect(); } catch (e) { /* egal */ }
-        strom.getTracks().forEach((t) => t.stop()); try { ac.close(); } catch (e) { /* egal */ }
-        if (typeof ftAudioNachMikrofon === 'function') ftAudioNachMikrofon();
-        const len = stuecke.reduce((a, s) => a + s.length, 0), roh = new Float32Array(len); let o = 0;
-        stuecke.forEach((s) => { roh.set(s, o); o += s.length; });
-        fertig({ samples: resample(roh, rate, 16000), rate: 16000, sprach, sprachMs, dauer: len / rate, url: URL.createObjectURL(wav(resample(roh, rate, 16000), 16000)) });
+        if (!laufend) return; laufend = null; m.onFrame = null;
+        clearTimeout(m.freiTimer); m.freiTimer = setTimeout(mikroAus, 45000);
+        // Stille vorn und hinten abschneiden (mit etwas Rand)
+        const pegel = stuecke.map(rmsVon); let a = pegel.findIndex((x) => x > schwelle), z = pegel.length - 1;
+        while (z > 0 && pegel[z] <= schwelle) z--;
+        if (a < 0) { a = 0; z = pegel.length - 1; }
+        const rand = Math.ceil((0.3 * rate) / BLOCK), teil = stuecke.slice(Math.max(0, a - rand), Math.min(stuecke.length, z + 1 + rand * 2));
+        const len = teil.reduce((x, y) => x + y.length, 0), roh = new Float32Array(len); let o = 0;
+        teil.forEach((y) => { roh.set(y, o); o += y.length; });
+        const s16 = resample(roh, rate, 16000);
+        fertig({ samples: s16, rate: 16000, sprach, sprachMs, dauer: len / rate, url: URL.createObjectURL(wav(s16, 16000)) });
       };
       laufend = { stop: ende };
-      proz.onaudioprocess = (e) => {
-        const d = e.inputBuffer.getChannelData(0); stuecke.push(new Float32Array(d));
-        let s = 0; for (let k = 0; k < d.length; k++) s += d[k] * d[k];
-        const rms = Math.sqrt(s / d.length), t = performance.now() - t0;
-        if (t < 300) rausch = rausch == null ? rms : Math.min(rausch, rms);
-        const schwelle = Math.max(0.01, (rausch || 0.004) * 3);
-        if (rms > schwelle && t > 150) { sprach = true; letzteSprache = t; sprachMs += (d.length / rate) * 1000; }
+      m.onFrame = (d) => {
+        stuecke.push(d);
+        const rms = rmsVon(d), t = performance.now() - t0;
+        if (rms > schwelle) { sprach = true; letzteSprache = t; sprachMs += (d.length / rate) * 1000; }
         if (onPegel) onPegel(Math.min(1, rms / 0.12));
         if ((sprach && t - letzteSprache > stilleMs) || t > maxMs) ende();
       };
@@ -175,6 +213,7 @@ const SprechKI = (() => {
       rec.lang = lang === 'sl' ? 'sl-SI' : 'en-GB'; rec.interimResults = false; rec.maxAlternatives = 5;
       let fertig = false;
       laufend = { stop: () => { try { rec.stop(); } catch (e) { /* egal */ } } };
+      rec.onaudiostart = () => { if (webHoeren.bereit) webHoeren.bereit(); };
       rec.onresult = (e) => { fertig = true; ok([...e.results[0]].map((x) => x.transcript)); };
       rec.onerror = (e) => {
         fertig = true;
@@ -197,7 +236,8 @@ const SprechKI = (() => {
     const w = weg(lang);
     if (!w) throw Object.assign(new Error('keine'), { code: 'keine' });
     if (w === 'web') {
-      onStatus && onStatus('Ich höre zu …');
+      onStatus && onStatus('🎙️ Mikrofon startet …');
+      webHoeren.bereit = () => onStatus && onStatus('🔴 Jetzt sprechen!', true);
       try { const alt = await webHoeren(lang); return { text: alt[0] || '', alternativen: alt, quelle: 'web' }; }
       catch (e) { if (whisperInstalliert() && e.code !== 'no-speech' && e.code !== 'aborted') return hoerenWhisper(lang, { onPegel, onStatus }); throw e; }
     }
@@ -205,8 +245,8 @@ const SprechKI = (() => {
   }
   async function hoerenWhisper(lang, { onPegel, onStatus } = {}) {
     if (!pipe) { onStatus && onStatus('Lade Spracherkennung …'); whisperLaden().catch(() => {}); }
-    onStatus && onStatus('Ich höre zu …');
-    const a = await aufnehmen({ onPegel });
+    onStatus && onStatus('🎙️ Mikrofon startet …');
+    const a = await aufnehmen({ onPegel, onBereit: () => onStatus && onStatus('🔴 Jetzt sprechen!', true) });
     if (!a.sprach || a.sprachMs < 180) throw Object.assign(new Error('no-speech'), { code: 'no-speech', url: a.url });
     onStatus && onStatus(pipe ? 'Erkenne …' : 'Lade Spracherkennung …');
     const text = await (SprechKI._transkribiere ? SprechKI._transkribiere(a.samples, lang) : whisperHoeren(a.samples, lang));
@@ -235,7 +275,7 @@ const SprechKI = (() => {
       if ('speechSynthesis' in window) speechSynthesis.cancel();
       knopf.classList.add('an'); knopf.querySelector('em').textContent = 'Fertig? Tippen zum Stoppen';
       try {
-        const r = await hoeren(opt.lang, { onPegel: (p) => knopf.style.setProperty('--pegel', p.toFixed(2)), onStatus: (t) => { status.textContent = t; } });
+        const r = await hoeren(opt.lang, { onPegel: (p) => knopf.style.setProperty('--pegel', p.toFixed(2)), onStatus: (t, bereit) => { status.textContent = t; knopf.classList.toggle('bereit', !!bereit); } });
         versuche++;
         const v = besteVon(r.alternativen, opt.ziel, opt.lang);
         const urteil = v.ok ? (v.quote >= 0.95 ? '🌟 Perfekt!' : '✅ Gut verstanden!') : v.quote >= 0.5 ? '🟡 Fast – achte auf die markierten Wörter.' : '❌ Das klang anders.';
@@ -250,7 +290,7 @@ const SprechKI = (() => {
         status.textContent = FEHLER[e.code] || 'Das hat nicht geklappt (' + (e.code || e.message) + ').';
         if (e.code === 'keine' || (webKaputt(opt.lang) && !whisperInstalliert())) keineErkennung(box, opt);
       } finally {
-        if (knopf.isConnected) { knopf.classList.remove('an'); knopf.style.setProperty('--pegel', 0); knopf.querySelector('em').textContent = versuche ? 'Noch einmal' : 'Tippen und sprechen'; }
+        if (knopf.isConnected) { knopf.classList.remove('an', 'bereit'); knopf.style.setProperty('--pegel', 0); knopf.querySelector('em').textContent = versuche ? 'Noch einmal' : 'Tippen und sprechen'; }
       }
     });
   }
@@ -266,7 +306,8 @@ const SprechKI = (() => {
       if (auf.classList.contains('an')) { stopp(); return; }
       auf.classList.add('an');
       try {
-        const a = await aufnehmen({ onPegel: (p) => auf.style.setProperty('--pegel', p.toFixed(2)) });
+        auf.querySelector('em').textContent = 'Mikrofon startet …';
+        const a = await aufnehmen({ onPegel: (p) => auf.style.setProperty('--pegel', p.toFixed(2)), onBereit: () => { auf.classList.add('bereit'); auf.querySelector('em').textContent = '🔴 Jetzt sprechen!'; } });
         const vgl = box.querySelector('[data-ski="vgl"]');
         if (!a.sprach) { vgl.innerHTML = '<p class="ski-hinweis">Ich habe nichts gehört – noch einmal?</p>'; return; }
         vgl.innerHTML = '<div class="ski-knoepfe"><button type="button" class="ski-k" data-x="ich">▶️ Ich</button>' + (opt.sprich ? '<button type="button" class="ski-k" data-x="orig">🔊 Original</button>' : '') + '</div>'
@@ -276,7 +317,7 @@ const SprechKI = (() => {
         vgl.querySelector('[data-x="ja"]').addEventListener('click', () => opt.onErgebnis && opt.onErgebnis({ ok: true, quote: null, selbst: true, woerter: [], url: a.url }));
         vgl.querySelector('[data-x="nein"]').addEventListener('click', () => opt.onErgebnis && opt.onErgebnis({ ok: false, quote: null, selbst: true, woerter: [], url: a.url }));
       } catch (e) { box.querySelector('[data-ski="vgl"]').innerHTML = '<p class="ski-hinweis">' + esc(FEHLER[e.code] || 'Aufnahme nicht möglich.') + '</p>'; }
-      finally { if (auf.isConnected) { auf.classList.remove('an'); auf.style.setProperty('--pegel', 0); } }
+      finally { if (auf.isConnected) { auf.classList.remove('an', 'bereit'); auf.style.setProperty('--pegel', 0); auf.querySelector('em').textContent = 'Nochmal aufnehmen'; } }
     });
   }
   // Einrichtungs-Dialog: Modell wählen, laden, Fortschritt
@@ -288,7 +329,7 @@ const SprechKI = (() => {
       d.innerHTML = '<div class="ski-dlg-in"><button type="button" class="ski-zu" aria-label="Schließen">×</button><h3>🧠 Echte Spracherkennung</h3>'
         + '<p>Die App lädt <b>Whisper</b>, ein offenes Spracherkennungs-Modell (MIT-Lizenz, von OpenAI), und lässt es <b>direkt auf deinem Gerät</b> laufen. Es versteht Slowenisch und Englisch.</p>'
         + '<ul class="ski-fakten"><li>🔒 Deine Stimme verlässt das Gerät nicht.</li><li>📦 Einmaliger Download von Hugging Face (Modell) und jsDelivr (Programm) – danach offline.</li><li>💸 Kostenlos, kein Konto.</li><li>🔋 Erkennen dauert je nach Gerät 1–4 Sekunden.</li></ul>'
-        + '<div class="ski-modelle">' + Object.entries(MODELLE).map(([k, m]) => '<button type="button" class="ski-modell' + ((s.modell || 'base') === k ? ' an' : '') + '" data-m="' + k + '"><b>' + m.n + '</b><small>' + m.t + '</small></button>').join('') + '</div>'
+        + '<div class="ski-modelle">' + Object.entries(MODELLE).map(([k, m]) => '<button type="button" class="ski-modell' + ((s.modell || 'small') === k ? ' an' : '') + '" data-m="' + k + '"><b>' + m.n + '</b><small>' + m.t + '</small></button>').join('') + '</div>'
         + '<div class="ski-laden" hidden><div class="ski-balken"><i></i></div><small data-ski="ladetext"></small></div>'
         + '<div class="ski-knoepfe"><button type="button" class="btn" data-ski="los">' + (whisperInstalliert() ? 'Neu laden' : '⬇️ Laden & einrichten') + '</button>' + (whisperInstalliert() ? '<button type="button" class="btn secondary" data-ski="weg">Entfernen</button>' : '') + '</div>'
         + '<p class="ski-fein">Nur WLAN empfohlen. Alternativ nutzt die App die Erkennung deines Browsers, falls er die Sprache kann (dann geht der Ton an Apple/Google).</p></div>';
@@ -300,7 +341,7 @@ const SprechKI = (() => {
         const box = d.querySelector('.ski-laden'), balken = box.querySelector('i'), txt = d.querySelector('[data-ski="ladetext"]');
         box.hidden = false; d.querySelector('[data-ski="los"]').disabled = true;
         try {
-          await whisperLaden(s.modell || 'base', (p) => { balken.style.width = Math.round((p.geladen / p.gesamt) * 100) + '%'; txt.textContent = p.text + ' · ' + Math.round(p.geladen / 1e6) + ' / ' + Math.round(p.gesamt / 1e6) + ' MB'; });
+          await whisperLaden(s.modell || 'small', (p) => { balken.style.width = Math.round((p.geladen / p.gesamt) * 100) + '%'; txt.textContent = p.text + ' · ' + Math.round(p.geladen / 1e6) + ' / ' + Math.round(p.gesamt / 1e6) + ' MB'; });
           balken.style.width = '100%'; txt.textContent = '✅ Bereit – offline nutzbar.';
           setTimeout(() => { if (d.close) d.close(); else d.removeAttribute('open'); if (danach) danach(); }, 700);
         } catch (e) {
@@ -317,5 +358,5 @@ const SprechKI = (() => {
     const w = weg(lang);
     return w === 'whisper' ? '🧠 Whisper auf dem Gerät (' + MODELLE[store().modell].n + ')' : w === 'web' ? '🌐 Browser-Erkennung' + (whisperInstalliert() ? '' : ' (Whisper nicht installiert)') : '🔒 Keine Spracherkennung eingerichtet';
   }
-  return { vergleiche, besteVon, norm, widget, einrichten, weg, statusText, hoeren, aufnehmen, stopp, whisperInstalliert, whisperBereit, whisperLaden, MODELLE, _import: null, _transkribiere: null };
+  return { freigeben: mikroAus, vergleiche, besteVon, norm, widget, einrichten, weg, statusText, hoeren, aufnehmen, stopp, whisperInstalliert, whisperBereit, whisperLaden, MODELLE, _import: null, _transkribiere: null };
 })();

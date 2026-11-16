@@ -4657,3 +4657,7 @@ a.bb-datei { text-decoration: none; }
 .slo-buehne > .slo-teil, .eng-buehne > #engInhalt { position: relative; z-index: 1; }
 .lh { position: relative; z-index: 1; transform: translateZ(0); -webkit-transform: translateZ(0); }
 .lh-verlauf > span:nth-child(2) { display: block; line-height: 1.35; }
+/* SprechKI: erst sprechen, wenn das Mikrofon wirklich läuft */
+.ski-mikro.bereit b { background: radial-gradient(circle at 30% 25%, rgba(255,255,255,.4), transparent 50%), linear-gradient(145deg, #22c55e, #16a34a); box-shadow: 0 0 0 6px rgba(74,222,128,.25), 0 14px 32px -12px #22c55e; }
+.ski-mikro.bereit em { color: #86efac; font-weight: 800; }
+.ski-modelle { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)) !important; }

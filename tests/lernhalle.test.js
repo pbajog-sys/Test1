@@ -61,9 +61,18 @@ const ordner = process.argv[2] || '.';
   await p.waitForSelector('#sloSprechBox .ski-urteil', { timeout: 15000 }).catch(() => {});
   ck('Whisper: anderer Satz erkannt → falsch', await p.evaluate(() => slo.zustand === 'antwort' && /schlecht/.test(document.querySelector('#sloSprechBox .ski-urteil').className)));
   await p.evaluate(() => { saveJson('walquiz.sprechki.v1', {}); sloKarte(); });
+  // Aufnahme: erst „Jetzt sprechen“, wenn Ton fließt; Vorlauf + Stille abgeschnitten; Mikro bleibt für den nächsten Versuch offen
+  const auf = await p.evaluate(async () => {
+    const ereignisse = []; const t0 = performance.now();
+    const a = await SprechKI.aufnehmen({ maxMs: 2500, onBereit: () => ereignisse.push('bereit@' + Math.round(performance.now() - t0)) });
+    const t1 = performance.now(); const b = await SprechKI.aufnehmen({ maxMs: 1500, onBereit: () => ereignisse.push('bereit2@' + Math.round(performance.now() - t1)) });
+    SprechKI.freigeben();
+    return { ereignisse, dauerA: +a.dauer.toFixed(2), samples: a.samples.length, rate: a.rate, sprach: a.sprach, zweiterSchnell: +ereignisse[1].split('@')[1] < 400 };
+  });
+  ck('Aufnahme: „Jetzt sprechen“-Signal, 16-kHz-Aufnahme mit Vorlauf, zweiter Versuch ohne Anlaufzeit (Mikro bleibt offen)', auf.ereignisse.length === 2 && auf.samples > 8000 && auf.rate === 16000 && auf.zweiterSchnell, JSON.stringify(auf));
   // Einrichten-Dialog
   await p.evaluate(() => SprechKI.einrichten()); await p.waitForTimeout(200);
-  ck('Einrichten-Dialog: 2 Modelle, Datenschutz, Laden-Knopf', await p.evaluate(() => document.querySelectorAll('#skiDlg [data-m]').length === 2 && /verlässt das Gerät nicht/.test($('skiDlg').innerText) && !!document.querySelector('#skiDlg [data-ski="los"]')));
+  ck('Einrichten-Dialog: 3 Modelle (Sehr genau vorausgewählt), Datenschutz, Laden-Knopf', await p.evaluate(() => document.querySelectorAll('#skiDlg [data-m]').length === 3 && !!document.querySelector('#skiDlg [data-m="small"].an') && /verlässt das Gerät nicht/.test($('skiDlg').innerText) && !!document.querySelector('#skiDlg [data-ski="los"]')));
   await bild('lh-whisper-dialog');
   await p.evaluate(() => $('skiDlg').close());
 
