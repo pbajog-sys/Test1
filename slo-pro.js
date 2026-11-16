@@ -540,13 +540,76 @@ SLO_RENDER.erkl = function (a, box) {
   sloBereit(true, 'Los geht’s'); $('sloWeissNicht').hidden = true;
   slo.pruefe = () => { slo.i++; sloZeigen(); return null; };   // Erklärung: einfach weiter, ohne Wertung
 };
+// Grammatik-Pfad: Reihenfolge + Voraussetzungen (vorherige Themen ≥ 70 %, Reise-Stationen, Anzahl gelernter Wörter).
+// Was schon geübt wurde, bleibt immer offen.
+const SLP_GRAM_PFAD = [
+  { id: 'praesens', stationen: ['pozdravi', 'jaz'], woerter: 20 },
+  { id: 'tozilnik', vor: ['praesens'], stationen: ['hrana'], woerter: 40 },
+  { id: 'nikalnica', vor: ['tozilnik'], woerter: 50 },
+  { id: 'mestnik', vor: ['praesens'], stationen: ['mesto'], woerter: 60 },
+  { id: 'zsk', vor: ['mestnik'], woerter: 60 },
+  { id: 'dvojina', vor: ['praesens'], stationen: ['stevilke'], woerter: 60 },
+  { id: 'rodilnik', vor: ['nikalnica'], stationen: ['druzina'], woerter: 80 },
+  { id: 'vergangenheit', vor: ['praesens'], stationen: ['dnevi'], woerter: 100 },
+  { id: 'zukunft', vor: ['vergangenheit'], woerter: 120 },
+  { id: 'dajalnik', vor: ['rodilnik'], woerter: 140 },
+  { id: 'orodnik', vor: ['mestnik', 'rodilnik'], woerter: 160 },
+  { id: 'stevila', vor: ['dvojina', 'rodilnik'], woerter: 160 },
+  { id: 'pridevnik', vor: ['tozilnik', 'rodilnik'], stationen: ['barve'], woerter: 200 },
+];
+// gelernte Wörter: Reise (Wortstärke > 0) + Wortschatz-Karteikarten + Karteikarten der Spielhalle
+function slpGelernteWoerter() {
+  const st = sloStore(), w = new Set(Object.keys(st.wort || {}).filter((k) => st.wort[k] > 0));
+  Object.keys(st.srs || {}).forEach((k) => w.add(k));
+  const lh = loadJson('walquiz.lernhalle.slo.v1'); if (lh && lh.srs) Object.entries(lh.srs).forEach(([k, z]) => { if (z && z[0] >= 1) w.add(k); });
+  return w;
+}
+function slpGramStatus() {
+  const st = slpStore(), sst = sloStore(), gelernt = slpGelernteWoerter(), n = gelernt.size, erg = {};
+  SLP_GRAM_PFAD.forEach((p) => {
+    const th = SLP_THEMEN.find((t) => t.id === p.id), g = st.gram[p.id], best = g ? g.best : 0;
+    const fehlt = [];
+    (p.vor || []).forEach((v) => { const b = st.gram[v] ? st.gram[v].best : 0; if (b < 70) fehlt.push({ art: 'thema', id: v, text: 'Thema „' + SLP_THEMEN.find((t) => t.id === v).titel + '“ zu 70 % (jetzt ' + b + ' %)' }); });
+    (p.stationen || []).forEach((sid) => {
+      if ((sst.stufe[sid] || 0) >= 1) return;
+      const u = SLO_EINHEITEN.find((x) => x.id === sid), beispiele = u.W.filter((w) => !gelernt.has(w.sl)).slice(0, 4).map((w) => w.sl);
+      fehlt.push({ art: 'station', id: sid, text: 'Reise-Station ' + u.ortEmoji + ' ' + u.ort + ' (' + u.de + ')', woerter: beispiele });
+    });
+    if (n < p.woerter) fehlt.push({ art: 'woerter', text: p.woerter + ' gelernte Wörter (jetzt ' + n + ')' });
+    const offen = !fehlt.length || !!g;
+    erg[p.id] = { th, best, offen, fehlt: g ? [] : fehlt, status: best >= 70 ? 'fertig' : offen ? 'offen' : 'zu' };
+  });
+  return { erg, n };
+}
 function slpGrammatik() {
-  const st = slpStore();
-  $('slo-grammatik').innerHTML = '<div class="slp-karte"><h3>🧩 Grammatik-Werkstatt</h3><p class="slp-klein">Kurz erklärt, dann 10 Aufgaben. Ab 80 % tippst du die Formen selbst. Alle abgefragten Formen sind in echten slowenischen Texten belegt oder folgen sicheren Regeln.</p></div>'
-    + '<div class="slp-themen">' + SLP_THEMEN.map((th) => { const g = st.gram[th.id], b = g ? g.best : 0; return '<button type="button" class="slp-thema" data-th="' + th.id + '"><span class="slp-th-ic">' + th.ic + '</span><span><b>' + th.titel + '</b><small>' + th.stufe + (g ? ' · ' + g.n + ' geübt' : ' · neu') + '</small></span><i class="slp-meister" style="--p:' + b + '%"><em>' + (b ? b + '%' : '') + '</em></i></button>'; }).join('') + '</div>';
-  $('slo-grammatik').querySelectorAll('[data-th]').forEach((b) => b.addEventListener('click', () => { const th = SLP_THEMEN.find((t) => t.id === b.dataset.th); slpLektion('gram', '🧩 ' + th.titel, slpGramAufgaben(th), slpLex, th.id); }));
+  const { erg, n } = slpGramStatus();
+  const naechstes = SLP_GRAM_PFAD.map((p) => erg[p.id]).find((x) => x.status === 'offen');
+  const zuerst = !naechstes && SLP_GRAM_PFAD.map((p) => erg[p.id]).find((x) => x.status === 'zu');
+  const fehltHtml = (f) => '<ul class="slp-fehlt">' + f.map((x) => '<li>' + (x.art === 'station' ? '🗺️' : x.art === 'thema' ? '🧩' : '📚') + ' ' + sloEsc(x.text)
+    + (x.woerter && x.woerter.length ? '<small>z. B. ' + x.woerter.map(sloEsc).join(', ') + '</small>' : '')
+    + (x.art === 'station' ? '<button type="button" class="slp-fehlt-los" data-station="' + x.id + '">Station öffnen ›</button>' : x.art === 'woerter' ? '<button type="button" class="slp-fehlt-los" data-woerter="1">Wörter lernen ›</button>' : '<button type="button" class="slp-fehlt-los" data-th="' + x.id + '">Thema üben ›</button>') + '</li>').join('') + '</ul>';
+  $('slo-grammatik').innerHTML = '<div class="slp-karte"><h3>🧩 Grammatik-Pfad</h3><p class="slp-klein">Schritt für Schritt: Jedes Thema baut auf Wörtern und Themen auf, die du schon kannst. Ab 70 % gilt ein Thema als geschafft und schaltet die nächsten frei. Du kennst schon <b>' + n + '</b> Wörter.</p></div>'
+    + (naechstes ? '<div class="slp-naechstes"><small>Als Nächstes</small><button type="button" class="slp-thema gross" data-th="' + naechstes.th.id + '"><span class="slp-th-ic">' + naechstes.th.ic + '</span><span><b>' + naechstes.th.titel + '</b><small>' + naechstes.th.stufe + (naechstes.best ? ' · bisher ' + naechstes.best + ' %' : ' · neu') + '</small></span><span class="slp-los">Los ›</span></button></div>'
+      : zuerst ? '<div class="slp-naechstes"><small>Als Nächstes freischalten: ' + zuerst.th.ic + ' ' + zuerst.th.titel + '</small>' + fehltHtml(zuerst.fehlt) + '</div>' : '<div class="slp-naechstes"><small>🎉 Alle Themen geschafft – weiter üben hält sie frisch.</small></div>')
+    + '<div class="slp-pfad">' + SLP_GRAM_PFAD.map((p, i) => {
+      const x = erg[p.id], b = x.best;
+      return '<div class="slp-pfad-schritt ' + x.status + '"><i class="slp-pfad-punkt">' + (x.status === 'fertig' ? '✓' : x.status === 'zu' ? '🔒' : i + 1) + '</i>'
+        + '<button type="button" class="slp-thema' + (x.status === 'zu' ? ' gesperrt' : '') + '" data-th="' + p.id + '"' + (x.status === 'zu' ? ' aria-disabled="true"' : '') + '><span class="slp-th-ic">' + x.th.ic + '</span><span><b>' + x.th.titel + '</b><small>' + x.th.stufe + (x.status === 'zu' ? ' · gesperrt' : b ? ' · ' + b + ' %' : ' · neu') + '</small></span><i class="slp-meister" style="--p:' + b + '%"><em>' + (b ? b + '%' : x.status === 'zu' ? '🔒' : '') + '</em></i></button>'
+        + (x.status === 'zu' ? '<details class="slp-sperre"><summary>Was fehlt noch?</summary>' + fehltHtml(x.fehlt) + '</details>' : '') + '</div>';
+    }).join('') + '</div>';
+  const box = $('slo-grammatik');
+  box.querySelectorAll('[data-th]').forEach((b) => b.addEventListener('click', (e) => {
+    const id = b.dataset.th;
+    if (!erg[id] || !erg[id].offen) { const d = b.closest('.slp-pfad-schritt'); const det = d && d.querySelector('details'); if (det) det.open = true; b.classList.add('wackeln'); setTimeout(() => b.classList.remove('wackeln'), 420); if (navigator.vibrate) navigator.vibrate(30); e.stopPropagation(); return; }
+    const th = SLP_THEMEN.find((t) => t.id === id); slpLektion('gram', '🧩 ' + th.titel, slpGramAufgaben(th), slpLex, th.id);
+  }));
+  box.querySelectorAll('[data-station]').forEach((b) => b.addEventListener('click', () => { const u = SLO_EINHEITEN.find((x) => x.id === b.dataset.station); const i = SLO_EINHEITEN.indexOf(u); if (sloOffen(sloStore(), i)) sloStart(u); else { slpZeige('karte'); if (typeof skToast === 'function') skToast('🗺️ ' + u.ort + ' liegt weiter hinten auf der Reise – erst die Stationen davor.'); } }));
+  box.querySelectorAll('[data-woerter]').forEach((b) => b.addEventListener('click', () => slpZeige('wortschatz')));
   slpTabsMarkieren();
 }
+// Für die Spielhalle: Grammatik-Duell nur mit freigeschalteten Themen
+const SLP_GRAM_TH = { 'biti (sein)': 'praesens', Verben: 'praesens', Akkusativ: 'tozilnik', Verneinung: 'nikalnica', Präpositionen: 'mestnik', Dual: 'dvojina', Genitiv: 'rodilnik', Zeiten: 'vergangenheit', Dativ: 'dajalnik', Instrumental: 'orodnik', Zahlen: 'stevila', Adjektive: 'pridevnik' };
+function slpGramOffen(thText) { const id = SLP_GRAM_TH[thText]; if (!id) return true; const x = slpGramStatus().erg[id]; return !x || x.offen; }
 
 // ---------- Gespräche: Rollenspiele ----------
 // Zeilen: ['npc', slowenisch, deutsch] oder ['du', [[slowenisch, deutsch, richtig?, Erklärung bei falsch], …]]

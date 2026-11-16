@@ -123,8 +123,27 @@ const ordner = process.argv[2] || '.';
   await bild('slp-wortschatz-anki');
   // Grammatik
   await wisch(330, 500, 70, 505); await p.waitForTimeout(1000);
-  ck('Wischen → Grammatik mit 13 Themen', await p.evaluate(() => !$('slo-grammatik').hidden) && (await p.locator('.slp-thema').count()) === 13);
+  ck('Wischen → Grammatik-Pfad mit 13 Themen', await p.evaluate(() => !$('slo-grammatik').hidden) && (await p.locator('.slp-pfad .slp-thema').count()) === 13);
   await bild('slp-grammatik');
+  // Pfad: Sperren und Freischalten (eigener, leerer Spielstand)
+  const pfad = await p.evaluate(() => {
+    const sicher = JSON.stringify(sloStore()), st = sloStore(); st.wort = {}; st.srs = {}; st.gram = {}; st.stufe = {}; saveJson(SLO_KEY, st); saveJson('walquiz.lernhalle.slo.v1', {});
+    const zu = slpGramStatus().erg; slpGrammatik();
+    const a = { praesensZu: zu.praesens.status === 'zu', alleZu: Object.values(zu).every((x) => x.status === 'zu'), fehlt: zu.praesens.fehlt.map((f) => f.art).join(','), beispiel: (zu.praesens.fehlt.find((f) => f.art === 'station') || {}).woerter, knopf: !!document.querySelector('.slp-naechstes [data-station="pozdravi"]') };
+    const st2 = sloStore(); st2.stufe = { pozdravi: 1, jaz: 1 }; SLO_EINHEITEN.slice(0, 3).flatMap((u) => u.W).forEach((w) => { st2.wort[w.sl] = 1; }); saveJson(SLO_KEY, st2);
+    const e2 = slpGramStatus().erg; a.praesensOffen = e2.praesens.status === 'offen'; a.tozZu = e2.tozilnik.status === 'zu' && /Gegenwart/.test(e2.tozilnik.fehlt.map((f) => f.text).join(' '));
+    const st3 = sloStore(); st3.gram = { praesens: { n: 1, ok: 8, best: 80 } }; saveJson(SLO_KEY, st3);
+    const e3 = slpGramStatus().erg; a.dualOffen = e3.dvojina.status === 'zu' && e3.dvojina.fehlt.every((f) => f.art !== 'thema'); a.praesensFertig = e3.praesens.status === 'fertig';
+    a.duell = LH._paket('slo').grammatikOffen({ th: 'Dual' }) === false && LH._paket('slo').grammatikOffen({ th: 'biti (sein)' }) === true;
+    slpGrammatik();
+    localStorage.setItem(SLO_KEY, sicher);
+    return a;
+  });
+  ck('Grammatik-Pfad: alles gesperrt, Gegenwart braucht Stationen + Wörter (mit Beispielwörtern und Knopf)', pfad.praesensZu && pfad.alleZu && /station/.test(pfad.fehlt) && /woerter/.test(pfad.fehlt) && pfad.beispiel && pfad.beispiel.length > 0 && pfad.knopf, JSON.stringify(pfad));
+  ck('Stationen + Wörter → Gegenwart offen; Akkusativ wartet auf Gegenwart; ab 70 % geschafft, Dual braucht nur noch Station/Wörter', pfad.praesensOffen && pfad.tozZu && pfad.praesensFertig && pfad.dualOffen, JSON.stringify(pfad));
+  ck('Spielhallen-Grammatik nutzt nur freigeschaltete Themen', pfad.duell);
+  await bild('slp-grammatik-pfad');
+  await p.evaluate(() => slpGrammatik());
   const gram = await p.evaluate(() => SLP_THEMEN.map((th) => {
     let ok = 0, schlecht = [];
     for (let i = 0; i < 40; i++) {
@@ -147,7 +166,8 @@ const ordner = process.argv[2] || '.';
     return out;
   });
   ck('Zahlen: richtiges Zahlwort (en/ena/eno, dva/dve, trije/tri …) in 300 Aufgaben', !stichprobe.length, stichprobe.slice(0, 3).join(' | '));
-  await p.click('.slp-thema[data-th="orodnik"]'); await p.waitForTimeout(300);
+  await p.evaluate(() => { const st = slpStore(); st.gram.orodnik = st.gram.orodnik || { n: 1, ok: 0, best: 0 }; saveJson(SLO_KEY, st); slpGrammatik(); });
+  await p.click('.slp-pfad .slp-thema[data-th="orodnik"]'); await p.waitForTimeout(300);
   ck('Thema startet mit Erklärung', await p.evaluate(() => slo.liste[0].typ === 'erkl') && /stimmlosen/.test(await p.textContent('#sloAufgabe')));
   await p.click('#sloPruefen'); await p.waitForTimeout(200);
   await bild('slp-grammatik-aufgabe');

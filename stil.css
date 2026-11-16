@@ -4615,3 +4615,19 @@ a.bb-datei { text-decoration: none; }
 .ski-woerter.links { justify-content: flex-start; margin: 8px 0 4px; } .ski-w small { font-weight: 500; opacity: .8; }
 .lh-opt.leise { opacity: .7; font-weight: 500; }
 .lh-niveau-info { margin: -6px 2px 0; font-size: .78rem; opacity: .8; line-height: 1.4; } .lh-niveau-info b { color: #fde68a; }
+/* 🧩 Grammatik-Pfad */
+.slp-naechstes { display: grid; gap: 8px; padding: 12px; border-radius: 20px; background: linear-gradient(135deg, rgba(74,222,128,.18), rgba(56,189,248,.12)); box-shadow: inset 0 0 0 1px rgba(74,222,128,.35); }
+.slp-naechstes > small { font-weight: 800; letter-spacing: .06em; text-transform: uppercase; font-size: .72rem; opacity: .85; }
+.slp-thema.gross { background: rgba(255,255,255,.1); } .slp-los { font-weight: 800; color: #86efac; }
+.slp-pfad { display: grid; gap: 0; }
+.slp-pfad-schritt { position: relative; display: grid; grid-template-columns: 34px 1fr; column-gap: 8px; padding-bottom: 10px; }
+.slp-pfad-schritt::before { content: ''; position: absolute; left: 16px; top: 34px; bottom: -2px; width: 2px; background: rgba(255,255,255,.12); }
+.slp-pfad-schritt:last-child::before { display: none; } .slp-pfad-schritt.fertig::before { background: #4ade80; }
+.slp-pfad-punkt { grid-row: span 2; width: 34px; height: 34px; margin-top: 12px; border-radius: 50%; display: grid; place-items: center; font-style: normal; font-weight: 800; font-size: .85rem; background: rgba(255,255,255,.1); }
+.slp-pfad-schritt.fertig .slp-pfad-punkt { background: #22c55e; color: #fff; } .slp-pfad-schritt.offen .slp-pfad-punkt { background: linear-gradient(135deg, #4ade80, #38bdf8); color: #08111a; box-shadow: 0 0 0 4px rgba(74,222,128,.2); }
+.slp-thema.gesperrt { opacity: .55; filter: grayscale(.6); }
+.slp-thema.wackeln { animation: lhWackel .35s; }
+.slp-sperre { grid-column: 2; margin-top: 4px; font-size: .84rem; } .slp-sperre summary { cursor: pointer; opacity: .8; padding: 2px 4px; }
+.slp-fehlt { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
+.slp-fehlt li { display: grid; gap: 3px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.06); font-size: .85rem; } .slp-fehlt small { opacity: .7; }
+.slp-fehlt-los { justify-self: start; border: 0; border-radius: 999px; padding: 5px 11px; background: rgba(74,222,128,.22); color: #bbf7d0; font: inherit; font-size: .78rem; font-weight: 700; }

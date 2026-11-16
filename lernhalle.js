@@ -385,10 +385,9 @@ const LH = (() => {
         };
         runde();
       } },
-    { id: 'grammatik', e: '🧬', n: 'Grammatik-Duell', sub: '12 Lücken, Zeitbonus, Erklärung', f: ['#0ea5e9', '#a855f7'], geht: () => (P.grammatik && P.grammatik.length >= 12 ? true : 'Für diese Sprache in der Grammatik-Werkstatt'),
+    { id: 'grammatik', e: '🧬', n: 'Grammatik-Duell', sub: 'Lücken bis zu deinem Niveau, mit Erklärung', f: ['#0ea5e9', '#a855f7'], geht: (d) => (!P.grammatik ? 'Für diese Sprache in der Grammatik-Werkstatt' : grammatikPassend(d).length >= 6 ? true : '🔒 Erst im Grammatik-Pfad Themen freischalten'),
       start(sp, box, hudBox) {
-        const st = stufeIndex(sp.d.voll || sp.d), passend = P.grammatik.filter((g) => grammatikStufe(g) <= st);
-        const fragen = misch(passend.length >= 12 ? passend : P.grammatik).slice(0, 12); let r = 0;
+        const fragen = misch(grammatikPassend(sp.d.voll || sp.d)).slice(0, 12); let r = 0;
         const runde = () => {
           if (!aktiv(sp)) return;
           if (r >= fragen.length) { ende(sp, [120, 240, 330]); return; }
@@ -503,6 +502,8 @@ const LH = (() => {
     const i = P.niveaus.findIndex((n) => n.decks.includes(d.id));
     return i >= 0 ? i : 0;
   }
+  // Grammatik bis zum aktuellen Niveau und nur freigeschaltete Themen (z. B. Grammatik-Pfad im Slowenischen)
+  function grammatikPassend(d) { const st = stufeIndex(d); return (P.grammatik || []).filter((g) => grammatikStufe(g) <= st && (!P.grammatikOffen || P.grammatikOffen(g))); }
   const grammatikStufe = (g) => { const m = /\((A1|A2|B1|B2|C1|C2)\)/.exec(g.th || ''); const i = m && P.niveaus ? P.niveaus.findIndex((n) => n.id === m[1]) : -1; return Math.max(0, i); };
   // Satz-Spiele: reichen die Sätze aus dem Niveau-Pool nicht, die kürzesten (= leichtesten) des ganzen Decks nehmen
   function genug(f, d) {
@@ -569,7 +570,7 @@ const LH = (() => {
       if (rot.length) { const g = SPIELE.find((x) => x.id === rot[tag % rot.length]); M.push({ id: g.id, ic: g.e, n: g.n, sub: deckVon(haupt).n, deck: haupt }); }
     }
     if (min >= 30) {
-      if (P.grammatik && P.grammatik.length >= 12) M.push({ id: 'grammatik', ic: '🧬', n: 'Grammatik-Duell', sub: '12 Lücken', deck: haupt });
+      if (P.grammatik && grammatikPassend(deckVon(haupt)).length >= 6) M.push({ id: 'grammatik', ic: '🧬', n: 'Grammatik-Duell', sub: '12 Lücken', deck: haupt });
       if (P.rollen && P.rollen.length) { const R = P.rollen[tag % P.rollen.length]; M.push({ id: 'rolle', ic: '🎭', n: 'Rollenspiel', sub: R.titel, rolle: R.id }); }
     }
     if (min >= 45) M.push({ id: 'sprechen', ic: '🎙️', n: 'Sprech-Arena', sub: deckVon(haupt).n, deck: haupt });

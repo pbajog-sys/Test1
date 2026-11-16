@@ -158,7 +158,10 @@ const ordner = process.argv[2] || '.';
   ck('Satz-Sprint: Pharma-Satz richtig gebaut', await p.evaluate(() => /gut/.test(document.querySelector('.lh-loesung').className)));
   await bild('lh-satz');
   // Grammatik-Duell
-  await p.click('[data-lh="raus"]'); await p.waitForTimeout(300); await p.click('[data-spiel="grammatik"]'); await p.waitForTimeout(300);
+  await p.click('[data-lh="raus"]'); await p.waitForTimeout(300);
+  ck('Grammatik-Duell (Slowenisch) gesperrt, solange im Grammatik-Pfad nichts frei ist', await p.evaluate(() => { const b = document.querySelector('[data-spiel="grammatik"]'); return b.disabled && /Grammatik-Pfad/.test(b.textContent); }));
+  await p.evaluate(() => { const st = slpStore(); SLP_THEMEN.forEach((t) => { st.gram[t.id] = { n: 1, ok: 8, best: 80 }; }); saveJson(SLO_KEY, st); LH.home(); }); await p.waitForTimeout(400);
+  await p.click('[data-spiel="grammatik"]'); await p.waitForTimeout(300);
   await p.evaluate(() => { const b = [...document.querySelectorAll('.lh-opt')]; const s = document.querySelector('.lh-frage b').textContent; const f = SLF_GRAMMATIK.find((g) => g.s.replace('___', '') === s.replace('___', '')); b.find((x) => x.textContent === f.o[f.r]).click(); });
   ck('Grammatik-Duell: richtige Lücke + Erklärung', await p.evaluate(() => /Richtig/.test(document.querySelector('.lh-erk').textContent)));
   // Übersetzung (Slowenisch, Deck Alltag mit Varianten)
@@ -240,7 +243,7 @@ const ordner = process.argv[2] || '.';
   await p.click('#engInhalt [data-deck="pharma"]'); await p.waitForTimeout(300);
   await p.click('#engInhalt [data-spiel="diktat"]'); await p.waitForTimeout(500);
   const dik = await p.evaluate(async () => {
-    const t = window.__gesprochen, w = t.split(' ').sort((x, y) => y.length - x.length)[0].replace(/[.,!?]/g, ''), kaputt = w.slice(0, 2) + w[3] + w[2] + w.slice(4);
+    const t = window.__gesprochen, w = t.split(' ').map((x) => x.replace(/[.,!?]/g, '')).filter((x) => x.length >= 5 && x[2] !== x[3]).sort((x, y) => y.length - x.length)[0], kaputt = w.slice(0, 2) + w[3] + w[2] + w.slice(4);
     document.querySelector('[data-lh="ein"]').value = t.replace(w, kaputt); document.querySelector('[data-lh="ok"]').click();
     await new Promise((r) => setTimeout(r, 100));
     const falsch = [...document.querySelectorAll('.lh-erk .ski-w')].filter((x) => !x.classList.contains('ok'));

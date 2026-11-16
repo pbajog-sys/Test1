@@ -243,6 +243,7 @@ LH.paket({
   // schon gelernt: Reise-Lektionen (Wortstärke) oder Wortschatz-Karteikarten
   bekannt: (z) => (sloStore().wort[z] || 0) > 0 || !!(typeof slpStore === 'function' && slpStore().srs[z]),
   leichtDeck: 'alltag',
+  grammatikOffen: (g) => typeof slpGramOffen !== 'function' || slpGramOffen(g.th),
   rollen: SLF_ROLLEN, grammatik: SLF_GRAMMATIK,
   async decks() {
     const alltag = SLO_EINHEITEN.flatMap((u) => u.W.map((w) => ({ z: w.sl, de: w.de, e: w.e })).concat(u.S.map((x) => ({ z: x.sl, de: x.de, bsp: x.sl, bspDe: x.de, alt: x.slAlt, deAlt: x.deAlt }))));
