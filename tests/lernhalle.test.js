@@ -259,6 +259,28 @@ const ordner = process.argv[2] || '.';
   ck('English Grammatik-Duell: falsche Wahl → Erklärung', await p.evaluate(() => /Leider/.test(document.querySelector('.lh-erk').textContent)));
   await bild('lh-en-grammatik');
   await p.click('[data-lh="raus"]'); await p.waitForTimeout(300);
+  // 🧩 Grammatik-Pfad (Englisch): Start C1 aus der Einstufung → B-Themen offen, C1-Themen brauchen C1-Wörter
+  const gp = await p.evaluate(() => { const e = LH._intern.gramStatus(); return { zeiten: e.zeiten.status, cond: e.cond.status, c1: e['c1-unreal'].status, fehlt: e['c1-unreal'].fehlt.map((f) => f.art + ':' + f.text).join(' | '), c2: e.c2.fehlt.map((f) => f.art).join(','), karte: !!document.querySelector('#engInhalt .lh-gramkarte') }; });
+  ck('Grammatik-Pfad Englisch: B-Themen offen (Einstufung C1), C1 gesperrt bis 10 C1-Wörter, C2 braucht C1-Themen', gp.karte && gp.zeiten === 'offen' && gp.cond === 'offen' && gp.c1 === 'zu' && /deck/.test(gp.fehlt) && /thema/.test(gp.c2), JSON.stringify(gp));
+  await p.click('#engInhalt .lh-pfad-link'); await p.waitForTimeout(300);
+  ck('Pfad-Ansicht: 11 Themen, gesperrte mit „Was fehlt noch?“', await p.evaluate(() => document.querySelectorAll('#engInhalt .slp-pfad .slp-thema').length === 11 && !!document.querySelector('#engInhalt .slp-sperre')));
+  await bild('lh-en-pfad');
+  await p.click('#engInhalt .slp-thema[data-thema="zeiten"]'); await p.waitForTimeout(300);
+  for (let i = 0; i < 10; i++) {
+    const weiter = await p.evaluate(() => { const q = document.querySelector('.lh-frage b'); if (!q) return false; const s = q.textContent, f = EN_GRAMMATIK.find((g) => g.s.replace('___', '') === s.replace('___', '')); [...document.querySelectorAll('.lh-opt')].find((x) => x.textContent === f.o[f.r]).click(); document.querySelector('[data-lh="weiter"]').click(); return true; });
+    if (!weiter) break; await p.waitForTimeout(60);
+  }
+  ck('Thema „Zeiten“: alles richtig → 100 %, als geschafft gespeichert', await p.evaluate(() => /100 %/.test(document.querySelector('.lh-ende-punkte').textContent) && LH._intern.gramStatus().zeiten.status === 'fertig'));
+  await p.click('#engInhalt [data-lh="raus"]'); await p.waitForTimeout(300);
+  // 📈 Verlauf
+  ck('Startseite: Verlauf-Zeile „Heute … geübt · gestern …“', await p.evaluate(() => /Heute \d+ geübt · gestern \d+ · 7 Tage \d+/.test(document.querySelector('#engInhalt .lh-verlauf').textContent)));
+  await p.click('#engInhalt [data-lh="verlauf"]'); await p.waitForTimeout(300);
+  const ll = await p.evaluate(() => ({ balken: document.querySelectorAll('#engInhalt .ll-balken').length, heute: +document.querySelectorAll('#engInhalt .ll-kachel b')[1].textContent, zeile: !!document.querySelector('#engInhalt .ll-liste tr.heute'), gekonnt: document.querySelector('#engInhalt .ll-kachel.gross b').textContent, sl: (LernLog.tage('sl', 1)[0] || {}).g }));
+  ck('Verlauf: Wörter gekonnt, heute geübt > 0, 14 Tagesbalken, Tagesliste; Slowenisch zählt getrennt', ll.balken === 14 && ll.heute > 10 && ll.zeile && ll.gekonnt !== '' && ll.sl > 10, JSON.stringify(ll));
+  await p.click('#engInhalt .ll-balken.heute'); await p.waitForTimeout(100);
+  ck('Balken antippen zeigt den Tag', await p.evaluate(() => /Heute/.test(document.querySelector('#engInhalt [data-ll="info"]').textContent)));
+  await bild('lh-verlauf');
+  await p.click('#engInhalt [data-lh="raus"]'); await p.waitForTimeout(300);
   // Englisch Sprechen über Browser-Erkennung (simuliert): falsche Präposition wird rot markiert
   const enSp = await p.evaluate(async () => { window.__srFehler = null; window.__gehoert = 'I am interested on the position'; const r = await SprechKI.hoeren('en'); const v = SprechKI.besteVon(r.alternativen, 'I am interested in the position.', 'en'); return { weg: SprechKI.weg('en'), w: v.woerter.map((x) => x.w + ':' + x.status).join(' ') }; });
   ck('Englisch: Browser-Erkennung, falsche Präposition „on“ statt „in“ wird markiert', enSp.weg === 'web' && /in:fehlt/.test(enSp.w) && /interested:ok/.test(enSp.w), JSON.stringify(enSp));

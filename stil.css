@@ -4631,3 +4631,24 @@ a.bb-datei { text-decoration: none; }
 .slp-fehlt { margin: 6px 0 0; padding: 0; list-style: none; display: grid; gap: 6px; }
 .slp-fehlt li { display: grid; gap: 3px; padding: 8px 10px; border-radius: 12px; background: rgba(255,255,255,.06); font-size: .85rem; } .slp-fehlt small { opacity: .7; }
 .slp-fehlt-los { justify-self: start; border: 0; border-radius: 999px; padding: 5px 11px; background: rgba(74,222,128,.22); color: #bbf7d0; font: inherit; font-size: .78rem; font-weight: 700; }
+
+/* 📈 Verlauf (LernLog) + Grammatik-Pfad-Karte der Lernhalle */
+.lh-verlauf, .lh-gramkarte { display: flex; align-items: center; gap: 10px; padding: 11px 14px; border: 0; border-radius: 18px; background: var(--glas); color: inherit; font: inherit; text-align: left; box-shadow: inset 0 0 0 1px var(--rand); }
+.lh-verlauf > span:first-child, .lh-gramkarte > span:first-child { font-size: 1.4rem; } .lh-verlauf > span:nth-child(2), .lh-gramkarte > span:nth-child(2) { flex: 1; font-size: .88rem; display: grid; } .lh-verlauf b { color: #fde68a; }
+.lh-gramkarte small { opacity: .75; font-size: .78rem; } .lh-pfad-link { justify-self: start; margin-top: -6px; }
+.lh-spick-ein { border-radius: 16px; background: var(--glas); box-shadow: inset 0 0 0 1px var(--rand); } .lh-spick-ein summary { padding: 10px 14px; font-weight: 700; cursor: pointer; } .lh-spick-ein > div { padding: 0 14px 10px; font-size: .9rem; line-height: 1.5; } .lh-spick-ein p { margin: 4px 0; }
+.ll { display: grid; gap: 14px; }
+.ll-kacheln { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.ll-kachel { display: grid; gap: 2px; padding: 12px 14px; border-radius: 18px; background: var(--glas, rgba(255,255,255,.06)); box-shadow: inset 0 0 0 1px var(--rand, rgba(255,255,255,.1)); }
+.ll-kachel small { font-size: .72rem; opacity: .7; letter-spacing: .04em; } .ll-kachel b { font-size: 1.6rem; font-variant-numeric: tabular-nums; line-height: 1.1; } .ll-kachel em { font-style: normal; font-size: .75rem; opacity: .75; }
+.ll-kachel.gross { grid-column: span 2; background: linear-gradient(135deg, color-mix(in srgb, var(--lh1, #22c55e) 35%, transparent), color-mix(in srgb, var(--lh2, #0ea5e9) 25%, transparent)); } .ll-kachel.gross b { font-size: 2.4rem; }
+.ll-chart { padding: 14px; border-radius: 20px; background: var(--glas, rgba(255,255,255,.06)); box-shadow: inset 0 0 0 1px var(--rand, rgba(255,255,255,.1)); }
+.ll-chart-kopf { display: flex; justify-content: space-between; gap: 8px; align-items: baseline; font-size: .85rem; } .ll-chart-kopf span { opacity: .75; font-size: .78rem; text-align: right; }
+.ll-balken-reihe { display: grid; grid-template-columns: repeat(14, 1fr); gap: 2px; height: 150px; margin-top: 10px; align-items: end; border-bottom: 1px solid rgba(255,255,255,.15); }
+.ll-balken { position: relative; height: 100%; display: flex; flex-direction: column; justify-content: flex-end; align-items: center; padding: 0 0 18px; border: 0; background: none; color: inherit; font: inherit; }
+.ll-balken i { width: 70%; max-width: 18px; border-radius: 4px 4px 0 0; background: var(--lh1, #22c55e); transition: opacity .15s; }
+.ll-balken small { position: absolute; bottom: 0; font-size: .62rem; opacity: .65; }
+.ll-balken.heute small { opacity: 1; font-weight: 800; } .ll-balken.an i { outline: 2px solid #fff; outline-offset: 1px; } .ll-balken-reihe:hover .ll-balken:not(:hover) i { opacity: .55; }
+.ll-liste { display: grid; gap: 6px; } .ll-liste table { width: 100%; border-collapse: collapse; font-size: .84rem; font-variant-numeric: tabular-nums; }
+.ll-liste th, .ll-liste td { padding: 7px 6px; text-align: right; border-bottom: 1px solid rgba(255,255,255,.08); } .ll-liste th:first-child, .ll-liste td:first-child { text-align: left; } .ll-liste th { font-size: .72rem; opacity: .65; font-weight: 600; }
+.ll-liste tr.heute td { font-weight: 800; } .ll-fein { margin: 0; font-size: .76rem; opacity: .6; line-height: 1.4; }

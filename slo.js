@@ -539,7 +539,8 @@ function sloBewerten(r, a) {
     slo.fehlerListe.push(a);
   }
   if (a.w) sloWortStaerke(a.w, r.ok ? 1 : -1);
-  const lob = ['Pravilno!', 'Odlično!', 'Bravo!', 'Super!', 'Točno!'];
+  if (typeof LernLog !== 'undefined') LernLog.antwort('sl', !!r.ok);
+  const lob =['Pravilno!', 'Odlično!', 'Bravo!', 'Super!', 'Točno!'];
   $('sloFuss').className = 'slo-fuss ' + (r.ok ? 'gut' : 'schlecht');
   $('sloUrteil').innerHTML = '<div class="slo-urteil-kopf">' + sloDrache(r.ok ? 'jubel' : 'traurig') + '<b>' + (r.ok ? lob[Math.floor(Math.random() * lob.length)] + ' <small>(richtig!)</small>' : r.aufgegeben ? 'Tako se reče <small>(so sagt man das)</small>' : 'Ni čisto prav <small>(nicht ganz)</small>') + '</b></div>'
     + (r.loesung ? '<div class="slo-loesung">' + (r.ok || r.aufgegeben ? '' : 'Richtig: ') + r.loesung + (r.laut ? ' ' + sloLaut(r.laut) : '') + '</div>' : '')
@@ -554,6 +555,7 @@ function sloBewerten(r, a) {
 }
 function sloWortStaerke(w, d) {
   const st = sloStore();
+  if (!(st.wort[w.sl] > 0) && d > 0 && typeof LernLog !== 'undefined') LernLog.neu('sl');   // erstes Mal gekonnt
   st.wort[w.sl] = Math.max(0, Math.min(5, (st.wort[w.sl] || 0) + d));
   saveJson(SLO_KEY, st);
 }

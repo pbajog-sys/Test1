@@ -243,6 +243,7 @@ LH.paket({
   // schon gelernt: Reise-Lektionen (Wortstärke) oder Wortschatz-Karteikarten
   bekannt: (z) => (sloStore().wort[z] || 0) > 0 || !!(typeof slpStore === 'function' && slpStore().srs[z]),
   leichtDeck: 'alltag',
+  gekonnt: () => (typeof slpGelernteWoerter === 'function' ? slpGelernteWoerter().size : 0),
   grammatikOffen: (g) => typeof slpGramOffen !== 'function' || slpGramOffen(g.th),
   rollen: SLF_ROLLEN, grammatik: SLF_GRAMMATIK,
   async decks() {

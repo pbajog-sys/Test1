@@ -201,6 +201,31 @@ EN_GRAMMATIK.push(...EN_GRAMMATIK_C);
 (() => {
   LH.paket(Object.assign(LH._paket('en'), {
     uebersetzung: EN_UEBERSETZUNG,
+    // 🧩 Grammatik-Pfad: Reihenfolge + Voraussetzungen (vorherige Themen ≥ 70 %, gelernte Wörter, Wörter aus einem Niveau-Deck)
+    gramPfad: [
+      { id: 'zeiten', ic: '⏱️', titel: 'Zeiten: Present Perfect & Co.', stufe: 'B1', th: ['Tenses'], woerter: 20,
+        erkl: '<p><b>Present Perfect</b> (have + Partizip) bei <i>since/for/yet/already/ever</i> – Verbindung zur Gegenwart. <b>Past Simple</b> bei festem Zeitpunkt (<i>yesterday, last year, ago</i>).</p>' },
+      { id: 'praep', ic: '📍', titel: 'Präpositionen & Mengen', stufe: 'B1', th: ['Prepositions', 'Quantifiers', 'Comparison', 'Adjective / Adverb'], vor: ['zeiten'], woerter: 40,
+        erkl: '<p><i>on</i> Monday · <i>at</i> 10 · <i>in</i> May · responsible <i>for</i> · depend <i>on</i> · interested <i>in</i>. <b>much</b> + unzählbar, <b>many/fewer</b> + zählbar. good → <b>well</b>.</p>' },
+      { id: 'modal', ic: '🔑', titel: 'Modalverben', stufe: 'B1', th: ['Modals'], vor: ['zeiten'], woerter: 50,
+        erkl: '<p><b>must</b> = muss · <b>mustn\'t</b> = darf nicht · <b>don\'t have to</b> = muss nicht · <b>should have</b> + Partizip = hätte sollen.</p>' },
+      { id: 'cond', ic: '🔀', titel: 'Conditionals & Wünsche', stufe: 'B1', th: ['Conditionals', 'Wishes'], vor: ['zeiten'], woerter: 70,
+        erkl: '<p>0: if + Present, Present · 1: if + Present, will · 2: if + Past, would · 3: if + Past Perfect, would have. Nach <b>if</b> nie will/would. <i>I wish I had …</i></p>' },
+      { id: 'passiv', ic: '🏭', titel: 'Passiv', stufe: 'B2', th: ['Passive'], vor: ['zeiten', 'praep'], woerter: 90,
+        erkl: '<p>be + Partizip III: <i>is tested · was released · will be finished · must be reported · are being tested</i>.</p>' },
+      { id: 'gerund', ic: '➰', titel: 'Gerund oder Infinitiv', stufe: 'B2', th: ['Gerund / Infinitive'], vor: ['modal'], woerter: 110,
+        erkl: '<p><b>-ing</b> nach enjoy, avoid, mind, look forward to, be used to · <b>to</b> nach decide, want, agree · <i>make sb do</i> ohne to.</p>' },
+      { id: 'reported', ic: '🗣️', titel: 'Indirekte Rede & Relativsätze', stufe: 'B2', th: ['Reported speech', 'Relative clauses'], vor: ['passiv'], woerter: 130,
+        erkl: '<p>Zeit rückt zurück (is → was), indirekte Fragen ohne do. <b>who</b> für Personen, <b>which/that</b> für Sachen, <b>whose</b> = dessen.</p>' },
+      { id: 'c1-unreal', ic: '🌫️', titel: 'Mixed Conditionals & Subjunctive', stufe: 'C1', th: ['Mixed conditionals (C1)', 'Subjunctive (C1)', 'Unreal past (C1)'], vor: ['cond'], deck: { id: 'c1', n: 10 },
+        erkl: '<p><i>If I had taken the job, I would be living in London now.</i> · <i>It is essential that he <b>be</b> informed.</i> · <i>It\'s high time we <b>left</b>.</i></p>' },
+      { id: 'c1-inv', ic: '🔃', titel: 'Inversion', stufe: 'C1', th: ['Inversion (B2)', 'Inversion (C1)'], vor: ['c1-unreal'], deck: { id: 'c1', n: 15 },
+        erkl: '<p>Nach <i>Not only, Hardly, Rarely, Under no circumstances</i>: Hilfsverb vor Subjekt. <i>Should you need …</i> · <i>Had I known …</i></p>' },
+      { id: 'c1-stil', ic: '🎩', titel: 'Cleft, Partizipien & Passive Reporting', stufe: 'C1', th: ['Cleft sentences (C1)', 'Participle clauses (C1)', 'Passive reporting (C1)'], vor: ['reported', 'passiv'], deck: { id: 'c1', n: 20 },
+        erkl: '<p><i>What we need is …</i> · <i>Having read the report, …</i> · <i>The drug is thought to reduce …</i></p>' },
+      { id: 'c2', ic: '💎', titel: 'C2: Feinheiten', stufe: 'C2', th: ['Inversion (C2)', 'Unreal past (C2)', 'Concession (C2)', 'Relative clauses (C2)', 'Preference (C2)', 'Conditionals (C2)'], vor: ['c1-inv', 'c1-stil'], deck: { id: 'c2', n: 15 },
+        erkl: '<p><i>Little did he know …</i> · <i>Much as I admire her …</i> · <i>Try as he might …</i> · <i>But for your help …</i> · <i>would sooner … than</i></p>' },
+    ],
     niveaus: [
       { id: 'B1', n: 'Selbstständig', decks: ['b1', 'phrasal'] },
       { id: 'B2', n: 'Sicher im Beruf', decks: ['b2', 'business', 'falsch'] },

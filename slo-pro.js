@@ -304,6 +304,7 @@ function slkNote(n) {
   if (!slk || !slk.umgedreht) return;
   const k = slk.q[slk.i];
   slk.gesehen++; if (n > 1) slk.gut++;
+  if (typeof LernLog !== 'undefined') { LernLog.antwort('sl', n > 1); if (k.neu && !k.lernen) LernLog.neu('sl'); }
   if (n === 1 && k.lernen && !k.neu) slk.q.splice(Math.min(slk.q.length, slk.i + 4), 0, { ...k });
   else if (n === 1 || (n === 2 && k.neu && !k.lernen)) {
     // noch einmal in dieser Sitzung (nach ein paar anderen Karten) – wie Anki-Lernschritte
