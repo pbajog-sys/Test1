@@ -4614,3 +4614,4 @@ a.bb-datei { text-decoration: none; }
 .lh-zentriert { text-align: center; }
 .ski-woerter.links { justify-content: flex-start; margin: 8px 0 4px; } .ski-w small { font-weight: 500; opacity: .8; }
 .lh-opt.leise { opacity: .7; font-weight: 500; }
+.lh-niveau-info { margin: -6px 2px 0; font-size: .78rem; opacity: .8; line-height: 1.4; } .lh-niveau-info b { color: #fde68a; }

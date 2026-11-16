@@ -88,7 +88,7 @@ const ordner = process.argv[2] || '.';
   // Blitz: alles richtig klicken
   await p.click('[data-spiel="blitz"]'); await p.waitForTimeout(300);
   for (let i = 0; i < 8; i++) {
-    await p.evaluate(() => { const f = document.querySelector('.lh-frage b').textContent; const D = LH._intern.aktivesDeck().items; const x = D.find((y) => y.z === f || y.de === f); const b = [...document.querySelectorAll('.lh-opt:not([disabled])')].find((o) => x && (o.textContent === x.de || o.textContent === x.z)); if (b) b.click(); });
+    await p.evaluate(() => { const f = document.querySelector('.lh-frage b').textContent; const D = LH._intern.decks().flatMap((d) => d.items); const b = [...document.querySelectorAll('.lh-opt:not([disabled])')].find((o) => D.some((y) => (y.z === f && y.de === o.textContent) || (y.de === f && y.z === o.textContent))); if (b) b.click(); });
     await p.waitForTimeout(330);
   }
   const blitz = await p.evaluate(() => ({ punkte: +document.querySelector('.lh-punkte').textContent.replace(/\./g, ''), combo: (document.querySelector('.lh-combo') || {}).textContent }));
@@ -105,6 +105,16 @@ const ordner = process.argv[2] || '.';
   ck('Memory (Pharma-Deck): nur Wörter aus Lektionen/Karteikarten – keine unbekannten', memPool.n >= 8 && memPool.alleBekannt, JSON.stringify(memPool));
   const leicht = await p.evaluate(() => { const st = sloStore(); st.wort = {}; saveJson(SLO_KEY, st); const s2 = LH._intern.store(); s2.srs = {}; saveJson('walquiz.lernhalle.slo.v1', s2); return LH._intern.bekannteItems(LH._intern.decks().find((d) => d.id === 'b2')).slice(0, 6).map((x) => x.z); });
   ck('Noch nichts gelernt → leichteste Wörter (erste Reise-Lektion), nicht B2', leicht.includes('zdravo') && leicht.includes('hvala'), leicht.join(','));
+  // Niveau-Pool für alle Spiele
+  const niv = await p.evaluate(() => {
+    const st = sloStore(); st.wort = {}; ['hvala', 'prosim', 'kruh', 'voda', 'mačka', 'pes', 'sir', 'čaj', 'mleko', 'riba'].forEach((w) => { st.wort[w] = 2; }); saveJson(SLO_KEY, st);
+    const b2 = LH._intern.decks().find((d) => d.id === 'b2'), P = LH._intern.spielPool(b2), kannSet = new Set(Object.keys(st.wort));
+    const neu = P.items.filter((x) => b2.items.includes(x) && !kannSet.has(x.z));
+    return { n: P.items.length, bekannt: P.bekannt, neu: P.neu, ersteNeue: neu.slice(0, 3).map((x) => x.z), b2Start: b2.items.slice(0, 3).map((x) => x.z), anteil: P.bekannt / P.items.length };
+  });
+  ck('Spiel-Pool (B2): alle bekannten + ~40 % neue – die häufigsten B2-Wörter zuerst', niv.bekannt >= 10 && niv.neu === Math.max(4, Math.round(niv.bekannt * 0.4)) && JSON.stringify(niv.ersteNeue) === JSON.stringify(niv.b2Start) && niv.anteil > 0.6, JSON.stringify(niv));
+  await p.evaluate(() => LH.home()); await p.waitForTimeout(300);
+  ck('Startseite zeigt „Auf dein Niveau zugeschnitten“', await p.evaluate(() => /Niveau zugeschnitten/.test(document.querySelector('.lh-niveau-info').textContent)));
   // Memory komplett lösen
   await p.click('[data-spiel="memory"]'); await p.waitForTimeout(300);
   await p.evaluate(async () => {
@@ -127,7 +137,7 @@ const ordner = process.argv[2] || '.';
   await p.click('[data-lh="raus"]'); await p.waitForTimeout(300); await p.click('[data-spiel="tippen"]'); await p.waitForTimeout(300);
   const tipp = [];
   for (const art of ['exakt', 'akzent', 'falsch']) {
-    await p.evaluate((art) => { const de = document.querySelector('.lh-frage b').textContent, x = LH._intern.aktivesDeck().items.find((y) => y.de === de); const i = document.querySelector('[data-lh="ein"]'); i.value = art === 'exakt' ? x.z : art === 'akzent' ? x.z.normalize('NFD').replace(/[̀-ͯ]/g, '') : 'qqqq'; document.querySelector('[data-lh="form"]').requestSubmit(); }, art);
+    await p.evaluate((art) => { const de = document.querySelector('.lh-frage b').textContent, x = LH._intern.decks().flatMap((d) => d.items).find((y) => y.de === de); const i = document.querySelector('[data-lh="ein"]'); i.value = art === 'exakt' ? x.z : art === 'akzent' ? x.z.normalize('NFD').replace(/[̀-ͯ]/g, '') : 'qqqq'; document.querySelector('[data-lh="form"]').requestSubmit(); }, art);
     await p.waitForTimeout(100); tipp.push(await p.evaluate(() => document.querySelector('.lh-loesung').className + ' ' + document.querySelector('.lh-loesung').textContent.slice(0, 18)));
     await p.waitForTimeout(1800);
   }
@@ -135,15 +145,15 @@ const ordner = process.argv[2] || '.';
   ck('Tipp-Wertung: Tippfehler-Toleranz nur ab 5 Buchstaben', await p.evaluate(() => { const T = LH._intern.tippWert; return T('odmerk', 'odmerek') === 0.6 && T('pes', 'pas') === 0 && T('Kontrola kakovosti', 'kontrola kakovosti') === 1 && T('to carry out', 'carry out / to carry out') === 1; }));
   // Wort-Regen: drei Wellen richtig fangen, dann absichtlich daneben
   await p.click('[data-lh="raus"]'); await p.waitForTimeout(300); await p.click('[data-spiel="regen"]'); await p.waitForTimeout(400);
-  for (let i = 0; i < 3; i++) { await p.evaluate(() => { const de = document.querySelector('[data-lh="prompt"]').textContent, x = LH._intern.aktivesDeck().items.find((y) => y.de === de); [...document.querySelectorAll('.lh-tropfen')].find((t) => t.textContent === x.z).click(); }); await p.waitForTimeout(450); }
+  for (let i = 0; i < 3; i++) { await p.evaluate(() => { const de = document.querySelector('[data-lh="prompt"]').textContent, x = LH._intern.decks().flatMap((d) => d.items).find((y) => y.de === de); [...document.querySelectorAll('.lh-tropfen')].find((t) => t.textContent === x.z).click(); }); await p.waitForTimeout(450); }
   await bild('lh-regen');
   const regen1 = await p.evaluate(() => +document.querySelector('.lh-punkte').textContent);
-  for (let i = 0; i < 3; i++) { await p.evaluate(() => { const de = document.querySelector('[data-lh="prompt"]').textContent, x = LH._intern.aktivesDeck().items.find((y) => y.de === de); const t = [...document.querySelectorAll('.lh-tropfen:not([disabled])')].find((q) => q.textContent !== x.z); if (t) t.click(); }); await p.waitForTimeout(1250); }
+  for (let i = 0; i < 3; i++) { await p.evaluate(() => { const de = document.querySelector('[data-lh="prompt"]').textContent, x = LH._intern.decks().flatMap((d) => d.items).find((y) => y.de === de); const t = [...document.querySelectorAll('.lh-tropfen:not([disabled])')].find((q) => q.textContent !== x.z); if (t) t.click(); }); await p.waitForTimeout(1250); }
   await p.waitForSelector('.lh-ende', { timeout: 4000 }).catch(() => {});
   ck('Wort-Regen: Treffer geben Punkte, 3 Fehlgriffe → Spielende', regen1 >= 30 && await p.evaluate(() => !!document.querySelector('.lh-ende')), 'Punkte ' + regen1);
   // Satz-Sprint
   await p.click('[data-lh="raus"]'); await p.waitForTimeout(300); await p.click('[data-spiel="satz"]'); await p.waitForTimeout(300);
-  await p.evaluate(() => { const de = document.querySelector('.lh-frage b').textContent, x = LH._intern.aktivesDeck().items.find((y) => y.bspDe === de); x.bsp.split(' ').forEach((w) => { const k = [...document.querySelectorAll('.lh-bank .lh-kachel:not(.weg)')].find((q) => q.textContent === w); k.click(); }); document.querySelector('[data-lh="ok"]').click(); });
+  await p.evaluate(() => { const de = document.querySelector('.lh-frage b').textContent, x = LH._intern.decks().flatMap((d) => d.items).find((y) => y.bspDe === de); x.bsp.split(' ').forEach((w) => { const k = [...document.querySelectorAll('.lh-bank .lh-kachel:not(.weg)')].find((q) => q.textContent === w); k.click(); }); document.querySelector('[data-lh="ok"]').click(); });
   await p.waitForTimeout(150);
   ck('Satz-Sprint: Pharma-Satz richtig gebaut', await p.evaluate(() => /gut/.test(document.querySelector('.lh-loesung').className)));
   await bild('lh-satz');
@@ -158,10 +168,10 @@ const ordner = process.argv[2] || '.';
   for (let i = 0; i < 3; i++) {
     await p.evaluate((i) => {
       const q = document.querySelector('.lh-frage b').textContent, P = LH._paket('slo');
-      const x = P.uebersetzung.find((y) => y.de === q || y.z === q) || LH._intern.aktivesDeck().items.find((y) => y.bspDe === q || y.bsp === q);
+      const x = P.uebersetzung.find((y) => y.de === q || y.z === q) || LH._intern.decks().flatMap((d) => d.items).find((y) => y.bspDe === q || y.bsp === q);
       const nachZiel = !!(x.de === q || x.bspDe === q);
       const ziel = nachZiel ? (x.z || x.bsp) : (x.de || x.bspDe);
-      document.querySelector('[data-lh="ein"]').value = i === 0 ? ziel : i === 1 ? ziel.split(' ').slice(0, -1).join(' ') + ' xyz' : 'banana';
+      document.querySelector('[data-lh="ein"]').value = i === 0 ? ziel : i === 1 ? ziel.toUpperCase().replace(/[.,!?]/g, '') : 'banana';
       document.querySelector('[data-lh="ok"]').click();
     }, i);
     await p.waitForTimeout(120);
@@ -169,7 +179,7 @@ const ordner = process.argv[2] || '.';
     if (i === 2) { await p.click('[data-lh="auch"]'); ue.push(await p.evaluate(() => document.querySelector('[data-lh="auch"]').textContent)); }
     await p.click('[data-lh="weiter"]'); await p.waitForTimeout(150);
   }
-  ck('Übersetzung: exakt „Sehr gut“, fast „Nah dran“/„Sehr gut“, Unsinn „Weicht ab“; „Meine Version stimmt auch“ zählt', /Sehr gut/.test(ue[0]) && /Nah dran|Sehr gut/.test(ue[1]) && /Weicht/.test(ue[2]) && /gezählt/.test(ue[3]), ue.join(' | '));
+  ck('Übersetzung: exakt „Sehr gut“, GROSS ohne Satzzeichen „Sehr gut“, Unsinn „Weicht ab“; „Meine Version stimmt auch“ zählt', /Sehr gut/.test(ue[0]) && /Sehr gut/.test(ue[1]) && /Weicht/.test(ue[2]) && /gezählt/.test(ue[3]), ue.join(' | '));
   await bild('lh-uebersetzen');
   ck('Diktat-Wertung: exakt 100 %, ohne Häkchen = halbe Punkte, falsches Wort rot', await p.evaluate(() => { const D = LH._intern.diktatWert; const a = D('dober dan kako ste', 'Dober dan, kako ste?'), b = D('zelim kavo', 'Želim kavo.'), c = D('dober noc', 'Dober dan.'); return a.quote === 1 && b.quote === 0.75 && b.woerter[0].status === 'fast' && c.woerter[1].status === 'fehlt'; }));
   ck('Diktat ohne slowenische Stimme ehrlich gesperrt', await p.evaluate(() => { const b = document.querySelector('[data-spiel="diktat"]'); return !b || true; }) && await p.evaluate(async () => { document.querySelector('[data-lh="raus"]').click(); await new Promise((r) => setTimeout(r, 300)); const b = document.querySelector('[data-spiel="diktat"]'); return b.disabled === !LH._paket('slo').hatTon('Dober dan.'); }));
@@ -192,7 +202,7 @@ const ordner = process.argv[2] || '.';
   await p.click('[data-lh="raus"]'); await p.waitForTimeout(400);
   const xp = await p.evaluate(() => LH._intern.store().xp);
   ck('XP gesammelt, Level-Leiste und Tagesring sichtbar', xp > 50 && await p.evaluate(() => !!document.querySelector('.lh-xpbar i') && !!document.querySelector('.lh-hero .lh-ring')), xp + ' XP');
-  ck('„Meine Fehler“-Deck taucht auf', await p.evaluate(() => !!document.querySelector('[data-deck="fehler"]')));
+  ck('„Meine Fehler“-Deck taucht ab 4 falsch beantworteten Wörtern auf', await p.evaluate(async () => { const s = LH._intern.store(); LH._intern.decks()[1].items.slice(0, 4).forEach((x) => { s.falsch[x.k] = 2; }); saveJson('walquiz.lernhalle.slo.v1', s); LH.home(); await new Promise((r) => setTimeout(r, 300)); return !!document.querySelector('[data-deck="fehler"]'); }));
   await bild('lh-slo-start-2');
 
   // ---------- English Pro ----------
@@ -214,6 +224,8 @@ const ordner = process.argv[2] || '.';
   await p.click('#engInhalt [data-lh="weiter"]'); await p.waitForTimeout(200);
   await p.click('#engInhalt [data-lh="speichern"]'); await p.waitForTimeout(400);
   const plan = await p.evaluate(() => ({ plan: LH._intern.store().plan, niv: LH._intern.aktuellesNiveau().id, m: LH._intern.planMissionen().M.map((m) => m.id), karte: !!document.querySelector('#engInhalt .lh-plan'), ton: LH._paket('en').hatTon('x') }));
+  const encheck = await p.evaluate(() => { const st = LH._intern.stufeIndex(LH._intern.decks()[0]); return { st }; });
+  ck('Niveau-Index aus dem Plan (C1 = 2)', encheck.st === 2, JSON.stringify(encheck));
   ck('Plan gespeichert (Ziel C2, 30 Min., Start C1) mit Tagesmissionen (Diktat nur mit Stimme), Übersetzung, Grammatik, Rollenspiel', plan.karte && plan.plan.ziel === 'C2' && plan.plan.start === 'C1' && plan.niv === 'C1' && plan.m.length === (plan.ton ? 6 : 5) && plan.m.includes('diktat') === plan.ton && plan.m.includes('uebersetzen') && plan.m.includes('grammatik') && plan.m.includes('rolle'), JSON.stringify(plan.m));
   await bild('lh-plan');
   // Mission „Übersetzung“ starten und erledigen
