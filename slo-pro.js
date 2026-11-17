@@ -367,7 +367,7 @@ const _sloBewertenAlt = sloBewerten;
 sloBewerten = function (r, a) {
   _sloBewertenAlt(r, a);
   if (slo && slo.art === 'srs' && a.w && !a.nochmal) slpSrsAntwort(a.w, r.ok);
-  if (slo && slo.art === 'gram' && !a.nochmal) { slo.gramN = (slo.gramN || 0) + 1; if (r.ok) slo.gramOk = (slo.gramOk || 0) + 1; }
+  if (slo && slo.art === 'gram' && !a.nochmal && !a.theorie) { slo.gramN = (slo.gramN || 0) + 1; if (r.ok) slo.gramOk = (slo.gramOk || 0) + 1; }
 };
 const _sloEndeAlt = sloEnde;
 sloEnde = function () {
@@ -411,7 +411,7 @@ SLO_RENDER.form = function (a, box) {
   const passt = [a.loesung].concat(a.alt || []).map(sloNorm), ergebnis = (ok, extra) => ({ ok, loesung: sloEsc(a.loesungText || a.loesung), laut: a.laut, hinweis: [a.erklaerung, extra].filter(Boolean).join(' ') });
   if (a.opt) {
     sloOptionen(box, a.opt, (o) => passt.includes(sloNorm(o)), (o) => sloEsc(o));
-    const p = slo.pruefe; slo.pruefe = () => { const r = p(); return r && ergebnis(r.ok); };
+    const p = slo.pruefe; slo.pruefe = () => { const r = p(); if (!r) return r; return r.ok || a.theorie || typeof slpWarum !== 'function' ? ergebnis(r.ok) : ergebnis(false, slpWarum(a, slo.antwort)); };
   } else {
     const inp = $('sloEingabe');
     inp.addEventListener('input', () => sloBereit(inp.value.trim().length > 0));
@@ -422,7 +422,7 @@ SLO_RENDER.form = function (a, box) {
       const v = inp.value; if (!v.trim()) return null;
       if (passt.includes(sloNorm(v))) return ergebnis(true);
       if (passt.map(sloOhneZeichen).includes(sloOhneZeichen(v))) return ergebnis(true, 'Fast perfekt – achte auf die Häkchen.');
-      return ergebnis(false, 'Du hast „' + sloEsc(v.trim()) + '“ geschrieben.');
+      return ergebnis(false, 'Du hast „' + sloEsc(v.trim()) + '“ geschrieben. ' + (typeof slpWarum === 'function' ? slpWarum(a, v.trim()) : ''));
     };
   }
 };
@@ -524,18 +524,32 @@ const SLP_THEMEN = [
       if (Math.random() < 0.5) { const n = slpWahl(slpN().filter((w) => w.F[ZI(5, 0)])), f = n.F[ZI(5, 0)]; return { frage: '____ ' + sloEsc(f), hilfe: 'mit … – z oder s?', loesung: slpZS(f), opt: ['z', 's'], laut: slpZS(f) + ' ' + f }; }
       const n = slpWahl(slpN().filter((w) => w.F[ZI(2, 0)])), f = n.F[ZI(2, 0)]; return { frage: '____ ' + sloEsc(f), hilfe: 'zu … – k oder h?', loesung: slpKH(f), opt: ['k', 'h'], laut: slpKH(f) + ' ' + f }; } },
 ];
-function slpGramAufgaben(th, n = 10) {
+// modus: 'voll' = Kapitel lesen + Verständnisfragen + Übungen · 'theorie' = nur lesen + Fragen · sonst kurze Erklärung + Übungen
+function slpGramAufgaben(th, n = 10, modus) {
   const st = slpStore(), g = st.gram[th.id], tippen = g && g.best >= 80;   // wer es kann, tippt die zweite Hälfte selbst
-  const A = [{ typ: 'erkl', th }]; let versuche = 0;
-  while (A.length < n + 1 && versuche++ < 200) {
+  const T = typeof SLP_THEORIE !== 'undefined' && SLP_THEORIE[th.id];
+  let A = [{ typ: 'erkl', th }]; let versuche = 0;
+  if (T && (modus === 'voll' || modus === 'theorie')) {
+    A = T.seiten.map((seite, i) => ({ typ: 'kapitel', th, seite, nr: i + 1, von: T.seiten.length }))
+      .concat(T.fragen.map((f) => ({ typ: 'form', theorie: true, titel: '🤔 Verstanden?', frage: sloEsc(f.f), opt: sloMisch(f.o.slice()), loesung: f.o[f.r], erklaerung: f.e, loesungText: f.o[f.r] })));
+    if (modus === 'theorie') return A;
+    A.push({ typ: 'kapitel', th, seite: ['Jetzt üben', '<p>Gut! Jetzt kommen <b>' + n + ' Übungen</b>. Wenn etwas falsch ist, erklärt die App, <b>warum</b> – und welche Form du stattdessen gewählt hast.</p><p class="slp-bsp">💡 ' + T.regel + '</p>'], nr: 0, von: 0 });
+  }
+  const start = A.length;
+  while (A.length < start + n && versuche++ < 200) {
     const q = th.neu(); if (!q) continue;
     const opt = q.opt || slpOptionen(q.loesung, q.kand || []);
     if (!opt) continue;
     const tipp = tippen && A.length > n / 2 && !q.opt;
-    A.push({ typ: 'form', frage: q.frage, hilfe: q.hilfe, loesung: q.loesung, opt: tipp ? null : opt, laut: q.laut, erklaerung: q.erklaerung, loesungText: q.laut && !q.opt ? q.loesung : q.loesung, titel: tipp ? 'Tippe die richtige Form' : 'Welche Form passt?' });
+    A.push({ typ: 'form', frage: q.frage, hilfe: q.hilfe, loesung: q.loesung, opt: tipp ? null : opt, laut: q.laut, erklaerung: q.erklaerung, kand: q.kand, thema: th.id, loesungText: q.laut && !q.opt ? q.loesung : q.loesung, titel: tipp ? 'Tippe die richtige Form' : 'Welche Form passt?' });
   }
   return A;
 }
+SLO_RENDER.kapitel = function (a, box) {
+  box.innerHTML = '<div class="slo-tippkarte slp-erkl slp-kapitel"><div class="slo-tk-kopf">' + sloDrache('froh') + '<div><small>📖 ' + a.th.ic + ' ' + a.th.titel + (a.von ? ' · Seite ' + a.nr + ' / ' + a.von : '') + '</small><b>' + a.seite[0] + '</b></div></div>' + a.seite[1] + '</div>';
+  sloBereit(true, a.nr && a.nr < a.von ? 'Weiter lesen ›' : 'Weiter ›'); $('sloWeissNicht').hidden = true;
+  slo.pruefe = () => { slo.i++; sloZeigen(); return null; };
+};
 SLO_RENDER.erkl = function (a, box) {
   box.innerHTML = '<div class="slo-tippkarte slp-erkl"><div class="slo-tk-kopf">' + sloDrache('froh') + '<div><small>Grammatik · ' + a.th.stufe + '</small><b>' + a.th.ic + ' ' + a.th.titel + '</b></div></div>' + a.th.erkl + '</div>';
   sloBereit(true, 'Los geht’s'); $('sloWeissNicht').hidden = true;
@@ -596,14 +610,19 @@ function slpGrammatik() {
       const x = erg[p.id], b = x.best;
       return '<div class="slp-pfad-schritt ' + x.status + '"><i class="slp-pfad-punkt">' + (x.status === 'fertig' ? '✓' : x.status === 'zu' ? '🔒' : i + 1) + '</i>'
         + '<button type="button" class="slp-thema' + (x.status === 'zu' ? ' gesperrt' : '') + '" data-th="' + p.id + '"' + (x.status === 'zu' ? ' aria-disabled="true"' : '') + '><span class="slp-th-ic">' + x.th.ic + '</span><span><b>' + x.th.titel + '</b><small>' + x.th.stufe + (x.status === 'zu' ? ' · gesperrt' : b ? ' · ' + b + ' %' : ' · neu') + '</small></span><i class="slp-meister" style="--p:' + b + '%"><em>' + (b ? b + '%' : x.status === 'zu' ? '🔒' : '') + '</em></i></button>'
+        + (typeof SLP_THEORIE !== 'undefined' && SLP_THEORIE[p.id] ? '<button type="button" class="slp-theorie-knopf" data-theorie="' + p.id + '">📖 Theorie lesen' + (x.status === 'zu' ? ' (schon vorab)' : '') + '</button>' : '')
         + (x.status === 'zu' ? '<details class="slp-sperre"><summary>Was fehlt noch?</summary>' + fehltHtml(x.fehlt) + '</details>' : '') + '</div>';
     }).join('') + '</div>';
   const box = $('slo-grammatik');
   box.querySelectorAll('[data-th]').forEach((b) => b.addEventListener('click', (e) => {
     const id = b.dataset.th;
     if (!erg[id] || !erg[id].offen) { const d = b.closest('.slp-pfad-schritt'); const det = d && d.querySelector('details'); if (det) det.open = true; b.classList.add('wackeln'); setTimeout(() => b.classList.remove('wackeln'), 420); if (navigator.vibrate) navigator.vibrate(30); e.stopPropagation(); return; }
-    const th = SLP_THEMEN.find((t) => t.id === id); slpLektion('gram', '🧩 ' + th.titel, slpGramAufgaben(th), slpLex, th.id);
+    // erstes Mal: Kapitel lesen → verstehen → üben; danach direkt üben
+    const th = SLP_THEMEN.find((t) => t.id === id), neu = !slpStore().gram[id];
+    slpLektion('gram', '🧩 ' + th.titel, slpGramAufgaben(th, 10, neu ? 'voll' : null), slpLex, th.id);
   }));
+  // Theorie allein (zählt nicht als geübt, schaltet nichts frei)
+  box.querySelectorAll('[data-theorie]').forEach((b) => b.addEventListener('click', () => { const th = SLP_THEMEN.find((t) => t.id === b.dataset.theorie); slpLektion('gram', '📖 ' + th.titel, slpGramAufgaben(th, 0, 'theorie'), slpLex, null); }));
   box.querySelectorAll('[data-station]').forEach((b) => b.addEventListener('click', () => { const u = SLO_EINHEITEN.find((x) => x.id === b.dataset.station); const i = SLO_EINHEITEN.indexOf(u); if (sloOffen(sloStore(), i)) sloStart(u); else { slpZeige('karte'); if (typeof skToast === 'function') skToast('🗺️ ' + u.ort + ' liegt weiter hinten auf der Reise – erst die Stationen davor.'); } }));
   box.querySelectorAll('[data-woerter]').forEach((b) => b.addEventListener('click', () => slpZeige('wortschatz')));
   slpTabsMarkieren();

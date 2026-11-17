@@ -142,6 +142,29 @@ const ordner = process.argv[2] || '.';
   ck('Grammatik-Pfad: alles gesperrt, Gegenwart braucht Stationen + Wörter (mit Beispielwörtern und Knopf)', pfad.praesensZu && pfad.alleZu && /station/.test(pfad.fehlt) && /woerter/.test(pfad.fehlt) && pfad.beispiel && pfad.beispiel.length > 0 && pfad.knopf, JSON.stringify(pfad));
   ck('Stationen + Wörter → Gegenwart offen; Akkusativ wartet auf Gegenwart; ab 70 % geschafft, Dual braucht nur noch Station/Wörter', pfad.praesensOffen && pfad.tozZu && pfad.praesensFertig && pfad.dualOffen, JSON.stringify(pfad));
   ck('Spielhallen-Grammatik nutzt nur freigeschaltete Themen', pfad.duell);
+  // 📖 Theorie-Kapitel + „warum falsch?“
+  const theo = await p.evaluate(() => {
+    const ok = SLP_THEMEN.every((t) => SLP_THEORIE[t.id] && SLP_THEORIE[t.id].seiten.length >= 2 && SLP_THEORIE[t.id].fragen.length >= 3 && SLP_THEORIE[t.id].fragen.every((f) => f.o[f.r] && f.e) && SLP_THEORIE[t.id].regel);
+    const th = SLP_THEMEN.find((t) => t.id === 'tozilnik'), A = slpGramAufgaben(th, 10, 'voll'), T = slpGramAufgaben(th, 0, 'theorie');
+    return { ok, typen: A.map((a) => (a.theorie ? 'frage' : a.typ)).join(','), nurTheorie: T.every((a) => a.typ === 'kapitel' || a.theorie) && T.length === 6 };
+  });
+  ck('13 Themen mit Theorie (Seiten, Regel, Verständnisfragen mit Erklärung); Ablauf: lesen → verstehen → üben', theo.ok && /^kapitel,kapitel,kapitel,frage,frage,frage,kapitel,(form,){9}form$/.test(theo.typen) && theo.nurTheorie, theo.typen);
+  await p.evaluate(() => { const th = SLP_THEMEN.find((t) => t.id === 'tozilnik'); slpLektion('gram', 'Test', slpGramAufgaben(th, 10, 'voll'), slpLex, null); });
+  await p.waitForTimeout(200);
+  await bild('slp-theorie-seite');
+  for (let i = 0; i < 3; i++) { await p.click('#sloPruefen'); await p.waitForTimeout(120); }
+  // Verständnisfrage absichtlich falsch → Erklärung
+  await p.evaluate(() => { const a = slo.liste[slo.i]; const b = [...document.querySelectorAll('.slo-opt')].find((x) => sloNorm(x.textContent) !== sloNorm(a.loesung)); b.click(); sloPruefen(); });
+  await p.waitForTimeout(150);
+  ck('Verständnisfrage falsch → Erklärung warum', await p.evaluate(() => /Akkusativ|lebt|Richtung/.test($('sloUrteil').innerText)), await p.evaluate(() => $('sloUrteil').innerText.slice(0, 120)));
+  await p.evaluate(() => { while (slo.liste[slo.i].typ !== 'form' || slo.liste[slo.i].theorie) { if (slo.zustand === 'weiter') { slo.i++; sloZeigen(); continue; } if (slo.liste[slo.i].theorie) { [...document.querySelectorAll('.slo-opt')][0].click(); sloPruefen(); continue; } slo.i++; sloZeigen(); } });
+  await p.waitForTimeout(150);
+  await p.evaluate(() => { const a = slo.liste[slo.i]; const b = [...document.querySelectorAll('.slo-opt')].find((x) => sloNorm(x.textContent) !== sloNorm(a.loesung)); b.click(); sloPruefen(); });
+  await p.waitForTimeout(150);
+  const warum = await p.evaluate(() => $('sloUrteil').innerText);
+  ck('Übung falsch → „… ist Genitiv/Dativ … – gesucht ist Akkusativ Einzahl“ + Regel', /gesucht ist/.test(warum) && /Akkusativ Einzahl/.test(warum) && /💡/.test(warum), warum.replace(/\n/g, ' ').slice(0, 200));
+  await bild('slp-warum');
+  await p.evaluate(() => { slo = null; slpZeige('grammatik'); }); await p.waitForTimeout(400);
   await bild('slp-grammatik-pfad');
   await p.evaluate(() => slpGrammatik());
   const gram = await p.evaluate(() => SLP_THEMEN.map((th) => {
