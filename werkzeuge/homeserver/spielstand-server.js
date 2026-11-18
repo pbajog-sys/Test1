@@ -12,7 +12,8 @@
 //   POST /api/abgleich        { basis, geraet, stand, aenderungen: { schlüssel: { v: text|null, alt?: true } } }
 //                             → { version, neu? }  (neu = nur Einträge, die seit „basis“ ein anderes Gerät geändert hat;
 //                                                   v: null = gelöscht – so geht nach einer Runde kaum etwas über die Leitung)
-//                             optional oeffentlich: { xp, level, titel, avatar, farbe, skills[7], serie, abzeichen, gelernt, runden }
+//                             optional oeffentlich: { xp, level, titel, avatar, farbe, skills[7], serie, abzeichen, gelernt, runden,
+//                                                      spiele: [{ s, n }] (meistgespielt, höchstens 5) }
 //                             → Eintrag in der gemeinsamen Bestenliste (nur diese Zusammenfassung ist für andere sichtbar)
 //   GET  /api/bestenliste     → [{ name, ich?, xp, level, … }]  nach XP sortiert, nur für Angemeldete
 //
@@ -91,6 +92,7 @@ function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
       avatar: String(o.avatar || '🙂').slice(0, 8), farbe: /^#[0-9a-fA-F]{6}$/.test(o.farbe || '') ? o.farbe : '#64748b',
       skills: Array.isArray(o.skills) ? o.skills.slice(0, 7).map((v) => zahl(v, -1, 100)) : [],
       serie: zahl(o.serie, 0, 1e5), abzeichen: zahl(o.abzeichen, 0, 1e5), gelernt: zahl(o.gelernt, 0, 1e6), runden: zahl(o.runden, 0, 1e7),
+      spiele: Array.isArray(o.spiele) ? o.spiele.filter((x) => x && /^[a-z0-9_-]{1,20}$/i.test(x.s)).slice(0, 5).map((x) => ({ s: x.s, n: zahl(x.n, 0, 1e7) })) : [],
     };
   }
   const aenderungenPruefen = (a) => a && typeof a === 'object' && Object.entries(a).every(([k, x]) => k.startsWith('walquiz.') && k.length < 200 && x && (typeof x.v === 'string' || x.v === null));

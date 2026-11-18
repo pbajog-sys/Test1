@@ -149,7 +149,13 @@ const caddy = http.createServer((req, res) => {
   await C.evaluate(() => { document.getElementById('profilWahl') && (document.getElementById('profilWahl').hidden = true); syBestenliste(true); }); await ruhig(C, 800);
   ck('Bestenliste im Dashboard sichtbar, eigener Eintrag mit „(du)“', /Anna/.test(await C.textContent('#syBestenliste')) && /Ben \(du\)/.test(await C.textContent('#syBestenliste')));
   await C.locator('#syBestenliste').scrollIntoViewIfNeeded(); await C.screenshot({ path: path.join(os.tmpdir(), 'sync-bestenliste.png') });
-  await C.click('#syBestenliste [data-vgl="0"]'); await ruhig(C, 800);
+  const zeileAnna = await C.textContent('#syBestenliste [data-sp="0"]');
+  ck('Zeile zeigt Stärke und Lieblingsspiel', /❤️ 🎨/.test(zeileAnna) && /Lvl 1 · \S+ \S+ \d+/.test(zeileAnna), zeileAnna.replace(/\s+/g, ' ').trim());
+  await C.click('#syBestenliste [data-sp="0"]'); await ruhig(C, 600);
+  const karte = await C.textContent('#skDlg');
+  ck('Detailkarte: Stärken, meistgespielte Spiele, Platz', /Stärken/.test(karte) && /Spielt am meisten/.test(karte) && /Farb-Gedächtnis/.test(karte) && /1\. von 2/.test(karte));
+  await C.screenshot({ path: path.join(os.tmpdir(), 'sync-spieler.png') });
+  await C.click('#syVgl'); await ruhig(C, 800);
   ck('📊 öffnet den Radar-Vergleich mit Anna', /Anna \(Level/.test(await C.textContent('.sk-legende').catch(() => '')));
   await C.screenshot({ path: path.join(os.tmpdir(), 'sync-vergleich.png') });
   const ohne = await D0();

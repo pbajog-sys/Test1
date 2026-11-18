@@ -132,9 +132,21 @@ function syOeffentlich() {
     const z = typeof zusammenfassung === 'function' && typeof datenVon === 'function' && pr ? zusammenfassung(datenVon(pr.id)) : {};
     return { xp, level: lv.level, titel: lv.titel, avatar: pr ? pr.avatar : '🙂', farbe: pr ? pr.farbe : '#64748b',
       skills: D.skills.map((x) => (x.wert == null ? -1 : x.wert)), serie: skTagesSerie(D.tagesSt).serie || 0,
-      abzeichen: z.abzeichen || 0, gelernt: z.gelernt || 0, runden: D.E.length };
+      abzeichen: z.abzeichen || 0, gelernt: z.gelernt || 0, runden: D.E.length, spiele: syMeistgespielt(D.E) };
   } catch (e) { return null; }
 }
+// Die 5 meistgespielten Spiele (Runden insgesamt)
+function syMeistgespielt(E) {
+  const n = {}; E.forEach((e) => { if (e.s) n[e.s] = (n[e.s] || 0) + 1; });
+  return Object.entries(n).sort((a, b) => b[1] - a[1]).slice(0, 5).map(([s, k]) => ({ s, n: k }));
+}
+const sySpiel = (s) => (typeof VERLAUF_SPIELE !== 'undefined' && VERLAUF_SPIELE[s]) || { name: s, emoji: '🎮' };
+// Fähigkeiten eines Eintrags, stärkste zuerst (nur die mit Wert)
+function syFaehigkeiten(e) {
+  if (typeof SK_FAEHIGKEITEN === 'undefined') return [];
+  return SK_FAEHIGKEITEN.map((f, i) => ({ f, w: (e.skills || [])[i] })).filter((x) => typeof x.w === 'number' && x.w >= 0).sort((a, b) => b.w - a.w);
+}
+const syVorHer = (t) => { const m = Math.round((Date.now() - t) / 60e3); return m < 2 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' Tagen'; };
 let syListe = [], syListeZeit = 0;
 async function syBestenliste(sofort) {
   if (syZustand !== 'ok') { const b = document.getElementById('syBestenliste'); if (b) b.remove(); return; }
@@ -156,20 +168,47 @@ function syListeZeigen() {
   }
   const medaille = ['🥇', '🥈', '🥉'];
   box.innerHTML = '<h2 class="hub-h"><span>🌍</span> Bestenliste <small>' + syListe.length + ' Spieler</small></h2>'
-    + (syListe.length ? '<div class="sk-letzte">' + syListe.map((e, i) => '<div class="sk-letzt' + (e.ich ? ' sy-ich' : '') + '"' + (e.ich ? ' style="box-shadow:inset 0 0 0 2px #f59e0b"' : '') + '>'
-      + '<span style="min-width:1.6em;text-align:center">' + (medaille[i] || '<small style="font-size:.85rem;color:#8b8bab">' + (i + 1) + '.</small>') + '</span>'
-      + '<span>' + syEsc(e.avatar) + '</span>'
-      + '<div><b>' + syEsc(e.name) + (e.ich ? ' (du)' : '') + '</b><small>Level ' + e.level + ' · ' + syEsc(e.titel) + (e.serie ? ' · 🔥 ' + e.serie : '') + '</small></div>'
-      + '<i>' + (typeof fmt === 'function' ? fmt(e.xp) : e.xp) + ' XP</i>'
-      + (e.ich ? '' : '<button type="button" data-vgl="' + i + '" aria-label="Mit ' + syEsc(e.name) + ' vergleichen" title="Vergleichen">📊</button>') + '</div>').join('') + '</div>'
+    + (syListe.length ? '<div class="sk-letzte">' + syListe.map((e, i) => {
+      const top = syFaehigkeiten(e)[0], lieb = (e.spiele || [])[0];
+      // kurz halten, damit es aufs Handy passt: „Lvl 4 · 🧠 Logik 72 · ❤️ 🕵️ · 🔥 3“
+      const unten = ['Lvl ' + e.level]
+        .concat(top ? [top.f.emoji + ' ' + top.f.kurz + ' ' + top.w] : [])
+        .concat(lieb ? ['❤️ ' + sySpiel(lieb.s).emoji] : [])
+        .concat(e.serie ? ['🔥 ' + e.serie] : []);
+      return '<button type="button" class="sk-letzt" data-sp="' + i + '" title="' + syEsc(e.name + (lieb ? ' – spielt am liebsten ' + sySpiel(lieb.s).name : '')) + '" style="width:100%;border:0;text-align:left;color:inherit;font:inherit;cursor:pointer' + (e.ich ? ';box-shadow:inset 0 0 0 2px #f59e0b' : '') + '">'
+        + '<span style="min-width:1.6em;text-align:center">' + (medaille[i] || '<small style="font-size:.85rem;color:#8b8bab">' + (i + 1) + '.</small>') + '</span>'
+        + '<span>' + syEsc(e.avatar) + '</span>'
+        + '<div><b>' + syEsc(e.name) + (e.ich ? ' (du)' : '') + '</b><small>' + syEsc(unten.join(' · ')) + '</small></div>'
+        + '<i>' + (typeof fmt === 'function' ? fmt(e.xp) : e.xp) + ' XP</i></button>';
+    }).join('') + '</div><p class="sk-fein" style="margin:2px 0 0;font-size:.75rem">Antippen für Details und Vergleich</p>'
       : '<p class="sk-fein">Noch niemand dabei.</p>');
-  box.querySelectorAll('[data-vgl]').forEach((b) => b.addEventListener('click', () => {
-    const e = syListe[Number(b.dataset.vgl)];
-    if (!e || typeof skProfilZeigen !== 'function') return;
+  box.querySelectorAll('[data-sp]').forEach((b) => b.addEventListener('click', () => sySpielerZeigen(syListe[Number(b.dataset.sp)], Number(b.dataset.sp))));
+}
+// Detailkarte eines Spielers: Fähigkeiten als Balken, meistgespielte Spiele, Vergleich
+function sySpielerZeigen(e, platz) {
+  if (!e) return;
+  const balken = (w, farbe) => '<span style="flex:1;height:8px;border-radius:4px;background:rgba(255,255,255,.08);overflow:hidden"><i style="display:block;height:100%;width:' + w + '%;background:' + farbe + '"></i></span>';
+  const zeile = (links, w, rechts, farbe) => '<div style="display:flex;align-items:center;gap:10px;margin:6px 0"><span style="min-width:8.5em">' + links + '</span>' + balken(w, farbe) + '<b style="min-width:2.6em;text-align:right;font-variant-numeric:tabular-nums">' + rechts + '</b></div>';
+  const fae = syFaehigkeiten(e), spiele = e.spiele || [], maxN = Math.max(1, ...spiele.map((x) => x.n));
+  const d = skDialog('<h3>' + syEsc(e.avatar) + ' ' + syEsc(e.name) + (e.ich ? ' (du)' : '') + '</h3>'
+    + '<ul class="ft-check"><li><b>Platz</b><span>' + (platz + 1) + '. von ' + syListe.length + '</span></li>'
+    + '<li><b>Level</b><span>' + e.level + ' · ' + syEsc(e.titel) + '</span></li>'
+    + '<li><b>Erfahrung</b><span>' + (typeof fmt === 'function' ? fmt(e.xp) : e.xp) + ' XP · ' + e.runden + ' Runden</span></li>'
+    + (e.serie ? '<li><b>Serie</b><span>🔥 ' + e.serie + ' Tage</span></li>' : '')
+    + (e.abzeichen ? '<li><b>Abzeichen</b><span>🏅 ' + e.abzeichen + '</span></li>' : '')
+    + '<li><b>Zuletzt aktiv</b><span>' + (e.zeit ? syVorHer(e.zeit) : '–') + '</span></li></ul>'
+    + '<h4 style="margin:14px 0 4px">Stärken</h4>'
+    + (fae.length ? fae.map((x) => zeile(x.f.emoji + ' ' + x.f.kurz, x.w, x.w, '#f59e0b')).join('') : '<p class="ft-klein">Noch zu wenig gespielt.</p>')
+    + '<h4 style="margin:14px 0 4px">Spielt am meisten</h4>'
+    + (spiele.length ? spiele.map((x) => zeile(sySpiel(x.s).emoji + ' ' + syEsc(sySpiel(x.s).name), Math.round((x.n / maxN) * 100), x.n + '×', sySpiel(x.s).farbe || '#38bdf8')).join('') : '<p class="ft-klein">Noch nichts gespielt.</p>')
+    + (e.ich ? '' : '<button type="button" class="btn" id="syVgl">📊 Mit mir vergleichen</button>'));
+  if (d.querySelector('#syVgl')) d.querySelector('#syVgl').addEventListener('click', () => {
+    d.close();
+    if (typeof skProfilZeigen !== 'function') return;
     skProfilZeigen();
     skVergleich = { name: e.name, avatar: e.avatar, level: e.level, werte: (e.skills || []).map((v) => (v < 0 ? null : v)) };
     skProfilZeichnen();
-  }));
+  });
 }
 
 // ---------- ☁️-Knopf ----------

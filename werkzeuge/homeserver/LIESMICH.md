@@ -14,7 +14,8 @@ Läuft daneben `spielstand-server.js`, fragt die App beim ersten Besuch einmal n
 - Täglich entsteht eine Kopie in `daten/archiv/`.
 - Bestenliste: Jedes Konto schickt beim Abgleich eine kleine Zusammenfassung (Level, XP, Titel, Avatar, Serie,
   Fähigkeitswerte) mit – nur die ist für andere sichtbar, nie der Spielstand. Im Dashboard zeigt „🌍 Bestenliste“
-  alle registrierten Spieler nach XP, 📊 vergleicht die Fähigkeiten im Radar. Nur für Angemeldete. Liegt in
+  alle registrierten Spieler nach XP mit stärkster Fähigkeit und Lieblingsspiel; Antippen zeigt alle Stärken,
+  die meistgespielten Spiele und vergleicht die Fähigkeiten im Radar. Nur für Angemeldete. Liegt in
   `daten/bestenliste.json`.
 - Namen sind eindeutig (Groß-/Kleinschreibung egal), PIN 4–8 Ziffern, nur als Hash gespeichert.
   Nach 5 falschen PINs ist der Name 15 Minuten gesperrt (danach jeweils doppelt so lange).
