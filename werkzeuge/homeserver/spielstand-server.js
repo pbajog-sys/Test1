@@ -12,6 +12,9 @@
 //   POST /api/abgleich        { basis, geraet, stand, aenderungen: { schlüssel: { v: text|null, alt?: true } } }
 //                             → { version, neu? }  (neu = nur Einträge, die seit „basis“ ein anderes Gerät geändert hat;
 //                                                   v: null = gelöscht – so geht nach einer Runde kaum etwas über die Leitung)
+//                             optional oeffentlich: { xp, level, titel, avatar, farbe, skills[7], serie, abzeichen, gelernt, runden }
+//                             → Eintrag in der gemeinsamen Bestenliste (nur diese Zusammenfassung ist für andere sichtbar)
+//   GET  /api/bestenliste     → [{ name, ich?, xp, level, … }]  nach XP sortiert, nur für Angemeldete
 //
 // Abgleich Eintrag für Eintrag: Jeder Eintrag merkt sich die Server-Version, in der er zuletzt geändert wurde.
 //  • Normale Änderungen (gerade gespielt) gelten immer – die zuletzt angekommene gewinnt.
@@ -42,6 +45,7 @@ function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
   };
   let konten = lesen('konten.json', {});        // schlüssel (klein) → { name, salz, hash, erstellt, fehl, sperreBis, sperreMin }
   let sitzungen = lesen('sitzungen.json', {});  // sha256(token) → { schluessel, erstellt }
+  let bestenliste = lesen('bestenliste.json', {});   // schlüssel → öffentliche Zusammenfassung
   const schluessel = (name) => name.normalize('NFC').toLowerCase();
   const dateiname = (k) => encodeURIComponent(k).replace(/%/g, '_');
 
@@ -78,6 +82,17 @@ function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
     req.on('end', () => { try { ok(teile.length ? JSON.parse(Buffer.concat(teile).toString('utf8')) : {}); } catch (e) { nein(Object.assign(new Error('kein JSON'), { status: 400 })); } });
     req.on('error', nein);
   });
+  // Öffentliche Zusammenfassung: nur bekannte Felder, Zahlen begrenzt, Texte gekürzt
+  const zahl = (x, min, max) => { const n = Math.round(Number(x)); return Number.isFinite(n) ? Math.min(max, Math.max(min, n)) : min; };
+  function oeffentlichSaeubern(o) {
+    if (!o || typeof o !== 'object') return null;
+    return {
+      xp: zahl(o.xp, 0, 1e8), level: zahl(o.level, 1, 1000), titel: String(o.titel || '').slice(0, 30),
+      avatar: String(o.avatar || '🙂').slice(0, 8), farbe: /^#[0-9a-fA-F]{6}$/.test(o.farbe || '') ? o.farbe : '#64748b',
+      skills: Array.isArray(o.skills) ? o.skills.slice(0, 7).map((v) => zahl(v, -1, 100)) : [],
+      serie: zahl(o.serie, 0, 1e5), abzeichen: zahl(o.abzeichen, 0, 1e5), gelernt: zahl(o.gelernt, 0, 1e6), runden: zahl(o.runden, 0, 1e7),
+    };
+  }
   const aenderungenPruefen = (a) => a && typeof a === 'object' && Object.entries(a).every(([k, x]) => k.startsWith('walquiz.') && k.length < 200 && x && (typeof x.v === 'string' || x.v === null));
   // Stand eines Kontos; ältere Dateien ({ version, daten }) werden beim Lesen umgewandelt
   function standLesen(datei) {
@@ -162,10 +177,18 @@ function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
         const archiv = 'archiv/' + dateiname(k) + '-' + new Date(jetzt()).toISOString().slice(0, 10) + '.json';
         if (!fs.existsSync(path.join(daten, archiv))) schreiben(archiv, st);
       }
+      const oe = oeffentlichSaeubern(b.oeffentlich);
+      if (oe) { bestenliste[k] = Object.assign(oe, { zeit: jetzt() }); schreiben('bestenliste.json', bestenliste); }
       // Nur zurückschicken, was ein anderes Gerät seit „basis“ geändert hat (das eben Hochgeladene kennt das Gerät ja)
       const neu = {}; let n = 0;
       Object.entries(st.eintraege).forEach(([schl, e]) => { if (e.ver > basis && !vonHier.has(schl)) { neu[schl] = e.v; n++; } });
       return senden(res, 200, n ? { version: st.version, zeit: st.zeit, geraet: st.geraet, neu } : { version: st.version });
+    }
+    if (weg === '/bestenliste' && m === 'GET') {
+      const liste = Object.entries(bestenliste).filter(([schl]) => konten[schl])
+        .map(([schl, e]) => Object.assign({ name: konten[schl].name }, e, schl === k ? { ich: true } : {}))
+        .sort((a, b) => b.xp - a.xp || b.level - a.level || a.name.localeCompare(b.name));
+      return senden(res, 200, liste);
     }
     return senden(res, 404, { fehler: 'Unbekannt' });
   }

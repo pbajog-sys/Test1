@@ -64,6 +64,7 @@ const caddy = http.createServer((req, res) => {
     await p.click(knopf === 'neu' ? '#syRegistrieren' : '#syAnmelden'); await ruhig(p, 1500);
   };
   const meldung = (p) => p.textContent('#syMeldung').catch(() => '');
+  const D0 = async () => (await fetch('http://localhost:8766/api/bestenliste')).status;
 
   // ---------- A: erster Besuch, registriert „Anna“ und nimmt den vorhandenen Spielstand mit ----------
   const A = await geraet('A');
@@ -137,6 +138,22 @@ const caddy = http.createServer((req, res) => {
   ck('Ben sieht nur seinen eigenen Stand', fremd.neu && fremd.neu['walquiz.zahlen.v1'] === '"Ben"' && !('walquiz.farben.v1' in fremd.neu));
   const schlecht = await C.evaluate(async () => (await fetch('api/abgleich', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ basis: 0, aenderungen: { 'fremd.x': { v: 'x' } } }) })).status);
   ck('Server nimmt nur Spieldaten an', schlecht === 400);
+
+  // ---------- Bestenliste ----------
+  const heute = new Date().toISOString().slice(0, 10);
+  await setzen(A, 'walquiz.verlauf.v1', JSON.stringify({ tage: { [heute]: [{ s: 'farben', p: 9, m: 10, z: Date.now() }, { s: 'krimi', p: 1, m: 1, z: Date.now() + 1 }] } }));
+  await abgleich(A); await abgleich(C);
+  const liste = await C.evaluate(async () => (await fetch('api/bestenliste')).json());
+  ck('Bestenliste: beide Konten, nach XP sortiert, „ich“ markiert', liste.length === 2 && liste[0].name === 'Anna' && liste[0].xp > liste[1].xp && liste[1].ich === true && !liste[0].ich, liste.map((e) => e.name + ' ' + e.xp + 'XP L' + e.level).join(' · '));
+  ck('Bestenliste: nur Zusammenfassung, kein Spielstand', !JSON.stringify(liste).includes('walquiz.'));
+  await C.evaluate(() => { document.getElementById('profilWahl') && (document.getElementById('profilWahl').hidden = true); syBestenliste(true); }); await ruhig(C, 800);
+  ck('Bestenliste im Dashboard sichtbar, eigener Eintrag mit „(du)“', /Anna/.test(await C.textContent('#syBestenliste')) && /Ben \(du\)/.test(await C.textContent('#syBestenliste')));
+  await C.locator('#syBestenliste').scrollIntoViewIfNeeded(); await C.screenshot({ path: path.join(os.tmpdir(), 'sync-bestenliste.png') });
+  await C.click('#syBestenliste [data-vgl="0"]'); await ruhig(C, 800);
+  ck('📊 öffnet den Radar-Vergleich mit Anna', /Anna \(Level/.test(await C.textContent('.sk-legende').catch(() => '')));
+  await C.screenshot({ path: path.join(os.tmpdir(), 'sync-vergleich.png') });
+  const ohne = await D0();
+  ck('Bestenliste nur für Angemeldete', ohne === 401);
 
   // ---------- Sperre nach 5 falschen PINs ----------
   const E = await geraet('E');

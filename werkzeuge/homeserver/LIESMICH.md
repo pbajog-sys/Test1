@@ -12,6 +12,10 @@ Läuft daneben `spielstand-server.js`, fragt die App beim ersten Besuch einmal n
   am Laptop Krimi, bleibt beides. Ändern zwei Geräte denselben Eintrag, gewinnt die zuletzt angekommene Änderung.
   Was ein lange nicht benutztes Gerät beim Öffnen noch an altem Stand hat, überschreibt nie Neueres.
 - Täglich entsteht eine Kopie in `daten/archiv/`.
+- Bestenliste: Jedes Konto schickt beim Abgleich eine kleine Zusammenfassung (Level, XP, Titel, Avatar, Serie,
+  Fähigkeitswerte) mit – nur die ist für andere sichtbar, nie der Spielstand. Im Dashboard zeigt „🌍 Bestenliste“
+  alle registrierten Spieler nach XP, 📊 vergleicht die Fähigkeiten im Radar. Nur für Angemeldete. Liegt in
+  `daten/bestenliste.json`.
 - Namen sind eindeutig (Groß-/Kleinschreibung egal), PIN 4–8 Ziffern, nur als Hash gespeichert.
   Nach 5 falschen PINs ist der Name 15 Minuten gesperrt (danach jeweils doppelt so lange).
   Höchstens 5 neue Konten pro Stunde und Anschluss, höchstens 50 Konten.

@@ -13,6 +13,10 @@
 //    zählt als „alt“: Es setzt sich nur durch, wo kein anderes Gerät inzwischen etwas geändert hat.
 //  • Haben zwei Geräte gleichzeitig denselben Eintrag geändert, gewinnt die zuletzt angekommene Änderung.
 //    Zusätzlich legt der Server täglich eine Kopie an.
+//
+// Bestenliste: Bei jedem Abgleich geht eine kleine öffentliche Zusammenfassung mit (Level, XP, Titel, Avatar, Serie,
+// Fähigkeitswerte) – nur wenn sie sich geändert hat. Im Dashboard zeigt „🌍 Bestenliste“ alle registrierten Spieler,
+// Antippen vergleicht die Fähigkeiten im Radar.
 const SY_META = 'spielekiste-sync';   // bewusst ohne „walquiz.“ – wird selbst nicht synchronisiert und nicht gesichert
 const SY_SPAETER = 'spielekiste-konto-spaeter';
 const SY_API = new URL('api/', location.href).href;
@@ -83,9 +87,11 @@ async function syAbgleich({ alt = false, ladenErlaubt = false } = {}) {
     syGeaendert = false;
     const m = syMeta(), vorher = syDaten(), aend = syAenderungen(vorher, alt), basis = m.h ? (m.version || 0) : 0;   // ohne Eintrags-Merkliste (frisch angemeldet, alte Version): alles vom Server ist neuer
     if (!Object.keys(aend).length && !ladenErlaubt) return;
-    const { status, json } = await syApi('abgleich', 'POST', { basis, geraet: syGeraet(), stand: typeof APP_STAND !== 'undefined' ? APP_STAND : '', aenderungen: aend });
+    const oe = syOeffentlich(), oeHash = oe ? syHash(JSON.stringify(oe)) : null, oeNeu = oe && oeHash !== m.oh;
+    const { status, json } = await syApi('abgleich', 'POST', Object.assign({ basis, geraet: syGeraet(), stand: typeof APP_STAND !== 'undefined' ? APP_STAND : '', aenderungen: aend }, oeNeu ? { oeffentlich: oe } : {}));
     if (status === 401) { syZustand = 'abgemeldet'; return; }
     if (status !== 200 || !json) throw new Error('Sync: HTTP ' + status);
+    if (oeNeu) { syMetaSetzen({ oh: oeHash }); syBestenliste(true); }
     const jetzt = syDaten(), h = Object.assign({}, syMeta().h || {});
     // Das Hochgeladene gilt als abgeglichen (was der Server verworfen hat, steht unten in „neu“ und wird übernommen)
     Object.entries(aend).forEach(([k, x]) => { if (x.v === null) delete h[k]; else h[k] = syHash(x.v); });
@@ -114,6 +120,56 @@ async function syAbgleich({ alt = false, ladenErlaubt = false } = {}) {
     syLaeuft = false;
     syKnopf();
   }
+}
+
+// ---------- Bestenliste ----------
+// Öffentliche Zusammenfassung des gerade aktiven Spielers (wie im Dashboard berechnet)
+function syOeffentlich() {
+  try {
+    if (typeof skDaten !== 'function') return null;
+    const D = skDaten(), xp = skXP(D.E, D.tagesSt, D.expSt, D.erfolgSt).gesamt, lv = skLevel(xp);
+    const pr = typeof aktivesProfil === 'function' ? aktivesProfil() : null;
+    const z = typeof zusammenfassung === 'function' && typeof datenVon === 'function' && pr ? zusammenfassung(datenVon(pr.id)) : {};
+    return { xp, level: lv.level, titel: lv.titel, avatar: pr ? pr.avatar : '🙂', farbe: pr ? pr.farbe : '#64748b',
+      skills: D.skills.map((x) => (x.wert == null ? -1 : x.wert)), serie: skTagesSerie(D.tagesSt).serie || 0,
+      abzeichen: z.abzeichen || 0, gelernt: z.gelernt || 0, runden: D.E.length };
+  } catch (e) { return null; }
+}
+let syListe = [], syListeZeit = 0;
+async function syBestenliste(sofort) {
+  if (syZustand !== 'ok') { const b = document.getElementById('syBestenliste'); if (b) b.remove(); return; }
+  if (!sofort && Date.now() - syListeZeit < 60e3) return;   // höchstens einmal pro Minute nachfragen
+  try {
+    const { status, json } = await syApi('bestenliste');
+    if (status === 200 && Array.isArray(json)) { syListe = json; syListeZeit = Date.now(); }
+  } catch (e) { /* offline – alte Liste bleibt */ }
+  syListeZeigen();
+}
+function syListeZeigen() {
+  const spalte = document.querySelector('#screen-hub .spalte-b');
+  if (!spalte || syZustand !== 'ok') return;
+  let box = document.getElementById('syBestenliste');
+  if (!box) {
+    box = document.createElement('div'); box.id = 'syBestenliste'; box.className = 'sk-unten';
+    const familie = document.getElementById('hubFamilie');
+    if (familie) spalte.insertBefore(box, familie); else spalte.appendChild(box);
+  }
+  const medaille = ['🥇', '🥈', '🥉'];
+  box.innerHTML = '<h2 class="hub-h"><span>🌍</span> Bestenliste <small>' + syListe.length + ' Spieler</small></h2>'
+    + (syListe.length ? '<div class="sk-letzte">' + syListe.map((e, i) => '<div class="sk-letzt' + (e.ich ? ' sy-ich' : '') + '"' + (e.ich ? ' style="box-shadow:inset 0 0 0 2px #f59e0b"' : '') + '>'
+      + '<span style="min-width:1.6em;text-align:center">' + (medaille[i] || '<small style="font-size:.85rem;color:#8b8bab">' + (i + 1) + '.</small>') + '</span>'
+      + '<span>' + syEsc(e.avatar) + '</span>'
+      + '<div><b>' + syEsc(e.name) + (e.ich ? ' (du)' : '') + '</b><small>Level ' + e.level + ' · ' + syEsc(e.titel) + (e.serie ? ' · 🔥 ' + e.serie : '') + '</small></div>'
+      + '<i>' + (typeof fmt === 'function' ? fmt(e.xp) : e.xp) + ' XP</i>'
+      + (e.ich ? '' : '<button type="button" data-vgl="' + i + '" aria-label="Mit ' + syEsc(e.name) + ' vergleichen" title="Vergleichen">📊</button>') + '</div>').join('') + '</div>'
+      : '<p class="sk-fein">Noch niemand dabei.</p>');
+  box.querySelectorAll('[data-vgl]').forEach((b) => b.addEventListener('click', () => {
+    const e = syListe[Number(b.dataset.vgl)];
+    if (!e || typeof skProfilZeigen !== 'function') return;
+    skProfilZeigen();
+    skVergleich = { name: e.name, avatar: e.avatar, level: e.level, werte: (e.skills || []).map((v) => (v < 0 ? null : v)) };
+    skProfilZeichnen();
+  }));
 }
 
 // ---------- ☁️-Knopf ----------
@@ -182,7 +238,7 @@ function syKontoDialog() {
   d.querySelector('#syAbmelden').addEventListener('click', async () => {
     await syAbgleich();   // letzten Stand noch sichern
     try { await syApi('abmelden', 'POST', {}); } catch (e) { /* offline – Cookie bleibt dann eben */ }
-    syZustand = 'abgemeldet'; syName = ''; localStorage.setItem(SY_SPAETER, '1'); d.close(); syKnopf(); syHinweis('Abgemeldet');
+    syZustand = 'abgemeldet'; syName = ''; localStorage.setItem(SY_SPAETER, '1'); d.close(); syKnopf(); syBestenliste(); syHinweis('Abgemeldet');
   });
 }
 
@@ -201,9 +257,10 @@ function syHinweis(text) {
 // ---------- Start ----------
 async function syLaufen() {
   await syAbgleich({ alt: true, ladenErlaubt: true });
+  syBestenliste(true);
   if (syGestartet) return;
   syGestartet = true;
-  setInterval(() => { if (document.visibilityState === 'visible') syAbgleich(); }, SY_TAKT);
+  setInterval(() => { if (document.visibilityState === 'visible') { syAbgleich(); syBestenliste(false); } }, SY_TAKT);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') syAbgleich();
     else syAbgleich({ alt: true, ladenErlaubt: true });   // zurück in der App: Neues von anderen Geräten holen
