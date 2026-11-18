@@ -22,14 +22,15 @@
 <main>
   <a href="./">← Zurück zur App</a>
   <h1>Datenschutz</h1>
-  <p class="muted">Kurz gesagt: Alles, was du spielst, bleibt auf deinem Gerät. Keine Werbung, kein Tracking.</p>
+  <p class="muted">Kurz gesagt: Ohne Konto bleibt alles, was du spielst, auf deinem Gerät. Legst du freiwillig ein Konto an, wird dein Spielstand auf unserem eigenen Server gespeichert, damit er auf allen deinen Geräten gleich ist. Keine Werbung, kein Tracking, keine Weitergabe.</p>
 
   <h2>Verantwortlich</h2>
   <p><span class="platzhalter">[Name und Anschrift eintragen]</span><br>
   E-Mail: <span class="platzhalter">[Kontakt-E-Mail eintragen]</span></p>
 
   <h2>Hosting</h2>
-  <p>Die App liegt bei GitHub Pages (GitHub Inc., USA). Beim Aufruf verarbeitet GitHub technisch nötige Daten wie deine IP-Adresse, um die Seite auszuliefern und vor Missbrauch zu schützen. Siehe <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub-Datenschutzerklärung</a>.</p>
+  <p><b>Eigener Server:</b> Unter der eigenen Adresse (z. B. <code>….duckdns.org</code>) liefert ein privat betriebener Server in Deutschland die App aus. Dabei verarbeitet er technisch nötige Daten wie deine IP-Adresse, um die Seite auszuliefern. Es werden <b>keine Zugriffsprotokolle gespeichert</b>. Die Verschlüsselung (HTTPS) nutzt ein kostenloses Zertifikat von Let’s Encrypt; dafür werden keine Daten von dir übertragen. Der Name der Adresse wird über den Dienst DuckDNS auf die IP-Adresse des Servers umgeleitet; DuckDNS sieht dabei nicht, welche Seiten du aufrufst.</p>
+  <p><b>GitHub Pages:</b> Rufst du die App über <code>github.io</code> auf, liefert GitHub (GitHub Inc., USA) sie aus und verarbeitet dabei technisch nötige Daten wie deine IP-Adresse. Konto, Sync, Bestenliste und Duelle gibt es dort nicht. Siehe <a href="https://docs.github.com/de/site-policy/privacy-policies/github-general-privacy-statement" target="_blank" rel="noopener">GitHub-Datenschutzerklärung</a>.</p>
 
   <h2>Fotos und Töne</h2>
   <p>Die Karten im Spiel „Karten-Gefühl“ sind fest in der App gespeichert (Natural Earth, gemeinfrei) – dafür wird nichts nachgeladen.</p>
@@ -45,10 +46,23 @@
   <h2>Spracherkennung (Slowenisch, English Pro)</h2>
   <p>Beim Nachsprechen gibt es zwei Wege. <b>Whisper auf dem Gerät</b>: Nur wenn du es ausdrücklich einrichtest, lädt die App einmalig das Programm (transformers.js von cdn.jsdelivr.net) und das Sprachmodell (von huggingface.co) herunter; dabei sehen diese Anbieter wie bei jedem Download deine IP-Adresse. Danach läuft die Erkennung offline – deine Aufnahmen verlassen das Gerät nicht und werden nicht gespeichert. <b>Browser-Erkennung</b>: Nutzt die App die eingebaute Spracherkennung deines Browsers, kann der Browser-Hersteller (z. B. Apple oder Google) den Ton zur Erkennung an seine Server schicken. Das Modell kannst du jederzeit wieder entfernen.</p>
   <h2>Speicher auf deinem Gerät</h2>
-  <p>Fortschritt, Abzeichen, Rekorde und Einstellungen speichert die App im lokalen Speicher deines Browsers (localStorage). Diese Daten verlassen dein Gerät nicht. Du kannst sie jederzeit über die Browser-Einstellungen löschen.</p>
+  <p>Fortschritt, Abzeichen, Rekorde und Einstellungen speichert die App im lokalen Speicher deines Browsers (localStorage). Ohne Konto verlassen diese Daten dein Gerät nicht. Du kannst sie jederzeit über die Browser-Einstellungen löschen.</p>
 
   <h2>Profile</h2>
-  <p>Profile (Name, Bild, Spielstand) werden nur auf deinem Gerät gespeichert. Es gibt keine Anmeldung und keinen Server, an den sie übertragen werden. Ein Profil löschst du unter „Profile verwalten“.</p>
+  <p>Profile (Name, Bild, Spielstand) werden auf deinem Gerät gespeichert. Bist du mit einem Konto angemeldet, werden sie zusammen mit deinem Spielstand auf dem Server gesichert (siehe unten). Ein Profil löschst du unter „Profile verwalten“.</p>
+
+  <h2>Konto, Sync, Bestenliste und Duelle (freiwillig)</h2>
+  <p>Ein Konto brauchst du nicht – du kannst jederzeit „Ohne Konto spielen“. Legst du eines an, speichert der eigene Server:</p>
+  <ul>
+    <li><b>Konto:</b> den von dir gewählten Namen (gern ein Spitzname) und deine PIN – die PIN nur als verschlüsselter Hash, nicht im Klartext.</li>
+    <li><b>Spielstand:</b> deinen Fortschritt aus der App (dieselben Daten wie im lokalen Speicher, ohne eigene Songs), dazu den Gerätetyp des letzten Abgleichs (z. B. „iPhone“). Einmal am Tag entsteht eine Sicherungskopie, die nach 30 Tagen gelöscht wird.</li>
+    <li><b>Anmelde-Cookie:</b> Damit dein Gerät angemeldet bleibt, setzt der Server ein technisch notwendiges Cookie (gültig 1 Jahr). Es dient nur der Anmeldung, nicht dem Tracking.</li>
+    <li><b>Bestenliste:</b> Name, Level, Erfahrungspunkte, Avatar, Tagesserie, Fähigkeitswerte und deine meistgespielten Spiele. Diese Zusammenfassung sehen <b>alle angemeldeten Spieler</b>; deinen Spielstand selbst sieht niemand.</li>
+    <li><b>Duelle:</b> wer wen herausgefordert hat, das Spiel und eure Ergebnisse – sichtbar für euch beide, gelöscht nach 30 Tagen.</li>
+    <li><b>Schutz vor Missbrauch:</b> Bei Anmeldeversuchen und neuen Konten merkt sich der Server deine IP-Adresse höchstens eine Stunde lang im Arbeitsspeicher, um das Durchprobieren von PINs zu verhindern. Sie wird nicht dauerhaft gespeichert.</li>
+  </ul>
+  <p>Die Daten liegen nur auf diesem Server, werden nicht an Dritte weitergegeben und nicht für Werbung genutzt. Zweck ist allein, dir den Sync zwischen deinen Geräten, die Bestenliste und Duelle anzubieten (Art. 6 Abs. 1 lit. b DSGVO).</p>
+  <p><b>Konto löschen:</b> Über ☁️ → „Konto löschen“ (mit deiner PIN) werden Konto, Spielstand, Sicherungskopien, Bestenlisten-Eintrag und Duelle sofort vom Server gelöscht. Der Spielstand auf deinem Gerät bleibt erhalten.</p>
 
   <h2>Deine Rechte</h2>
   <p>Du hast das Recht auf Auskunft, Berichtigung, Löschung, Einschränkung der Verarbeitung, Datenübertragbarkeit und Widerruf deiner Einwilligung. Du kannst dich außerdem bei einer Datenschutz-Aufsichtsbehörde beschweren.</p>

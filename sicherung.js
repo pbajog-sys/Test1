@@ -96,13 +96,16 @@ async function sbDialog() {
   const info = sbInfo(), songs = await sbSongsLesen(), songGroesse = songs.reduce((s, x) => s + (x.groesse || (x.daten && x.daten.byteLength) || 0), 0);
   let dauerhaft = null; try { if (navigator.storage && navigator.storage.persisted) dauerhaft = await navigator.storage.persisted(); } catch (e) { /* egal */ }
   let rueck = null; try { rueck = JSON.parse(localStorage.getItem(SB_VORHER) || 'null'); } catch (e) { /* egal */ }
+  // Angemeldet mit Spielstand-Sync (sync.js): Der Server sichert automatisch – die Datei-Sicherung ist nur noch ein Extra
+  const sync = typeof syZustand !== 'undefined' && syZustand === 'ok';
   const html = '<h3>💾 Sicherung</h3>'
-    + '<p class="sb-warn">Löschst du die App vom Home-Bildschirm, löscht das iPhone alle ihre Daten mit. Mit einer Sicherung in <b>iCloud Drive</b> holst du alles zurück.</p>'
+    + (sync ? '<p class="sb-warn" style="background:rgba(34,197,94,.14)">☁️ <b>Automatisch gesichert:</b> Als <b>' + (typeof syEsc === 'function' ? syEsc(syName) : '') + '</b> liegt dein Spielstand auf dem Homeserver (mit täglicher Kopie). Melde dich auf einem neuen Gerät einfach an. Eine Datei-Sicherung brauchst du nur für eigene Songs oder als Extra.</p>'
+      : '<p class="sb-warn">Löschst du die App vom Home-Bildschirm, löscht das iPhone alle ihre Daten mit. Mit einer Sicherung in <b>iCloud Drive</b> holst du alles zurück.</p>')
     + '<ul class="ft-check"><li><b>Letzte Sicherung</b><span id="sbZuletzt">' + sbVorHer(info.zuletzt) + '</span></li><li><b>Daten</b><span>' + sbSchluessel().length + ' Einträge' + (songs.length ? ' · ' + songs.length + (songs.length === 1 ? ' eigener Song' : ' eigene Songs') : '') + '</span></li>'
     + '<li><b>Dauerhaft gespeichert</b><span>' + (dauerhaft === true ? 'ja ✓' : dauerhaft === false ? 'nein – Sicherung umso wichtiger' : 'unbekannt') + '</span></li></ul>'
     + (songs.length ? '<label class="sb-songs"><input type="checkbox" id="sbMitSongs"' + (songGroesse < 40 * 1048576 ? ' checked' : '') + '> eigene Songs mitsichern (' + sbMB(songGroesse) + ')</label>' : '')
     + '<div class="sb-ziele" role="radiogroup" aria-label="Wohin sichern?">' + Object.entries(SB_ZIELE).map(([k, z]) => '<button type="button" role="radio" data-ziel="' + k + '" class="' + (k === sbZiel() ? 'an' : '') + '" aria-checked="' + (k === sbZiel()) + '">' + z.icon + ' ' + z.name + '</button>').join('') + '</div>'
-    + '<details class="sb-anleitung" id="sbAnleitung"' + (info.zuletzt ? '' : ' open') + '><summary>So geht’s mit ' + SB_ZIELE[sbZiel()].name + '</summary><ol>' + SB_ZIELE[sbZiel()].schritte.map((x) => '<li>' + x + '</li>').join('') + '</ol></details>'
+    + '<details class="sb-anleitung" id="sbAnleitung"' + (info.zuletzt || sync ? '' : ' open') + '><summary>So geht’s mit ' + SB_ZIELE[sbZiel()].name + '</summary><ol>' + SB_ZIELE[sbZiel()].schritte.map((x) => '<li>' + x + '</li>').join('') + '</ol></details>'
     + '<button type="button" class="btn sb-los" id="sbJetzt">💾 Jetzt in ' + SB_ZIELE[sbZiel()].name + ' sichern</button>'
     + '<p class="ft-klein sb-schritte">Auf dem iPhone: im Teilen-Menü <b>„In Dateien sichern“</b> → <b>iCloud Drive</b> wählen. So liegt die Sicherung sicher in der Cloud.</p>'
     + '<label class="btn secondary sb-einspielen">📂 Sicherung einspielen<input type="file" id="sbDatei" accept=".json,application/json" hidden></label>'
@@ -141,7 +144,8 @@ async function sbAktualisieren() {
 function sbHinweis() {
   const hub = $('screen-hub'); if (!hub) return;
   let box = $('sbHinweis');
-  const info = sbInfo(), faellig = sbHatDaten() && sbNeues() && (!info.zuletzt || Date.now() - info.zuletzt > 2 * 864e5) && !(info.spaeter > Date.now());
+  const sync = typeof syZustand !== 'undefined' && syZustand === 'ok';   // angemeldet: Server sichert automatisch → keine Erinnerung
+  const info = sbInfo(), faellig = !sync && sbHatDaten() && sbNeues() && (!info.zuletzt || Date.now() - info.zuletzt > 2 * 864e5) && !(info.spaeter > Date.now());
   if (!faellig) { if (box) box.remove(); return; }
   if (!box) {
     box = document.createElement('div'); box.id = 'sbHinweis'; box.className = 'sb-hinweis'; box.setAttribute('role', 'status');

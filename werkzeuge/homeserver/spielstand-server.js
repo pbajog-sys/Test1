@@ -9,6 +9,7 @@
 //   POST /api/registrieren    { name, pin } → neues Konto, angemeldet (Cookie)
 //   POST /api/anmelden        { name, pin } → angemeldet (Cookie)
 //   POST /api/abmelden
+//   POST /api/konto/loeschen  { pin } → Konto, Spielstand, Tageskopien, Bestenliste, Duelle und Anmeldungen löschen
 //   POST /api/abgleich        { basis, geraet, stand, aenderungen: { schlüssel: { v: text|null, alt?: true } } }
 //                             → { version, neu? }  (neu = nur Einträge, die seit „basis“ ein anderes Gerät geändert hat;
 //                                                   v: null = gelöscht – so geht nach einer Runde kaum etwas über die Leitung)
@@ -16,6 +17,12 @@
 //                                                      spiele: [{ s, n }] (meistgespielt, höchstens 5) }
 //                             → Eintrag in der gemeinsamen Bestenliste (nur diese Zusammenfassung ist für andere sichtbar)
 //   GET  /api/bestenliste     → [{ name, ich?, xp, level, … }]  nach XP sortiert, nur für Angemeldete
+//
+// Duelle (beide spielen dieselbe Runde – gleicher Seed, gleiche Stufe –, wann sie wollen):
+//   POST /api/duell           { gegen, spiel? } → neues Duell (Spiel zufällig, wenn keins angegeben)
+//   GET  /api/duelle          → { duelle: [...], bilanz: { gegnername: { s, n, u } } }  eigene Duelle der letzten 30 Tage
+//   POST /api/duell/ergebnis  { id, p, m } → eigenes Ergebnis (nur einmal pro Duell)
+//   POST /api/duell/ablehnen  { id }
 //
 // Abgleich Eintrag für Eintrag: Jeder Eintrag merkt sich die Server-Version, in der er zuletzt geändert wurde.
 //  • Normale Änderungen (gerade gespielt) gelten immer – die zuletzt angekommene gewinnt.
@@ -26,12 +33,14 @@
 // Schutz: PIN nur als scrypt-Hash; nach 5 Fehlversuchen wird der Name gesperrt (15 min, danach doppelt so lang);
 // höchstens 30 Fehlversuche und 5 neue Konten pro Stunde und Anschluss; höchstens 50 Konten; Anfragen bis 10 MB.
 // Anmeldung per Cookie (HttpOnly, 1 Jahr). Im Datenordner: konten.json, sitzungen.json, staende/<name>.json,
-// archiv/<name>-JJJJ-MM-TT.json (Tageskopie).
+// archiv/<name>-JJJJ-MM-TT.json (Tageskopie, wird nach 30 Tagen gelöscht), bestenliste.json, duelle.json (30 Tage).
 'use strict';
 const http = require('http'), fs = require('fs'), path = require('path'), crypto = require('crypto');
 
 const NAME_RE = /^[A-Za-z0-9ÄÖÜäöüß._-]{3,20}$/;
 const PIN_RE = /^\d{4,8}$/;
+const DUELL_SPIELE = ['farben', 'toene', 'augen', 'takt', 'funktion', 'karte', 'punkte', 'riff', 'tiefgang'];
+const DUELL_TAGE = 7, DUELL_OFFEN_MAX = 20;
 const MAX_KONTEN = 50, MAX_BODY = 10 * 1024 * 1024, COOKIE = 'spielekiste_sitzung', SITZUNG_TAGE = 365;
 
 function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
@@ -47,6 +56,7 @@ function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
   let konten = lesen('konten.json', {});        // schlüssel (klein) → { name, salz, hash, erstellt, fehl, sperreBis, sperreMin }
   let sitzungen = lesen('sitzungen.json', {});  // sha256(token) → { schluessel, erstellt }
   let bestenliste = lesen('bestenliste.json', {});   // schlüssel → öffentliche Zusammenfassung
+  let duelle = lesen('duelle.json', {});             // id → { id, von, gegen, spiel, seed, erstellt, ergebnisse: { schlüssel: { p, m, z } }, abgelehnt? }
   const schluessel = (name) => name.normalize('NFC').toLowerCase();
   const dateiname = (k) => encodeURIComponent(k).replace(/%/g, '_');
 
@@ -177,7 +187,12 @@ function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
         st.geraet = String(b.geraet || '').slice(0, 30); st.stand = String(b.stand || '').slice(0, 30);
         schreiben(standDatei, st);
         const archiv = 'archiv/' + dateiname(k) + '-' + new Date(jetzt()).toISOString().slice(0, 10) + '.json';
-        if (!fs.existsSync(path.join(daten, archiv))) schreiben(archiv, st);
+        if (!fs.existsSync(path.join(daten, archiv))) {
+          schreiben(archiv, st);
+          // Tageskopien älter als 30 Tage löschen
+          const grenze = new Date(jetzt() - 30 * 864e5).toISOString().slice(0, 10), vor = dateiname(k) + '-';
+          for (const f of fs.readdirSync(path.join(daten, 'archiv'))) if (f.startsWith(vor) && f.slice(vor.length, vor.length + 10) < grenze) fs.rmSync(path.join(daten, 'archiv', f), { force: true });
+        }
       }
       const oe = oeffentlichSaeubern(b.oeffentlich);
       if (oe) { bestenliste[k] = Object.assign(oe, { zeit: jetzt() }); schreiben('bestenliste.json', bestenliste); }
@@ -191,6 +206,62 @@ function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
         .map(([schl, e]) => Object.assign({ name: konten[schl].name }, e, schl === k ? { ich: true } : {}))
         .sort((a, b) => b.xp - a.xp || b.level - a.level || a.name.localeCompare(b.name));
       return senden(res, 200, liste);
+    }
+    if (weg === '/konto/loeschen' && m === 'POST') {
+      const b = await koerper(req), konto = konten[k];
+      if (!PIN_RE.test(String(b.pin || '')) || !pinOk(konto, String(b.pin))) return senden(res, 401, { fehler: 'Die PIN stimmt nicht.' });
+      const vor = dateiname(k) + '-';
+      fs.rmSync(path.join(daten, standDatei), { force: true });
+      for (const f of fs.readdirSync(path.join(daten, 'archiv'))) if (f.startsWith(vor)) fs.rmSync(path.join(daten, 'archiv', f), { force: true });
+      Object.keys(sitzungen).forEach((h) => { if (sitzungen[h].schluessel === k) delete sitzungen[h]; });
+      Object.values(duelle).forEach((d) => { if (d.von === k || d.gegen === k) delete duelle[d.id]; });
+      delete bestenliste[k]; delete konten[k];
+      schreiben('konten.json', konten); schreiben('sitzungen.json', sitzungen); schreiben('bestenliste.json', bestenliste); schreiben('duelle.json', duelle);
+      res.setHeader('Set-Cookie', COOKIE + '=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
+      return senden(res, 200, {});
+    }
+    // ---------- Duelle ----------
+    const duellFuer = (d) => {   // Sicht eines Teilnehmers
+      const gegner = d.von === k ? d.gegen : d.von, mein = d.ergebnisse[k] || null, sein = d.ergebnisse[gegner] || null;
+      const abgelaufen = !d.abgelehnt && (!mein || !sein) && jetzt() - d.erstellt > DUELL_TAGE * 864e5;
+      let ausgang = null;
+      if (mein && sein) ausgang = mein.p > sein.p ? 'sieg' : mein.p < sein.p ? 'niederlage' : 'unentschieden';
+      return { id: d.id, spiel: d.spiel, seed: d.seed, erstellt: d.erstellt, vonMir: d.von === k, gegner: konten[gegner] ? konten[gegner].name : '?',
+        mein, sein, ausgang, abgelehnt: !!d.abgelehnt, abgelaufen };
+    };
+    const meineDuelle = () => Object.values(duelle).filter((d) => (d.von === k || d.gegen === k) && jetzt() - d.erstellt < 30 * 864e5);
+    if (weg === '/duell' && m === 'POST') {
+      const b = await koerper(req), gk = schluessel(String(b.gegen || '').trim());
+      if (!konten[gk] || gk === k) return senden(res, 400, { fehler: 'Diesen Spieler gibt es nicht.' });
+      const spiel = b.spiel ? String(b.spiel) : DUELL_SPIELE[crypto.randomInt(DUELL_SPIELE.length)];
+      if (!DUELL_SPIELE.includes(spiel)) return senden(res, 400, { fehler: 'Dieses Spiel geht nicht als Duell.' });
+      const offen = meineDuelle().filter((d) => d.von === k && !d.abgelehnt && Object.keys(d.ergebnisse).length < 2 && jetzt() - d.erstellt < DUELL_TAGE * 864e5);
+      if (offen.length >= DUELL_OFFEN_MAX) return senden(res, 429, { fehler: 'Du hast schon ' + DUELL_OFFEN_MAX + ' offene Duelle.' });
+      const d = { id: crypto.randomBytes(8).toString('hex'), von: k, gegen: gk, spiel, seed: 'duell-' + crypto.randomBytes(6).toString('hex'), erstellt: jetzt(), ergebnisse: {} };
+      // aufräumen: Duelle älter als 30 Tage
+      Object.values(duelle).forEach((x) => { if (jetzt() - x.erstellt > 30 * 864e5) delete duelle[x.id]; });
+      duelle[d.id] = d; schreiben('duelle.json', duelle);
+      return senden(res, 200, duellFuer(d));
+    }
+    if (weg === '/duelle' && m === 'GET') {
+      const liste = meineDuelle().sort((a, b) => b.erstellt - a.erstellt).slice(0, 50).map(duellFuer);
+      const bilanz = {};
+      meineDuelle().map(duellFuer).forEach((d) => {
+        if (!d.ausgang) return;
+        const z = (bilanz[d.gegner] = bilanz[d.gegner] || { s: 0, n: 0, u: 0 });
+        z[d.ausgang === 'sieg' ? 's' : d.ausgang === 'niederlage' ? 'n' : 'u']++;
+      });
+      return senden(res, 200, { duelle: liste, bilanz });
+    }
+    if ((weg === '/duell/ergebnis' || weg === '/duell/ablehnen') && m === 'POST') {
+      const b = await koerper(req), d = duelle[String(b.id || '')];
+      if (!d || (d.von !== k && d.gegen !== k)) return senden(res, 404, { fehler: 'Duell nicht gefunden.' });
+      if (weg === '/duell/ablehnen') { if (d.gegen === k && !d.ergebnisse[k]) { d.abgelehnt = true; schreiben('duelle.json', duelle); } return senden(res, 200, duellFuer(d)); }
+      if (d.abgelehnt) return senden(res, 409, { fehler: 'Dieses Duell wurde abgelehnt.' });
+      if (d.ergebnisse[k]) return senden(res, 409, Object.assign({ fehler: 'Du hast dieses Duell schon gespielt.' }, duellFuer(d)));
+      d.ergebnisse[k] = { p: zahl(b.p, 0, 1e7), m: zahl(b.m, 0, 1e7), z: jetzt() };
+      schreiben('duelle.json', duelle);
+      return senden(res, 200, duellFuer(d));
     }
     return senden(res, 404, { fehler: 'Unbekannt' });
   }

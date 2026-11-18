@@ -95,8 +95,8 @@ function skLevel(xp) {
   const von = skXpFuerLevel(L), bis = skXpFuerLevel(L + 1);
   return { level: L, von, bis, anteil: (xp - von) / (bis - von), titel: skTitel(L) };
 }
-const SK_TITEL = [[1, 'Frischling'], [3, 'Knobelfuchs'], [5, 'Spürnase'], [8, 'Querkopf'], [12, 'Laborratte'], [16, 'Wundertüte'], [20, 'Universalgenie']];
-const skTitel = (L) => SK_TITEL.filter(([l]) => L >= l).pop()[1];
+// Keine Ränge mehr („Frischling“ …) – neutral nur das Level
+const skTitel = (L) => 'Level ' + L;
 
 // ---------- Fähigkeiten ----------
 // Gewicht, mit dem ein Spiel in eine Fähigkeit eingeht
@@ -405,7 +405,7 @@ function skProfilZeichnen() {
   const erfolge = skErfolgeStand(D);
   const andere = (typeof profile === 'function' ? profile().liste : []).filter((p) => !pr || p.id !== pr.id);
   $('skInhalt').innerHTML = '<div class="sk-kopfkarte">' + (pr ? '<span class="sk-ava" style="background:' + pr.farbe + '">' + pr.avatar + '</span>' : '')
-    + '<div><b>' + (pr ? pr.name : 'Du') + '</b><span>Level ' + lv.level + ' · ' + lv.titel + (mit[0] && mit[0].wert >= 40 ? ' · ' + mit[0].titel : '') + '</span>'
+    + '<div><b>' + (pr ? pr.name : 'Du') + '</b><span>Level ' + lv.level + (mit[0] && mit[0].wert >= 40 ? ' · ' + mit[0].titel : '') + '</span>'
     + '<div class="sk-xpbalken"><i style="width:' + Math.round(lv.anteil * 100) + '%"></i></div><small>' + fmt(xp.gesamt) + ' XP · noch ' + fmt(lv.bis - xp.gesamt) + ' bis Level ' + (lv.level + 1) + '</small></div></div>'
     + '<section class="sk-block"><h2>Fähigkeitenprofil</h2>'
     + '<div class="sk-legende"><span style="--f:#f59e0b">' + (pr ? pr.name : 'Du') + ' heute</span>' + (skVergleich ? '<span style="--f:#38bdf8">' + skVergleich.avatar + ' ' + skVergleich.name + ' (Level ' + skVergleich.level + ')</span>' : frueher.some((s) => s.wert != null) ? '<span style="--f:rgba(255,255,255,.45)">vor 30 Tagen</span>' : '') + '</div>'
@@ -478,7 +478,7 @@ function skDashboard() {
   const exp = typeof labDieseWoche === 'function' ? labDieseWoche() : null;
   start.innerHTML = '<button type="button" class="sk-gruss" id="skGruss" aria-label="Dein Profil öffnen">'
     + '<span class="sk-level"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" class="sk-ring-bg"/><circle cx="22" cy="22" r="19" class="sk-ring" style="stroke-dasharray:' + (119.4 * lv.anteil).toFixed(1) + ' 119.4"/></svg><b>' + lv.level + '</b></span>'
-    + '<span class="sk-gruss-text"><small>' + skBegruessung() + (pr ? ', ' + pr.name : '') + '</small><b>' + lv.titel + '</b><span>' + fmt(xp.gesamt) + ' XP · Level ' + (lv.level + 1) + ' bei ' + fmt(lv.bis) + '</span></span>'
+    + '<span class="sk-gruss-text"><small>' + skBegruessung() + (pr ? ', ' + pr.name : '') + '</small><b>Level ' + lv.level + '</b><span>' + fmt(xp.gesamt) + ' XP · Level ' + (lv.level + 1) + ' bei ' + fmt(lv.bis) + '</span></span>'
     + skRadar([{ werte: D.skills.map((s) => s.wert), farbe: '#f59e0b' }], { klein: true }) + '</button>'
     + '<div class="sk-tag-kopf"><h2 class="hub-h"><span>📅</span> Heute <small>' + fertig + ' / 3' + (serie.serie ? ' · 🔥 ' + serie.serie : '') + '</small></h2><button type="button" class="sk-teilen" id="skTagTeilen" aria-label="Tagesergebnis teilen">📤</button></div>'
     + '<div class="sk-tageskarten">' + SK_SLOTS.map((s) => {

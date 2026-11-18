@@ -19,7 +19,7 @@ Spielstände, alte Stände zählen also sofort mit und werden nicht verändert.
 - **Fortschritt:** XP und Level werden aus dem Verlauf berechnet (nichts Neues zu speichern). Jede Runde 10 XP + bis zu 20 XP für
   Leistung × Schwierigkeit; pro Spiel und Tag zählen die ersten zwei Runden voll, dann 60 %, 35 %, 20 %, 10 %, danach nichts mehr.
   Tagesaufgabe 40 XP (+40 für alle drei), Experiment 40 XP (einmal je Experiment), Erfolge mit eigenen XP.
-  Level n braucht 50·(n−1)·(n+2) XP; Titel von „Frischling“ bis „Universalgenie“.
+  Level n braucht 50·(n−1)·(n+2) XP. Angezeigt wird nur das Level (keine Rang-Titel).
 - **12 spielübergreifende Erfolge**, darunter Meisterdetektiv, Absolutes Gehör?, Universalgenie und Experimentierfreudig. Sie
   nutzen die vorhandenen Stände: Krimi-Lösungen, Piranha-Sterne, Slowenisch-Stationen, Quiz-Abzeichen und Tierleben.
   Das Datum, an dem ein Erfolg erreicht wurde, wird gespeichert.

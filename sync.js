@@ -17,6 +17,9 @@
 // Bestenliste: Bei jedem Abgleich geht eine kleine öffentliche Zusammenfassung mit (Level, XP, Titel, Avatar, Serie,
 // Fähigkeitswerte) – nur wenn sie sich geändert hat. Im Dashboard zeigt „🌍 Bestenliste“ alle registrierten Spieler,
 // Antippen vergleicht die Fähigkeiten im Radar.
+//
+// Duelle: Aus der Bestenliste jemanden herausfordern → beide spielen dieselbe Runde (gleicher Seed, gleiche Stufe),
+// wann sie wollen. Das Ergebnis kommt über skNachSpiel (wie bei den Tagesaufgaben). Im Dashboard „⚔️ Duelle“.
 const SY_META = 'spielekiste-sync';   // bewusst ohne „walquiz.“ – wird selbst nicht synchronisiert und nicht gesichert
 const SY_SPAETER = 'spielekiste-konto-spaeter';
 const SY_API = new URL('api/', location.href).href;
@@ -130,7 +133,7 @@ function syOeffentlich() {
     const D = skDaten(), xp = skXP(D.E, D.tagesSt, D.expSt, D.erfolgSt).gesamt, lv = skLevel(xp);
     const pr = typeof aktivesProfil === 'function' ? aktivesProfil() : null;
     const z = typeof zusammenfassung === 'function' && typeof datenVon === 'function' && pr ? zusammenfassung(datenVon(pr.id)) : {};
-    return { xp, level: lv.level, titel: lv.titel, avatar: pr ? pr.avatar : '🙂', farbe: pr ? pr.farbe : '#64748b',
+    return { xp, level: lv.level, titel: '', avatar: pr ? pr.avatar : '🙂', farbe: pr ? pr.farbe : '#64748b',
       skills: D.skills.map((x) => (x.wert == null ? -1 : x.wert)), serie: skTagesSerie(D.tagesSt).serie || 0,
       abzeichen: z.abzeichen || 0, gelernt: z.gelernt || 0, runden: D.E.length, spiele: syMeistgespielt(D.E) };
   } catch (e) { return null; }
@@ -192,7 +195,7 @@ function sySpielerZeigen(e, platz) {
   const fae = syFaehigkeiten(e), spiele = e.spiele || [], maxN = Math.max(1, ...spiele.map((x) => x.n));
   const d = skDialog('<h3>' + syEsc(e.avatar) + ' ' + syEsc(e.name) + (e.ich ? ' (du)' : '') + '</h3>'
     + '<ul class="ft-check"><li><b>Platz</b><span>' + (platz + 1) + '. von ' + syListe.length + '</span></li>'
-    + '<li><b>Level</b><span>' + e.level + ' · ' + syEsc(e.titel) + '</span></li>'
+    + '<li><b>Level</b><span>' + e.level + '</span></li>'
     + '<li><b>Erfahrung</b><span>' + (typeof fmt === 'function' ? fmt(e.xp) : e.xp) + ' XP · ' + e.runden + ' Runden</span></li>'
     + (e.serie ? '<li><b>Serie</b><span>🔥 ' + e.serie + ' Tage</span></li>' : '')
     + (e.abzeichen ? '<li><b>Abzeichen</b><span>🏅 ' + e.abzeichen + '</span></li>' : '')
@@ -201,7 +204,8 @@ function sySpielerZeigen(e, platz) {
     + (fae.length ? fae.map((x) => zeile(x.f.emoji + ' ' + x.f.kurz, x.w, x.w, '#f59e0b')).join('') : '<p class="ft-klein">Noch zu wenig gespielt.</p>')
     + '<h4 style="margin:14px 0 4px">Spielt am meisten</h4>'
     + (spiele.length ? spiele.map((x) => zeile(sySpiel(x.s).emoji + ' ' + syEsc(sySpiel(x.s).name), Math.round((x.n / maxN) * 100), x.n + '×', sySpiel(x.s).farbe || '#38bdf8')).join('') : '<p class="ft-klein">Noch nichts gespielt.</p>')
-    + (e.ich ? '' : '<button type="button" class="btn" id="syVgl">📊 Mit mir vergleichen</button>'));
+    + (e.ich ? '' : syBilanzText(e.name) + '<button type="button" class="btn" id="syDuell">⚔️ Zum Duell herausfordern</button><button type="button" class="btn secondary" id="syVgl">📊 Mit mir vergleichen</button>'));
+  if (d.querySelector('#syDuell')) d.querySelector('#syDuell').addEventListener('click', () => syDuellWahl(e.name));
   if (d.querySelector('#syVgl')) d.querySelector('#syVgl').addEventListener('click', () => {
     d.close();
     if (typeof skProfilZeigen !== 'function') return;
@@ -209,6 +213,135 @@ function sySpielerZeigen(e, platz) {
     skVergleich = { name: e.name, avatar: e.avatar, level: e.level, werte: (e.skills || []).map((v) => (v < 0 ? null : v)) };
     skProfilZeichnen();
   });
+}
+
+// ---------- Duelle ----------
+// Spiele, die dieselbe Runde für beide erzeugen können (gleicher Seed). Stufe/Modus fest, damit beide gleich spielen.
+const SY_DUELL_SPIELE = {
+  farben: { start: () => farbenStart, opts: { stufe: 'mittel', art: 'merken', werkzeug: 'rgb' }, stand: () => fs },
+  toene: { start: () => toeneStart, opts: { stufe: 'mittel' }, stand: () => ts },
+  augen: { start: () => augenStart, opts: { stufe: 'mittel', modus: 'ziehen' }, stand: () => ag },
+  takt: { start: () => taktStart, opts: { stufe: 'mittel', modus: 'mix' }, stand: () => tk },
+  funktion: { start: () => funktionStart, opts: { stufe: 'mittel', modus: 'mix' }, stand: () => fd },
+  karte: { start: () => karteStart, opts: { stufe: 'mittel', modus: 'mix' }, stand: () => kt },
+  punkte: { start: () => punkteStart, opts: { stufe: 'mittel', modus: 'mix' }, stand: () => pw },
+  riff: { start: () => riffStart, opts: {}, stand: () => rf },
+  tiefgang: { start: () => tiefgangStart, opts: { stufe: 'mittel' }, stand: () => tg },
+};
+const SY_DUELL_AKTIV = 'spielekiste-duell', SY_DUELL_GESEHEN = 'spielekiste-duelle-gesehen';
+let syDuelle = [], syBilanz = {}, syDuelleZeit = 0;
+const syDuellName = (spiel) => { const sp = typeof SK_SPIELE !== 'undefined' && SK_SPIELE[spiel]; return sp ? sp.emoji + ' ' + sp.name : spiel; };
+function syBilanzText(name) {
+  const b = syBilanz[name];
+  if (!b) return '<p class="ft-klein">Noch kein Duell gegeneinander.</p>';
+  return '<p class="ft-klein">⚔️ Duell-Bilanz: <b>' + b.s + ' : ' + b.n + '</b>' + (b.u ? ' (' + b.u + '× unentschieden)' : '') + '</p>';
+}
+// Spiel für ein neues Duell wählen
+function syDuellWahl(gegner) {
+  const d = skDialog('<h3>⚔️ Duell gegen ' + syEsc(gegner) + '</h3><p>Welches Spiel? Ihr bekommt beide <b>genau dieselbe Runde</b>. Du spielst gleich los, dann ist ' + syEsc(gegner) + ' dran.</p>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px">'
+    + '<button type="button" class="btn" data-dspiel="" style="grid-column:1/-1">🎲 Zufall</button>'
+    + Object.keys(SY_DUELL_SPIELE).map((sp) => '<button type="button" class="btn secondary" data-dspiel="' + sp + '" style="margin:0">' + syDuellName(sp) + '</button>').join('')
+    + '</div><p class="ft-klein" id="syMeldung" role="status"></p>');
+  d.querySelectorAll('[data-dspiel]').forEach((b) => b.addEventListener('click', async () => {
+    const m = d.querySelector('#syMeldung'); m.textContent = 'Duell wird angelegt …';
+    const r = await syApi('duell', 'POST', { gegen: gegner, spiel: b.dataset.dspiel || undefined }).catch(() => ({ status: 0 }));
+    if (r.status !== 200) { m.textContent = '⚠️ ' + ((r.json && r.json.fehler) || 'Keine Verbindung zum Server.'); return; }
+    d.close(); syDuelle.unshift(r.json); syDuellStarten(r.json);
+  }));
+}
+// Runde eines Duells starten: Spiel öffnen, dann mit dem Seed des Duells starten
+function syDuellStarten(du) {
+  const cfg = SY_DUELL_SPIELE[du.spiel], sp = typeof SK_SPIELE !== 'undefined' && SK_SPIELE[du.spiel];
+  if (!cfg || !sp) return;
+  sessionStorage.setItem(SY_DUELL_AKTIV, JSON.stringify({ id: du.id, spiel: du.spiel, seed: du.seed, gegner: du.gegner }));
+  if (sp.ton && typeof audio === 'function') audio();   // Ton muss im Klick entsperrt werden
+  const dlg = document.getElementById('skDlg'); if (dlg && dlg.open) dlg.close();
+  document.getElementById(sp.hub).click();
+  const opts = Object.assign({}, cfg.opts, { seed: du.seed, taeglich: false });
+  if (du.sein) opts.gegner = Object.assign({ name: du.gegner, punkte: du.sein.p, seed: du.seed }, cfg.opts);
+  const bis = Date.now() + 5000;
+  const warte = () => {
+    const b = sp.tag && document.getElementById(sp.tag);
+    let fn = null; try { fn = cfg.start(); } catch (e) { /* Spiel noch nicht geladen */ }
+    if ((!b || !b.offsetParent || typeof fn !== 'function') && Date.now() < bis) { setTimeout(warte, 80); return; }
+    if (typeof fn === 'function') fn(opts);
+    syHinweis('⚔️ Duell gegen ' + du.gegner + (du.sein ? ' – Ziel: ' + du.sein.p + ' Punkte' : ' – dein Ergebnis zählt'));
+  };
+  setTimeout(warte, 120);
+}
+// Nach jeder Runde: gehört sie zum laufenden Duell? (gleiches Spiel und gleicher Seed)
+async function syDuellErgebnis(spiel, punkte, max) {
+  let a = null; try { a = JSON.parse(sessionStorage.getItem(SY_DUELL_AKTIV) || 'null'); } catch (e) { /* kaputt */ }
+  if (!a || a.spiel !== spiel) return;
+  let seed = null; try { seed = SY_DUELL_SPIELE[spiel].stand().seed; } catch (e) { /* egal */ }
+  if (seed !== a.seed) return;
+  sessionStorage.removeItem(SY_DUELL_AKTIV);
+  const r = await syApi('duell/ergebnis', 'POST', { id: a.id, p: punkte, m: max }).catch(() => ({ status: 0 }));
+  if (r.status !== 200) { syHinweis('⚠️ Duell-Ergebnis konnte nicht gespeichert werden'); return; }
+  const du = r.json;
+  syGesehenSetzen(du);
+  setTimeout(() => syHinweis(du.ausgang ? syAusgangText(du) : 'Ergebnis gespeichert – jetzt ist ' + du.gegner + ' dran'), 1600);
+  syDuelleLaden(true);
+}
+const syAusgangText = (du) => ({ sieg: '🏆 Gewonnen', niederlage: '😅 Verloren', unentschieden: '🤝 Unentschieden' }[du.ausgang]) + ' gegen ' + du.gegner + ' – ' + du.mein.p + ' : ' + du.sein.p;
+try {
+  if (typeof skNachSpiel === 'function') {
+    const vorher = skNachSpiel;
+    skNachSpiel = function (spiel, punkte, max) { try { syDuellErgebnis(spiel, punkte, max); } catch (e) { /* Duell darf das Spiel nie stören */ } return vorher.apply(this, arguments); };
+  }
+} catch (e) { /* ohne Duelle weiter */ }
+
+const syDuellZustand = (du) => (du.abgelehnt ? 'abgelehnt' : du.ausgang ? 'fertig' : du.abgelaufen ? 'abgelaufen' : !du.mein ? 'du' : 'warte');
+function syGesehenSetzen(du) { const g = syGesehen(); g[du.id] = syDuellZustand(du); try { localStorage.setItem(SY_DUELL_GESEHEN, JSON.stringify(g)); } catch (e) { /* voll */ } }
+function syGesehen() { try { return JSON.parse(localStorage.getItem(SY_DUELL_GESEHEN) || '{}'); } catch (e) { return {}; } }
+async function syDuelleLaden(sofort) {
+  if (syZustand !== 'ok') { const b = document.getElementById('syDuelle'); if (b) b.remove(); return; }
+  if (!sofort && Date.now() - syDuelleZeit < 60e3) return;
+  let r; try { r = await syApi('duelle'); } catch (e) { return; }
+  if (r.status !== 200 || !r.json) return;
+  syDuelle = r.json.duelle || []; syBilanz = r.json.bilanz || {}; syDuelleZeit = Date.now();
+  // Neuigkeiten melden (beim allerersten Laden nur merken, nicht alles auf einmal melden)
+  const erstmals = !localStorage.getItem(SY_DUELL_GESEHEN), g = syGesehen(), meldungen = [];
+  syDuelle.forEach((du) => {
+    const z = syDuellZustand(du);
+    if (!erstmals && g[du.id] !== z) {
+      if (z === 'du' && !du.vonMir) meldungen.push('⚔️ ' + du.gegner + ' fordert dich heraus: ' + syDuellName(du.spiel));
+      if (z === 'fertig') meldungen.push(syAusgangText(du));
+      if (z === 'abgelehnt' && du.vonMir) meldungen.push(du.gegner + ' hat dein Duell abgelehnt');
+    }
+    g[du.id] = z;
+  });
+  try { localStorage.setItem(SY_DUELL_GESEHEN, JSON.stringify(g)); } catch (e) { /* voll */ }
+  meldungen.slice(0, 3).forEach((t, i) => setTimeout(() => syHinweis(t), 400 + i * 4200));
+  syDuelleZeigen();
+}
+function syDuelleZeigen() {
+  const spalte = document.querySelector('#screen-hub .spalte-b');
+  if (!spalte || syZustand !== 'ok') return;
+  let box = document.getElementById('syDuelle');
+  if (!box) {
+    box = document.createElement('div'); box.id = 'syDuelle'; box.className = 'sk-unten';
+    const liste = document.getElementById('syBestenliste');
+    spalte.insertBefore(box, liste || document.getElementById('hubFamilie') || null);
+  }
+  const offen = syDuelle.filter((du) => syDuellZustand(du) === 'du');
+  const warte = syDuelle.filter((du) => syDuellZustand(du) === 'warte');
+  const fertig = syDuelle.filter((du) => ['fertig', 'abgelehnt', 'abgelaufen'].includes(syDuellZustand(du))).slice(0, 5);
+  if (!syDuelle.length) { box.innerHTML = '<h2 class="hub-h"><span>⚔️</span> Duelle</h2><p class="sk-fein">Tippe in der Bestenliste auf jemanden und fordere ihn heraus.</p>'; return; }
+  const zeile = (du, rechts, knoepfe) => '<div class="sk-letzt"><span>' + syDuellName(du.spiel).split(' ')[0] + '</span><div><b>' + rechts.titel + '</b><small>' + rechts.unten + '</small></div>' + (knoepfe || '') + '</div>';
+  box.innerHTML = '<h2 class="hub-h"><span>⚔️</span> Duelle' + (offen.length ? ' <small>' + offen.length + ' für dich</small>' : '') + '</h2><div class="sk-letzte">'
+    + offen.map((du) => zeile(du, { titel: du.vonMir ? 'Duell gegen ' + syEsc(du.gegner) : syEsc(du.gegner) + ' fordert dich heraus', unten: syDuellName(du.spiel) + (du.sein ? ' · Ziel: ' + du.sein.p : '') },
+      '<button type="button" class="btn" data-dlos="' + du.id + '" style="margin:0;padding:6px 12px;width:auto">Spielen</button>' + (du.vonMir ? '' : '<button type="button" data-dweg="' + du.id + '" aria-label="Ablehnen" title="Ablehnen">✕</button>'))).join('')
+    + warte.map((du) => zeile(du, { titel: 'Warte auf ' + syEsc(du.gegner), unten: syDuellName(du.spiel) + ' · du: ' + du.mein.p })).join('')
+    + fertig.map((du) => zeile(du, { titel: du.ausgang ? syEsc(syAusgangText(du)) : du.abgelehnt ? syEsc(du.gegner) + ' hat abgelehnt' : 'Abgelaufen – ' + syEsc(du.gegner), unten: syDuellName(du.spiel) })).join('')
+    + '</div>';
+  box.querySelectorAll('[data-dlos]').forEach((b) => b.addEventListener('click', () => syDuellStarten(syDuelle.find((x) => x.id === b.dataset.dlos))));
+  box.querySelectorAll('[data-dweg]').forEach((b) => b.addEventListener('click', async () => {
+    if (!confirm('Dieses Duell ablehnen?')) return;
+    const r = await syApi('duell/ablehnen', 'POST', { id: b.dataset.dweg }).catch(() => null);
+    if (r && r.status === 200) { syGesehenSetzen(r.json); syDuelleLaden(true); }
+  }));
 }
 
 // ---------- ☁️-Knopf ----------
@@ -272,19 +405,28 @@ function syKontoDialog() {
     + '<ul class="ft-check"><li><b>Spielstand</b><span>auf allen Geräten gleich ✓</span></li><li><b>Zuletzt abgeglichen</b><span>' + (m.zuletzt ? syZeit(m.zuletzt) : '–') + '</span></li></ul>'
     + '<p class="ft-klein">Auf einem anderen Gerät einfach die Seite öffnen und mit demselben Namen und derselben PIN anmelden.</p>'
     + '<button type="button" class="btn secondary" id="syJetzt">🔄 Jetzt abgleichen</button>'
-    + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>');
+    + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>'
+    + '<button type="button" class="btn secondary" id="syLoeschen" style="opacity:.75">🗑️ Konto löschen</button>');
+  d.querySelector('#syLoeschen').addEventListener('click', async () => {
+    const pin = prompt('Konto „' + syName + '“ endgültig löschen?\n\nDein Spielstand, deine Einträge in Bestenliste und Duellen werden vom Server gelöscht. Auf diesem Gerät bleibt dein Spielstand.\n\nZur Bestätigung deine PIN eingeben:');
+    if (!pin) return;
+    const r = await syApi('konto/loeschen', 'POST', { pin: pin.trim() }).catch(() => ({ status: 0 }));
+    if (r.status !== 200) { alert((r.json && r.json.fehler) || 'Hat nicht geklappt.'); return; }
+    localStorage.removeItem(SY_META); localStorage.setItem(SY_SPAETER, '1');
+    syZustand = 'abgemeldet'; syName = ''; d.close(); syKnopf(); syBestenliste(); syDuelleLaden(); syHinweis('Konto gelöscht');
+  });
   d.querySelector('#syJetzt').addEventListener('click', async () => { d.close(); await syAbgleich({ ladenErlaubt: true }); syHinweis('Abgeglichen ✓'); });
   d.querySelector('#syAbmelden').addEventListener('click', async () => {
     await syAbgleich();   // letzten Stand noch sichern
     try { await syApi('abmelden', 'POST', {}); } catch (e) { /* offline – Cookie bleibt dann eben */ }
-    syZustand = 'abgemeldet'; syName = ''; localStorage.setItem(SY_SPAETER, '1'); d.close(); syKnopf(); syBestenliste(); syHinweis('Abgemeldet');
+    syZustand = 'abgemeldet'; syName = ''; localStorage.setItem(SY_SPAETER, '1'); d.close(); syKnopf(); syBestenliste(); syDuelleLaden(); syHinweis('Abgemeldet');
   });
 }
 
 function syHinweis(text) {
   const el = document.createElement('div');
   el.className = 'sync-hinweis';
-  el.textContent = '☁️ ' + text;
+  el.textContent = (/^\p{Extended_Pictographic}/u.test(text) ? '' : '☁️ ') + text;   // eigenes Symbol vorne? dann kein ☁️ davor
   el.style.cssText = 'position:fixed;left:50%;bottom:calc(16px + env(safe-area-inset-bottom));transform:translateX(-50%);z-index:99999;'
     + 'background:rgba(15,23,42,.92);color:#fff;padding:10px 16px;border-radius:999px;font:600 14px/1.3 system-ui,sans-serif;'
     + 'box-shadow:0 6px 24px rgba(0,0,0,.3);max-width:90vw;text-align:center;pointer-events:none;transition:opacity .4s';
@@ -296,10 +438,11 @@ function syHinweis(text) {
 // ---------- Start ----------
 async function syLaufen() {
   await syAbgleich({ alt: true, ladenErlaubt: true });
-  syBestenliste(true);
+  syBestenliste(true); syDuelleLaden(true);
+  if (typeof sbHinweis === 'function') sbHinweis();   // Sicherungs-Erinnerung ausblenden – der Server sichert
   if (syGestartet) return;
   syGestartet = true;
-  setInterval(() => { if (document.visibilityState === 'visible') { syAbgleich(); syBestenliste(false); } }, SY_TAKT);
+  setInterval(() => { if (document.visibilityState === 'visible') { syAbgleich(); syBestenliste(false); syDuelleLaden(false); } }, SY_TAKT);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') syAbgleich();
     else syAbgleich({ alt: true, ladenErlaubt: true });   // zurück in der App: Neues von anderen Geräten holen
