@@ -40,7 +40,7 @@ try {
   Move-Item $neuOrdner.FullName $spiel
   Copy-Item -Force (Join-Path $Basis 'spielstand-server.js') (Join-Path $Basis 'spielstand-server.vorher.js') -ErrorAction SilentlyContinue
   Copy-Item -Force "$spiel\werkzeuge\homeserver\spielstand-server.js" $Basis
-  foreach ($f in 'aktualisieren.ps1', 'aktualisieren.bat', 'einrichten.ps1', 'einrichten.bat') { Copy-Item -Force "$spiel\werkzeuge\homeserver\windows\$f" $Basis -ErrorAction SilentlyContinue }
+  foreach ($f in 'aktualisieren.ps1', 'aktualisieren.bat', 'einrichten.ps1', 'einrichten.bat', 'CLAUDE.md') { Copy-Item -Force "$spiel\werkzeuge\homeserver\windows\$f" $Basis -ErrorAction SilentlyContinue }
 
   if ($aufgabe) {
     Start-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Konto-Server'
