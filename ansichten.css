@@ -1,0 +1,169 @@
+/* ===================================================================
+   Ansichten: Hochformat (Standard) · Querformat am Handy · Tablet/Desktop
+   Die Seiten sind in .spalten > .spalte-a / .spalte-b aufgeteilt.
+   Im Hochformat sind diese Hüllen unsichtbar (display: contents) – alles bleibt untereinander.
+   Im Querformat stehen die beiden Hälften nebeneinander.
+   =================================================================== */
+.spalten, .spalte { display: contents; }
+/* Hinweis aufs Opfer: im Hochformat über dem Grundriss, im Querformat oben rechts */
+#krimiOpfer { order: -1; }
+
+/* ---------- Querformat (Handy quer, Tablet, Desktop) ---------- */
+@media (orientation: landscape) and (min-width: 700px) {
+  .app { max-width: 1180px; padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+  .spalten { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px 32px; align-items: start; }
+  .spalte { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+  .farb-buehne > *, .cello-buehne > *, .ton-buehne > *, .sr-buehne > *, .takt-buehne > *, .pw-buehne > *, .fd-buehne > *, .zf-buehne > *, .zl-buehne > *, .tl-buehne > *, .pr-buehne > *, .slo-buehne > *, .sk-buehne > *, .dp-buehne > *, .lab-buehne > *, .ag-buehne > *, .kt-buehne > *, .vl-buehne > *, .tg-buehne > *, .rf-buehne > *, .krimi-buehne > *, .kl-buehne > *, .ft-buehne > * { max-width: 1100px; }
+  .farb-buehne, .cello-buehne, .ton-buehne, .takt-buehne, .pw-buehne, .fd-buehne, .zf-buehne, .zl-buehne, .tl-buehne, .pr-buehne, .slo-buehne, .sk-buehne, .dp-buehne, .lab-buehne, .ag-buehne, .kt-buehne, .vl-buehne, .tg-buehne, .rf-buehne, .krimi-buehne, .kl-buehne, .ft-buehne { padding-left: max(16px, env(safe-area-inset-left)); padding-right: max(16px, env(safe-area-inset-right)); }
+
+  /* Dashboard: links die Games, rechts die Bestenliste */
+  .hub-spalten .spalte-b .hub-h:first-child { margin-top: 0; }
+  .hub-spalten .hub-quizzes { margin-top: 0; }
+  .hub-spalten .hub-game { margin-top: 0; }
+  .hub-spalten .spalte-b { gap: 10px; }
+  .hub-spalten .hub-mehr { margin: 6px 0 0; }
+  /* Breit: Games über die ganze Breite als Kachel-Raster, Bestenliste darunter */
+  .hub-spalten { grid-template-columns: minmax(0, 1fr); }
+  .hub-spalten .hub-liste { grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 14px; }
+  .hub-spalten .hub-liste > .hub-game { height: 100%; }
+  .hub-spalten .spalte-b { align-items: center; }
+  .hub-spalten .hub-familie { width: 100%; max-width: 620px; }
+
+
+  /* Quiz-Auswahl: alle Welten in einer Reihe */
+  .hub-quiz { grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); }
+  .hub-card.hc-beide { grid-column: auto; min-height: 190px; }
+
+  /* Quiz-Startseite und Stufen */
+  .start-spalten .hero { padding-top: 4px; }
+  .start-spalten .menu { margin-top: 0; }
+  #pickList { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+
+  /* Quiz: Foto links (bleibt stehen), Frage und Antworten rechts */
+  .quiz-spalten { grid-template-columns: minmax(0, 1.15fr) minmax(0, 1fr); }
+  .quiz-spalten .spalte-a { position: sticky; top: 8px; }
+  .quiz-spalten .gallery { aspect-ratio: auto; height: min(calc(100dvh - 150px), 62vw * 0.75); }
+  .quiz-spalten .q-row { margin-top: 0; }
+
+  /* Ergebnis und Lexikon */
+  .result-spalten .spalte-b .share { margin-top: 0; }
+  .lex { grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); align-items: start; }
+
+  /* Farb-Gedächtnis */
+  #farb-intro .spalte-a { justify-content: center; min-height: 60dvh; }
+  #farb-mischen .farb-vorschau { height: calc(100dvh - 110px); max-height: 520px; }
+  #farb-mischen .spalte-b { justify-content: center; min-height: calc(100dvh - 110px); }
+  #farb-aufloesung .farb-vergleich { height: min(46dvh, 360px); }
+
+  /* Cello: Noten links, Griffbrett und Tasten rechts */
+  #cello-intro .spalte-a { justify-content: center; min-height: 60dvh; }
+  #cello-spiel .spalten { align-items: center; }
+  #cello-spiel.mit-griff .griff-svg { max-height: 62dvh; }
+  #cello-spiel.mit-griff .noten-svg { max-height: 34dvh; }
+
+  /* Ton-Gedächtnis */
+  #ton-intro .spalte-a, #ton-treffen .spalte-a { justify-content: center; min-height: 55dvh; }
+  #ton-treffen .spalte-b { justify-content: center; min-height: 55dvh; }
+
+  /* Takt-Gefühl */
+  #takt-intro .spalte-a { justify-content: center; min-height: 55dvh; }
+  #takt-spiel.takt-mitte { grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); align-items: center; min-height: calc(100dvh - 90px); max-width: 1000px; }
+  #taktMerk { grid-column: 1 / -1; }
+
+  /* Punktwolke */
+  #pw-intro .spalte-a { justify-content: center; min-height: 55dvh; }
+  .pw-spiel-spalten { align-items: center; }
+  .pw-gross { max-width: min(100%, calc(100dvh - 130px)); }
+  .pw-spiel-spalten:has(.pw-raster) { grid-template-columns: minmax(0, 1fr); }
+  .pw-raster, .pw-raster.drei { grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: min(100%, calc((100dvh - 200px) * 4)); }
+  .pw-raster.drei { grid-template-columns: repeat(3, minmax(0, 1fr)); max-width: min(100%, calc((100dvh - 200px) * 3)); }
+  .pw-spiel-spalten:has(.pw-raster) .pw-aktion { grid-template-columns: 1fr 1fr; max-width: 700px; margin: 0 auto; width: 100%; }
+  .pw-spiel-spalten:has(.pw-raster) .pw-pfeil { grid-column: 1 / -1; }
+
+  /* Augenmaß und Karten-Gefühl */
+  #fd-intro .spalte-a, #zf-intro .spalte-a { justify-content: center; min-height: 55dvh; }
+  .fd-spiel-spalten { align-items: center; }
+  .fd-gross { max-width: min(100%, calc(100dvh - 130px)); }
+  .fd-spiel-spalten:has(.fd-raster) { grid-template-columns: minmax(0, 1fr); }
+  .fd-raster { grid-template-columns: repeat(4, minmax(0, 1fr)); max-width: min(100%, calc((100dvh - 220px) * 4)); }
+  #ag-intro .spalte-a, #kt-intro .spalte-a { justify-content: center; min-height: 55dvh; }
+  .ag-spalten { align-items: center; }
+  .ag-flaeche { max-width: min(100%, calc(100dvh - 120px)); }
+  #ag-aufloesung .ag-flaeche.klein { max-width: min(100%, calc(100dvh - 260px)); }
+  #kt-spiel { grid-template-columns: minmax(0, 1fr) 260px; grid-template-areas: "frage frage" "karte knoepfe"; align-items: center; max-width: 1100px; }
+  #ktFrage { grid-area: frage; } #ktKarte { grid-area: karte; } .kt-knoepfe { grid-area: knoepfe; }
+  .kt-karte.spiel, .kt-karte.spiel.kt-deutschland { height: calc(100dvh - 120px); }
+
+  /* Riffbau */
+  .rf-brett { max-width: min(100%, calc(100dvh - 150px)); }
+
+  /* Krimi */
+  .krimi-teil > .spalten { gap: 14px 28px; }
+  #krimi-intro .villa-szene { margin: 0; border-radius: 18px; }
+  #krimi-intro .spalte-b .km-h { margin-top: 4px; }
+  #krimi-spiel .spalte-a, #krimi-wachen .spalte-a, #krimi-alibi .spalte-a { position: sticky; top: 0; }
+  .krimi-brett, .wachen-brett { max-width: min(100%, calc(100dvh - 120px), 560px); }
+  #krimi-verhoer .spalten { grid-template-columns: minmax(0, 0.8fr) minmax(0, 1.2fr); }
+  #krimi-verhoer .vh-raum { position: sticky; top: 0; }
+  #krimi-ende .spalte-b { align-self: center; }
+  #krimi-ende .krimi-endbrett { max-width: min(100%, 300px); }
+  .akte-spalten .spalte-a { position: sticky; top: 0; }
+  .akte-spalten .akte-deckblatt { margin-top: 18px; }
+  #krimi-setup .spalte-b { justify-content: center; min-height: 50dvh; }
+  .kh-blatt { max-width: 640px; }
+}
+
+/* ---------- Handy quer: wenig Höhe – alles kompakter ---------- */
+@media (orientation: landscape) and (max-height: 520px) {
+  header { margin-bottom: 6px; }
+  .icon-btn { width: 38px; height: 38px; }
+  .buehne { height: 210px; }
+  .hub-titel { font-size: 2.6rem; margin-bottom: 8px; }
+  .hub-quizzes { min-height: 150px; padding: 14px 16px; }
+  .hq-stapel .w-av { width: 54px; height: 54px; }
+  .hq-titel { font-size: 2rem; }
+  .hub-game { padding: 10px 14px; }
+  .hg-av > .hg-in { width: 52px; height: 52px; }
+  .hg-titel { font-size: 1.2rem; }
+  .hub-card { min-height: 160px; }
+  .hero .logo { width: 60px; height: 60px; }
+  .hero h2 { font-size: 1.4rem; margin: 4px 0; }
+  .menu-btn { padding-top: 10px; padding-bottom: 10px; }
+  .quiz-spalten .gallery { height: calc(100dvh - 110px); }
+  .choices { gap: 8px; }
+  .choice { padding-top: 10px; padding-bottom: 10px; }
+  .farb-buehne, .cello-buehne, .ton-buehne, .takt-buehne, .pw-buehne, .fd-buehne, .zf-buehne, .zl-buehne, .tl-buehne, .pr-buehne, .slo-buehne, .sk-buehne, .lab-buehne, .ag-buehne, .kt-buehne, .vl-buehne, .tg-buehne, .rf-buehne, .krimi-buehne, .kl-buehne, .ft-buehne { padding-top: calc(env(safe-area-inset-top) + 6px); }
+  .farb-kopf { margin-bottom: 4px; }
+  .farb-logo { height: 46px; }
+  #farb-mischen .farb-vorschau { height: calc(100dvh - 80px); }
+  #farb-mischen .spalte-b { min-height: calc(100dvh - 80px); }
+  .ton-titel, .takt-titel { font-size: 2rem; }
+  .takt-logo .metronom { height: 56px; }
+  .tk-uhr, .tk-pad { width: min(52dvh, 220px); }
+  .tk-lautsprecher { width: min(40dvh, 160px); }
+  .takt-logo { height: 60px; }
+  .ton-logo i { height: 46px; }
+  .krimi-titel { font-size: 2.6rem; }
+  .krimi-brett, .wachen-brett { max-width: min(100%, calc(100dvh - 118px)); }
+  .krimi-sterne { font-size: 0.75rem; }
+  .ks-stern { width: 16px; height: 16px; }
+  .vh-raum { padding-top: 10px; }
+  .vh-lampe { display: none; }
+  .ks-titel { font-size: 2rem; }
+  .ks-bild { width: 60px; height: 60px; }
+  .krimi-taeter-fig { width: 110px; height: 110px; }
+  .krimi-orden i { width: 64px; height: 64px; }
+  .kh-blatt { padding: 12px 16px; }
+}
+
+/* ---------- Großer Bildschirm (Desktop, Tablet quer) ---------- */
+@media (min-width: 1000px) and (min-height: 600px) {
+  .hub-quiz { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+  .vh-karten { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .hub-titel { font-size: 5rem; }
+  #pickList { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+}
+
+/* Vollbild-Knopf */
+.vollbild-btn { border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--text); font: inherit; font-size: 1.05rem; width: 40px; height: 40px; cursor: pointer; flex: none; }
+.hub-knoepfe { display: flex; align-items: center; gap: 8px; min-width: 0; }

@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<!-- Offline-Garantie: Diese Seite darf keinerlei Netzverbindung aufbauen (keine Skripte, Bilder, Schriften, Anfragen von außen). -->
+<meta http-equiv="Content-Security-Policy" content="default-src 'none'; script-src 'unsafe-inline'; style-src 'unsafe-inline'; img-src data:; connect-src 'none'; form-action 'none'; base-uri 'none'">
+<meta name="referrer" content="no-referrer">
+<title>Text zu Kalender</title>
+<style>
+  :root { --bg: #0b1220; --karte: #121b2e; --rand: #24324d; --text: #e8eefc; --grau: #93a3c3; --akzent: #60a5fa; --gruen: #4ade80; --rot: #f87171; }
+  @media (prefers-color-scheme: light) { :root { --bg: #f4f6fb; --karte: #fff; --rand: #d7deec; --text: #0f172a; --grau: #5b6b8a; --akzent: #2563eb; --gruen: #16a34a; --rot: #dc2626; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.45 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; padding: max(16px, env(safe-area-inset-top)) 16px max(24px, env(safe-area-inset-bottom)); }
+  main { max-width: 640px; margin: 0 auto; display: grid; gap: 14px; }
+  h1 { margin: 4px 0 0; font-size: 1.6rem; } .unter { margin: 0; color: var(--grau); font-size: .9rem; }
+  .schloss { display: inline-flex; gap: 6px; align-items: center; padding: 4px 10px; border-radius: 999px; background: color-mix(in srgb, var(--gruen) 15%, transparent); color: var(--gruen); font-size: .8rem; font-weight: 600; }
+  textarea { width: 100%; min-height: 150px; padding: 12px; border-radius: 12px; border: 1px solid var(--rand); background: var(--karte); color: var(--text); font: inherit; resize: vertical; }
+  button { font: inherit; font-weight: 600; border: 0; border-radius: 12px; padding: 12px 16px; cursor: pointer; }
+  .haupt { background: var(--akzent); color: #fff; } .zweit { background: var(--karte); color: var(--text); border: 1px solid var(--rand); }
+  .knoepfe { display: flex; flex-wrap: wrap; gap: 8px; } .knoepfe button { flex: 1 1 140px; }
+  .termin { background: var(--karte); border: 1px solid var(--rand); border-radius: 14px; padding: 12px; display: grid; gap: 8px; }
+  .termin.fehler { border-color: var(--rot); }
+  .zeile { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  label { display: grid; gap: 3px; font-size: .78rem; color: var(--grau); }
+  input, select { width: 100%; min-width: 0; padding: 9px 10px; border-radius: 10px; border: 1px solid var(--rand); background: var(--bg); color: var(--text); font: inherit; font-size: .95rem; }
+  .kopf { display: flex; justify-content: space-between; align-items: center; gap: 8px; font-size: .85rem; color: var(--grau); }
+  .kopf button { padding: 6px 10px; font-size: .8rem; background: transparent; color: var(--rot); }
+  .ganztag { display: flex; align-items: center; gap: 8px; font-size: .9rem; color: var(--text); } .ganztag input { width: auto; }
+  .hinweis { font-size: .82rem; color: var(--grau); } .warn { color: var(--rot); font-size: .82rem; }
+  details { font-size: .88rem; color: var(--grau); } details li { margin: 3px 0; } code { background: var(--karte); padding: 1px 5px; border-radius: 6px; }
+  #meldung { min-height: 1.2em; font-size: .9rem; color: var(--gruen); }
+</style>
+</head>
+<body>
+<main>
+  <div>
+    <h1>📅 Text zu Kalender</h1>
+    <p class="unter">Termine einfach hinschreiben – daraus wird eine <b>.ics</b>-Datei für jeden Kalender.</p>
+  </div>
+  <span class="schloss">🔒 Läuft komplett offline – nichts verlässt dein Gerät</span>
+
+  <textarea id="eingabe" placeholder="Ein Termin pro Zeile, z. B.:
+Zahnarzt morgen um 14:30 in der Hauptstraße 5
+Teammeeting 12.11. 9–10:30 Uhr @ Raum 2
+Mama Geburtstag 3. Dezember
+Joggen nächsten Samstag 8 Uhr für 45 Minuten"></textarea>
+  <div class="knoepfe">
+    <button class="haupt" id="erkennen" type="button">Termine erkennen</button>
+    <button class="zweit" id="leeren" type="button">Leeren</button>
+  </div>
+
+  <div id="liste"></div>
+
+  <div class="knoepfe" id="aktionen" hidden>
+    <button class="haupt" id="laden" type="button">⬇︎ .ics speichern</button>
+    <button class="zweit" id="kopieren" type="button">📋 ICS-Text kopieren</button>
+    <button class="zweit" id="neu" type="button">＋ Termin</button>
+  </div>
+  <div id="meldung" role="status"></div>
+
+  <details>
+    <summary>Was versteht die Seite?</summary>
+    <ul>
+      <li><b>Datum:</b> <code>heute</code>, <code>morgen</code>, <code>übermorgen</code>, <code>Montag</code> … <code>Sonntag</code>, <code>nächsten Freitag</code>, <code>12.11.</code>, <code>12.11.2026</code>, <code>12.11.26</code>, <code>2026-11-12</code>, <code>12. November</code>, <code>in 3 Tagen</code></li>
+      <li><b>Uhrzeit:</b> <code>14:30</code>, <code>14.30 Uhr</code>, <code>14 Uhr</code>, <code>um 9</code>, Spannen wie <code>9–10:30</code>, <code>von 9 bis 11 Uhr</code></li>
+      <li><b>Dauer:</b> <code>für 2 Stunden</code>, <code>1,5 h</code>, <code>45 Minuten</code> – sonst 1 Stunde. Ohne Uhrzeit wird es ein ganztägiger Termin.</li>
+      <li><b>Ort:</b> <code>in …</code>, <code>im …</code>, <code>bei …</code>, <code>@ …</code> oder <code>Ort: …</code> (am Ende der Zeile)</li>
+      <li><b>Erinnerung:</b> <code>Erinnerung 30 min</code> oder <code>Erinnerung 1 Tag</code></li>
+      <li>Alles lässt sich vor dem Speichern noch von Hand korrigieren. Zeitzone: Europe/Berlin.</li>
+    </ul>
+  </details>
+  <p class="hinweis">iPhone: Nach „.ics speichern“ öffnet Safari die Datei – dort „Alle hinzufügen“ tippen. Die Seite speichert nichts und sendet nichts.</p>
+</main>
+
+<script>
+'use strict';
+// ---------------- Erkennen ----------------
+const MONATE = { januar: 1, jan: 1, jänner: 1, februar: 2, feb: 2, märz: 3, maerz: 3, mär: 3, mrz: 3, april: 4, apr: 4, mai: 5, juni: 6, jun: 6, juli: 7, jul: 7, august: 8, aug: 8, september: 9, sep: 9, sept: 9, oktober: 10, okt: 10, november: 11, nov: 11, dezember: 12, dez: 12 };
+const TAGE = { sonntag: 0, montag: 1, dienstag: 2, mittwoch: 3, donnerstag: 4, freitag: 5, samstag: 6, sonnabend: 6, 'so.': 0, 'mo.': 1, 'di.': 2, 'mi.': 3, 'do.': 4, 'fr.': 5, 'sa.': 6 };   // Kürzel nur mit Punkt (sonst trifft „so“ normale Wörter)
+const pad = (n) => String(n).padStart(2, '0');
+const datumStr = (d) => d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate());
+function heuteMitternacht(jetzt) { const d = new Date(jetzt); d.setHours(0, 0, 0, 0); return d; }
+function plusTage(d, n) { const x = new Date(d); x.setDate(x.getDate() + n); return x; }
+function gueltig(j, m, t) { const d = new Date(j, m - 1, t); return d.getFullYear() === j && d.getMonth() === m - 1 && d.getDate() === t ? d : null; }
+
+function erkenne(zeile, jetzt = new Date()) {
+  let rest = ' ' + zeile.replace(/\s+/g, ' ').trim() + ' ';
+  const heute = heuteMitternacht(jetzt);
+  const nimm = (re) => { const m = rest.match(re); if (m) rest = rest.replace(m[0], ' '); return m; };
+  let datum = null, start = null, ende = null, dauer = null, ort = '', erinnerung = null, m;
+
+  // Erinnerung
+  if ((m = nimm(/\s(?:mit\s)?erinnerung(?:\s*:)?\s*(\d+)\s*(min(?:uten?)?|m|std\.?|stunden?|h|tage?n?|d)\b(?:\s*vorher)?/i))) {
+    const n = +m[1], e = m[2].toLowerCase(); erinnerung = e.startsWith('t') || e === 'd' ? n * 1440 : e.startsWith('s') || e === 'h' ? n * 60 : n;
+  }
+  // Ort (am Ende): "Ort: X", "@ X", " in X", " im X", " bei X"
+  if ((m = nimm(/\s(?:ort\s*:\s*|@\s*)(.+?)\s*$/i))) ort = m[1].trim();
+
+  // Datum – ISO
+  if (!datum && (m = nimm(/\s(\d{4})-(\d{1,2})-(\d{1,2})\b/))) datum = gueltig(+m[1], +m[2], +m[3]);
+  // Datum – 12.11.2026 / 12.11.26 / 12.11.
+  if (!datum && (m = nimm(/\s(?:am\s)?(\d{1,2})\.(\d{1,2})\.(\d{2,4})?(?=[\s,]|$)/i))) {
+    let j = m[3] ? +m[3] : heute.getFullYear(); if (j < 100) j += 2000;
+    datum = gueltig(j, +m[2], +m[1]);
+    if (datum && !m[3] && datum < heute) datum = gueltig(j + 1, +m[2], +m[1]);   // ohne Jahr: nächstes Vorkommen
+  }
+  // Datum – 12. November (2026)
+  if (!datum && (m = nimm(new RegExp('\\s(?:am\\s)?(\\d{1,2})\\.?\\s(' + Object.keys(MONATE).join('|') + ')\\.?(?:\\s(\\d{4}))?(?=[\\s,]|$)', 'i')))) {
+    let j = m[3] ? +m[3] : heute.getFullYear(); const mo = MONATE[m[2].toLowerCase()];
+    datum = gueltig(j, mo, +m[1]); if (datum && !m[3] && datum < heute) datum = gueltig(j + 1, mo, +m[1]);
+  }
+  // relativ
+  if (!datum && (m = nimm(/\s(heute|morgen|übermorgen|uebermorgen)(?=[\s,]|$)/i))) datum = plusTage(heute, { heute: 0, morgen: 1 }[m[1].toLowerCase()] ?? 2);
+  if (!datum && (m = nimm(/\sin\s(\d+)\s(tagen?|wochen?)(?=[\s,]|$)/i))) datum = plusTage(heute, +m[1] * (m[2].toLowerCase().startsWith('w') ? 7 : 1));
+  if (!datum && (m = nimm(new RegExp('\\s(?:am\\s)?(nächste[nm]?\\s|naechste[nm]?\\s|kommende[nm]?\\s)?(' + Object.keys(TAGE).map((k) => k.replace('.', '\\.')).join('|') + ')(?=[\\s,]|$)', 'i')))) {
+    const ziel = TAGE[m[2].toLowerCase()]; let n = (ziel - heute.getDay() + 7) % 7;
+    if (n === 0 || m[1]) n = n === 0 ? 7 : n;   // „Montag“ am Montag = nächste Woche
+    datum = plusTage(heute, n);
+  }
+
+  // Uhrzeit-Spanne: "von 9 bis 11 Uhr", "9–10:30", "14:00-15:00 Uhr"
+  const Z = '(\\d{1,2})(?:[:.](\\d{2}))?';
+  if ((m = nimm(new RegExp('\\s(?:von\\s)?' + Z + '\\s?(?:uhr\\s?)?(?:-|–|—|bis)\\s?' + Z + '(?:\\s?uhr)?(?=[\\s,]|$)', 'i')))) {
+    start = [+m[1], +(m[2] || 0)]; ende = [+m[3], +(m[4] || 0)];
+  } else if ((m = nimm(new RegExp('\\s(?:um|ab|gegen)\\s' + Z + '(?:\\s?uhr)?(?=[\\s,]|$)', 'i'))) || (m = nimm(new RegExp('\\s' + Z + '\\s?uhr(?=[\\s,]|$)', 'i'))) || (m = nimm(/\s(\d{1,2})[:](\d{2})(?=[\s,]|$)/))) {
+    start = [+m[1], +(m[2] || 0)];
+  }
+  if (start && (start[0] > 23 || start[1] > 59)) start = null;
+  if (ende && (ende[0] > 24 || ende[1] > 59)) ende = null;
+
+  // Dauer
+  if ((m = nimm(/\s(?:für\s|fuer\s|dauer\s*:?\s*)?(\d+(?:[.,]\d+)?)\s*(stunden?|std\.?|h|minuten?|min\.?)(?=[\s,]|$)/i))) {
+    const n = parseFloat(m[1].replace(',', '.')), e = m[2].toLowerCase(); dauer = Math.round(e.startsWith('m') ? n : n * 60);
+  }
+  // Ort mit Präposition am Ende (nach Datum/Zeit entfernt)
+  if (!ort && (m = nimm(/\s(?:in der|in den|im|in|bei|beim)\s([^,]+?)\s*$/i))) ort = m[1].trim();
+
+  let titel = rest.replace(/\s(am|um|ab|von|bis|uhr|für|fuer)(?=\s)/gi, ' ').replace(/[,;–-]\s*$/, '').replace(/^\s*[,;:–-]/, '').replace(/\s+/g, ' ').trim();
+  if (!titel) titel = 'Termin';
+  const t = { titel, ort, notiz: '', datum: datum ? datumStr(datum) : '', ganztag: !start, start: start ? pad(start[0]) + ':' + pad(start[1]) : '', ende: '', erinnerung };
+  if (start) {
+    let e = ende ? ende[0] * 60 + ende[1] : start[0] * 60 + start[1] + (dauer || 60);
+    if (ende && e <= start[0] * 60 + start[1]) e += 12 * 60;   // "8–2" → 14 Uhr
+    e = Math.min(e, 24 * 60 - 1);
+    t.ende = pad(Math.floor(e / 60)) + ':' + pad(e % 60);
+  }
+  return t;
+}
+
+// ---------------- ICS bauen ----------------
+const esc = (s) => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+function falten(zeile) {   // RFC 5545: max. 75 Oktette pro Zeile
+  const enc = new TextEncoder(); if (enc.encode(zeile).length <= 75) return zeile;
+  const teile = []; let akt = '';
+  for (const ch of zeile) { if (enc.encode(akt + ch).length > (teile.length ? 74 : 75)) { teile.push(akt); akt = ch; } else akt += ch; }
+  teile.push(akt); return teile.join('\r\n ');
+}
+const VTIMEZONE = ['BEGIN:VTIMEZONE', 'TZID:Europe/Berlin', 'BEGIN:DAYLIGHT', 'TZOFFSETFROM:+0100', 'TZOFFSETTO:+0200', 'TZNAME:CEST', 'DTSTART:19700329T020000', 'RRULE:FREQ=YEARLY;BYMONTH=3;BYDAY=-1SU', 'END:DAYLIGHT', 'BEGIN:STANDARD', 'TZOFFSETFROM:+0200', 'TZOFFSETTO:+0100', 'TZNAME:CET', 'DTSTART:19701025T030000', 'RRULE:FREQ=YEARLY;BYMONTH=10;BYDAY=-1SU', 'END:STANDARD', 'END:VTIMEZONE'];
+function uid() { const a = new Uint8Array(16); crypto.getRandomValues(a); return [...a].map((b) => b.toString(16).padStart(2, '0')).join('') + '@text-zu-ics.lokal'; }
+function zuIcs(termine, jetzt = new Date()) {
+  const stamp = jetzt.toISOString().replace(/[-:]/g, '').replace(/\.\d{3}/, '');
+  const z = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//Text zu Kalender//offline//DE', 'CALSCALE:GREGORIAN', 'METHOD:PUBLISH', ...VTIMEZONE];
+  for (const t of termine) {
+    const d = t.datum.replace(/-/g, '');
+    z.push('BEGIN:VEVENT', 'UID:' + uid(), 'DTSTAMP:' + stamp, 'SUMMARY:' + esc(t.titel));
+    if (t.ganztag) {
+      const naechster = datumStr(plusTage(new Date(t.datum + 'T00:00:00'), 1)).replace(/-/g, '');
+      z.push('DTSTART;VALUE=DATE:' + d, 'DTEND;VALUE=DATE:' + naechster);
+    } else {
+      z.push('DTSTART;TZID=Europe/Berlin:' + d + 'T' + t.start.replace(':', '') + '00', 'DTEND;TZID=Europe/Berlin:' + d + 'T' + t.ende.replace(':', '') + '00');
+    }
+    if (t.ort) z.push('LOCATION:' + esc(t.ort));
+    if (t.notiz) z.push('DESCRIPTION:' + esc(t.notiz));
+    if (t.erinnerung) z.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + esc(t.titel), 'TRIGGER:-PT' + t.erinnerung + 'M', 'END:VALARM');
+    z.push('END:VEVENT');
+  }
+  z.push('END:VCALENDAR');
+  return z.map(falten).join('\r\n') + '\r\n';
+}
+
+// ---------------- Oberfläche ----------------
+let termine = [];
+const $ = (id) => document.getElementById(id);
+const h = (s) => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+function pruefe(t) { if (!t.titel.trim()) return 'Titel fehlt'; if (!t.datum) return 'Datum nicht erkannt – bitte eintragen'; if (!t.ganztag && (!t.start || !t.ende)) return 'Uhrzeit fehlt'; if (!t.ganztag && t.ende <= t.start) return 'Ende liegt vor dem Beginn'; return ''; }
+function zeichnen() {
+  $('liste').innerHTML = termine.map((t, i) => {
+    const f = pruefe(t);
+    return '<div class="termin' + (f ? ' fehler' : '') + '" data-i="' + i + '"><div class="kopf"><span>Termin ' + (i + 1) + '</span><button type="button" data-weg="' + i + '">Entfernen</button></div>'
+      + '<label>Titel<input data-f="titel" value="' + h(t.titel) + '"></label>'
+      + '<div class="zeile"><label>Datum<input type="date" data-f="datum" value="' + h(t.datum) + '"></label><label class="ganztag"><input type="checkbox" data-f="ganztag"' + (t.ganztag ? ' checked' : '') + '> ganztägig</label></div>'
+      + (t.ganztag ? '' : '<div class="zeile"><label>Beginn<input type="time" data-f="start" value="' + h(t.start) + '"></label><label>Ende<input type="time" data-f="ende" value="' + h(t.ende) + '"></label></div>')
+      + '<label>Ort<input data-f="ort" value="' + h(t.ort) + '"></label>'
+      + '<div class="zeile"><label>Notiz<input data-f="notiz" value="' + h(t.notiz) + '"></label><label>Erinnerung<select data-f="erinnerung">' + [[0, 'keine'], [10, '10 Min. vorher'], [30, '30 Min. vorher'], [60, '1 Std. vorher'], [1440, '1 Tag vorher']].concat(t.erinnerung && ![10, 30, 60, 1440].includes(t.erinnerung) ? [[t.erinnerung, t.erinnerung + ' Min. vorher']] : []).map(([v, n]) => '<option value="' + v + '"' + ((t.erinnerung || 0) === v ? ' selected' : '') + '>' + n + '</option>').join('') + '</select></label></div>'
+      + (f ? '<div class="warn">⚠️ ' + f + '</div>' : '') + '</div>';
+  }).join('');
+  $('aktionen').hidden = !termine.length;
+}
+$('liste').addEventListener('input', (e) => {
+  const feld = e.target.dataset.f, box = e.target.closest('[data-i]'); if (!feld || !box) return;
+  const t = termine[+box.dataset.i];
+  if (feld === 'ganztag') { t.ganztag = e.target.checked; if (!t.ganztag && !t.start) { t.start = '09:00'; t.ende = '10:00'; } zeichnen(); return; }
+  t[feld] = feld === 'erinnerung' ? +e.target.value || null : e.target.value;
+  const w = box.querySelector('.warn'), f = pruefe(t); box.classList.toggle('fehler', !!f);
+  if (w && !f) w.remove(); else if (f) { if (w) w.textContent = '⚠️ ' + f; else box.insertAdjacentHTML('beforeend', '<div class="warn">⚠️ ' + f + '</div>'); }
+});
+$('liste').addEventListener('click', (e) => { const b = e.target.closest('[data-weg]'); if (b) { termine.splice(+b.dataset.weg, 1); zeichnen(); } });
+$('erkennen').addEventListener('click', () => { termine = $('eingabe').value.split(/\n+/).map((z) => z.trim()).filter(Boolean).map((z) => erkenne(z)); zeichnen(); meldung(termine.length ? termine.length + ' Termin' + (termine.length === 1 ? '' : 'e') + ' erkannt – bitte kurz prüfen.' : 'Kein Text eingegeben.'); });
+$('leeren').addEventListener('click', () => { $('eingabe').value = ''; termine = []; zeichnen(); meldung(''); });
+$('neu').addEventListener('click', () => { termine.push({ titel: '', ort: '', notiz: '', datum: datumStr(new Date()), ganztag: false, start: '09:00', ende: '10:00', erinnerung: null }); zeichnen(); });
+function fertigeTermine() { const fehl = termine.map(pruefe).findIndex(Boolean); if (fehl >= 0) { meldung('Termin ' + (fehl + 1) + ': ' + pruefe(termine[fehl]), true); return null; } return termine; }
+$('laden').addEventListener('click', () => {
+  const t = fertigeTermine(); if (!t) return;
+  const blob = new Blob([zuIcs(t)], { type: 'text/calendar;charset=utf-8' }), url = URL.createObjectURL(blob), a = document.createElement('a');
+  a.href = url; a.download = (t.length === 1 ? t[0].titel.replace(/[^\wäöüÄÖÜß -]+/g, '').trim().slice(0, 40) || 'termin' : 'termine') + '.ics';
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(url), 4000);
+  meldung('✅ ' + t.length + ' Termin' + (t.length === 1 ? '' : 'e') + ' als .ics erstellt.');
+});
+$('kopieren').addEventListener('click', async () => {
+  const t = fertigeTermine(); if (!t) return;
+  try { await navigator.clipboard.writeText(zuIcs(t)); meldung('📋 ICS-Text kopiert.'); } catch (e) { meldung('Kopieren nicht möglich – bitte „.ics speichern“ nehmen.', true); }
+});
+function meldung(text, fehler) { const m = $('meldung'); m.textContent = text; m.style.color = fehler ? 'var(--rot)' : ''; }
+</script>
+</body>
+</html>

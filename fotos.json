@@ -1,0 +1,536 @@
+{
+ "_hinweis": "sperre: Dateinamen von Wikimedia-Commons-Fotos, die nie gezeigt werden. wahl: pro Art-ID fest gewählte Commons-Fotos (werden zuerst gezeigt). Pflege über die Meldungen (GitHub-Issues).",
+ "sperre": [
+  "Ambergris.jpg",
+  "Balaenoptera_acutorostrata_Saint-Laurent_01a.jpg",
+  "Centroscymnus_coelolepis_3.jpg",
+  "Greyreefsharksmall2.jpg",
+  "Indus_River_dolphin_skull_cast.jpg",
+  "Mesoplodon_grayi.jpg",
+  "Minke_whale_in_ross_sea.jpg",
+  "NeophocaenaPhocaenoides.JPG",
+  "Okapi2.jpg",
+  "Pygmy_sperm_whale_skeleton.jpg",
+  "Pygmy_sperm_whale_skull.jpg",
+  "Sperm_whale_fluke.jpg",
+  "Stamps_of_Indonesia,_040-05.jpg",
+  "Statue_of_\"Vaquita_Marina\"_in_San_Juan_de_Aragón.jpg",
+  "Vaquita3_Olson_NOAA.jpg",
+  "Yellow.tang.arp.jpg"
+ ],
+ "wahl": {
+  "balaenoptera-musculus": [
+   "Anim1754_-_Flickr_-_NOAA_Photo_Library.jpg"
+  ],
+  "balaenoptera-physalus": [
+   "Finhval_(1).jpg"
+  ],
+  "balaenoptera-borealis": [
+   "Sei_whale_mother_and_calf_Christin_Khan_NOAA.jpg"
+  ],
+  "balaenoptera-brydei": [
+   "Balaenoptera_brydei.jpg"
+  ],
+  "balaenoptera-ricei": [
+   "Rices-whale-Aug2024-NOAA-SEFSC-Ocean-Alliance-Permit-21938.png"
+  ],
+  "balaenoptera-omurai": [
+   "Balaenoptera_omurai,_Madagascar_-_Royal_Society_Open_Science_1.jpg"
+  ],
+  "balaenoptera-acutorostrata": [
+   "SBNMS_-_Minke_Whale_-_Breach_(28670557361).jpg"
+  ],
+  "balaenoptera-bonaerensis": [
+   "Antarctic,_minky_whales_(js)_13.jpg",
+   "Balaenoptera_acutorostrata_Neko_Harbour_Antarctica.jpg"
+  ],
+  "megaptera-novaeangliae": [
+   "Humpback_whale_breaching_off_Cabo_San_Lucas.jpg"
+  ],
+  "eschrichtius-robustus": [
+   "Ballena_gris_adulta_con_su_ballenato.jpg"
+  ],
+  "balaena-mysticetus": [
+   "Bowhead_Whale_NOAA.jpg"
+  ],
+  "eubalaena-glacialis": [
+   "GRNMS_-_Right_Whales_(31361234602).jpg"
+  ],
+  "eubalaena-japonica": [
+   "Eubalaena_japonica_drawing.jpg"
+  ],
+  "eubalaena-australis": [
+   "Southern_right_whale6.jpg"
+  ],
+  "caperea-marginata": [
+   "Pygmy_right_whale.png"
+  ],
+  "physeter-macrocephalus": [
+   "Mother_and_baby_sperm_whale.jpg"
+  ],
+  "kogia-breviceps": [
+   "Kogia_breviceps.jpg",
+   "Pygmy_sperm_whale.jpg"
+  ],
+  "kogia-sima": [
+   "Dwarf_sperm_whale_(NOAA_Pitman).jpg"
+  ],
+  "delphinapterus-leucas": [
+   "Oceanogràfic_29102004.jpg"
+  ],
+  "monodon-monoceros": [
+   "Нарвал_в_российской_Арктике.jpg"
+  ],
+  "ziphius-cavirostris": [
+   "Ziphius_carvirostris.jpg"
+  ],
+  "berardius-bairdii": [
+   "Berardius_bairdii_3.jpg"
+  ],
+  "berardius-arnuxii": [
+   "Berardius_arnuxii_2.jpg"
+  ],
+  "berardius-minimus": [
+   "Berardius_minimus_illustration.png"
+  ],
+  "hyperoodon-ampullatus": [
+   "Hyperoodon_ampullatus_jumping.jpg"
+  ],
+  "hyperoodon-planifrons": [
+   "Hyperoodon_planifrons.jpg"
+  ],
+  "tasmacetus-shepherdi": [
+   "Male_Shepherd's_beaked_Whale_(Tasmacetus_shepherdi).jpg"
+  ],
+  "indopacetus-pacificus": [
+   "Indopacetus_pacificus_2.jpg"
+  ],
+  "mesoplodon-bidens": [
+   "Mesoplodon_bidens_2.jpg"
+  ],
+  "mesoplodon-densirostris": [
+   "Mesoplodon_densirostris.jpg",
+   "Adult_Male_Blainville's_Beaked_Whale.jpg"
+  ],
+  "mesoplodon-europaeus": [
+   "Mesoplodon_europaeus_2.jpg"
+  ],
+  "mesoplodon-mirus": [
+   "The_True's_beaked_whale_photographed_underwater.jpg"
+  ],
+  "mesoplodon-eueu": [
+   "Mesoplodon_eueu.jpg",
+   "Zifio_de_Ramari_(Mesoplodon_eueu)_detalle_cabeza.jpg"
+  ],
+  "mesoplodon-grayi": [
+   "Mesoplodon_grayi_2.jpg",
+   "Beached_whale_(Mesoplodon_grayi)_at_Port_Waikato.jpg"
+  ],
+  "mesoplodon-hectori": [
+   "Mesoplodon_hectori.jpg",
+   "Male_Hector's_beaked_whale_(lateral_ventral_view).jpg"
+  ],
+  "mesoplodon-perrini": [
+   "Mesoplodon_perrini.jpg"
+  ],
+  "mesoplodon-peruvianus": [
+   "Mesoplodon_peruvianus.jpg"
+  ],
+  "mesoplodon-ginkgodens": [
+   "Mesoplodon_ginkgodens_2.jpg"
+  ],
+  "mesoplodon-carlhubbsi": [
+   "Mesoplodon_carlhubbsi.jpg"
+  ],
+  "mesoplodon-stejnegeri": [
+   "Mesoplodon_stejnegeri.jpg"
+  ],
+  "mesoplodon-bowdoini": [
+   "Mesoplodon_bowdoini.jpg"
+  ],
+  "mesoplodon-layardii": [
+   "Mesoplodon_layardii.jpg"
+  ],
+  "mesoplodon-traversii": [
+   "Mesoplodon_traversii_2.jpg",
+   "Spade-toothedWhale.jpg"
+  ],
+  "orcinus-orca": [
+   "Killerwhales_jumping.jpg"
+  ],
+  "pseudorca-crassidens": [
+   "Pseudoorca_Crassidens_-_False_Killer_Whale.jpg"
+  ],
+  "feresa-attenuata": [
+   "Pygmy_killer_whales_(Feresa_attenuata)_off_of_Guam_(anim252384854).jpg"
+  ],
+  "peponocephala-electra": [
+   "Peponocephala_electra_Mayotte.jpg"
+  ],
+  "globicephala-melas": [
+   "Pilot_Whale_-_Flickr_-_gailhampshire.jpg"
+  ],
+  "globicephala-macrorhynchus": [
+   "Globicephala_macrorhynchus_Kurzflossen-Grindwal_DSCF8148.JPG"
+  ],
+  "grampus-griseus": [
+   "Grampo.jpg"
+  ],
+  "tursiops-truncatus": [
+   "Tursiops_truncatus_01-cropped.jpg"
+  ],
+  "tursiops-aduncus": [
+   "Tursiops_aduncus,_Port_River,_Adelaide,_Australia_-_2003.jpg"
+  ],
+  "delphinus-delphis": [
+   "Common_dolphin_noaa.jpg"
+  ],
+  "stenella-coeruleoalba": [
+   "Stenella_coeruleoalba_Ligurian_Sea_02_-_brighter.jpg"
+  ],
+  "stenella-attenuata": [
+   "Stenellaattenuataporpoising.jpg",
+   "Schlankdelfin.jpg"
+  ],
+  "stenella-frontalis": [
+   "Atlantic_spotted_dolphin_(Stenella_frontalis)_NOAA.jpg"
+  ],
+  "stenella-longirostris": [
+   "Gray's_spinner_dolphin_(Stenella_longirostris_longirostris)_Panglao_(cropped).jpg"
+  ],
+  "stenella-clymene": [
+   "Clymenes.jpg"
+  ],
+  "steno-bredanensis": [
+   "Steno_bredanensis_LB_1.jpg"
+  ],
+  "lagenodelphis-hosei": [
+   "Frazer´s_dolphin_group.jpg"
+  ],
+  "lagenorhynchus-albirostris": [
+   "White-beaked_dolphins_(Lagenorhynchus_albirostris)_bow-riding_Eyjafjordur.jpg"
+  ],
+  "leucopleurus-acutus": [
+   "Atlantic_white-sided_dolphin.jpg"
+  ],
+  "sagmatias-obliquidens": [
+   "Pacific_white-sided_dolphins_(Lagenorhynchus_obliquidens)_NOAA.jpg"
+  ],
+  "sagmatias-obscurus": [
+   "DuskyDolphin.jpg"
+  ],
+  "sagmatias-australis": [
+   "Peale's_dolphin_(Sagmatias_australis)_off_the_coast_of_Calbuco,_Chile_(380921709).jpg"
+  ],
+  "sagmatias-cruciger": [
+   "Hourglas_dolphin.jpg"
+  ],
+  "lissodelphis-borealis": [
+   "Anim1749_-_Flickr_-_NOAA_Photo_Library.jpg"
+  ],
+  "lissodelphis-peronii": [
+   "Lissodelphis_peronii_1847.jpg"
+  ],
+  "cephalorhynchus-commersonii": [
+   "Cephalorhynchus_commersonii_265492864.jpg"
+  ],
+  "cephalorhynchus-eutropia": [
+   "Cephalorhynchus_eutropia_406715652.jpg"
+  ],
+  "cephalorhynchus-heavisidii": [
+   "Dolphins_at_Lüderitz,_Namibia_(3144863196).jpg"
+  ],
+  "cephalorhynchus-hectori": [
+   "Hector's_Dolphins_at_Porpoise_Bay_1999_a_cropped.jpg"
+  ],
+  "orcaella-brevirostris": [
+   "Irrawaddy_dolphin-Orcaella_brevirostris_by_2eight.jpg"
+  ],
+  "orcaella-heinsohni": [
+   "Snubfin-3.jpg"
+  ],
+  "sousa-chinensis": [
+   "Pink_Dolphin.JPG"
+  ],
+  "sousa-teuszii": [
+   "Sousa_teuszii1.jpg"
+  ],
+  "sousa-plumbea": [
+   "Dolphin-Musandam_2.jpg"
+  ],
+  "sousa-sahulensis": [
+   "Australian_humpback_dolphins,_Tin_Can_Bay,_2016.jpg"
+  ],
+  "sotalia-fluviatilis": [
+   "Sotalia_fluviatilis_Amazon_River_Dolphin.jpg"
+  ],
+  "sotalia-guianensis": [
+   "Descrição_início_ou_comportamento.jpg"
+  ],
+  "inia-geoffrensis": [
+   "Amazonas-Flussdelfin_Orinoko3.jpg"
+  ],
+  "platanista-gangetica": [
+   "Ganges_River_Dolphin_cropped.jpg"
+  ],
+  "platanista-minor": [
+   "B-Platanista-gangetica-in-natural-habitat.png",
+   "Schnabeldelphin-drawing.jpg"
+  ],
+  "pontoporia-blainvillei": [
+   "Pontoporia_blainvillei_296896096.jpg"
+  ],
+  "phocoena-phocoena": [
+   "Ecomare_-_bruinvis_Michael_in_2015_(bruinvis-michael2015-9313-sw).jpg"
+  ],
+  "phocoena-sinus": [
+   "Vaquita6_Olson_NOAA.jpg",
+   "Vaquita_swimming_through_the_void._(Phocoena_Sinus).png"
+  ],
+  "phocoena-spinipinnis": [
+   "Burmeister's_porpoise_-_Phocoena_spinipinnis_-_2022-02-24.png"
+  ],
+  "phocoena-dioptrica": [
+   "Subadult_female_spectacled_porpoise.png",
+   "Stranded_male_spectacled_porpoise.jpg"
+  ],
+  "phocoenoides-dalli": [
+   "Phocoenoides_dalli_(Dall's_porpoise).jpg"
+  ],
+  "chlamydoselachus-anguineus": [
+   "Chlamydoselachus_anguineus1.jpg"
+  ],
+  "hexanchus-griseus": [
+   "Hexanchus_griseus.jpg"
+  ],
+  "notorynchus-cepedianus": [
+   "Notorynchus_cepedianus_SI4.jpg"
+  ],
+  "heptranchias-perlo": [
+   "Heptranchias_perlo.jpg"
+  ],
+  "squalus-acanthias": [
+   "Squalus_acanthias_stellwagen.jpg"
+  ],
+  "somniosus-microcephalus": [
+   "Somniosus_microcephalus_okeanos.jpg"
+  ],
+  "somniosus-pacificus": [
+   "Pacific_sleeper_shark.png",
+   "Pacific_sleeper_shark_(illustration).jpg"
+  ],
+  "isistius-brasiliensis": [
+   "Isistius_brasiliensis.jpg"
+  ],
+  "etmopterus-perryi": [
+   "Etmopterus_perryi_SI_cr.jpg"
+  ],
+  "dalatias-licha": [
+   "Dalatias_licha_csiro-nfc.jpg"
+  ],
+  "echinorhinus-brucus": [
+   "Echinorhinidae_-_Echinorhinus_brucus.JPG"
+  ],
+  "oxynotus-centrina": [
+   "Oxynotus_centrina_55827395.jpg"
+  ],
+  "centroscymnus-coelolepis": [
+   "Centroscymnus_coelolepis_norfanz.jpg",
+   "Portuguese_shark.jpg"
+  ],
+  "pristiophorus-cirratus": [
+   "Sketchbook_of_fishes_-_25._(Longnose)_Saw_shark_-_William_Buelow_Gould,_c1832.jpg"
+  ],
+  "pristiophorus-japonicus": [
+   "Pristiophorus_japonicus.jpg"
+  ],
+  "squatina-squatina": [
+   "Squatina_australis.jpg"
+  ],
+  "squatina-californica": [
+   "Squatina_californica.jpg"
+  ],
+  "squatina-dumeril": [
+   "Squatina_dumeril_nefsc.jpg"
+  ],
+  "squatina-japonica": [
+   "Squatina_japonica2.jpg"
+  ],
+  "heterodontus-portusjacksoni": [
+   "Heterodontus_portusjacksoni_wilsons_promontory.jpg"
+  ],
+  "heterodontus-francisci": [
+   "Hornhai_(Heterodontus_francisci).JPG"
+  ],
+  "heterodontus-zebra": [
+   "Heterodontus_zebra_csiro-nfc.jpg"
+  ],
+  "heterodontus-quoyi": [
+   "Cestracion_pantherinus.jpg"
+  ],
+  "rhincodon-typus": [
+   "Similan_Dive_Center_-_great_whale_shark.jpg"
+  ],
+  "ginglymostoma-cirratum": [
+   "Nurse_shark.jpg"
+  ],
+  "stegostoma-tigrinum": [
+   "Zebra_Shark_at_Sydney_Sea_Life_Aquarium.png"
+  ],
+  "orectolobus-maculatus": [
+   "Orectolobus_maculatus_cod_ground.jpg"
+  ],
+  "eucrossorhinus-dasypogon": [
+   "Tasselled_wobbegong_(Eucrossorhinus_dasypogon)_-_49929002423.jpg"
+  ],
+  "hemiscyllium-ocellatum": [
+   "Hemiscyllium_ocellatum_060417w1.jpg"
+  ],
+  "chiloscyllium-punctatum": [
+   "Brownbanded_Bambooshark_(5729957195).jpg"
+  ],
+  "nebrius-ferrugineus": [
+   "Ginglymostoma_cirratum_Maldives.JPG"
+  ],
+  "carcharodon-carcharias": [
+   "White_shark.jpg"
+  ],
+  "isurus-oxyrinchus": [
+   "Shortfin_mako_(Isurus_oxyrinchus).jpg"
+  ],
+  "isurus-paucus": [
+   "Longfin_mako_shark_(Isurus_paucus).jpg"
+  ],
+  "lamna-nasus": [
+   "Lamna_nasus_noaa.jpg"
+  ],
+  "lamna-ditropis": [
+   "Salmon_shark_(Lamna_ditropis).jpg"
+  ],
+  "cetorhinus-maximus": [
+   "Cetorhinus_maximus_by_greg_skomal.JPG"
+  ],
+  "megachasma-pelagios": [
+   "Megamouth_shark_Megachasma_pelagios.jpg"
+  ],
+  "alopias-vulpinus": [
+   "Alopias_vulpinus_noaa2.jpg"
+  ],
+  "alopias-pelagicus": [
+   "Pelagic_thresher_shark_(Alopias_pelagicus)_(cropped).jpg"
+  ],
+  "alopias-superciliosus": [
+   "Alopias_superciliosus.jpg"
+  ],
+  "carcharias-taurus": [
+   "Sand_tiger_shark_(Carcharias_taurus).jpg"
+  ],
+  "odontaspis-ferox": [
+   "Odontaspis_ferox_swim_in_an_aquarium.jpg"
+  ],
+  "mitsukurina-owstoni": [
+   "Goblin_shark_(Mitsukurina_owstoni).jpg"
+  ],
+  "pseudocarcharias-kamoharai": [
+   "Pseudocarcharias_kamoharai.jpg"
+  ],
+  "galeocerdo-cuvier": [
+   "Tiger_shark.jpg"
+  ],
+  "carcharhinus-leucas": [
+   "Bull_shark_(Carcharhinus_leucas).jpg"
+  ],
+  "prionace-glauca": [
+   "Tiburón_azul_(Prionace_glauca),_canal_Fayal-Pico,_islas_Azores,_Portugal,_2020-07-27,_DD_31.jpg"
+  ],
+  "carcharhinus-longimanus": [
+   "Oceanic_Whitetip_Shark_(cropped).jpg"
+  ],
+  "carcharhinus-melanopterus": [
+   "Blacktip_reef_shark_(Carcharhinus_melanopterus)_Moorea.jpg"
+  ],
+  "triaenodon-obesus": [
+   "Carcharhinus_albimarginatus-shark.jpg"
+  ],
+  "carcharhinus-amblyrhynchos": [
+   "Corl0207_(28225976491).jpg"
+  ],
+  "carcharhinus-falciformis": [
+   "Carcharhinus_falciformis_off_Cuba.jpg"
+  ],
+  "carcharhinus-limbatus": [
+   "Carcharhinus_limbatus_(2).jpg"
+  ],
+  "carcharhinus-plumbeus": [
+   "Carcharhinus_plumbeus_georgia.jpg"
+  ],
+  "carcharhinus-perezi": [
+   "Caribbean_reef_sharks2.jpg"
+  ],
+  "carcharhinus-galapagensis": [
+   "Carcharinus_galapagensis_1.jpg"
+  ],
+  "carcharhinus-obscurus": [
+   "Carcharhinus_obscurus_at_Seaworld.jpg"
+  ],
+  "carcharhinus-brachyurus": [
+   "Bronze_whaler_auckland.jpg"
+  ],
+  "carcharhinus-brevipinna": [
+   "Carcharhinus_brevipinna_JNC3080_Body.JPG"
+  ],
+  "negaprion-brevirostris": [
+   "Lemonshark.JPG"
+  ],
+  "sphyrna-mokarran": [
+   "Great_hammerhead2.jpg"
+  ],
+  "sphyrna-lewini": [
+   "Scalloped_hammerhead_shark_(Sphyrna_lewini)_Costa_Rica_(cropped).jpg"
+  ],
+  "sphyrna-zygaena": [
+   "Sphyrna_zygaena_noaa.jpg"
+  ],
+  "sphyrna-tiburo": [
+   "Sphyrna_tiburo_SI.jpg"
+  ],
+  "eusphyra-blochii": [
+   "Eusphyra_blochii_csiro-nfc.jpg"
+  ],
+  "scyliorhinus-canicula": [
+   "Scyliorhinus_canicula.jpg"
+  ],
+  "scyliorhinus-stellaris": [
+   "Katzenhai-01.jpg"
+  ],
+  "cephaloscyllium-ventriosum": [
+   "Swell_Shark,_San_Clemente_Island,_California.jpg"
+  ],
+  "poroderma-africanum": [
+   "Poroderma_africanum.jpg"
+  ],
+  "galeorhinus-galeus": [
+   "Galeorhinus_galeus_SI3.jpg"
+  ],
+  "mustelus-mustelus": [
+   "Mustelus_mustelus1.jpg"
+  ],
+  "triakis-semifasciata": [
+   "Leopard_shark_in_kelp.jpg"
+  ],
+  "galeus-melastomus": [
+   "Galeus_melastomus_Sardinia.jpg"
+  ],
+  "rhizoprionodon-terraenovae": [
+   "Rhizoprionodon_terraenovae_nmfs.jpg",
+   "Rhizoprionodon_terraenovae_SI2.jpg"
+  ],
+  "glyphis-gangeticus": [
+   "Naturalis_Biodiversity_Center_-_RMNH.ART.45_-_Carcharhinus_gangeticus_(Müller_and_Henle)_-_Kawahara_Keiga_-_1823_-_1829_-_Siebold_Collection_-_pencil_drawing_-_water_colour.jpeg"
+  ],
+  "pseudotriakis-microdon": [
+   "Pseudotriakis_microdon_1.jpg"
+  ]
+ },
+ "_geprueft": "Titelbilder aller 170 Wal- und Haiarten am 2.11.2026 einzeln angesehen; Ersatz für Karten, Briefmarken, Skelette und unscharfe Fotos von Hand gewählt."
+}

@@ -1,0 +1,1311 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>NVL Hypertonie · Fallsimulator</title>
+<meta name="theme-color" content="#f5f7fb">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-64.png?v=1" type="image/png">
+<link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png?v=1">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/750x1334.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2) and (orientation: portrait)" href="icons/splash/828x1792.png">
+<link rel="apple-touch-startup-image" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1125x2436.png">
+<link rel="apple-touch-startup-image" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1242x2688.png">
+<link rel="apple-touch-startup-image" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1170x2532.png">
+<link rel="apple-touch-startup-image" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1284x2778.png">
+<link rel="apple-touch-startup-image" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1179x2556.png">
+<link rel="apple-touch-startup-image" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1290x2796.png">
+<link rel="apple-touch-startup-image" media="(device-width: 402px) and (device-height: 874px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1206x2622.png">
+<link rel="apple-touch-startup-image" media="(device-width: 440px) and (device-height: 956px) and (-webkit-device-pixel-ratio: 3) and (orientation: portrait)" href="icons/splash/1320x2868.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="NVL Hypertonie">
+<meta name="application-name" content="NVL Hypertonie">
+<meta name="format-detection" content="telephone=no">
+<meta name="description" content="Interaktives Schulungstool zur Nationalen VersorgungsLeitlinie Hypertonie: Fälle Schritt für Schritt durchspielen.">
+<style>
+:root{
+  --bg:#f5f7fb; --surface:#fff; --surface-2:#f0f3f8; --line:#e3e8f0; --line-2:#d3dae6;
+  --text:#18212f; --text-2:#4a5568; --text-3:#7a8699;
+  --accent:#2557d6; --accent-2:#1d47b3; --accent-soft:#e9effc;
+  --ok:#14804a; --ok-soft:#e5f5ec; --warn:#b25e09; --warn-soft:#fdf1e2; --danger:#c62828; --danger-soft:#fdeaea;
+  --radius:14px; --radius-sm:10px;
+  --shadow:0 1px 2px rgba(16,24,40,.05),0 4px 16px rgba(16,24,40,.06);
+  --shadow-lg:0 12px 40px rgba(16,24,40,.16);
+  --p-screening:#5b6b8c; --p-diag:#2557d6; --p-confirm:#7b45c9; --p-therapy:#14804a; --p-monitoring:#0b7f86; --p-special:#b25e09;
+  font-synthesis:none;
+}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html,body{margin:0}
+body{-webkit-tap-highlight-color:transparent;font:15px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+button,input{font:inherit;color:inherit}
+button{cursor:pointer}
+a{color:var(--accent)}
+:focus-visible{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px;border-radius:8px}
+.sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+kbd{font:600 11px/1 ui-monospace,SFMono-Regular,Menlo,monospace;border:1px solid var(--line-2);border-bottom-width:2px;border-radius:5px;padding:2px 5px;color:var(--text-3);background:#fff}
+
+/* ---------- Topbar ---------- */
+.topbar{position:sticky;top:0;z-index:30;display:flex;align-items:center;gap:12px;padding:calc(10px + env(safe-area-inset-top)) calc(20px + env(safe-area-inset-right)) 10px calc(20px + env(safe-area-inset-left));background:rgba(245,247,251,.86);backdrop-filter:saturate(1.6) blur(12px);border-bottom:1px solid var(--line)}
+.brand{display:flex;align-items:center;gap:10px;min-width:0;flex:1}
+#main:focus{outline:none}
+.brand-mark{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#2557d6,#7b45c9);display:grid;place-items:center;flex:none;box-shadow:0 4px 10px rgba(37,87,214,.3)}
+.brand-title{font-weight:700;letter-spacing:-.01em;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.brand-sub{font-size:12px;color:var(--text-3);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.topbar .spacer{flex:1}
+.btn{display:inline-flex;align-items:center;gap:8px;border:1px solid var(--line-2);background:var(--surface);border-radius:10px;padding:8px 13px;font-weight:550;font-size:14px;transition:background .15s,border-color .15s,box-shadow .15s}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn.primary:hover{background:var(--accent-2)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--surface-2)}
+.btn[disabled]{opacity:.45;cursor:not-allowed}
+.btn svg{width:17px;height:17px;flex:none}
+a.btn{text-decoration:none;color:inherit}
+.badge{min-width:20px;height:20px;padding:0 6px;border-radius:99px;background:var(--accent);color:#fff;font-size:12px;font-weight:700;display:inline-grid;place-items:center}
+.only-mobile{display:none}
+
+/* ---------- Disclaimer ---------- */
+.disclaimer{max-width:1440px;margin:16px auto 0;padding:0 20px}
+.disclaimer-box{display:flex;gap:14px;align-items:flex-start;background:var(--warn-soft);border:1px solid #f3d9b5;border-radius:var(--radius);padding:14px 16px;color:#5b3a10}
+.disclaimer-box p{margin:0 0 6px;font-size:14px}
+.disclaimer-box details{font-size:13px}
+.disclaimer-box summary{cursor:pointer;font-weight:600;color:#8a4b0a}
+.disclaimer-box .btn{white-space:nowrap;margin-left:auto}
+.disclaimer-box.install{background:var(--accent-soft);border-color:#cfdcf8;color:var(--text);align-items:center}
+.disclaimer-box.install p{margin:0}
+
+/* ---------- Layout ---------- */
+.layout{max-width:1440px;margin:0 auto;padding:20px;display:grid;grid-template-columns:270px minmax(0,1fr) 340px;gap:20px;align-items:start}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--radius);box-shadow:var(--shadow)}
+.sticky{position:sticky;top:76px;max-height:calc(100vh - 96px);overflow:auto;border-radius:var(--radius)}
+
+/* ---------- Pfad-Karte ---------- */
+.map{padding:14px 10px 10px}
+.map h2,.log h2{font-size:12px;text-transform:uppercase;letter-spacing:.08em;color:var(--text-3);margin:2px 8px 10px;font-weight:700}
+.phase{margin-bottom:6px}
+.phase-label{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:700;color:var(--text-2);padding:8px 8px 4px}
+.phase-dot{width:8px;height:8px;border-radius:50%;background:var(--pc)}
+.node{display:flex;align-items:center;gap:10px;width:100%;text-align:left;border:0;background:none;border-radius:9px;padding:7px 8px 7px 10px;font-size:14px;color:var(--text-2);position:relative}
+.node:hover{background:var(--surface-2);color:var(--text)}
+.node .ico{width:20px;height:20px;border-radius:50%;border:2px solid var(--line-2);flex:none;display:grid;place-items:center;background:#fff}
+.node .ico svg{width:12px;height:12px;opacity:0}
+.node.visited .ico{border-color:var(--pc);background:var(--pc)}
+.node.visited .ico svg{opacity:1;color:#fff}
+.node.current{background:color-mix(in srgb,var(--pc) 11%,#fff);color:var(--text);font-weight:650}
+.node.current .ico{border-color:var(--pc);background:#fff;box-shadow:0 0 0 4px color-mix(in srgb,var(--pc) 20%,transparent)}
+.node.current .ico::after{content:"";width:8px;height:8px;border-radius:50%;background:var(--pc)}
+.node.current .ico svg{display:none}
+.node.next::after{content:"möglich";margin-left:auto;font-size:11px;font-weight:600;color:var(--pc);background:color-mix(in srgb,var(--pc) 10%,#fff);border-radius:99px;padding:1px 8px}
+.map-legend{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--text-3);padding:10px 8px 2px;border-top:1px solid var(--line);margin-top:8px}
+.map-legend span{display:inline-flex;align-items:center;gap:5px}
+.map-legend i{width:10px;height:10px;border-radius:50%;display:inline-block;border:2px solid var(--line-2)}
+
+/* ---------- Hauptbereich ---------- */
+.main{min-width:0}
+.trail{display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin:0 0 14px;font-size:13px;color:var(--text-3)}
+.trail button{border:0;background:var(--surface);border:1px solid var(--line);border-radius:99px;padding:3px 10px;font-size:12.5px;color:var(--text-2)}
+.trail button:hover{border-color:var(--line-2);color:var(--text)}
+.trail .sep{color:var(--line-2)}
+.trail .now{font-weight:650;color:var(--text);background:var(--accent-soft);border-color:transparent}
+
+.step{padding:26px 28px 24px;position:relative;overflow:hidden;animation:stepIn .28s ease}
+@keyframes stepIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.step::before{content:"";position:absolute;inset:0 0 auto 0;height:4px;background:var(--pc)}
+.step-meta{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12px;font-weight:700;border-radius:99px;padding:3px 10px;background:color-mix(in srgb,var(--pc) 12%,#fff);color:var(--pc)}
+.ref{font-size:13px;color:var(--text-3)}
+.step h1{font-size:28px;line-height:1.2;letter-spacing:-.02em;margin:2px 0 6px}
+.lead{font-size:16px;color:var(--text-2);margin:0 0 18px;max-width:70ch}
+
+.facts{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:10px;margin:0 0 18px}
+.fact{border:1px solid var(--line);border-radius:var(--radius-sm);padding:12px 14px;background:var(--surface-2)}
+.fact .k{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text-3);margin-bottom:2px}
+.fact .v{font-size:15px}
+.fact.cut{background:color-mix(in srgb,var(--pc) 7%,#fff);border-color:color-mix(in srgb,var(--pc) 25%,#fff)}
+.fact.cut .v{font-size:22px;font-weight:750;letter-spacing:-.01em;color:var(--text)}
+.fact.cut .v small{font-size:13px;font-weight:600;color:var(--text-3)}
+
+.howto{margin:0 0 20px}
+.howto h3,.section-h{font-size:13px;font-weight:700;color:var(--text-2);margin:0 0 8px;text-transform:uppercase;letter-spacing:.05em}
+.howto ol{margin:0;padding:0;list-style:none;counter-reset:s;display:grid;gap:8px}
+.howto li{counter-increment:s;display:flex;gap:12px;align-items:flex-start;font-size:14.5px}
+.howto li::before{content:counter(s);flex:none;width:24px;height:24px;border-radius:50%;background:var(--accent-soft);color:var(--accent);font-weight:700;font-size:12.5px;display:grid;place-items:center;margin-top:1px}
+.howto ul{margin:0;padding:0;list-style:none;display:flex;flex-wrap:wrap;gap:8px}
+.howto ul li{border:1px solid var(--line);background:#fff;border-radius:99px;padding:5px 12px;font-size:14px}
+.howto ul li::before{display:none}
+
+/* Assistent-Kacheln */
+.tools{display:grid;gap:10px;margin:0 0 22px}
+.tool{display:flex;gap:14px;align-items:flex-start;border:1px dashed var(--line-2);border-radius:var(--radius);padding:14px 16px;background:#fbfcfe}
+.tool.done{border-style:solid;border-color:color-mix(in srgb,var(--ok) 35%,#fff);background:var(--ok-soft)}
+.tool-ico{width:38px;height:38px;border-radius:10px;flex:none;display:grid;place-items:center;background:var(--accent-soft);color:var(--accent)}
+.tool.done .tool-ico{background:#fff;color:var(--ok)}
+.tool-ico svg{width:20px;height:20px}
+.tool-body{flex:1;min-width:0}
+.tool-title{font-weight:650}
+.tool-desc{font-size:13.5px;color:var(--text-2)}
+.tool-result{margin-top:8px;font-size:13.5px;color:var(--text);display:grid;gap:4px}
+.tool-result b{font-weight:650}
+.tool .btn{flex:none;align-self:center}
+
+/* Entscheidungen */
+.decide{border-top:1px solid var(--line);padding-top:18px}
+.decide .section-h{display:flex;align-items:center;gap:10px}
+.decide .section-h span{font-weight:500;text-transform:none;letter-spacing:0;color:var(--text-3);font-size:12.5px}
+.choices{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:10px}
+.choice{display:flex;align-items:center;gap:12px;text-align:left;border:1.5px solid var(--line-2);background:#fff;border-radius:var(--radius);padding:14px 14px;transition:border-color .15s,box-shadow .15s,transform .05s}
+.choice:hover{border-color:var(--cc,var(--accent));box-shadow:0 0 0 4px color-mix(in srgb,var(--cc,var(--accent)) 12%,transparent)}
+.choice:active{transform:translateY(1px)}
+.choice .num{flex:none;width:26px;height:26px;border-radius:8px;background:var(--surface-2);display:grid;place-items:center;font-weight:700;font-size:13px;color:var(--text-3)}
+.choice .txt{flex:1;min-width:0}
+.choice .t{font-weight:650;display:block;font-size:15.5px}
+.choice .h{display:block;font-size:13px;color:var(--text-3);margin-top:1px}
+.choice .arr{color:var(--text-3);flex:none}
+.choice.rec{border-color:color-mix(in srgb,var(--cc,var(--accent)) 55%,#fff);background:color-mix(in srgb,var(--cc,var(--accent)) 4%,#fff)}
+.choice .tag{font-size:11px;font-weight:700;color:var(--cc,var(--accent));text-transform:uppercase;letter-spacing:.05em}
+.more{margin-top:14px}
+.more>summary{cursor:pointer;font-weight:600;color:var(--text-2);font-size:14px;list-style:none;display:flex;align-items:center;gap:6px}
+.more>summary::-webkit-details-marker{display:none}
+.more>summary::before{content:"";width:7px;height:7px;border-right:2px solid currentColor;border-bottom:2px solid currentColor;transform:rotate(-45deg);transition:transform .15s;margin-right:3px}
+.more[open]>summary::before{transform:rotate(45deg)}
+.more .groups{display:grid;gap:14px;margin-top:12px}
+.more .gl{font-size:12px;font-weight:700;color:var(--text-3);margin:0 0 6px;text-transform:uppercase;letter-spacing:.05em}
+.more .choice{padding:10px 12px}
+.more .choice .t{font-size:14.5px}
+
+.step-foot{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:22px;padding-top:16px;border-top:1px solid var(--line);font-size:13px;color:var(--text-3)}
+.step-foot .spacer{flex:1}
+.step-foot a{display:inline-flex;align-items:center;gap:6px;text-decoration:none;font-weight:550}
+.step-foot a:hover{text-decoration:underline}
+
+.finish{margin-top:4px;display:flex;gap:14px;align-items:center;padding:16px;border-radius:var(--radius);background:var(--ok-soft);border:1px solid color-mix(in srgb,var(--ok) 25%,#fff)}
+.finish .big{font-size:20px;font-weight:750;color:var(--ok)}
+.finish p{margin:0;color:var(--text-2);font-size:14px}
+
+/* ---------- Protokoll ---------- */
+.log{padding:14px 14px 12px}
+.log-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.log-head h2{margin:2px 0}
+.timeline{list-style:none;margin:0;padding:0 0 0 2px;display:grid;gap:0}
+.timeline li{position:relative;padding:0 0 12px 22px;font-size:13.5px;color:var(--text-2)}
+.timeline li::before{content:"";position:absolute;left:4px;top:6px;width:9px;height:9px;border-radius:50%;background:var(--pc,var(--accent))}
+.timeline li::after{content:"";position:absolute;left:8px;top:18px;bottom:0;width:1.5px;background:var(--line)}
+.timeline li:last-child::after{display:none}
+.timeline li b{display:block;color:var(--text);font-weight:650;font-size:13.5px}
+.timeline .fu{display:inline-block;margin-top:3px;font-size:12px;font-weight:600;color:var(--monitoring,var(--p-monitoring));background:#e3f4f5;border-radius:6px;padding:1px 7px}
+.log-results{display:grid;gap:8px;margin:6px 0 12px}
+.log-result{border:1px solid var(--line);border-radius:10px;padding:9px 11px;font-size:13px;background:var(--surface-2)}
+.log-result b{display:block;font-size:12.5px;margin-bottom:2px}
+.log-empty{font-size:13.5px;color:var(--text-3);padding:6px 2px 14px}
+.log-actions{display:flex;gap:8px;flex-wrap:wrap;border-top:1px solid var(--line);padding-top:12px}
+.log-actions .btn{flex:1;justify-content:center;padding:8px 10px;font-size:13px}
+
+/* ---------- Sheet (Assistenten) ---------- */
+.overlay{position:fixed;inset:0;background:rgba(15,23,42,.38);z-index:50;opacity:0;pointer-events:none;transition:opacity .2s}
+.overlay.open{opacity:1;pointer-events:auto}
+.sheet{position:fixed;z-index:60;top:0;right:0;bottom:0;width:min(640px,100vw);background:var(--surface);box-shadow:var(--shadow-lg);display:flex;flex-direction:column;transform:translateX(102%);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+.sheet.open{transform:none}
+.sheet-head{padding:18px 22px 14px;border-bottom:1px solid var(--line);display:flex;gap:12px;align-items:flex-start}
+.sheet-head h2{margin:0;font-size:20px;letter-spacing:-.01em}
+.sheet-head p{margin:2px 0 0;color:var(--text-3);font-size:13px}
+.sheet-head .x{margin-left:auto}
+.progress{height:4px;background:var(--surface-2);border-radius:99px;overflow:hidden;margin-top:10px}
+.progress i{display:block;height:100%;background:var(--accent);width:0;transition:width .2s}
+.sheet-body{flex:1;overflow:auto;padding:18px 22px 24px;scroll-padding-bottom:190px}
+.sheet-foot{border-top:1px solid var(--line);padding:12px 22px calc(12px + env(safe-area-inset-bottom));display:flex;gap:10px;align-items:center;background:#fff}
+.sheet-foot .hint{font-size:13px;color:var(--text-3);margin-right:auto}
+
+.q{padding:14px 0;border-bottom:1px solid var(--line)}
+.q:last-child{border-bottom:0}
+.q-title{font-weight:650;margin:0 0 3px;display:flex;gap:8px;align-items:baseline}
+.q-title .n{font-size:12px;color:var(--text-3);font-weight:700;min-width:18px}
+.q-title .opt{font-size:12px;font-weight:500;color:var(--text-3)}
+.q-desc{font-size:13.5px;color:var(--text-2);margin:0 0 10px}
+.seg{display:flex;flex-wrap:wrap;gap:8px}
+.seg label{position:relative}
+.seg input{position:absolute;opacity:0;inset:0;cursor:pointer}
+.seg span{display:inline-flex;align-items:center;gap:7px;border:1.5px solid var(--line-2);border-radius:10px;padding:7px 12px;font-size:14px;background:#fff;transition:all .12s;user-select:none}
+.seg label:hover span{border-color:var(--accent)}
+.seg input:checked+span{border-color:var(--accent);background:var(--accent-soft);color:var(--accent-2);font-weight:600}
+.seg input:focus-visible+span{outline:3px solid color-mix(in srgb,var(--accent) 45%,transparent);outline-offset:2px}
+.seg.yn input[value=yes]:checked+span,.seg.yn input[value=use]:checked+span,.seg.yn input[value=try]:checked+span{border-color:var(--ok);background:var(--ok-soft);color:var(--ok)}
+.seg.yn input[value=no]:checked+span,.seg.yn input[value=none]:checked+span{border-color:#9aa5b5;background:var(--surface-2);color:var(--text-2)}
+.seg.susp input[value=yes]:checked+span{border-color:var(--warn);background:var(--warn-soft);color:var(--warn)}
+.chips span::before{content:"";width:14px;height:14px;border-radius:4px;border:1.5px solid var(--line-2);background:#fff;flex:none}
+.chips input:checked+span::before{background:var(--accent) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='white' stroke-width='2.5'%3E%3Cpath d='M3.5 8.5l3 3 6-7'/%3E%3C/svg%3E") center/11px no-repeat;border-color:var(--accent)}
+.group-h{display:flex;align-items:center;justify-content:space-between;margin:4px 0 8px}
+.group-h .cnt{font-size:12px;color:var(--text-3)}
+
+.drug{border:1px solid var(--line);border-radius:var(--radius);padding:14px 16px;margin-bottom:12px}
+.drug h3{margin:0 0 8px;font-size:16px}
+.drug dl{display:grid;grid-template-columns:max-content 1fr;gap:4px 14px;margin:0 0 12px;font-size:13.5px}
+.drug dt{font-weight:650;color:var(--text-2)}
+.drug dd{margin:0;color:var(--text)}
+.drug .pc{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:0 0 12px;font-size:13.5px}
+.drug .pc div{border-radius:10px;padding:8px 10px}
+.drug .pc .pro{background:var(--ok-soft)}
+.drug .pc .con{background:var(--danger-soft)}
+.drug .pc b{display:block;font-size:12px;text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.subhead{font-size:12px;font-weight:700;color:var(--text-3);text-transform:uppercase;letter-spacing:.06em;margin:6px 0 10px}
+
+.slider{padding:12px 0;border-bottom:1px solid var(--line)}
+.slider .row{display:flex;justify-content:space-between;align-items:baseline;gap:10px;font-size:13px;color:var(--text-3)}
+.slider .row b{color:var(--text);font-size:14.5px;font-weight:650;text-align:center}
+.slider input[type=range]{width:100%;margin:8px 0 0;accent-color:var(--accent);height:22px}
+.slider .ticks{display:flex;justify-content:space-between;font-size:11px;color:var(--text-3);padding:0 4px}
+
+.live{margin:18px 0 0}
+.live.stick{position:sticky;bottom:-24px;margin:16px -22px -24px;padding:14px 22px 18px;background:linear-gradient(to bottom,rgba(255,255,255,0),#fff 14px)}
+.live-box{border-radius:var(--radius);padding:14px 16px;background:var(--accent-soft);border:1px solid #cfdcf8}
+.live-box .k{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--accent-2)}
+.live-box .v{font-size:24px;font-weight:750;letter-spacing:-.01em;margin:2px 0}
+.live-box .s{font-size:12.5px;color:var(--text-2)}
+.live-box ul{margin:6px 0 0;padding-left:18px;font-size:13.5px}
+.live-box .cls{display:flex;flex-wrap:wrap;gap:6px;margin:8px 0 4px}
+.live-box .cls span{background:#fff;border:1px solid #cfdcf8;border-radius:99px;padding:3px 10px;font-weight:650;font-size:13.5px}
+.live-box.muted{background:var(--surface-2);border-color:var(--line)}
+.live-box.muted .k{color:var(--text-3)}
+.scale{position:relative;height:10px;border-radius:99px;margin:10px 0 4px;background:linear-gradient(90deg,#2557d6,#14804a 50%,#b25e09)}
+.scale i{position:absolute;top:50%;width:16px;height:16px;border-radius:50%;background:#fff;border:3px solid var(--text);transform:translate(-50%,-50%);transition:left .15s}
+.scale-l{display:flex;justify-content:space-between;font-size:11px;color:var(--text-3)}
+
+/* ---------- Toast & Dialog ---------- */
+.toast{position:fixed;left:50%;bottom:24px;transform:translate(-50%,20px);background:#18212f;color:#fff;padding:10px 16px;border-radius:10px;font-size:14px;opacity:0;pointer-events:none;transition:all .2s;z-index:90;box-shadow:var(--shadow-lg)}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+dialog{border:0;border-radius:var(--radius);padding:0;box-shadow:var(--shadow-lg);max-width:420px;width:calc(100vw - 32px);color:var(--text)}
+dialog::backdrop{background:rgba(15,23,42,.38)}
+dialog .d-body{padding:20px 22px 8px}
+dialog h3{margin:0 0 6px;font-size:18px}
+dialog p{margin:0;color:var(--text-2);font-size:14px}
+dialog .d-foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 22px 18px}
+.btn.danger{background:var(--danger);border-color:var(--danger);color:#fff}
+
+/* ---------- Responsive ---------- */
+@media (max-width:1180px){
+  .layout{grid-template-columns:240px minmax(0,1fr)}
+  .log-col{grid-column:1/-1}
+  .log-col.sticky{position:static;max-height:none;overflow:visible}
+}
+@media (max-width:860px){
+  .topbar{padding:calc(10px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right)) 10px calc(14px + env(safe-area-inset-left))}
+  .brand-sub{display:none}
+  .topbar{gap:6px}
+  .topbar .spacer{display:none}
+  .topbar .btn{padding:8px 10px}
+  .brand-mark{width:30px;height:30px}
+  .sheet-foot .hint{font-size:12px}
+  .only-mobile{display:inline-flex}
+  body.kiste .brand-mark{display:none}
+  .hide-mobile{display:none!important}
+  .layout{grid-template-columns:1fr;padding:14px 14px calc(24px + env(safe-area-inset-bottom));gap:14px}
+  .map-col.sticky{position:fixed;z-index:60;inset:0 auto 0 0;max-height:none;top:0;width:min(320px,88vw);transform:translateX(-104%);transition:transform .25s cubic-bezier(.2,.8,.2,1)}
+  .map-col.sticky.open{transform:none}
+  .map-col .panel{min-height:100%;border-radius:0}
+  .step{padding:20px 18px}
+  .step h1{font-size:23px}
+  .disclaimer{padding:0 14px;margin-top:12px}
+  .disclaimer-box:not(.install){flex-direction:column}
+  .disclaimer-box.install{gap:10px;padding:12px}
+  .disclaimer-box.install p{font-size:13.5px}
+  .disclaimer-box.install img{width:34px;height:34px}
+  .disclaimer-box .btn{margin-left:0}
+  .mprog{display:flex}
+  .sheet{top:auto;left:0;width:100%;height:92vh;border-radius:18px 18px 0 0;transform:translateY(102%)}
+  .sheet.open{transform:none}
+}
+.mprog{display:none;gap:4px;margin:0 0 12px}
+.mprog i{flex:1;height:5px;border-radius:99px;background:var(--line)}
+.mprog i.on{background:var(--pc)}
+
+/* ---------- Druck ---------- */
+@media print{
+  body{background:#fff}
+  .topbar,.disclaimer,.map-col,.main,.log-actions,.sheet,.overlay{display:none!important}
+  .layout{display:block;padding:0}
+  .log-col .panel{border:0;box-shadow:none}
+  .sticky{position:static;max-height:none;overflow:visible}
+  #printReport{display:block!important;white-space:pre-wrap;font:12px/1.5 ui-monospace,Menlo,monospace}
+  .log{display:none}
+}
+#printReport{display:none}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header class="topbar">
+  <button class="btn ghost only-mobile" id="mapToggle" aria-label="Pfad-Karte öffnen" aria-controls="mapCol">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 6h16M4 12h16M4 18h10"/></svg>
+  </button>
+  <a class="btn ghost" id="kisteBtn" href="../" hidden title="Zurück zur Spielkiste">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 18l-6-6 6-6"/></svg>
+    <span class="hide-mobile">Spielkiste</span>
+  </a>
+  <div class="brand">
+    <div class="brand-mark" aria-hidden="true">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg>
+    </div>
+    <div style="min-width:0">
+      <div class="brand-title">NVL Hypertonie <span class="hide-mobile">· </span><span class="hide-mobile">Fallsimulator</span></div>
+      <div class="brand-sub">Leitlinie interaktiv durchspielen – Schritt für Schritt</div>
+    </div>
+  </div>
+  <div class="spacer"></div>
+  <button class="btn ghost" id="backBtn" title="Letzten Schritt rückgängig (Alt + ←)">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 14 4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 0 1 0 11H11"/></svg>
+    <span class="hide-mobile">Zurück</span>
+  </button>
+  <button class="btn only-mobile" id="logToggle" aria-label="Fallprotokoll anzeigen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M8 6h12M8 12h12M8 18h12M4 6h.01M4 12h.01M4 18h.01"/></svg>
+    <span class="badge" id="logCountM">0</span>
+  </button>
+  <button class="btn" id="resetBtn" title="Neuen Fall beginnen">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+    <span class="hide-mobile">Neuer Fall</span>
+  </button>
+</header>
+
+<section class="disclaimer" id="installHint" hidden>
+  <div class="disclaimer-box install">
+    <img src="icons/apple-touch-icon.png?v=1" alt="" width="40" height="40" style="border-radius:10px;flex:none">
+    <div><p><strong>Als App installieren:</strong> In Safari unten auf <b>Teilen</b> <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="vertical-align:-2px"><path d="M12 3v12M7 8l5-5 5 5"/><path d="M5 12v7a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-7"/></svg> tippen, dann <b>„Zum Home-Bildschirm“</b>. Danach startet der Fallsimulator im Vollbild – auch ohne Internet.</p></div>
+    <button class="btn" id="installOk">Später</button>
+  </div>
+</section>
+<section class="disclaimer" id="disclaimer" hidden>
+  <div class="disclaimer-box" role="note">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#b25e09" stroke-width="2" stroke-linecap="round" style="flex:none;margin-top:1px"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>
+    <div>
+      <p><strong>Nur für Schulung & Fortbildung.</strong> Dieses Tool bildet die Nationale VersorgungsLeitlinie (NVL) Hypertonie hierarchisch ab, um Entscheidungswege interaktiv durchzuspielen. Es ersetzt keine ärztliche Diagnostik oder Therapieentscheidung.</p>
+      <details>
+        <summary>Vollständiger Hinweis</summary>
+        <p style="margin-top:6px">Es stellt insbesondere keine medizinische Auskunft oder Behandlungsempfehlung dar und begründet kein Behandlungsverhältnis. Maßgeblich bleibt stets die eigenverantwortliche fachliche Beurteilung des konkreten Einzelfalls durch die behandelnde Ärztin bzw. den behandelnden Arzt. Die Inhalte können unvollständig, fehlerhaft oder nicht mehr aktuell sein; für Richtigkeit, Aktualität und Vollständigkeit wird keine Haftung übernommen. Bitte keine echten Patientendaten eingeben.</p>
+      </details>
+    </div>
+    <button class="btn" id="disclaimerOk">Verstanden</button>
+  </div>
+</section>
+
+<div class="layout">
+  <aside class="map-col sticky" id="mapCol" aria-label="Pfad-Karte">
+    <div class="panel map" id="map"></div>
+  </aside>
+
+  <main class="main" id="main" tabindex="-1"></main>
+
+  <aside class="log-col sticky" id="logCol" aria-label="Fallprotokoll">
+    <div class="panel log" id="log"></div>
+    <pre id="printReport"></pre>
+  </aside>
+</div>
+
+<div class="overlay" id="overlay"></div>
+<aside class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" aria-hidden="true">
+  <div class="sheet-head">
+    <div style="flex:1;min-width:0">
+      <h2 id="sheetTitle"></h2>
+      <p id="sheetSub"></p>
+      <div class="progress"><i id="sheetProg"></i></div>
+    </div>
+    <button class="btn ghost x" id="sheetClose" aria-label="Schließen">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 6 6 18M6 6l12 12"/></svg>
+    </button>
+  </div>
+  <div class="sheet-body" id="sheetBody"></div>
+  <div class="sheet-foot">
+    <span class="hint" id="sheetHint"></span>
+    <button class="btn" id="sheetCancel">Abbrechen</button>
+    <button class="btn primary" id="sheetApply">Übernehmen</button>
+  </div>
+</aside>
+
+<dialog id="confirmDlg">
+  <form method="dialog">
+    <div class="d-body">
+      <h3>Neuen Fall beginnen?</h3>
+      <p>Pfad und alle Assistenten-Ergebnisse dieses Falls werden gelöscht.</p>
+    </div>
+    <div class="d-foot">
+      <button class="btn" value="cancel">Abbrechen</button>
+      <button class="btn danger" value="ok">Neuer Fall</button>
+    </div>
+  </form>
+</dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script>
+"use strict";
+/* =====================================================================
+   Inhalte: Zustände der NVL Hypertonie (Schulungsmodell)
+   ===================================================================== */
+const NVL_URL = "https://www.leitlinien.de/themen/hypertonie";
+const DHL_URL = "https://www.hochdruckliga.de";
+
+const PHASES = [
+  { id: "screening",  label: "Screening",                 color: "var(--p-screening)",  states: ["screening.initial"] },
+  { id: "diag",       label: "Diagnostik",                color: "var(--p-diag)",       states: ["diagnostics.initial", "diagnostics.second", "diagnostics.abpm", "diagnostics.hbpm", "diagnostics.repeat"] },
+  { id: "confirm",    label: "Basisdiagnostik & Risiko",  color: "var(--p-confirm)",    states: ["diagnostics.confirmed", "special.secondary", "risk.main"] },
+  { id: "therapy",    label: "Therapie",                  color: "var(--p-therapy)",    states: ["therapy.non_drug", "therapy.drug_initial", "therapy.adhaerenz", "therapy.drug_escalation"] },
+  { id: "monitoring", label: "Monitoring",                color: "var(--p-monitoring)", states: ["monitoring.main", "monitoring.lowrisk"] },
+  { id: "special",    label: "Sonderfälle",               color: "var(--p-special)",    states: ["special.resistant", "special.pregnant", "special.emergency", "special.invasive_denervation", "special.invasive_baroreceptor"] }
+];
+
+const PRAXIS_MESSUNG = [
+  "Vorbereitung: mind. 5 Minuten Ruhe, in der Regel sitzend",
+  "3 Messungen in Folge am Oberarm, je 2 Minuten Abstand",
+  "Beurteilt wird ausschließlich der Mittelwert der 2. und 3. Messung"
+];
+
+const STATES = {
+  "screening.initial": {
+    title: "Screening", nav: "Screening", tag: "Einstieg", ref: "Kapitel 2.1",
+    lead: "Einmalige Blutdruckmessung in der Praxis – Ausgangspunkt jedes Falls.",
+    facts: [["Trigger", "Alter ≥ 18, Zufallsbefund, Vorsorge"], ["Aktion", "Einmalige Praxis-Blutdruckmessung"]],
+    question: "Wie lautet der gemessene Blutdruck?",
+    next: [
+      { to: "diagnostics.initial", label: "BP ≥ 140/90 mmHg", hint: "Weiter zur Praxis-Blutdruckmessung" },
+      { to: "monitoring.lowrisk", label: "BP < 140/90 mmHg", hint: "Kontrolle in 1 Jahr" }
+    ]
+  },
+  "diagnostics.initial": {
+    title: "Praxis-Blutdruckmessung", nav: "Praxismessung", tag: "Diagnostik", ref: "Kapitel 3.1",
+    lead: "Standardisierte Messung in der Praxis, um den Erstbefund zu überprüfen.",
+    cutoff: ["Cut-off", "≥ 140/90", "mmHg"],
+    howto: { title: "So wird gemessen", steps: PRAXIS_MESSUNG },
+    question: "Ergebnis der standardisierten Praxismessung?",
+    next: [
+      { to: "diagnostics.second", label: "BP ≥ 140/90 mmHg", hint: "Bestätigung durch Zweitmessung" },
+      { to: "monitoring.lowrisk", label: "BP < 140/90 mmHg", hint: "Kontrolle in 1 Jahr" }
+    ]
+  },
+  "diagnostics.second": {
+    title: "Zweitmessung", nav: "Zweitmessung", tag: "Diagnostik", ref: "Kapitel 3.1.2",
+    lead: "Die Diagnose wird durch eine Messung außerhalb der Praxis bestätigt.",
+    facts: [["Priorität", "ABPM > HBPM > erneute Praxismessung"]],
+    question: "Welches Verfahren wird zur Bestätigung eingesetzt?",
+    next: [
+      { to: "diagnostics.abpm", label: "24h-Messung (ABPM)", hint: "1. Wahl", rec: true },
+      { to: "diagnostics.hbpm", label: "Heimmessung (HBPM)", hint: "2. Wahl" },
+      { to: "diagnostics.repeat", label: "Erneute Praxismessung", hint: "Wenn ABPM/HBPM nicht möglich" }
+    ]
+  },
+  "diagnostics.abpm": {
+    title: "Ambulante 24h-Blutdruckmessung (ABPM)", nav: "ABPM (24h)", tag: "Diagnostik", ref: "Kapitel 3.1.2",
+    lead: "Langzeitmessung über 24 Stunden – bevorzugtes Verfahren zur Diagnosesicherung.",
+    cutoff: ["Cut-off 24h-Mittel", "≥ 130/80", "mmHg"],
+    facts: [["Tagesmittelwert", "≥ 135/85 mmHg"], ["Nächtlicher Mittelwert", "≥ 120/70 mmHg"]],
+    question: "Ergebnis der 24h-Messung?",
+    next: [
+      { to: "diagnostics.confirmed", label: "Hypertonie bestätigt", hint: "Weiter zur Basisdiagnostik" },
+      { to: "monitoring.lowrisk", label: "Keine Hypertonie", hint: "Kontrolle in 1 Jahr" }
+    ]
+  },
+  "diagnostics.hbpm": {
+    title: "Heimblutdruckmessung (HBPM)", nav: "HBPM (Heim)", tag: "Diagnostik", ref: "Kapitel 3.1.2",
+    lead: "Selbstmessung zu Hause über eine Woche.",
+    cutoff: ["Cut-off", "≥ 135/85", "mmHg"],
+    howto: { title: "So wird gemessen", steps: [
+      "Vorbereitung: mind. 5 Minuten Ruhe, sitzend",
+      "2 Messungen in Folge am Oberarm, 1–2 Minuten Abstand – bei regelmäßigem Puls morgens und abends",
+      "Beurteilt wird der Mittelwert aller Messwerte über 7 Tage"
+    ] },
+    question: "Ergebnis der Heimmessung?",
+    next: [
+      { to: "diagnostics.confirmed", label: "Hypertonie bestätigt", hint: "Weiter zur Basisdiagnostik" },
+      { to: "monitoring.lowrisk", label: "Keine Hypertonie", hint: "Kontrolle in 1 Jahr" }
+    ]
+  },
+  "diagnostics.repeat": {
+    title: "Erneute Praxismessung", nav: "Erneute Praxismessung", tag: "Diagnostik", ref: "Kapitel 3.1.2",
+    lead: "Wiederholung der standardisierten Praxismessung nach 3–4 Wochen.",
+    cutoff: ["Cut-off", "≥ 140/90", "mmHg"],
+    facts: [["Aktion", "Erneute Messung nach 3–4 Wochen"]],
+    howto: { title: "So wird gemessen", steps: PRAXIS_MESSUNG },
+    question: "Ergebnis der erneuten Messung?",
+    next: [
+      { to: "diagnostics.confirmed", label: "Erneut ≥ 140/90 mmHg", hint: "Hypertonie bestätigt" },
+      { to: "monitoring.lowrisk", label: "< 140/90 mmHg", hint: "Kontrolle in 1 Jahr" }
+    ]
+  },
+  "diagnostics.confirmed": {
+    title: "Hypertonie bestätigt · Basisdiagnostik", nav: "Basisdiagnostik", tag: "Basisdiagnostik", ref: "Kapitel 3.1.4 + 3.1.5",
+    lead: "Die Diagnose steht. Jetzt folgen Anamnese, Labor und EKG.",
+    facts: [["Anamnese", "Hypertoniespezifisch (Tabelle 5)"], ["Labor", "inkl. Albumin-Kreatinin-Ratio"], ["EKG", "Hinweis auf linksventrikuläre Hypertrophie?"]],
+    tools: ["medicalhistory"],
+    question: "Wie geht es weiter?",
+    next: [
+      { to: "risk.main", label: "Risiko & Zielwerte", hint: "Regulärer nächster Schritt", rec: true },
+      { to: "special.secondary", label: "Sekundäre Ursache prüfen", hint: "Bei Hinweisen auf sekundäre Genese" }
+    ]
+  },
+  "special.secondary": {
+    title: "Sekundäre Hypertonie", nav: "Sekundäre Hypertonie", tag: "Sonderfall", ref: "Kapitel 3.2",
+    lead: "Abklärung möglicher Ursachen bei auffälligen Befunden.",
+    facts: [["Trigger", "z. B. atypischer Verlauf, Therapieresistenz"]],
+    tools: ["secondary"],
+    question: "Wie geht es weiter?",
+    next: [{ to: "risk.main", label: "Risiko & Zielwerte", hint: "Zielkorridor festlegen", rec: true }]
+  },
+  "risk.main": {
+    title: "Risiko & Zielwerte", nav: "Risiko & Zielwerte", tag: "Risiko", ref: "Kapitel 5.1 + 5.2",
+    lead: "Risikostratifikation und Festlegung eines individuellen Zielkorridors.",
+    facts: [["Aktion", "Risikostratifikation, Zielkorridor definieren"]],
+    tools: ["target"],
+    question: "Welche Therapie wird eingeleitet?",
+    next: [
+      { to: "therapy.drug_initial", label: "Medikamentöse Therapie", hint: "Startregime nach NVL" },
+      { to: "therapy.non_drug", label: "Nichtmedikamentöse Therapie", hint: "Lebensstil-Maßnahmen" }
+    ]
+  },
+  "therapy.non_drug": {
+    title: "Nichtmedikamentöse Therapie", nav: "Nichtmedikamentös", tag: "Therapie", ref: "Kapitel 6",
+    lead: "Lebensstilmaßnahmen als Basis jeder Hypertonie-Therapie.",
+    howto: { title: "Module", chips: ["Salzreduktion", "Gewicht", "Körperliche Aktivität", "Ernährung"] },
+    question: "Wie geht es weiter?",
+    next: [{ to: "monitoring.main", label: "Monitoring", hint: "Kontrolle in 4–6 Wochen", rec: true }]
+  },
+  "therapy.drug_initial": {
+    title: "Medikamentöse Therapie", nav: "Medikamentös", tag: "Therapie", ref: "Kapitel 7.1",
+    lead: "Startregime nach NVL (Abbildung 5 / Tabelle 13).",
+    howto: { title: "Basis-Wirkstoffklassen (und/oder)", chips: ["ACE-Hemmer / ARB", "Calciumkanalblocker (CCB)", "Thiazid(-artig)"] },
+    tools: ["med"],
+    question: "Wie geht es weiter?",
+    next: [{ to: "monitoring.main", label: "Monitoring", hint: "Kontrolle in 4–6 Wochen", rec: true }]
+  },
+  "therapy.adhaerenz": {
+    title: "Adhärenz", nav: "Adhärenz", tag: "Therapie", ref: "Kapitel 5.3 – 5.5",
+    lead: "Ursachen für mangelnde Adhärenz prüfen und adressieren.",
+    howto: { title: "Zu prüfen", chips: ["Einnahmefehler?", "Nebenwirkungen?", "Zu komplexe Therapie?", "Verständnisprobleme?"] },
+    question: "Wie geht es weiter?",
+    next: [{ to: "monitoring.main", label: "Monitoring / Verlaufskontrolle", hint: "Kontrolle in 4–6 Wochen", rec: true }]
+  },
+  "therapy.drug_escalation": {
+    title: "Therapie-Eskalation", nav: "Eskalation", tag: "Therapie", ref: "Kapitel 7.2.2.2",
+    lead: "Zielwert verfehlt: Kombination erweitern, Dosis anpassen – oder Ursachen suchen.",
+    facts: [["Aktion", "Kombination erweitern, Dosis anpassen"], ["Prüfen", "≥ 3 Wirkstoffe inkl. Diuretikum im Einsatz? Therapieresistenz oder Adhärenzproblem?"]],
+    question: "Wie geht es weiter?",
+    next: [{ to: "monitoring.main", label: "Monitoring nach Dosisanpassung", hint: "Kontrolle in 4–6 Wochen", rec: true }],
+    more: [
+      { label: "Ursachen & Basis", items: [
+        { to: "therapy.adhaerenz", label: "Adhärenzproblem?", hint: "Ursachen prüfen" },
+        { to: "therapy.non_drug", label: "Nichtmedikamentös", hint: "Lebensstil verstärken" },
+        { to: "therapy.drug_initial", label: "Medikation neu bewerten", hint: "Medikations-Assistent" }
+      ] },
+      { label: "Therapieresistenz", items: [
+        { to: "special.resistant", label: "Therapieresistent – medikamentös", hint: "Tabelle 19" },
+        { to: "special.invasive_denervation", label: "Therapieresistent – invasiv", hint: "Renale Denervation" }
+      ] },
+      { label: "Spezialfälle", items: [
+        { to: "special.pregnant", label: "Schwangerschaft / Kinderwunsch", hint: "Tabelle 21" },
+        { to: "special.emergency", label: "Hypertensiver Notfall", hint: "Tabelle 22", danger: true }
+      ] }
+    ]
+  },
+  "monitoring.lowrisk": {
+    title: "Monitoring · niedriges Risiko", nav: "Kontrolle in 1 Jahr", tag: "Follow-up", ref: "Kapitel 4.3",
+    lead: "Kein Hypertonie-Nachweis bzw. niedriges Risiko – regelmäßige Kontrolle genügt.",
+    facts: [["Intervall", "Kontrolle in 1 Jahr"]],
+    end: true
+  },
+  "monitoring.main": {
+    title: "Monitoring · unter Therapie", nav: "Monitoring Therapie", tag: "Follow-up", ref: "Kapitel 4.3",
+    lead: "Frühe Verlaufskontrolle nach Therapiebeginn oder -anpassung.",
+    facts: [["Früh", "4–6 Wochen nach Anpassung"], ["Bewertung", "Ziel erreicht → stabil · Ziel verfehlt → Eskalation"]],
+    question: "Wurde der Zielwert erreicht?",
+    next: [
+      { to: "@finish", label: "Ziel erreicht", hint: "Fall abschließen & Protokoll ansehen" },
+      { to: "therapy.drug_escalation", label: "Ziel verfehlt", hint: "Therapie-Eskalation" }
+    ]
+  },
+  "special.resistant": {
+    title: "Therapieresistente Hypertonie", nav: "Therapieresistent", tag: "Sonderfall", ref: "Kapitel 7.3",
+    lead: "Blutdruck trotz ≥ 3 Wirkstoffen nicht kontrolliert.",
+    facts: [["Definition", "BP trotz ≥ 3 Wirkstoffen (inkl. Diuretikum) nicht kontrolliert"]],
+    tools: ["resistant"],
+    question: "Wie geht es weiter?",
+    next: [
+      { to: "monitoring.main", label: "Monitoring", hint: "Kontrolle in 4–6 Wochen", rec: true },
+      { to: "special.invasive_denervation", label: "Invasive Verfahren prüfen", hint: "Renale Denervation" }
+    ]
+  },
+  "special.pregnant": {
+    title: "Hypertonie und Kinderwunsch", nav: "Schwangerschaft", tag: "Sonderfall", ref: "Kapitel 7.4",
+    lead: "Besondere Wirkstoffauswahl bei Schwangerschaft, Stillzeit oder Kinderwunsch.",
+    facts: [["Trigger", "Schwangerschaft / Stillzeit / Kinderwunsch"]],
+    tools: ["pregnant"],
+    question: "Wie geht es weiter?",
+    next: [{ to: "monitoring.main", label: "Monitoring", hint: "Kontrolle in 4–6 Wochen", rec: true }]
+  },
+  "special.emergency": {
+    title: "Hypertensiver Notfall", nav: "Hypertensiver Notfall", tag: "Sonderfall", ref: "Kapitel 7.5", danger: true,
+    lead: "Sehr hoher Blutdruck mit akuten Endorganschäden.",
+    facts: [["Trigger", "Sehr hoher BP + akute Endorganschäden"]],
+    tools: ["emergency"],
+    question: "Wie geht es weiter?",
+    next: [{ to: "monitoring.main", label: "Monitoring", hint: "Nach Stabilisierung", rec: true }]
+  },
+  "special.invasive_denervation": {
+    title: "Renale Denervation", nav: "Renale Denervation", tag: "Invasiv", ref: "Kapitel 8.1",
+    lead: "Invasive Option bei therapieresistenter Hypertonie.",
+    facts: [["Aktion", "Erwägung bei therapieresistenten Fällen"]],
+    question: "Wie geht es weiter?",
+    next: [
+      { to: "monitoring.main", label: "Monitoring", hint: "Kontrolle in 4–6 Wochen", rec: true },
+      { to: "special.invasive_baroreceptor", label: "Barorezeptor-Stimulation", hint: "Sehr selektive Indikation" }
+    ]
+  },
+  "special.invasive_baroreceptor": {
+    title: "Barorezeptor-Stimulation", nav: "Barorezeptor-Stimulation", tag: "Invasiv", ref: "Kapitel 8.2",
+    lead: "Invasives Verfahren mit sehr selektiver Indikation.",
+    facts: [["Aktion", "Sehr selektive Indikation"]],
+    question: "Wie geht es weiter?",
+    next: [{ to: "monitoring.main", label: "Monitoring", hint: "Kontrolle in 4–6 Wochen", rec: true }]
+  }
+};
+
+/* Protokoll-Texte (aus dem Original übernommen) */
+const LOG_LABELS = {
+  "screening.initial": "Erstmessung des Blutdrucks durchgeführt.",
+  "diagnostics.initial": "Diagnostik begonnen: Praxis-BP erhoben.",
+  "diagnostics.second": "Zweitmessung im Schulungsfall durchgeführt.",
+  "diagnostics.repeat": "Wiederholungsmessung im Schulungsfall durchgeführt.",
+  "diagnostics.abpm": "ABPM im Schulungsfall durchgeführt.",
+  "diagnostics.hbpm": "HBPM im Schulungsfall durchgeführt.",
+  "diagnostics.confirmed": "Hypertonie im Schulungsfall bestätigt.",
+  "risk.main": "Risikostratifikation nach NVL im Schulungsfall durchgeführt.",
+  "therapy.non_drug": "Nichtmedikamentöse Therapie im Schulungsfall empfohlen.",
+  "therapy.adhaerenz": "Adhärenz und Barrieren im Schulungsfall geprüft.",
+  "therapy.drug_initial": "Medikamentöse Therapie im Schulungsfall eingeleitet.",
+  "therapy.drug_escalation": "Therapie-Eskalation im Schulungsfall geprüft.",
+  "monitoring.lowrisk": "Monitoring (low risk) begonnen: Kontrolle in 1 Jahr.",
+  "monitoring.main": "Monitoring im Schulungsfall begonnen.",
+  "special.secondary": "Sonderfall: Sekundäre Hypertonie geprüft.",
+  "special.resistant": "Therapieresistenz: Weitere Wirkstoffklassen für spezielle Personengruppen hinzugezogen.",
+  "special.pregnant": "Sonderfall: Hypertonie und Kinderwunsch / Schwangerschaft geprüft.",
+  "special.emergency": "Sonderfall: Hypertensiver Notfall geprüft.",
+  "special.invasive_denervation": "Invasive Therapie: Renale Denervation geprüft.",
+  "special.invasive_baroreceptor": "Invasive Therapie: Barorezeptor-Stimulation geprüft."
+};
+const FOLLOW_UP = {
+  "monitoring.lowrisk": { text: "Kontrolle in 1 Jahr (wie in der NVL vorgeschlagen)", years: 1 },
+  "monitoring.main": { text: "Kontrolle in 6 Wochen (wie in der NVL vorgeschlagen)", weeks: 6 }
+};
+
+/* =====================================================================
+   Assistenten
+   ===================================================================== */
+const YN_SUSP = [["yes", "Ja – Verdacht"], ["no", "Nein"]];
+
+const WIZARDS = {
+  medicalhistory: {
+    title: "Anamnese-Assistent", sub: "Hypertoniespezifische Anamnese · NVL Tabelle 5", icon: "clipboard",
+    desc: "Symptome, Vorerkrankungen, Medikamente und Lebensstil strukturiert erfassen.",
+    kind: "chips", optional: true,
+    groups: [
+      { id: "symptoms", title: "Aktuelle Symptomatik", items: ["Kopfschmerz", "Schwindel / Synkopen", "kognitive Einschränkungen", "Visusminderung", "Ruhe- oder Belastungsdyspnoe", "Angina pectoris", "Palpitationen / Tachykardie", "Claudicatio intermittens", "Ödeme", "sensorische / motorische Defizite", "auffälliger Urin (Hämaturie, schäumender Urin, Nykturie)", "erektile Dysfunktion (Männer)"] },
+      { id: "history", title: "Eigen- & Familienanamnese", items: ["Herz-Kreislauf-Erkrankungen (KHK, HI, Z. n. PCI, PTA)", "Schlaganfall / TIA", "Demenz", "Diabetes mellitus", "Dyslipidämie", "Nierenkrankheit", "obstruktives Schlafapnoe-Syndrom", "posttraumatische Belastungsstörung", "Schwangerschaftshypertonie (Frauen)"] },
+      { id: "medication", title: "Medikamentenanamnese", items: ["aktuelle Antihypertensiva", "frühere Antihypertensiva", "Medikamente mit Blutdruckanstieg (NSAR, „Pille“, Kortison, Immunsuppressiva, Antidepressiva)", "Unverträglichkeiten", "Adhärenzprobleme"] },
+      { id: "lifestyle", title: "Lebensstilanamnese", items: ["Trinkmenge", "Essverhalten (inkl. Salz, Lakritz, Koffein)", "Nahrungsergänzungsmittel", "Rauchen / Alkohol / Drogen", "körperliche Aktivität, Sport", "Schlafstörungen / Schnarchen", "gestörter Tag-Nacht-Rhythmus", "Stressoren"] }
+    ]
+  },
+  secondary: {
+    title: "Sekundärhypertonie-Check", sub: "NVL Tabelle 6 · 7 Ursachen", icon: "search",
+    desc: "Sieben häufige sekundäre Ursachen nacheinander abfragen.",
+    kind: "yesno", options: YN_SUSP, cls: "susp",
+    items: [
+      { id: "sleep_apnea", title: "Obstruktives Schlafapnoesyndrom (OSAS)", q: "Klinische Hinweise wie lautes Schnarchen, Tagesschläfrigkeit, beobachtete Atemaussetzer?" },
+      { id: "renal_disease", title: "Renale Parenchymerkrankung / Nierenarterienstenose", q: "Hinweise auf eine renale Ursache, z. B. Kreatinin-Anstieg, Proteinurie, abdominelles Strömungsgeräusch?" },
+      { id: "hyperaldosteronism", title: "Primärer Hyperaldosteronismus (Conn-Syndrom)", q: "Therapieresistente Hypertonie oder spontane/diuretikainduzierte Hypokaliämie?" },
+      { id: "pheochromocytoma", title: "Phäochromozytom", q: "Paroxysmale Blutdruckkrisen mit Kopfschmerzen, Schwitzen und Tachykardie?" },
+      { id: "cushing", title: "Cushing-Syndrom", q: "Klinische Stigmata wie Stammfettsucht, Vollmondgesicht, Striae rubrae?" },
+      { id: "thyroid", title: "Schilddrüsenerkrankung (Hyper-/Hypothyreose)", q: "Klinische Symptome einer Schilddrüsenüber- oder -unterfunktion?" },
+      { id: "medication_induced", title: "Medikamenteninduzierte Hypertonie", q: "Regelmäßige Einnahme blutdrucksteigernder Substanzen (z. B. NSAR, Glukokortikoide, orale Kontrazeptiva)?" }
+    ],
+    groupsOut: [["yes", "Verdacht auf"], ["no", "Kein Verdacht"]]
+  },
+  target: {
+    title: "Zielwertkorridor-Assistent", sub: "Individueller Blutdruck-Zielkorridor · NVL Abbildung 3", icon: "target",
+    desc: "Sieben Patientenfaktoren gewichten – der Zielkorridor wird live berechnet.",
+    kind: "sliders", optional: true,
+    factors: [
+      { title: "Lebenserwartung", left: "hoch", right: "niedrig" },
+      { title: "Alter", left: "jünger", right: "älter" },
+      { title: "Einfluss der Polymedikation", left: "gering", right: "hoch" },
+      { title: "Relevante Nebenwirkungen & Interaktionen", left: "gering", right: "hoch" },
+      { title: "Belastung durch Therapie", left: "gering", right: "hoch" },
+      { title: "Kardiovaskuläres Risiko", left: "hoch", right: "gering" },
+      { title: "Funktionelle / kognitive Fähigkeiten", left: "gut", right: "gering" }
+    ]
+  },
+  med: {
+    title: "Medikations-Assistent", sub: "Startregime · NVL Abbildung 5 / Tabelle 13", icon: "pill",
+    desc: "Grad, Risiko und Begleiterkrankungen angeben – Empfehlung entsteht live.",
+    kind: "form",
+    questions: [
+      { id: "bp_grade", title: "Hypertonie-Grad", req: true, opts: [["grade1", "Grad 1 (140–159 / 90–99)"], ["grade2", "Grad 2 (160–179 / 100–109)"], ["grade3", "Grad 3 (≥ 180 / ≥ 110)"], ["ish", "Isolierte systolische Hypertonie"]] },
+      { id: "risk_stage", title: "Kardiovaskuläres Risiko", req: true, opts: [["low", "Niedrig"], ["high", "Hoch"], ["veryhigh", "Sehr hoch"]] },
+      { id: "hmod_cvd", title: "Endorganschäden (HMOD) oder kardiovaskuläre Erkrankung (CVD)?", req: true, opts: [["none", "Nein"], ["hmod", "HMOD – hypertensiver Endorganschaden"], ["cvd", "CVD – kardiovaskuläre Erkrankung"]] },
+      { id: "comorb", title: "Komorbiditäten", multi: true, opts: [["diabetes", "Diabetes"], ["ckd", "CKD ≥ 3"], ["hf", "Herzinsuffizienz"], ["cad", "KHK"], ["stroke", "Z. n. Schlaganfall"]] },
+      { id: "age", title: "Alter", req: true, opts: [["lt65", "< 65"], ["65to79", "65–79"], ["gte80", "≥ 80"]] },
+      { id: "frailty", title: "Gebrechlichkeit", req: true, opts: [["no", "Nein"], ["yes", "Ja"]] },
+      { id: "pregnancy", title: "Schwangerschaft", req: true, opts: [["no", "Nein"], ["yes", "Ja"]] },
+      { id: "ethnicity", title: "Ethnizität", opts: [["standard", "Keine Besonderheit"], ["black", "Schwarze Hautfarbe (ESC/ESH)"]] },
+      { id: "single_pill", title: "Single-Pill-Kombination", req: true, opts: [["preferred", "Bevorzugt"], ["no_pref", "Keine Präferenz"]] }
+    ]
+  },
+  resistant: {
+    title: "Wirkstoff-Check Therapieresistenz", sub: "Weitere Wirkstoffklassen · NVL Tabelle 19", icon: "pill",
+    desc: "Acht Reserve-Wirkstoffklassen mit Kommentar und Nebenwirkungen bewerten.",
+    kind: "drugs", options: [["try", "Einsatz erwägen"], ["none", "Aktuell keine Option"]],
+    items: [
+      { id: "mra", title: "Aldosteronantagonisten", rows: [["Kommentar", "Therapieresistente Hypertonie; Spironolacton erste Wahl, bei Unverträglichkeit Eplerenon; auch bei primärem Hyperaldosteronismus."], ["Nebenwirkungen", "Hyperkaliämie, Hyponatriämie; Gynäkomastie/Brustspannen (Spironolacton); GI-Nebenwirkungen (Eplerenon)."]] },
+      { id: "alpha", title: "Alpharezeptorblocker", rows: [["Kommentar", "Erste Wahl bei Phäochromozytom; Doxazosin möglich; Urapidil in Notfällen; zweite Wahl bei BPH."], ["Nebenwirkungen", "Hypotonie, orthostatische Hypotonie; ungeeignet bei Herzinsuffizienz/KHK; erhöhtes Sturzrisiko."]] },
+      { id: "bb", title: "Betablocker", rows: [["Kommentar", "Indikationen: HFrEF ≤ 40 %, KHK/MI, tachykarde Rhythmusstörungen, Vorhofflimmern; Vorsicht bei Asthma; möglich bei COPD."], ["Nebenwirkungen", "Erhöhung von Glukose/Triglyceriden; Diabetesrisiko; Schlafstörungen; Libido-/Erektionsstörungen."]] },
+      { id: "ksd", title: "Kaliumsparende Diuretika", rows: [["Kommentar", "Amilorid + HCT reduziert metabolische Effekte; zweite Wahl oder Ergänzung bei primärem Hyperaldosteronismus."], ["Nebenwirkungen", "Hyperkaliämie."]] },
+      { id: "renin", title: "Renin-Inhibitoren", rows: [["Kommentar", "Wirksam wie ACEI/ARB; nicht mit ACEI/ARB kombinieren; kontraindiziert bei Diabetes oder GFR < 60; hohe Kosten."], ["Nebenwirkungen", "Hyperkaliämie; erhöhtes Mortalitätsrisiko bei Diabetes."]] },
+      { id: "loop", title: "Schleifendiuretika", rows: [["Kommentar", "Geringe Blutdrucksenkung; bevorzugt bei symptomatischer Herzinsuffizienz, Ödemen, CKD."], ["Nebenwirkungen", "Hypokaliämie."]] },
+      { id: "alpha2", title: "Zentrale Alpha-2-Agonisten", rows: [["Kommentar", "Alpha-Methyldopa, Clonidin, Moxonidin."], ["Nebenwirkungen", "Wasser-/Salzretention; anticholinerge Effekte (Clonidin)."]] },
+      { id: "vaso", title: "Direkte Vasodilatatoren", rows: [["Kommentar", "Reserve: Minoxidil, Dihydralazin; bevorzugt bei Dialyse; Kombination mit Betablocker + Diuretikum; engmaschiges Monitoring."], ["Nebenwirkungen", "Tachykardie; Ödeme; Haarwuchs (Minoxidil)."]] }
+    ],
+    groupsOut: [["try", "Einsatz erwogen"], ["none", "Aktuell keine Option"]]
+  },
+  pregnant: {
+    title: "Wirkstoff-Check Schwangerschaft", sub: "Antihypertensiva in der Schwangerschaft · NVL Tabelle 21", icon: "pill",
+    desc: "Drei Wirkstoffe mit Vor- und Nachteilen gegenüberstellen.",
+    kind: "drugs", options: [["use", "Einsatz erwägen"], ["none", "Nicht gewollt"]],
+    items: [
+      { id: "nifedipin", title: "Nifedipin", sub: "Calciumkanalblocker", pro: "Wirkstoff erster Wahl; gutes Nebenwirkungsprofil; retard einsetzen; Stillzeit möglich.", con: "Wenig Daten im 1. Trimenon." },
+      { id: "metoprolol", title: "Metoprolol", sub: "Betablocker", pro: "Gut untersucht im 1. Trimenon; Stillzeit möglich; Umstellung möglich.", con: "Risiko für fetale Wachstumsrestriktion." },
+      { id: "alphamethyldopa", title: "Alpha-Methyldopa", sub: "Zentraler Alpha-2-Agonist", pro: "Sehr lange Erfahrung in der Schwangerschaft; Stillzeit möglich.", con: "Wenig Daten im 1. Trimenon." }
+    ],
+    groupsOut: [["use", "Einsatz erwogen"], ["none", "Nicht gewollt"]]
+  },
+  emergency: {
+    title: "Wirkstoff-Check Notfall", sub: "Hypertensive Dysregulation · NVL Tabelle 22", icon: "alert",
+    desc: "Notfall-Wirkstoffe mit Dosierung und Kontraindikationen bewerten.",
+    kind: "drugs", options: [["use", "Einsatz erwägen"], ["none", "Nicht geeignet"]],
+    sections: [["Ambulant", ["gtn", "urapidil", "amlodipin", "clonidin", "furosemid"]], ["Stationär", ["enalaprilat", "esmolol", "nitroprussid"]]],
+    items: [
+      { id: "gtn", title: "Glyceroltrinitrat", sub: "s. l.", rows: [["Initial", "0,5–1 mg/h"], ["Erhaltung", "maximal 8–10 mg/h"], ["Kontraindikationen", "Erhöhter intrakranieller Druck; Anwendung von Phosphodiesterasehemmern."]] },
+      { id: "urapidil", title: "Urapidil", sub: "i. v.", rows: [["Initial", "12,5 mg (max. 50 mg)"], ["Erhaltung", "5–40 mg/h"], ["Kontraindikationen", "Aortenisthmusstenose; arteriovenöser Shunt; Vorsicht bei Herzinsuffizienz durch mechanische Funktionsbehinderung, Lungenembolie, Perikarderguss."]] },
+      { id: "amlodipin", title: "Amlodipin", sub: "per os", rows: [["Initial", "5–10 mg"], ["Erhaltung", "5–10 mg"], ["Kontraindikationen", "Instabile Angina pectoris; akuter Myokardinfarkt; schwere Leberfunktionsstörung."]] },
+      { id: "clonidin", title: "Clonidin", sub: "p. o. / s. c. / i. m. / i. v.", rows: [["Initial", "0,075 mg"], ["Erhaltung", "0,075 mg alle 12 Stunden"], ["Kontraindikationen", "Instabile Angina pectoris; akuter Myokardinfarkt; Sinusknotensyndrom; Bradykardie; AV-Block II./III. Grades; fortgeschrittene pAVK."]] },
+      { id: "furosemid", title: "Furosemid", sub: "p. o. / i. v.", rows: [["Initial", "20–40 mg"], ["Erhaltung", "—"], ["Hinweise", "Wirkdauer bei CKD verlängert; Dosierung abhängig von Ödemen und Begleitumständen."]] },
+      { id: "enalaprilat", title: "Enalaprilat", sub: "i. v.", rows: [["Initial", "1,25 mg über 5 Minuten"], ["Erhaltung", "bis 5 mg alle 6 Stunden"], ["Kontraindikationen", "Schwangerschaft; Myokardinfarkt; bilaterale Nierenarterienstenose."]] },
+      { id: "esmolol", title: "Esmolol", sub: "i. v.", rows: [["Initial", "500–1000 µg/kg/min (1 Minute)"], ["Erhaltung", "50–300 µg/kg/min"], ["Kontraindikationen", "Bestehende Betablockertherapie; Bradykardie; (dekompensierte) Herzinsuffizienz."]] },
+      { id: "nitroprussid", title: "Nitroprussidnatrium", sub: "i. v.", rows: [["Initial", "0,3–0,5 µg/kg/min"], ["Erhaltung", "Steigerung um 0,5 µg/kg/min"], ["Hinweise", "Invasive oder engmaschige Blutdruckmessung empfohlen."]] }
+    ],
+    groupsOut: [["use", "Einsatz erwogen"], ["none", "Nicht geeignet"]]
+  }
+};
+
+/* ---------- Berechnungen ---------- */
+function computeTarget(values) {
+  const avg = values.reduce((a, b) => a + b, 0) / values.length;
+  if (avg <= 1.8) return { avg, title: "Strengerer Zielkorridor (individualisiert)", sys: [120, 130], dia: [70, 80] };
+  if (avg <= 3.5) return { avg, title: "Standard-Zielkorridor (Leitlinien-Ideal)", sys: [120, 140], dia: [70, 90] };
+  return { avg, title: "Moderater / Erwägungs-Zielkorridor", sys: [140, 160], dia: [80, 90] };
+}
+
+function medComplete(a) {
+  return WIZARDS.med.questions.filter(q => q.req).every(q => a[q.id]);
+}
+
+function computeMed(a) {
+  if (a.pregnancy === "yes") {
+    return { regimen: "Monotherapie (Schwangerschaft)", classes: ["Methyldopa", "Labetalol", "Nifedipin retard"], rationale: ["ACE-Hemmer/ARB sind in der Schwangerschaft kontraindiziert (NVL)."] };
+  }
+  const comorbs = Array.isArray(a.comorb) ? a.comorb : [];
+  const score = { "ACEI/ARB": 0, "CCB": 0, "Thiazid": 0, "Thiazid(-artig)": 0, "Betablocker": 0, "Diuretikum": 0, "Schleifendiuretikum": 0 };
+  const MAP = {
+    diabetes: { "ACEI/ARB": 1, "CCB": 1 }, ckd: { "ACEI/ARB": 2, "Schleifendiuretikum": 1 },
+    hf: { "ACEI/ARB": 1, "Betablocker": 1, "Diuretikum": 1 }, cad: { "Betablocker": 1, "ACEI/ARB": 1, "CCB": 1 },
+    stroke: { "CCB": 1, "ACEI/ARB": 1, "Thiazid": 1 }
+  };
+  const WHY = {
+    diabetes: "Diabetes: ACEI/ARB bevorzugt, CCB möglich.",
+    ckd: "CKD ≥ 3: RAAS-Blockade bevorzugt; bei eGFR < 30 Schleifendiuretikum.",
+    hf: "Herzinsuffizienz: ACEI/ARB und Betablocker empfohlen.",
+    cad: "KHK: Betablocker + ACEI/ARB, CCB möglich.",
+    stroke: "Nach Schlaganfall: bevorzugt CCB oder ACEI; thiazidartige Diuretika."
+  };
+  const rationale = [];
+  comorbs.forEach(c => { Object.entries(MAP[c]).forEach(([k, v]) => score[k] += v); rationale.push(WHY[c]); });
+  if (a.ethnicity === "black") {
+    score["CCB"] += 2; score["Thiazid(-artig)"] += 2;
+    rationale.push("ESC/ESH: Bei schwarzer Hautfarbe sprechen CCB und thiazidartige Diuretika besser an als RAAS-Blocker.");
+  }
+  const g1 = a.bp_grade === "grade1" || a.bp_grade === "ish", g2 = a.bp_grade === "grade2", g3 = a.bp_grade === "grade3";
+  const vh = a.risk_stage === "veryhigh", hi = a.risk_stage === "high", lo = a.risk_stage === "low";
+  const organ = a.hmod_cvd === "hmod" || a.hmod_cvd === "cvd";
+  let regimen, why;
+  if (g3 || vh || organ) { regimen = "Initiale Kombinationstherapie"; why = "NVL: Kombinationstherapie empfohlen aufgrund von Schweregrad/Risiko."; }
+  else if (g2 || hi) { regimen = "Initiale Kombinationstherapie"; why = "NVL: Kombinationstherapie bevorzugt."; }
+  else if (g1 && lo) { regimen = "Initiale Monotherapie"; why = "NVL: Bei Grad 1 mit niedrigem Risiko ist Monotherapie ausreichend."; }
+  else { regimen = "Initiale Monotherapie oder frühe Kombination"; why = "NVL: Therapie abhängig von individueller Situation."; }
+  rationale.push(why);
+  if (a.age === "gte80" || a.frailty === "yes") rationale.push("Hohes Alter/Gebrechlichkeit: vorsichtige Titration, individuelle Zielwerte (NVL).");
+  if (regimen !== "Initiale Monotherapie" && a.single_pill === "preferred") rationale.push("Single-Pill-Kombination bevorzugen (NVL).");
+  if (Object.values(score).every(v => v === 0)) {
+    score["ACEI/ARB"] = 1; score["CCB"] = 1; score["Thiazid(-artig)"] = 1;
+    rationale.push("NVL: Basistherapie ohne Komorbiditäten umfasst ACEI/ARB, CCB oder Thiazid(-artig).");
+  }
+  const classes = Object.entries(score).filter(([, v]) => v > 0).sort((x, y) => y[1] - x[1]).map(([k]) => k);
+  return { regimen, classes, rationale };
+}
+
+/* Ergebnis eines Assistenten → { lines: [[label, text]], report: "..." } */
+function summarize(id, a) {
+  const w = WIZARDS[id];
+  const fmt = arr => arr && arr.length ? arr.join(", ") : "Keine";
+  if (w.kind === "chips") {
+    const lines = w.groups.map(g => [g.title, fmt(a[g.id]).replace(/^Keine$/, "Keine Angaben")]);
+    return { lines, report: "◆ Hypertoniespezifische Anamnese (Tabelle 5):\n\n" + lines.map(([k, v]) => `• ${k}:\n  ${v}`).join("\n\n") };
+  }
+  if (w.kind === "yesno" || w.kind === "drugs") {
+    const lines = w.groupsOut.map(([val, label]) => [label, fmt(w.items.filter(it => a[it.id] === val).map(it => it.title))]);
+    const head = { secondary: "◆ Sekundärhypertonie-Check (Tabelle 6)", resistant: "◆ Therapieresistenz-Wirkstoffe (Tabelle 19)", pregnant: "◆ Schwangerschaftsmedikation (Tabelle 21)", emergency: "◆ Notfall-Medikamente bei hypertensiver Dysregulation (Tabelle 22)" }[id];
+    return { lines, report: head + ":\n\n" + lines.map(([k, v]) => `• ${k}:\n  ${v}`).join("\n\n") };
+  }
+  if (w.kind === "sliders") {
+    const r = computeTarget(a.values);
+    const corridor = `${r.sys[0]}–${r.sys[1]} / ${r.dia[0]}–${r.dia[1]} mmHg`;
+    return {
+      lines: [["Zielkorridor", corridor], ["Kategorie", r.title]],
+      report: "◆ Zielwertbestimmung nach NVL Blutdruck-Zielkorridor (Abbildung 3):\n\n" +
+        w.factors.map((f, i) => `• ${f.title}: ${a.values[i]} von 5 (${f.left} → ${f.right})`).join("\n") +
+        `\n\n→ Kategorie: ${r.title}\n→ Zielkorridor: ${corridor}`
+    };
+  }
+  if (w.kind === "form") {
+    const r = computeMed(a);
+    return {
+      lines: [["Strategie", r.regimen], ["Substanzklassen", r.classes.join(", ")]],
+      report: "◆ Medikations-Empfehlung (Abbildung 5 / Tabelle 13):\n" + `Therapiestrategie: ${r.regimen}\n\nEmpfohlene Substanzklassen:\n` +
+        r.classes.map(c => "• " + c).join("\n") + "\n\nBegründung:\n" + r.rationale.map(x => "• " + x).join("\n")
+    };
+  }
+}
+
+/* =====================================================================
+   Fallzustand (bleibt beim Neuladen erhalten – nur im eigenen Browser)
+   ===================================================================== */
+const STORE = "nvl-fallsimulator-v1";
+const blank = () => ({ current: "screening.initial", history: [], path: [], results: {}, answers: {}, created: new Date().toISOString(), finished: false });
+let C = load();
+function load() { try { const s = JSON.parse(localStorage.getItem(STORE)); if (s && STATES[s.current]) return s; } catch (e) {} return blank(); }
+function save() { try { localStorage.setItem(STORE, JSON.stringify(C)); } catch (e) {} }
+
+const $ = s => document.querySelector(s);
+const esc = s => String(s).replace(/[&<>"']/g, ch => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[ch]));
+const phaseOf = id => PHASES.find(p => p.states.includes(id));
+const fmtDate = d => d.toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit", year: "numeric" });
+const nextIds = id => { const s = STATES[id]; return [...(s.next || []), ...(s.more || []).flatMap(g => g.items)].map(n => n.to).filter(t => STATES[t]); };
+
+const ICONS = {
+  check: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>',
+  arrow: '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>',
+  clipboard: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="6" y="4" width="12" height="17" rx="2"/><path d="M9 4.5V3h6v1.5M9 10h6M9 14h6M9 18h3"/></svg>',
+  search: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/></svg>',
+  target: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="5"/><circle cx="12" cy="12" r="1.5" fill="currentColor"/></svg>',
+  pill: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20.5a4.95 4.95 0 0 1-7-7l7-7a4.95 4.95 0 0 1 7 7z"/><path d="m7 10 7 7"/></svg>',
+  alert: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 9v4M12 17h.01"/><path d="M10.3 3.9 1.8 18a2 2 0 0 0 1.7 3h17a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/></svg>',
+  done: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="m8 12.5 2.8 2.8L16 10"/></svg>',
+  ext: '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/></svg>'
+};
+
+/* ---------- Navigation ---------- */
+function go(to) {
+  if (to === "@finish") { finishCase(); return; }
+  if (!STATES[to]) return;
+  if (to === C.current && C.path.length) return;
+  C.history.push({ from: C.current, pathLen: C.path.length, finished: C.finished });
+  if (!C.path.length && to !== "screening.initial") C.path.push({ id: "screening.initial", t: Date.now() });
+  const entry = { id: to, t: Date.now() };
+  const fu = FOLLOW_UP[to];
+  if (fu) {
+    const d = new Date();
+    if (fu.years) d.setFullYear(d.getFullYear() + fu.years);
+    if (fu.weeks) d.setDate(d.getDate() + fu.weeks * 7);
+    entry.followUp = `${fu.text} – am ${fmtDate(d)}`;
+  }
+  C.path.push(entry);
+  C.current = to;
+  C.finished = !!STATES[to].end;
+  save(); render(true);
+}
+function back() {
+  const h = C.history.pop();
+  if (!h) return;
+  C.current = h.from; C.path.length = h.pathLen; C.finished = h.finished;
+  save(); render(true); toast("Schritt rückgängig gemacht");
+}
+function finishCase() {
+  C.history.push({ from: C.current, pathLen: C.path.length, finished: C.finished });
+  C.finished = true; save(); render(true);
+  if (matchMedia("(max-width:1180px)").matches) $("#logCol").scrollIntoView({ behavior: "smooth" });
+  toast("Fall abgeschlossen – Protokoll ist bereit");
+}
+function resetCase() { localStorage.removeItem(STORE); C = blank(); save(); render(true); toast("Neuer Fall gestartet"); }
+
+/* ---------- Rendering ---------- */
+function render(focus) {
+  renderMap(); renderStep(); renderLog();
+  $("#backBtn").disabled = !C.history.length;
+  if (focus) {
+    window.scrollTo({ top: 0, behavior: matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth" });
+    $("#main").focus({ preventScroll: true });
+  }
+}
+
+function renderMap() {
+  const visited = new Set(C.path.map(p => p.id));
+  const nxt = new Set(C.finished ? [] : nextIds(C.current));
+  let h = `<h2>Pfad-Karte</h2>`;
+  for (const p of PHASES) {
+    h += `<div class="phase" style="--pc:${p.color}"><div class="phase-label"><span class="phase-dot"></span>${p.label}</div>`;
+    for (const id of p.states) {
+      const cls = [id === C.current ? "current" : "", visited.has(id) && id !== C.current ? "visited" : "", nxt.has(id) ? "next" : ""].join(" ");
+      h += `<button class="node ${cls}" data-go="${id}" ${id === C.current ? 'aria-current="step"' : ""}><span class="ico">${ICONS.check}</span>${esc(STATES[id].nav)}</button>`;
+    }
+    h += `</div>`;
+  }
+  h += `<div class="map-legend"><span><i style="background:var(--accent);border-color:var(--accent)"></i>besucht</span><span><i style="box-shadow:0 0 0 3px var(--accent-soft);border-color:var(--accent)"></i>aktuell</span><span>Klick = direkt springen</span></div>`;
+  $("#map").innerHTML = h;
+}
+
+function toolHTML(id) {
+  const w = WIZARDS[id], r = C.results[id];
+  return `<div class="tool ${r ? "done" : ""}">
+    <div class="tool-ico">${r ? ICONS.done : ICONS[w.icon]}</div>
+    <div class="tool-body">
+      <div class="tool-title">${esc(w.title)} <span class="ref">· ${esc(w.sub.split("·").pop().trim())}</span></div>
+      ${r ? `<div class="tool-result">${r.lines.map(([k, v]) => `<div><b>${esc(k)}:</b> ${esc(v)}</div>`).join("")}</div>` : `<div class="tool-desc">${esc(w.desc)}</div>`}
+    </div>
+    <button class="btn ${r ? "" : "primary"}" data-wiz="${id}">${r ? "Bearbeiten" : "Starten"}</button>
+  </div>`;
+}
+
+function choiceHTML(n, i, color) {
+  const cc = n.danger ? "var(--danger)" : color;
+  return `<button class="choice ${n.rec ? "rec" : ""}" data-go="${n.to}" style="--cc:${cc}">
+    ${i != null ? `<span class="num" aria-hidden="true">${i}</span>` : ""}
+    <span class="txt">${n.rec ? `<span class="tag">Empfohlen</span>` : ""}<span class="t">${esc(n.label)}</span>${n.hint ? `<span class="h">${esc(n.hint)}</span>` : ""}</span>
+    <span class="arr">${ICONS.arrow}</span></button>`;
+}
+
+function renderStep() {
+  const s = STATES[C.current], ph = phaseOf(C.current);
+  const color = s.danger ? "var(--danger)" : ph.color;
+  const phaseIdx = PHASES.indexOf(ph);
+  let h = "";
+
+  // Pfad (Breadcrumb)
+  const trail = C.path.slice(-5);
+  if (C.path.length) {
+    h += `<nav class="trail" aria-label="Bisheriger Pfad">${C.path.length > 5 ? `<span>…</span><span class="sep">›</span>` : ""}` +
+      trail.map((p, i) => i === trail.length - 1 && p.id === C.current ? `<button class="now" disabled>${esc(STATES[p.id].nav)}</button>` : `<button data-go="${p.id}">${esc(STATES[p.id].nav)}</button>`).join(`<span class="sep">›</span>`) + `</nav>`;
+  }
+  h += `<div class="mprog" aria-hidden="true">${PHASES.map((p, i) => `<i class="${i <= phaseIdx ? "on" : ""}" style="--pc:${p.color}"></i>`).join("")}</div>`;
+
+  h += `<article class="panel step" style="--pc:${color}">`;
+  h += `<div class="step-meta"><span class="chip">${esc(ph.label)}</span><span class="ref">NVL Hypertonie · ${esc(s.ref)}</span></div>`;
+  h += `<h1>${esc(s.title)}</h1><p class="lead">${esc(s.lead)}</p>`;
+
+  const facts = [];
+  if (s.cutoff) facts.push(`<div class="fact cut"><div class="k">${esc(s.cutoff[0])}</div><div class="v">${esc(s.cutoff[1])} <small>${esc(s.cutoff[2])}</small></div></div>`);
+  (s.facts || []).forEach(([k, v]) => facts.push(`<div class="fact"><div class="k">${esc(k)}</div><div class="v">${esc(v)}</div></div>`));
+  if (facts.length) h += `<div class="facts">${facts.join("")}</div>`;
+
+  if (s.howto) {
+    h += `<div class="howto"><h3>${esc(s.howto.title)}</h3>` +
+      (s.howto.steps ? `<ol>${s.howto.steps.map(x => `<li>${esc(x)}</li>`).join("")}</ol>` : `<ul>${s.howto.chips.map(x => `<li>${esc(x)}</li>`).join("")}</ul>`) + `</div>`;
+  }
+  if (s.tools) h += `<div class="section-h">Assistent</div><div class="tools">${s.tools.map(toolHTML).join("")}</div>`;
+
+  if (C.finished) {
+    h += `<div class="finish"><div style="color:var(--ok)">${ICONS.done.replace("<svg", '<svg width="40" height="40"')}</div><div><div class="big">Fall abgeschlossen</div>
+      <p>${s.end ? esc(s.facts[0][1]) + ". " : ""}Das Fallprotokoll enthält den gesamten Pfad und alle Assistenten-Ergebnisse.</p></div></div>
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:14px">
+        <button class="btn primary" data-act="copy">Protokoll kopieren</button>
+        <button class="btn" data-act="reset">Neuen Fall durchspielen</button>
+      </div>`;
+  } else if (s.end) {
+    h += `<div class="decide"><div class="section-h">Fall abschließen</div><div class="choices">${choiceHTML({ to: "@finish", label: "Fall abschließen", hint: "Protokoll ansehen, kopieren oder drucken", rec: true }, 1, color)}</div></div>`;
+  } else {
+    h += `<div class="decide"><div class="section-h">${esc(s.question || "Wie geht es weiter?")} <span class="hide-mobile">· ${s.next.length > 1 ? `Tasten <kbd>1</kbd>–<kbd>${s.next.length}</kbd>` : `Taste <kbd>1</kbd>`}</span></div>`;
+    h += `<div class="choices">${s.next.map((n, i) => choiceHTML(n, i + 1, color)).join("")}</div>`;
+    if (s.more) {
+      h += `<details class="more"><summary>Therapie-Erweiterung & Sonderfälle</summary><div class="groups">` +
+        s.more.map(g => `<div><div class="gl">${esc(g.label)}</div><div class="choices">${g.items.map(n => choiceHTML(n, null, color)).join("")}</div></div>`).join("") + `</div></details>`;
+    }
+    h += `</div>`;
+  }
+
+  h += `<div class="step-foot"><span>Materialien:</span>
+    <a href="${NVL_URL}" target="_blank" rel="noopener">NVL Hypertonie ${ICONS.ext}</a>
+    <a href="${DHL_URL}" target="_blank" rel="noopener">Deutsche Hochdruckliga ${ICONS.ext}</a></div>`;
+  h += `</article>`;
+  $("#main").innerHTML = h;
+}
+
+function reportText() {
+  const created = new Date(C.created);
+  const path = (C.path.length ? C.path : [{ id: "screening.initial" }]);
+  let t = `--- SCHULUNGSFALL-PROTOKOLL (KEINE ECHTEN PATIENTENDATEN) ---\nErstellt am ${fmtDate(created)}\n\n`;
+  t += "• Klinischer Pfad / Verlauf:\n" + path.map(p => "  " + LOG_LABELS[p.id] + (p.followUp ? "\n  " + p.followUp + "." : "")).join("\n") + "\n";
+  if (C.finished && C.current === "monitoring.main") t += "  Zielwert erreicht – Verlauf stabil.\n";
+  const keys = Object.keys(WIZARDS).filter(k => C.results[k]);
+  if (keys.length) t += "\n• Durchgeführte Assistenten & Empfehlungen:\n\n" + keys.map(k => C.results[k].report).join("\n\n") + "\n";
+  t += "\n==================================================\nHAFTUNGSAUSSCHLUSS & ZWECKBESTIMMUNG:\nBeispiel für einen Schulungsfall. Dieses Programm ist ein reines\nSchulungs- und Interaktionstool zur Verbildlichung der Nationalen\nVersorgungsLeitlinie (NVL) Hypertonie und ersetzt keinesfalls die\närztliche Diagnostik oder Therapieentscheidung.\n==================================================";
+  return t;
+}
+
+function renderLog() {
+  const n = C.path.length;
+  $("#logCountM").textContent = n;
+  let h = `<div class="log-head"><h2>Fallprotokoll</h2>${n ? `<span class="badge">${n}</span>` : ""}</div>`;
+  if (!n) {
+    h += `<div class="log-empty">Noch keine Schritte. Triff die erste Entscheidung – jeder Schritt und jedes Assistenten-Ergebnis landet automatisch hier.</div>`;
+  } else {
+    h += `<ol class="timeline">${C.path.map(p => `<li style="--pc:${STATES[p.id].danger ? "var(--danger)" : phaseOf(p.id).color}"><b>${esc(STATES[p.id].nav)}</b>${esc(LOG_LABELS[p.id])}${p.followUp ? `<br><span class="fu">${esc(p.followUp)}</span>` : ""}</li>`).join("")}</ol>`;
+  }
+  const keys = Object.keys(WIZARDS).filter(k => C.results[k]);
+  if (keys.length) {
+    h += `<div class="section-h" style="margin-top:6px">Assistenten</div><div class="log-results">` +
+      keys.map(k => `<div class="log-result"><b>${esc(WIZARDS[k].title)}</b>${C.results[k].lines.map(([a, b]) => `${esc(a)}: ${esc(b)}`).join("<br>")}</div>`).join("") + `</div>`;
+  }
+  const dis = n || keys.length ? "" : "disabled";
+  h += `<div class="log-actions">
+    <button class="btn" data-act="copy" ${dis}>Kopieren</button>
+    <button class="btn" data-act="download" ${dis}>.txt</button>
+    <button class="btn" data-act="print" ${dis}>Drucken</button></div>`;
+  $("#log").innerHTML = h;
+  $("#printReport").textContent = reportText();
+}
+
+/* =====================================================================
+   Assistenten-Sheet
+   ===================================================================== */
+let W = null; // { id, a (Entwurf) }
+let lastFocus = null;
+
+function openWizard(id) {
+  const w = WIZARDS[id];
+  const prev = C.answers[id];
+  let a = prev ? JSON.parse(JSON.stringify(prev)) : {};
+  if (w.kind === "sliders" && !a.values) a.values = w.factors.map(() => 3);
+  W = { id, a };
+  lastFocus = document.activeElement;
+  $("#sheetTitle").textContent = w.title;
+  $("#sheetSub").textContent = w.sub;
+  $("#sheetBody").innerHTML = wizardBody(id, a);
+  $("#sheetBody").scrollTop = 0;
+  updateWizard();
+  $("#sheet").classList.add("open"); $("#overlay").classList.add("open");
+  $("#sheet").setAttribute("aria-hidden", "false");
+  document.body.style.overflow = "hidden";
+  setTimeout(() => ($("#sheetBody").querySelector("input") || $("#sheetClose")).focus({ preventScroll: true }), 50);
+}
+function closeWizard() {
+  $("#sheet").classList.remove("open"); $("#overlay").classList.remove("open");
+  $("#sheet").setAttribute("aria-hidden", "true");
+  document.body.style.overflow = "";
+  W = null;
+  if (lastFocus && document.contains(lastFocus)) lastFocus.focus({ preventScroll: true });
+}
+
+function seg(name, opts, sel, type = "radio", cls = "") {
+  return `<div class="seg ${cls}" role="${type === "radio" ? "radiogroup" : "group"}">` + opts.map(([v, l]) => {
+    const on = type === "radio" ? sel === v : (sel || []).includes(v);
+    return `<label><input type="${type}" name="${name}" value="${esc(v)}" ${on ? "checked" : ""}><span>${esc(l)}</span></label>`;
+  }).join("") + `</div>`;
+}
+
+function wizardBody(id, a) {
+  const w = WIZARDS[id];
+  if (w.kind === "chips") {
+    return `<p class="q-desc">Zutreffendes antippen. Nichts Zutreffendes? Einfach leer lassen.</p>` + w.groups.map(g => `<div class="q">
+      <div class="group-h"><div class="q-title">${esc(g.title)}</div><span class="cnt" data-cnt="${g.id}"></span></div>
+      ${seg(g.id, g.items.map(x => [x, x]), a[g.id], "checkbox", "chips")}</div>`).join("");
+  }
+  if (w.kind === "yesno") {
+    return w.items.map((it, i) => `<div class="q"><div class="q-title"><span class="n">${i + 1}</span>${esc(it.title)}</div>
+      <p class="q-desc">${esc(it.q)}</p>${seg(it.id, w.options, a[it.id], "radio", "yn " + (w.cls || ""))}</div>`).join("");
+  }
+  if (w.kind === "drugs") {
+    const card = it => `<div class="drug"><h3>${esc(it.title)}${it.sub ? ` <span class="ref">${esc(it.sub)}</span>` : ""}</h3>
+      ${it.rows ? `<dl>${it.rows.map(([k, v]) => `<dt>${esc(k)}</dt><dd>${esc(v)}</dd>`).join("")}</dl>` : ""}
+      ${it.pro ? `<div class="pc"><div class="pro"><b>Vorteile</b>${esc(it.pro)}</div><div class="con"><b>Nachteile</b>${esc(it.con)}</div></div>` : ""}
+      ${seg(it.id, w.options, a[it.id], "radio", "yn")}</div>`;
+    if (w.sections) return w.sections.map(([label, ids]) => `<div class="subhead">${esc(label)}</div>` + ids.map(x => card(w.items.find(i => i.id === x))).join("")).join("");
+    return w.items.map(card).join("");
+  }
+  if (w.kind === "sliders") {
+    return `<p class="q-desc">Schieberegler je Faktor einstellen (0 = ganz links, 5 = ganz rechts). Der Korridor aktualisiert sich sofort.</p>` +
+      w.factors.map((f, i) => `<div class="slider"><div class="row"><span>← ${esc(f.left)}</span><b id="fl${i}">${esc(f.title)}</b><span>${esc(f.right)} →</span></div>
+      <input type="range" min="0" max="5" step="1" value="${a.values[i]}" data-idx="${i}" aria-labelledby="fl${i}" aria-valuetext="${a.values[i]} von 5">
+      <div class="ticks">${[0, 1, 2, 3, 4, 5].map(n => `<span>${n}</span>`).join("")}</div></div>`).join("") +
+      `<div class="live stick" id="live"></div>`;
+  }
+  if (w.kind === "form") {
+    return w.questions.map((q, i) => `<div class="q"><div class="q-title"><span class="n">${i + 1}</span>${esc(q.title)}${q.req ? "" : ` <span class="opt">optional${q.multi ? " · Mehrfachauswahl" : ""}</span>`}</div>
+      ${seg(q.id, q.opts, a[q.id], q.multi ? "checkbox" : "radio", q.multi ? "chips" : "")}</div>`).join("") + `<div class="live" id="live"></div>`;
+  }
+}
+
+function readWizard() {
+  const w = WIZARDS[W.id], body = $("#sheetBody"), a = W.a;
+  const val = n => { const el = body.querySelector(`input[name="${n}"]:checked`); return el ? el.value : undefined; };
+  const vals = n => [...body.querySelectorAll(`input[name="${n}"]:checked`)].map(e => e.value);
+  if (w.kind === "chips") w.groups.forEach(g => a[g.id] = vals(g.id));
+  if (w.kind === "yesno" || w.kind === "drugs") w.items.forEach(it => { const v = val(it.id); if (v) a[it.id] = v; });
+  if (w.kind === "sliders") body.querySelectorAll("input[type=range]").forEach(r => { a.values[+r.dataset.idx] = +r.value; r.setAttribute("aria-valuetext", r.value + " von 5"); });
+  if (w.kind === "form") w.questions.forEach(q => { if (q.multi) a[q.id] = vals(q.id); else { const v = val(q.id); if (v) a[q.id] = v; } });
+}
+
+function updateWizard() {
+  const w = WIZARDS[W.id], a = W.a;
+  let done = 0, total = 0, ok = true, hint = "";
+  if (w.kind === "chips") {
+    total = w.groups.length; done = w.groups.filter(g => (a[g.id] || []).length).length;
+    const sel = w.groups.reduce((s, g) => s + (a[g.id] || []).length, 0);
+    w.groups.forEach(g => { const el = $(`[data-cnt="${g.id}"]`); if (el) el.textContent = (a[g.id] || []).length ? (a[g.id].length + " ausgewählt") : ""; });
+    hint = sel ? `${sel} Angaben ausgewählt` : "Alles optional";
+  } else if (w.kind === "yesno" || w.kind === "drugs") {
+    total = w.items.length; done = w.items.filter(it => a[it.id]).length; ok = done === total;
+    hint = ok ? "Alles beantwortet" : `${done} von ${total} beantwortet`;
+  } else if (w.kind === "sliders") {
+    total = done = 1;
+    const r = computeTarget(a.values);
+    $("#live").innerHTML = `<div class="live-box"><div class="k">${esc(r.title)}</div><div class="v">${r.sys[0]}–${r.sys[1]} / ${r.dia[0]}–${r.dia[1]} mmHg</div>
+      <div class="scale" aria-hidden="true"><i style="left:${(r.avg / 5) * 100}%"></i></div><div class="scale-l"><span>strenger</span><span>Standard</span><span>moderater</span></div>
+      <div class="s" style="margin-top:6px">Orientierungsbereich gemäß NVL Hypertonie (Abbildung 3) · Mittelwert der Faktoren ${r.avg.toFixed(1).replace(".", ",")}</div></div>`;
+    hint = "Zielkorridor wird live berechnet";
+  } else if (w.kind === "form") {
+    const req = w.questions.filter(q => q.req);
+    total = req.length; done = req.filter(q => a[q.id]).length; ok = done === total;
+    if (ok) {
+      const r = computeMed(a);
+      $("#live").innerHTML = `<div class="live-box"><div class="k">Therapiestrategie</div><div class="v" style="font-size:19px">${esc(r.regimen)}</div>
+        <div class="cls">${r.classes.map(c => `<span>${esc(c)}</span>`).join("")}</div>
+        <ul>${r.rationale.map(x => `<li>${esc(x)}</li>`).join("")}</ul></div>`;
+      hint = "Empfehlung: " + r.regimen;
+    } else {
+      $("#live").innerHTML = `<div class="live-box muted"><div class="k">Empfehlung</div><div class="s">Erscheint, sobald alle Pflichtfragen beantwortet sind (noch ${total - done} offen).</div></div>`;
+      hint = `${done} von ${total} Pflichtfragen`;
+    }
+  }
+  $("#sheetProg").style.width = (total ? Math.round(done / total * 100) : 100) + "%";
+  $("#sheetHint").textContent = hint;
+  $("#sheetApply").disabled = !ok;
+}
+
+function applyWizard() {
+  if (!W || $("#sheetApply").disabled) return;
+  const id = W.id;
+  C.answers[id] = W.a;
+  C.results[id] = summarize(id, W.a);
+  save(); closeWizard(); render(false);
+  toast("Ergebnis übernommen und ins Protokoll eingetragen");
+}
+
+/* =====================================================================
+   Aktionen & Ereignisse
+   ===================================================================== */
+let toastT;
+function toast(msg) { const t = $("#toast"); t.textContent = msg; t.classList.add("show"); clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove("show"), 2200); }
+
+async function copyReport() {
+  const text = reportText();
+  try { await navigator.clipboard.writeText(text); }
+  catch (e) { const ta = document.createElement("textarea"); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand("copy"); ta.remove(); }
+  toast("Protokoll in die Zwischenablage kopiert");
+}
+function downloadReport() {
+  const blob = new Blob([reportText()], { type: "text/plain;charset=utf-8" });
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob); a.download = `Schulungsfall-NVL-Hypertonie-${new Date().toISOString().slice(0, 10)}.txt`;
+  document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 1000);
+}
+function askReset() {
+  const d = $("#confirmDlg");
+  if (!C.path.length && !Object.keys(C.results).length) { resetCase(); return; }
+  if (typeof d.showModal !== "function") { if (confirm("Neuen Fall beginnen? Alle Eingaben werden gelöscht.")) resetCase(); return; }
+  d.returnValue = ""; d.showModal();
+  d.addEventListener("close", () => { if (d.returnValue === "ok") resetCase(); }, { once: true });
+}
+function closeMap() { $("#mapCol").classList.remove("open"); if (!W) $("#overlay").classList.remove("open"); }
+
+document.addEventListener("click", e => {
+  const g = e.target.closest("[data-go]");
+  if (g && !g.disabled) { closeMap(); go(g.dataset.go); return; }
+  const wz = e.target.closest("[data-wiz]");
+  if (wz) { openWizard(wz.dataset.wiz); return; }
+  const act = e.target.closest("[data-act]");
+  if (act && !act.disabled) {
+    ({ copy: copyReport, download: downloadReport, print: () => window.print(), reset: askReset })[act.dataset.act]();
+  }
+});
+$("#backBtn").addEventListener("click", back);
+$("#resetBtn").addEventListener("click", askReset);
+$("#sheetClose").addEventListener("click", closeWizard);
+$("#sheetCancel").addEventListener("click", closeWizard);
+$("#sheetApply").addEventListener("click", applyWizard);
+$("#overlay").addEventListener("click", () => { if (W) closeWizard(); closeMap(); });
+$("#sheetBody").addEventListener("input", () => { if (W) { readWizard(); updateWizard(); } });
+$("#mapToggle").addEventListener("click", () => { $("#mapCol").classList.add("open"); $("#overlay").classList.add("open"); });
+$("#logToggle").addEventListener("click", () => $("#logCol").scrollIntoView({ behavior: "smooth" }));
+
+document.addEventListener("keydown", e => {
+  if (e.key === "Escape") { if (W) closeWizard(); else closeMap(); return; }
+  if (W) {
+    if (e.key === "Tab") { // Fokus im Sheet halten
+      const f = [...$("#sheet").querySelectorAll("button:not([disabled]),input")];
+      const first = f[0], last = f[f.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    }
+    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) applyWizard();
+    return;
+  }
+  if (e.target.closest("input,textarea,dialog") || e.metaKey || e.ctrlKey) return;
+  if (e.altKey && e.key === "ArrowLeft") { e.preventDefault(); back(); return; }
+  const s = STATES[C.current];
+  if (/^[1-9]$/.test(e.key) && !C.finished) {
+    const list = s.end ? [{ to: "@finish" }] : (s.next || []);
+    const n = list[+e.key - 1];
+    if (n) { e.preventDefault(); go(n.to); }
+  }
+});
+
+/* Hinweis einmalig bestätigen */
+if (!localStorage.getItem("nvl-disclaimer-ok")) $("#disclaimer").hidden = false;
+$("#disclaimerOk").addEventListener("click", () => { localStorage.setItem("nvl-disclaimer-ok", "1"); $("#disclaimer").hidden = true; });
+
+/* Aus der Spielkiste geöffnet? Dann führt „← Spielkiste“ zurück, und der eigene Installationshinweis entfällt. */
+if (new URLSearchParams(location.search).has("kiste")) sessionStorage.setItem("nvl-kiste", "1");
+const ausKiste = sessionStorage.getItem("nvl-kiste") === "1";
+if (ausKiste) { $("#kisteBtn").hidden = false; document.body.classList.add("kiste"); }
+
+/* App-Betrieb: Offline-Speicher und Installationshinweis */
+if ("serviceWorker" in navigator && location.protocol.startsWith("http")) {
+  window.addEventListener("load", () => navigator.serviceWorker.register("sw.js").catch(() => {}));
+}
+const standalone = matchMedia("(display-mode: standalone)").matches || navigator.standalone === true;
+const iOS = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1);
+const showInstall = () => { if (!ausKiste && iOS && !standalone && !localStorage.getItem("nvl-install-hint") && $("#disclaimer").hidden) $("#installHint").hidden = false; };
+showInstall();
+$("#disclaimerOk").addEventListener("click", showInstall);
+$("#installOk").addEventListener("click", () => { localStorage.setItem("nvl-install-hint", "1"); $("#installHint").hidden = true; });
+
+render(false);
+</script>
+</body>
+</html>
