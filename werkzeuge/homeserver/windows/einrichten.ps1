@@ -4,6 +4,7 @@
 #   Konto-Server  – spielstand-server.js, ebenso
 #   Update        – holt die neueste Version von GitHub (aktualisieren.ps1): nach Bedarf über den Knopf
 #                   „Server aktualisieren“ in der App (nur für das Admin-Konto) und zur Sicherheit jede Nacht um 04:17
+#   DuckDNS       – meldet alle 5 Minuten die aktuelle IP an DuckDNS (nur wenn ein Token hinterlegt ist)
 # Läuft als SYSTEM: keine offenen Fenster, auch ohne angemeldeten Benutzer.
 param([string]$Basis = 'C:\homeserver')
 $ErrorActionPreference = 'Stop'
@@ -13,7 +14,7 @@ function Schritt($t) { Write-Host ''; Write-Host "== $t" -ForegroundColor Cyan }
 Schritt 'Skripte auf den neuesten Stand bringen'
 $neueSkripte = Join-Path $Basis 'spiel\werkzeuge\homeserver\windows'
 if (Test-Path $neueSkripte) {
-  foreach ($f in 'aktualisieren.ps1', 'aktualisieren.bat', 'CLAUDE.md') { if (Test-Path "$neueSkripte\$f") { Copy-Item -Force "$neueSkripte\$f" $Basis } }
+  foreach ($f in 'aktualisieren.ps1', 'aktualisieren.bat', 'duckdns.ps1', 'CLAUDE.md') { if (Test-Path "$neueSkripte\$f") { Copy-Item -Force "$neueSkripte\$f" $Basis } }
   Write-Host 'Update-Skripte und CLAUDE.md aus der aktuellen Spielversion übernommen.'
 }
 
@@ -35,6 +36,23 @@ else {
   if ($admin) { Set-Content -Path $adminDatei -Value $admin -Encoding UTF8 } else { Write-Host 'Kein Admin – der Knopf bleibt für alle verborgen.' }
 }
 if ($admin -match '["&|<>^%]') { throw 'Ungültiger Name' }
+
+Schritt 'DuckDNS (hält die Adresse auf deiner wechselnden IP)'
+$tokenDatei = Join-Path $Basis 'duckdns-token.txt'; $domainDatei = Join-Path $Basis 'duckdns-domain.txt'
+if (Test-Path $tokenDatei) { Write-Host 'Token ist hinterlegt (neuer Token: duckdns-token.txt löschen und einrichten.bat erneut ausführen).' }
+else {
+  $token = (Read-Host 'DuckDNS-Token (steht oben auf duckdns.org; Enter = überspringen)').Trim()
+  if ($token) {
+    if ($token -notmatch '^[0-9a-fA-F-]{20,60}$') { throw 'Das sieht nicht wie ein DuckDNS-Token aus.' }
+    Set-Content -Path $tokenDatei -Value $token -Encoding ASCII
+  }
+}
+if ((Test-Path $tokenDatei) -and -not (Test-Path $domainDatei)) {
+  $sub = (Read-Host 'DuckDNS-Subdomain (Enter = spielkiste)').Trim(); if (-not $sub) { $sub = 'spielkiste' }
+  $sub = $sub -replace '\.duckdns\.org$', ''
+  if ($sub -notmatch '^[a-z0-9-]{1,63}$') { throw 'Ungültige Subdomain' }
+  Set-Content -Path $domainDatei -Value $sub -Encoding ASCII
+}
 
 Schritt 'Caddy-Zertifikate übernehmen'
 $caddyDaten = Join-Path $Basis 'caddy-daten'
@@ -72,6 +90,14 @@ $updAktion = New-ScheduledTaskAction -Execute 'powershell.exe' -WorkingDirectory
 $nachts = New-ScheduledTaskTrigger -Daily -At '04:17'
 $updEinst = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
 Register-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Update' -Action $updAktion -Trigger $nachts -Principal $wer -Settings $updEinst -Force | Out-Null
+if ((Test-Path $tokenDatei) -and (Test-Path (Join-Path $Basis 'duckdns.ps1'))) {
+  Stop-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'DuckDNS' -ErrorAction SilentlyContinue
+  $ddAktion = New-ScheduledTaskAction -Execute 'powershell.exe' -WorkingDirectory $Basis `
+    -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$Basis\duckdns.ps1`" -Basis `"$Basis`""
+  Register-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'DuckDNS' -Action $ddAktion -Trigger $beimStart -Principal $wer -Settings $dauerhaft -Force | Out-Null
+  Start-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'DuckDNS'
+  Write-Host 'DuckDNS-Aufgabe angelegt.'
+}
 Write-Host 'Caddy, Konto-Server und Update angelegt.'
 
 Schritt 'Starten und prüfen'
@@ -85,6 +111,12 @@ try { Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8090/api/ich' -T
 }
 if (Get-Process -Name caddy_windows_amd64, caddy -ErrorAction SilentlyContinue) { Write-Host 'Caddy läuft ✓' -ForegroundColor Green }
 else { Write-Host "Caddy läuft nicht – siehe $Basis\caddy.log" -ForegroundColor Red; $ok = $false }
+if (Test-Path $tokenDatei) {
+  Start-Sleep 5
+  $dl = Join-Path $Basis 'duckdns.log'
+  $letzte = if (Test-Path $dl) { (Get-Content $dl -Tail 1) } else { '' }
+  if ($letzte -match 'gemeldet') { Write-Host 'DuckDNS aktuell ✓' -ForegroundColor Green } else { Write-Host "DuckDNS: $letzte" -ForegroundColor Yellow }
+}
 Write-Host ''
 if ($ok) { Write-Host 'Fertig! Ab jetzt startet alles mit Windows, Updates holst du in der App über ☁️ → „Server aktualisieren“ (sonst nachts automatisch).' -ForegroundColor Green }
 else { Write-Host 'Bitte einen Screenshot dieses Fensters schicken.' -ForegroundColor Yellow }

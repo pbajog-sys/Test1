@@ -48,3 +48,6 @@ Läuft daneben `spielstand-server.js`, fragt die App beim ersten Besuch einmal n
   nicht, kommt die vorige Version zurück (`spiel-vorher\`). Protokoll: `update.log`.
 - Zweig: `spielstand-sync`, änderbar über eine Datei `update-zweig.txt` mit dem Zweignamen.
 - Die Caddyfile wird nie automatisch geändert.
+- DuckDNS: `einrichten.bat` fragt einmal nach Token und Subdomain (nur lokal gespeichert in `duckdns-token.txt` /
+  `duckdns-domain.txt`) und legt die Aufgabe **DuckDNS** an: alle 5 Minuten wird die aktuelle IP (die Telekom vergibt
+  sie dynamisch) an DuckDNS gemeldet, wenn sie sich geändert hat. Protokoll `duckdns.log`.

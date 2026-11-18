@@ -23,6 +23,8 @@ Portweiterleitung TCP 80/443 auf diesen Laptop, feste lokale IP).
 - `Update`: `aktualisieren.ps1` – holt die neueste Version, wenn es auf GitHub etwas Neues gibt. Läuft nach Bedarf
   (im ☁️-Fenster der App: „🔍 Updates prüfen“ / „⬆️ Aktualisieren“, nur für das Konto in `admin.txt`;
   der Konto-Server startet dafür die Aufgabe) und zur Sicherheit täglich 04:17. Protokoll `update.log`.
+- `DuckDNS`: läuft dauerhaft (`duckdns.ps1`), meldet alle 5 Minuten die IP an DuckDNS, wenn sie sich geändert hat.
+  Token/Subdomain nur lokal in `duckdns-token.txt` / `duckdns-domain.txt` (geheim, nie ins Repo). Protokoll `duckdns.log`.
 - Einrichten/neu anlegen: `einrichten.bat` (als Administrator).
 
 ## Typische Aufgaben
