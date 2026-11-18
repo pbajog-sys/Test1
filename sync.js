@@ -371,11 +371,11 @@ function syKnopf() {
   let b = document.getElementById('syncBtn');
   if (syZustand === 'aus') { if (b) b.hidden = true; return; }
   if (!b) {
-    const ziel = document.getElementById('sicherungBtn');
-    if (!ziel || !ziel.parentNode) return;
+    const leiste = document.querySelector('.hub-knoepfe');
+    if (!leiste) return;
     b = document.createElement('button'); b.type = 'button'; b.id = 'syncBtn'; b.className = 'vollbild-btn';
     b.addEventListener('click', () => (syZustand === 'ok' ? syKontoDialog() : syAnmeldeDialog()));
-    ziel.parentNode.insertBefore(b, ziel);
+    leiste.insertBefore(b, leiste.firstChild);
   }
   b.hidden = false;
   b.textContent = syZustand === 'ok' ? '☁️' : '👤';
@@ -427,7 +427,13 @@ function syKontoDialog() {
   const d = skDialog('<h3>☁️ ' + syEsc(syName) + '</h3>'
     + '<ul class="ft-check"><li><b>Spielstand</b><span>auf allen Geräten gleich ✓</span></li><li><b>Zuletzt abgeglichen</b><span>' + (m.zuletzt ? syZeit(m.zuletzt) : '–') + '</span></li></ul>'
     + '<p class="ft-klein">Auf einem anderen Gerät einfach die Seite öffnen und mit demselben Namen und derselben PIN anmelden.</p>'
-    + (syAdmin ? '<button type="button" class="btn" id="syServerMenue">🖥️ Server-Menü</button>' : '')
+    + (syAdmin ? '<div style="margin:12px 0;padding:12px;border-radius:14px;background:rgba(255,255,255,.05)">'
+      + '<b>🖥️ Server</b> <small style="color:#8b8bab">· nur für dich sichtbar</small>'
+      + '<ul class="ft-check" style="margin:6px 0"><li><b>Version</b><span id="syServerVersion">…</span></li><li><b>Konten</b><span id="syServerKonten">…</span></li></ul>'
+      + '<p class="ft-klein" id="syServerStand" style="min-height:1.2em;margin:4px 0"></p>'
+      + '<div id="syServerNeu" class="ft-klein" style="margin:4px 0"></div>'
+      + '<button type="button" class="btn secondary" id="syPruefen" style="margin:6px 0 0;width:100%">🔍 Updates prüfen</button>'
+      + '<button type="button" class="btn" id="syServerUpdate" style="margin:6px 0 0;width:100%" hidden>⬆️ Aktualisieren</button></div>' : '')
     + '<button type="button" class="btn secondary" id="syJetzt">🔄 Jetzt abgleichen</button>'
     + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>'
     + '<button type="button" class="btn secondary" id="syLoeschen" style="opacity:.75">🗑️ Konto löschen</button>');
@@ -439,7 +445,11 @@ function syKontoDialog() {
     localStorage.removeItem(SY_META); localStorage.setItem(SY_SPAETER, '1');
     syZustand = 'abgemeldet'; syName = ''; d.close(); syKnopf(); syBestenliste(); syDuelleLaden(); syHinweis('Konto gelöscht');
   });
-  if (d.querySelector('#syServerMenue')) d.querySelector('#syServerMenue').addEventListener('click', syServerMenue);
+  if (syAdmin) {
+    syServerStatus(d);
+    d.querySelector('#syPruefen').addEventListener('click', () => syUpdatesPruefen(d));
+    d.querySelector('#syServerUpdate').addEventListener('click', (e) => (e.currentTarget.dataset.neuLaden ? syAppNeuLaden() : syServerAktualisieren(d)));
+  }
   d.querySelector('#syJetzt').addEventListener('click', async () => { d.close(); await syAbgleich({ ladenErlaubt: true }); syHinweis('Abgeglichen ✓'); });
   d.querySelector('#syAbmelden').addEventListener('click', async () => {
     await syAbgleich();   // letzten Stand noch sichern
@@ -449,15 +459,23 @@ function syKontoDialog() {
 }
 
 // ---------- Betreiber: Server-Menü (nur für das Admin-Konto; der Server prüft das bei jeder Anfrage selbst) ----------
-function syServerMenue() {
-  const d = skDialog('<h3>🖥️ Server-Menü</h3>'
-    + '<ul class="ft-check"><li><b>Version</b><span id="syServerVersion">…</span></li><li><b>Konten</b><span id="syServerKonten">…</span></li></ul>'
-    + '<p class="ft-klein" id="syServerStand" style="min-height:1.3em">Wird geladen …</p>'
-    + '<button type="button" class="btn" id="syServerUpdate">🖥️ Server aktualisieren</button>'
-    + '<p class="ft-klein">Holt die neueste Version des Spiels und des Konto-Servers von GitHub. Spielstände bleiben unangetastet. Startet der neue Server nicht, kommt automatisch die vorige Version zurück.</p>'
-    + '<h4 style="margin:12px 0 4px">Letzte Updates</h4><pre id="syServerLog" style="white-space:pre-wrap;font-size:.72rem;line-height:1.4;color:#a3a3c2;margin:0;max-height:9em;overflow:auto"></pre>');
-  syServerStatus(d);
-  d.querySelector('#syServerUpdate').addEventListener('click', (e) => (e.currentTarget.dataset.neuLaden ? (typeof sbAktualisieren === 'function' ? sbAktualisieren() : location.reload()) : syServerAktualisieren(d)));
+// Updates auf GitHub prüfen: zeigt, was neu ist; „Aktualisieren“ erscheint nur, wenn es etwas Neues gibt
+async function syUpdatesPruefen(d) {
+  const knopf = d.querySelector('#syPruefen'), feld = d.querySelector('#syServerNeu'), los = d.querySelector('#syServerUpdate');
+  knopf.disabled = true; knopf.textContent = '🔍 Prüfe …'; feld.textContent = '';
+  const r = await syApi('admin/pruefen').catch(() => ({ status: 0 }));
+  knopf.disabled = false; knopf.textContent = '🔍 Updates prüfen';
+  if (r.status !== 200) { feld.textContent = '⚠️ ' + ((r.json && r.json.fehler) || 'GitHub gerade nicht erreichbar.'); return; }
+  const j = r.json;
+  if (!j.neuer) { feld.innerHTML = '✓ <b>Alles aktuell</b> (' + syEsc(j.neu) + ')'; los.hidden = true; return; }
+  feld.innerHTML = '🆕 <b>Neue Version ' + syEsc(j.neu) + '</b>' + (j.anzahl ? ' – ' + j.anzahl + (j.anzahl === 1 ? ' Änderung' : ' Änderungen') : '') + ':'
+    + (j.aenderungen && j.aenderungen.length ? '<ul style="margin:4px 0 0;padding-left:1.2em">' + j.aenderungen.map((t) => '<li>' + syEsc(t) + '</li>').join('') + '</ul>' : '');
+  los.hidden = false; los.disabled = false; los.textContent = '⬆️ Aktualisieren'; delete los.dataset.neuLaden;
+}
+// App auf diesem Gerät auf die neue Version bringen (Service Worker prüfen lassen, dann neu laden – Daten bleiben)
+async function syAppNeuLaden() {
+  try { const r = navigator.serviceWorker && await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) { /* offline – dann einfach neu laden */ }
+  setTimeout(() => location.reload(), 800);
 }
 async function syServerStatus(d) {
   const el = d.querySelector('#syServerStand'); if (!el) return null;
@@ -466,9 +484,8 @@ async function syServerStatus(d) {
     if (r.status !== 200) throw new Error();
     d.querySelector('#syServerVersion').textContent = r.json.version || '?';
     d.querySelector('#syServerKonten').textContent = r.json.konten + ' · ' + r.json.duelle + ' Duelle';
-    d.querySelector('#syServerLog').textContent = (r.json.log || []).join('\n') || '–';
     const letzte = (r.json.log || []).slice(-1)[0] || '';
-    el.textContent = letzte ? 'Zuletzt: ' + letzte.replace(/^\S+ (\S+)\s+/, '$1 ') : '';
+    el.textContent = letzte ? 'Letztes Update: ' + letzte.replace(/^(\S+) (\S+)\s+/, '$1 $2 · ') : '';
     return r.json;
   } catch (e) { el.textContent = 'Server gerade nicht erreichbar (startet vielleicht neu) …'; return null; }
 }
@@ -489,8 +506,8 @@ async function syServerAktualisieren(d) {
     const letzte = (st.log || []).slice(-1)[0] || '';
     if (/Fertig|Schon aktuell/.test(letzte)) {
       knopf.disabled = false;
-      if (/Fertig/.test(letzte)) { knopf.textContent = '🔄 App neu laden'; knopf.dataset.neuLaden = '1'; }
-      else knopf.textContent = '✓ Schon aktuell';
+      if (/Fertig/.test(letzte)) { knopf.textContent = '🔄 Fertig – App neu laden'; knopf.dataset.neuLaden = '1'; d.querySelector('#syServerNeu').textContent = '✓ Server ist auf dem neuesten Stand.'; }
+      else { knopf.textContent = '✓ Schon aktuell'; knopf.hidden = true; }
       return;
     }
     if (/FEHLER|zurückgenommen/.test(letzte)) { knopf.disabled = false; knopf.textContent = '🖥️ Nochmal versuchen'; return; }
@@ -514,7 +531,6 @@ function syHinweis(text) {
 async function syLaufen() {
   await syAbgleich({ alt: true, ladenErlaubt: true });
   syBestenliste(true); syDuelleLaden(true);
-  if (typeof sbHinweis === 'function') sbHinweis();   // Sicherungs-Erinnerung ausblenden – der Server sichert
   if (syGestartet) return;
   syGestartet = true;
   setInterval(() => { if (document.visibilityState === 'visible') { syAbgleich(); syBestenliste(false); syDuelleLaden(false); } }, SY_TAKT);

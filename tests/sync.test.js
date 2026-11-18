@@ -14,7 +14,13 @@ let apiAn = true;
 // Admin „Anna“; statt der Windows-Aufgabe schreibt ein Platzhalter nach kurzer Zeit „Fertig“ ins Update-Protokoll
 let updatesGestartet = 0;
 fs.writeFileSync(path.join(DATEN, 'version.txt'), 'aaaaaaa1111\n');
-const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], updateStarten: async () => {
+// GitHub-Platzhalter: neueste Version „bbbbbbb…“ mit zwei Änderungen seit „aaaaaaa…“
+const github = async (pfad) => {
+  if (pfad.startsWith('/commits/')) return { sha: 'bbbbbbb2222', commit: { message: 'Duelle\n\nDetails' } };
+  if (pfad.startsWith('/compare/')) return { ahead_by: 2, commits: [{ commit: { message: 'Bestenliste' } }, { commit: { message: 'Duelle' } }] };
+  throw new Error('unbekannt');
+};
+const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, updateStarten: async () => {
   updatesGestartet++;
   setTimeout(() => { fs.writeFileSync(path.join(DATEN, 'version.txt'), 'bbbbbbb2222\n'); fs.appendFileSync(path.join(DATEN, 'update.log'), '2026-11-18 22:00:00  Fertig: Version bbbbbbb läuft.\n'); }, 1500);
 } });
@@ -214,14 +220,18 @@ const caddy = http.createServer((req, res) => {
   ck('Admin: Anna ist Admin, Ben nicht', (await A.evaluate(async () => (await syApi('ich')).json.admin)) === true && (await C.evaluate(async () => (await syApi('ich')).json.admin)) === undefined);
   const benDarf = await C.evaluate(async () => [(await syApi('admin/aktualisieren', 'POST', {})).status, (await syApi('admin/status')).status]);
   ck('Admin: Ben darf weder aktualisieren noch den Status sehen', benDarf[0] === 403 && benDarf[1] === 403 && updatesGestartet === 0);
-  ck('Admin: Ben sieht kein Server-Menü', !(await C.evaluate(() => { syKontoDialog(); return !!document.getElementById('syServerMenue'); })));
+  ck('Admin: Ben sieht im ☁️-Fenster keinen Server-Bereich', !(await C.evaluate(() => { syKontoDialog(); return !!document.getElementById('syPruefen'); })));
   await C.evaluate(() => document.getElementById('skDlg').close());
-  await A.evaluate(() => { syAdmin = true; syKontoDialog(); }); await ruhig(A, 300);
-  await A.click('#syServerMenue'); await ruhig(A, 1000);
-  ck('Server-Menü: Version und Konten', (await A.textContent('#syServerVersion')) === 'aaaaaaa' && /\d+ · \d+ Duelle/.test(await A.textContent('#syServerKonten')));
-  await A.screenshot({ path: path.join(os.tmpdir(), 'sync-servermenue.png') });
+  ck('Admin: Ben darf nicht nach Updates fragen', (await C.evaluate(async () => (await syApi('admin/pruefen')).status)) === 403);
+  await A.evaluate(() => { syAdmin = true; syKontoDialog(); }); await ruhig(A, 1000);
+  ck('☁️ (Admin): Server-Bereich mit Version und Konten, „Aktualisieren“ noch versteckt', (await A.textContent('#syServerVersion')) === 'aaaaaaa' && /\d+ · \d+ Duelle/.test(await A.textContent('#syServerKonten')) && !(await A.isVisible('#syServerUpdate')));
+  await A.click('#syPruefen'); await ruhig(A, 800);
+  ck('Updates prüfen: neue Version mit Liste der Änderungen, „Aktualisieren“ erscheint', /Neue Version bbbbbbb – 2 Änderungen/.test(await A.textContent('#syServerNeu')) && /Duelle/.test(await A.textContent('#syServerNeu')) && (await A.isVisible('#syServerUpdate')), (await A.textContent('#syServerNeu')).replace(/\s+/g, ' '));
+  await A.locator('#syPruefen').scrollIntoViewIfNeeded(); await A.screenshot({ path: path.join(os.tmpdir(), 'sync-servermenue.png') });
   await A.click('#syServerUpdate'); await ruhig(A, 7000);
-  ck('Server aktualisieren: gestartet, Fortschritt, danach „App neu laden“ und neue Version', updatesGestartet === 1 && (await A.textContent('#syServerUpdate')) === '🔄 App neu laden' && (await A.textContent('#syServerVersion')) === 'bbbbbbb', await A.textContent('#syServerUpdate'));
+  ck('Aktualisieren: Fortschritt, danach „Fertig – App neu laden“ und neue Version', updatesGestartet === 1 && /Fertig – App neu laden/.test(await A.textContent('#syServerUpdate')) && (await A.textContent('#syServerVersion')) === 'bbbbbbb', await A.textContent('#syServerUpdate'));
+  await A.click('#syPruefen'); await ruhig(A, 800);
+  ck('Danach prüfen: „Alles aktuell“, kein Aktualisieren-Knopf', /Alles aktuell/.test(await A.textContent('#syServerNeu')) && !(await A.isVisible('#syServerUpdate')));
   const gleichNochmal = await A.evaluate(async () => (await syApi('admin/aktualisieren', 'POST', {})).status);
   ck('Server aktualisieren: höchstens einmal pro Minute', gleichNochmal === 429 && updatesGestartet === 1);
   await A.evaluate(() => document.getElementById('skDlg').close());

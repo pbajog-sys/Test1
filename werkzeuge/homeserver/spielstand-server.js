@@ -11,7 +11,8 @@
 //   POST /api/anmelden        { name, pin } → angemeldet (Cookie)
 //   POST /api/abmelden
 //   POST /api/admin/aktualisieren   (nur Admin) → startet die Windows-Aufgabe „Spielekiste\Update“ (neueste Version von GitHub)
-//   GET  /api/admin/status          (nur Admin) → { version, log: [letzte Zeilen von update.log] }
+//   GET  /api/admin/status          (nur Admin) → { version, log: [letzte Zeilen von update.log], konten, duelle }
+//   GET  /api/admin/pruefen         (nur Admin) → { aktuell, neu, neuer, anzahl, aenderungen: [Commit-Titel] } – fragt GitHub
 //   POST /api/konto/loeschen  { pin } → Konto, Spielstand, Tageskopien, Bestenliste, Duelle und Anmeldungen löschen
 //   POST /api/abgleich        { basis, geraet, stand, aenderungen: { schlüssel: { v: text|null, alt?: true } } }
 //                             → { version, neu? }  (neu = nur Einträge, die seit „basis“ ein anderes Gerät geändert hat;
@@ -47,7 +48,13 @@ const DUELL_TAGE = 7, DUELL_OFFEN_MAX = 20;
 const MAX_KONTEN = 50, MAX_BODY = 10 * 1024 * 1024, COOKIE = 'spielekiste_sitzung', SITZUNG_TAGE = 365;
 
 const UPDATE_STARTEN = () => new Promise((ok, nein) => require('child_process').execFile('schtasks', ['/Run', '/TN', '\\Spielekiste\\Update'], { windowsHide: true }, (e) => (e ? nein(e) : ok())));
-function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = null, updateStarten = UPDATE_STARTEN } = {}) {
+const GITHUB = (repo) => async (pfad) => {
+  const r = await fetch('https://api.github.com/repos/' + repo + pfad, { headers: { 'User-Agent': 'spielekiste-homeserver', Accept: 'application/vnd.github+json' } });
+  if (!r.ok) throw new Error('GitHub ' + r.status);
+  return r.json();
+};
+function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = null, updateStarten = UPDATE_STARTEN, repo = 'pbajog-sys/Test1', github = GITHUB(repo) } = {}) {
+  let pruefCache = null;
   let letztesUpdate = 0;
   const admins = new Set([].concat(admin).filter(Boolean).map((n) => String(n).normalize('NFC').toLowerCase()));
   if (!daten) throw new Error('Datenordner fehlt');
@@ -221,7 +228,26 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
         return senden(res, 200, { version: lies('version.txt').trim().slice(0, 7), log: lies('update.log').trim().split(/\r?\n/).filter(Boolean).slice(-6),
           konten: Object.keys(konten).length, duelle: Object.keys(duelle).length });
       }
+      if (weg === '/admin/pruefen' && m === 'GET') {
+        if (pruefCache && jetzt() - pruefCache.zeit < 20e3) return senden(res, 200, pruefCache.antwort);   // GitHub nicht mit Klicks fluten
+        const zweig = lies('update-zweig.txt').trim() || 'spielstand-sync', aktuell = lies('version.txt').trim();
+        let kopf;
+        try { kopf = await github('/commits/' + encodeURIComponent(zweig)); } catch (e) { return senden(res, 502, { fehler: 'GitHub gerade nicht erreichbar (' + e.message + ').' }); }
+        const neu = String(kopf.sha || ''), antwort = { aktuell: aktuell.slice(0, 7), neu: neu.slice(0, 7), neuer: !!neu && neu !== aktuell, anzahl: 0, aenderungen: [] };
+        if (antwort.neuer) {
+          if (aktuell) {
+            try {
+              const v = await github('/compare/' + aktuell + '...' + neu);
+              antwort.anzahl = v.ahead_by || 0;
+              antwort.aenderungen = (v.commits || []).map((c) => String((c.commit && c.commit.message) || '').split('\n')[0].slice(0, 120)).reverse().slice(0, 8);
+            } catch (e) { /* Vergleich ist nur Zugabe */ }
+          } else antwort.aenderungen = [String((kopf.commit && kopf.commit.message) || '').split('\n')[0].slice(0, 120)];
+        }
+        pruefCache = { zeit: jetzt(), antwort };
+        return senden(res, 200, antwort);
+      }
       if (weg === '/admin/aktualisieren' && m === 'POST') {
+        pruefCache = null;
         if (jetzt() - letztesUpdate < 60e3) return senden(res, 429, { fehler: 'Ein Update wurde gerade erst gestartet – bitte eine Minute warten.' });
         letztesUpdate = jetzt();
         try { await updateStarten(); } catch (e) { return senden(res, 500, { fehler: 'Update konnte nicht gestartet werden (Aufgabe „Spielekiste\\Update“ eingerichtet?).' }); }

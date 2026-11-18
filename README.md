@@ -759,27 +759,9 @@ Filter nach Muskelgruppe; eigene Übungen mit optionalem Hauptmuskel. **Steigeru
 letztes Mal ≥ 2 Sätze mit dem schwersten Gewicht und gleicher Wdh.-Zahl (≥ 8) → heute + Gewichtssprung der Übung
 (1–5 kg), vorbelegt, mit „lieber wie letztes Mal“.
 
-## 💾 Sicherung
-`sicherung.js` – iOS löscht beim Entfernen der Home-Bildschirm-App alle ihre Daten. Darum: **alle** Daten (jeder
-`walquiz.*`-Schlüssel: Spielstände aller Profile, Fitness, Studio, Stimmgerät, Favoriten …) und auf Wunsch die eigenen
-Songs (IndexedDB, Base64) als eine JSON-Datei. Auf dem iPhone über das Teilen-Menü → „In Dateien sichern“ → iCloud Drive,
-sonst als Download. Einspielen über 💾 im Hub oder – nach einer Neuinstallation – direkt auf dem ersten Bildschirm
-„Wie heißt du?“ („Ich habe eine Sicherung – einspielen“). Prüft die Datei (App-Kennung, Format, nur `walquiz.*`),
-ersetzt dann die Daten und merkt sich den alten Stand für „↺ Rückgängig“. Erinnerung im Hub, wenn es Daten gibt und die
-letzte Sicherung fehlt oder älter als 7 Tage ist („×“ = 3 Tage Ruhe). Zusätzlich `navigator.storage.persist()`.
-**Ziel-Wahl** iCloud Drive / OneDrive / Google Drive mit Schritt-für-Schritt-Anleitung (beim ersten Mal aufgeklappt),
-Knopf „💾 Jetzt in … sichern“ öffnet das Teilen-Menü. Der Hinweis (direkt über der Level-Karte) erscheint nur, wenn sich
-seit der letzten Sicherung etwas geändert hat (Fingerabdruck der Daten) und diese älter als 2 Tage ist bzw. fehlt.
-Nach einem Fitness-Training: „💾 Training gleich sichern“. „🔄 App aktualisieren“ holt Updates ohne Löschen.
-Kein Server, kein Konto. Test: `tests/sicherung.test.js` (sichern → alles löschen wie iOS → einspielen → bitgenau zurück).
-**Trainingspläne** (`fitness-plaene.js`, wie „Routinen“ bei Hevy/Strong): Vorlagen Ganzkörper (A/B), Oberkörper/Unterkörper,
-Push/Pull/Beine, Zuhause ohne Geräte – je Übung „Sätze × Wiederholungsbereich“. Karte „Nächstes Training: …“ auf der
-Übersicht, geführtes Training (Fortschrittsbalken, Satz x/y, Übung erledigt → automatisch zur nächsten), Steigerung nach
-Bereich (alle Sätze am oberen Ende → + Gewicht, wieder unten im Bereich starten), nach dem Training rückt der Plan-Tag
-weiter. Eigene Pläne im Editor (Tage, Übungen, Sätze, Bereich), Vorlagen als Kopie bearbeitbar. **Teilen per Code**
-„SKPLAN1:…“ (Base64-JSON, ohne Server; eigene Übungen reisen mit Name/Muskel mit, Code darf mitten in einer Nachricht
-stehen; ungültige Codes werden abgelehnt). Apple Health: von Web-Apps aus nicht erreichbar (nur App-Store-Apps).
-Test: `tests/fitness-plan.test.js`.
+## 💾 Sicherung (entfernt)
+Die Datei-Sicherung (`sicherung.js`) ist entfernt: Mit Konto liegt der Spielstand auf dem Homeserver (Sync, tägliche
+Kopie, siehe `werkzeuge/homeserver/`). Ohne Konto bleibt er nur im Browser; eigene Songs werden nicht gesichert.
 
 ## 🔎 Zutaten-Check
 `scan.js` – Barcode scannen (Kamera, ZXing 0.21.3 lokal in `lib/zxing.min.js`, Apache-2.0, erst beim ersten Scan geladen) oder

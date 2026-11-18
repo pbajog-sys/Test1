@@ -24,7 +24,7 @@ Läuft daneben `spielstand-server.js`, fragt die App beim ersten Besuch einmal n
   Riffbau, Tiefgang.
 - Konto löschen: ☁️ → „Konto löschen“ mit PIN – löscht Konto, Spielstand, Tageskopien, Bestenliste und Duelle.
   Tageskopien werden ohnehin nach 30 Tagen gelöscht.
-- Angemeldet erinnert die App nicht mehr an die Datei-Sicherung (der Server sichert); 💾 bleibt für eigene Songs.
+- Die Datei-Sicherung (💾) ist entfernt – mit Konto sichert der Server. Eigene Songs werden nicht gesichert.
 - Namen sind eindeutig (Groß-/Kleinschreibung egal), PIN 4–8 Ziffern, nur als Hash gespeichert.
   Nach 5 falschen PINs ist der Name 15 Minuten gesperrt (danach jeweils doppelt so lange).
   Höchstens 5 neue Konten pro Stunde und Anschluss, höchstens 50 Konten.
@@ -42,8 +42,8 @@ Läuft daneben `spielstand-server.js`, fragt die App beim ersten Besuch einmal n
 - `einrichten.bat` (einmalig, fragt nach Administratorrechten): legt in der Aufgabenplanung unter „Spielekiste“ an:
   **Caddy** und **Konto-Server** (starten mit Windows als SYSTEM, ohne Fenster, nach Absturz neu) und **Update**
   (nach Bedarf über das Server-Menü der App, zur Sicherheit täglich 04:17). Fragt einmal nach dem Admin-Konto (`admin.txt`). Übernimmt Caddys Zertifikat nach `caddy-daten\`. Protokolle: `caddy.log`, `konto-server.log`.
-- `aktualisieren.bat` (Doppelklick): holt sofort die neueste Version. Dasselbe startet das **🖥️ Server-Menü** (☁️ → nur für
-  das Admin-Konto sichtbar; der Server prüft das bei jeder Anfrage, höchstens 1 Update pro Minute) und nachts 04:17 –
+- `aktualisieren.bat` (Doppelklick): holt sofort die neueste Version. Dasselbe startet im **☁️-Fenster** der Bereich **🖥️ Server** (nur für
+  das Admin-Konto sichtbar: „🔍 Updates prüfen“ zeigt, was auf GitHub neu ist, „⬆️ Aktualisieren“ spielt es ein; der Server prüft das bei jeder Anfrage, höchstens 1 Update pro Minute) und nachts 04:17 –
   jeweils nur, wenn es auf GitHub etwas Neues gibt. Spielstände, Caddyfile und Zertifikate bleiben; startet der neue Konto-Server
   nicht, kommt die vorige Version zurück (`spiel-vorher\`). Protokoll: `update.log`.
 - Zweig: `spielstand-sync`, änderbar über eine Datei `update-zweig.txt` mit dem Zweignamen.
