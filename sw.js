@@ -1,5 +1,5 @@
 // Service Worker: App offline verfügbar machen. Walfotos werden beim ersten Anzeigen zwischengespeichert.
-const VERSION = 'walquiz-v163';
+const VERSION = 'walquiz-v164';
 const SHELL = [
   './',
   'index.html',
@@ -147,7 +147,8 @@ const SHELL = [
 ];
 
 self.addEventListener('install', (event) => {
-  event.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL)).then(() => self.skipWaiting()));
+  // cache: 'reload' – beim Installieren einer neuen Version nie eine ältere Kopie aus dem Browser-Zwischenspeicher übernehmen
+  event.waitUntil(caches.open(VERSION).then((c) => c.addAll(SHELL.map((u) => new Request(u, { cache: 'reload' })))).then(() => self.skipWaiting()));
 });
 
 self.addEventListener('activate', (event) => {
@@ -163,8 +164,8 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Spielstand-Sync mit dem Homeserver: nie zwischenspeichern, immer direkt ans Netz.
-  if (url.origin === location.origin && url.pathname.includes('/sync/')) return;
+  // Spielstand-Sync / Konto-Server auf dem Homeserver: nie zwischenspeichern, immer direkt ans Netz.
+  if (url.origin === location.origin && (url.pathname.includes('/sync/') || url.pathname.includes('/api/'))) return;   // Konto-Server: nie zwischenspeichern
 
   // Eigene Dateien: sofort aus dem Cache (schneller Start, auch wenn der Homeserver gerade nicht erreichbar ist),
   // im Hintergrund frisch vom Server holen und für das nächste Öffnen merken. Nur was noch nicht im Cache ist,

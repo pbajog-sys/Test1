@@ -26,7 +26,7 @@ const SY_API = new URL('api/', location.href).href;
 const SY_NIE = ['walquiz.sicherung.v1', 'walquiz.installhinweis.v1', 'walquiz.photos.v4'];   // gerätebezogen bzw. nur Zwischenspeicher
 const SY_TAKT = 5000;
 
-let syZustand = 'aus';    // 'aus' (kein Server) | 'abgemeldet' | 'ok'
+let syZustand = 'aus';    // 'aus' (kein Server) | 'abgemeldet' | 'ok' | 'offline' (war angemeldet, Server gerade nicht erreichbar)
 let syName = '';
 let syAdmin = false;      // Betreiber: sieht „Server aktualisieren“
 let syLaeuft = false;     // gerade ein Abgleich unterwegs
@@ -155,7 +155,7 @@ function syFaehigkeiten(e) {
 const syVorHer = (t) => { const m = Math.round((Date.now() - t) / 60e3); return m < 2 ? 'gerade eben' : m < 60 ? 'vor ' + m + ' Min.' : m < 1440 ? 'vor ' + Math.round(m / 60) + ' Std.' : 'vor ' + Math.round(m / 1440) + ' Tagen'; };
 let syListe = [], syListeZeit = 0;
 async function syBestenliste(sofort) {
-  if (syZustand !== 'ok') { const b = document.getElementById('syBestenliste'); if (b) b.remove(); return; }
+  if (syZustand !== 'ok') { ['syBestenliste', 'syTop3'].forEach((id) => { const b = document.getElementById(id); if (b) b.remove(); }); return; }
   if (!sofort && Date.now() - syListeZeit < 60e3) return;   // höchstens einmal pro Minute nachfragen
   try {
     const { status, json } = await syApi('bestenliste');
@@ -189,6 +189,30 @@ function syListeZeigen() {
     }).join('') + '</div><p class="sk-fein" style="margin:2px 0 0;font-size:.75rem">Antippen für Details und Vergleich</p>'
       : '<p class="sk-fein">Noch niemand dabei.</p>');
   box.querySelectorAll('[data-sp]').forEach((b) => b.addEventListener('click', () => sySpielerZeigen(syListe[Number(b.dataset.sp)], Number(b.dataset.sp))));
+  syTop3Zeigen();
+}
+// Ganz oben im Dashboard: Podest der Top 3, eigener Platz, wartende Duelle
+function syTop3Zeigen() {
+  const hub = document.getElementById('screen-hub');
+  let box = document.getElementById('syTop3');
+  if (!hub || syZustand !== 'ok' || !syListe.length) { if (box) box.remove(); return; }
+  if (!box) {
+    box = document.createElement('div'); box.id = 'syTop3'; box.className = 'sy-top3';
+    const nach = document.getElementById('installKarte') || document.getElementById('hubBuehne');
+    hub.insertBefore(box, nach ? nach.nextSibling : hub.firstChild);
+  }
+  const ichI = syListe.findIndex((e) => e.ich), medaille = ['🥇', '🥈', '🥉'];
+  const offen = (typeof syDuelle !== 'undefined' ? syDuelle : []).filter((du) => syDuellZustand(du) === 'du').length;
+  box.innerHTML = '<div class="sy-top3-kopf"><b>🏆 Bestenliste</b><small>' + (ichI >= 0 ? 'Du: Platz ' + (ichI + 1) + ' von ' + syListe.length : syListe.length + ' Spieler') + '</small></div>'
+    + '<div class="sy-podest">' + syListe.slice(0, 3).map((e, i) => '<button type="button" class="sy-platz' + (e.ich ? ' ich' : '') + '" data-top="' + i + '">'
+      + '<span class="sy-med">' + medaille[i] + '</span><span class="sy-av">' + syEsc(e.avatar) + '</span><b>' + syEsc(e.name) + '</b><small>' + (typeof fmt === 'function' ? fmt(e.xp) : e.xp) + ' XP</small></button>').join('') + '</div>'
+    + '<div class="sy-top3-fuss">'
+    + (offen ? '<button type="button" class="sy-chip wichtig" data-zu="syDuelle">⚔️ ' + offen + (offen === 1 ? ' Duell' : ' Duelle') + ' für dich</button>' : '')
+    + '<button type="button" class="sy-chip" data-zu="syBestenliste">Ganze Liste ›</button>'
+    + (syListe.length > 1 ? '' : '<span class="sy-chip" style="cursor:default">Lade Freunde ein – sie melden sich einfach auf der Seite an</span>')
+    + '</div>';
+  box.querySelectorAll('[data-top]').forEach((b) => b.addEventListener('click', () => sySpielerZeigen(syListe[Number(b.dataset.top)], Number(b.dataset.top))));
+  box.querySelectorAll('[data-zu]').forEach((b) => b.addEventListener('click', () => { const z = document.getElementById(b.dataset.zu); if (z) z.scrollIntoView({ behavior: 'smooth', block: 'start' }); }));
 }
 // Detailkarte eines Spielers: Fähigkeiten als Balken, meistgespielte Spiele, Vergleich
 function sySpielerZeigen(e, platz) {
@@ -299,7 +323,7 @@ const syDuellZustand = (du) => (du.abgelehnt ? 'abgelehnt' : du.ausgang ? 'ferti
 function syGesehenSetzen(du) { const g = syGesehen(); g[du.id] = syDuellZustand(du); try { localStorage.setItem(SY_DUELL_GESEHEN, JSON.stringify(g)); } catch (e) { /* voll */ } }
 function syGesehen() { try { return JSON.parse(localStorage.getItem(SY_DUELL_GESEHEN) || '{}'); } catch (e) { return {}; } }
 async function syDuelleLaden(sofort) {
-  if (syZustand !== 'ok') { const b = document.getElementById('syDuelle'); if (b) b.remove(); return; }
+  if (syZustand !== 'ok') { ['syDuelle', 'syTop3'].forEach((id) => { const b = document.getElementById(id); if (b) b.remove(); }); return; }
   if (!sofort && Date.now() - syDuelleZeit < 60e3) return;
   let r; try { r = await syApi('duelle'); } catch (e) { return; }
   if (r.status !== 200 || !r.json) return;
@@ -322,6 +346,7 @@ async function syDuelleLaden(sofort) {
 function syDuelleZeigen() {
   const spalte = document.querySelector('#screen-hub .spalte-b');
   if (!spalte || syZustand !== 'ok') return;
+  syTop3Zeigen();
   let box = document.getElementById('syDuelle');
   if (!box) {
     box = document.createElement('div'); box.id = 'syDuelle'; box.className = 'sk-unten';
@@ -374,13 +399,33 @@ function syKnopf() {
     const leiste = document.querySelector('.hub-knoepfe');
     if (!leiste) return;
     b = document.createElement('button'); b.type = 'button'; b.id = 'syncBtn'; b.className = 'vollbild-btn';
-    b.addEventListener('click', () => (syZustand === 'ok' ? syKontoDialog() : syAnmeldeDialog()));
+    b.addEventListener('click', () => (syZustand === 'ok' ? syKontoDialog() : syZustand === 'offline' ? syOfflineDialog() : syAnmeldeDialog()));
     leiste.insertBefore(b, leiste.firstChild);
   }
   b.hidden = false;
-  b.textContent = syZustand === 'ok' ? '☁️' : '👤';
-  b.title = syZustand === 'ok' ? 'Angemeldet als ' + syName : 'Anmelden – Spielstand auf allen Geräten';
+  b.textContent = syZustand === 'ok' ? '☁️' : syZustand === 'offline' ? '☁️⚠️' : '👤';
+  b.style.opacity = syZustand === 'offline' ? '.7' : '';
+  b.title = syZustand === 'ok' ? 'Angemeldet als ' + syName : syZustand === 'offline' ? 'Server gerade nicht erreichbar' : 'Anmelden – Spielstand auf allen Geräten';
   b.setAttribute('aria-label', b.title);
+}
+
+// Server nicht erreichbar, obwohl dieses Gerät schon angemeldet war: zeigen statt verstecken, alle 30 s neu versuchen
+function syOfflineDialog() {
+  const d = skDialog('<h3>☁️⚠️ Server nicht erreichbar</h3>'
+    + '<p>Dein Homeserver antwortet gerade nicht. Du kannst normal weiterspielen – dein Fortschritt wird abgeglichen, sobald er wieder erreichbar ist.</p>'
+    + '<p class="ft-klein">Häufige Gründe: Laptop aus oder im Ruhezustand, kein Internet zu Hause, Konto-Server gestoppt (auf dem Laptop <code>einrichten.bat</code> ausführen).</p>'
+    + '<button type="button" class="btn" id="syNochmal">🔄 Nochmal versuchen</button><p class="ft-klein" id="syMeldung" role="status"></p>');
+  d.querySelector('#syNochmal').addEventListener('click', async () => {
+    d.querySelector('#syMeldung').textContent = 'Versuche …';
+    if (await syErneutVerbinden()) d.close(); else d.querySelector('#syMeldung').textContent = 'Immer noch nicht erreichbar.';
+  });
+}
+async function syErneutVerbinden() {
+  const z = await syPruefen();
+  if (z === 'aus') return false;
+  syZustand = z; syKnopf();
+  if (z === 'ok') { syAnimation('neu'); await syLaufen(); }
+  return true;
 }
 
 // ---------- Anmelden / Registrieren ----------
@@ -541,6 +586,10 @@ async function syLaufen() {
 }
 async function syStart() {
   syZustand = await syPruefen();
+  if (syZustand === 'aus' && syMeta().konto) {   // war schon angemeldet → Server nur gerade weg
+    syZustand = 'offline';
+    const t = setInterval(async () => { if (document.visibilityState === 'visible' && await syErneutVerbinden()) clearInterval(t); }, 30e3);
+  }
   syKnopf();
   const h = sessionStorage.getItem('spielekiste-sync-hinweis');
   if (h) { sessionStorage.removeItem('spielekiste-sync-hinweis'); syHinweis(h); }

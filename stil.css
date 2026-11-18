@@ -4671,3 +4671,25 @@ a.bb-datei { text-decoration: none; }
 .hub-nvl .hg-titel { background: linear-gradient(90deg, #93b4ff, #c4a5f5); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .hg-av-nvl { --ring: conic-gradient(#2557d6, #7b45c9, #14804a, #2557d6); } .hg-av-nvl > .hg-in { background: #f5f7fb; display: grid; place-items: center; }
 .nvl-mini { position: relative; font-size: 1.6rem; } .nvl-mini i { position: absolute; right: -12px; bottom: -6px; font: 800 .5rem/1 "Outfit", sans-serif; font-style: normal; background: #2557d6; color: #fff; padding: 2px 4px; border-radius: 6px; }
+
+/* ---------- Schlanke Kopfleiste statt Planeten-Bühne ---------- */
+.hub-leiste { display: flex; align-items: center; justify-content: space-between; gap: 10px; padding: calc(env(safe-area-inset-top) + 10px) 2px 8px; }
+.hub-marke { font-weight: 800; font-size: 1.2rem; letter-spacing: .01em; white-space: nowrap; }
+.hub-leiste .profil-btn { padding: 4px; min-height: 0; border-radius: 50%; }
+.hub-leiste .profil-btn .pb-name { display: none; }
+/* Top 3 der Bestenliste ganz oben */
+.sy-top3 { display: grid; gap: 8px; margin: 0 0 12px; padding: 12px 14px; border-radius: 24px; background: linear-gradient(135deg, rgba(245,158,11,.14), rgba(99,102,241,.12)); box-shadow: inset 0 0 0 1px rgba(255,255,255,.08); }
+.sy-top3-kopf { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; }
+.sy-top3-kopf b { font-size: .95rem; } .sy-top3-kopf small { color: #a3a3c2; font-size: .78rem; }
+.sy-podest { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; }
+.sy-platz { display: grid; justify-items: center; gap: 2px; padding: 8px 4px; border: 0; border-radius: 16px; background: rgba(0,0,0,.25); color: inherit; font: inherit; cursor: pointer; min-width: 0; }
+.sy-platz.ich { box-shadow: inset 0 0 0 2px #f59e0b; }
+.sy-platz .sy-med { font-size: 1.1rem; line-height: 1; }
+.sy-platz .sy-av { font-size: 1.6rem; line-height: 1.1; }
+.sy-platz b { font-size: .85rem; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.sy-platz small { color: #fde68a; font-size: .74rem; font-variant-numeric: tabular-nums; }
+.sy-top3-fuss { display: flex; flex-wrap: wrap; gap: 6px; }
+.sy-chip { border: 0; border-radius: 999px; padding: 6px 12px; background: rgba(255,255,255,.08); color: inherit; font: inherit; font-size: .8rem; cursor: pointer; }
+.sy-chip.wichtig { background: #f59e0b; color: #111; font-weight: 700; }
+/* Tageskarten: lange Wörter („Wahrnehmungsprobe“) umbrechen statt abschneiden */
+.sk-tageskarte small, .sk-tageskarte b { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: anywhere; }

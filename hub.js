@@ -369,7 +369,7 @@ if (pendingChallenge) {
 // Vorne (unten auf der Bahn) groß und hell, hinten klein, blass und hinter der Sonne. Bewegt wird nur über `translate`/`scale`.
 (function universum() {
   const b = $('hubBuehne');
-  if (!b) return;
+  if (!b || !b.querySelector('.bu-ding')) return;   // Bühne entfernt (schlanke Kopfleiste) – nichts zu animieren
   const q = (s) => b.querySelector(s);
   const bahnen = [
     ['.bu-punkte', '.bu-karte', '.bu-zufall', '.bu-augen', '[data-ziel="hubZoom"]', '[data-ziel="hubGlas"]', '[data-ziel="hubWunder"]'],

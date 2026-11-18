@@ -434,7 +434,7 @@
   .shake { animation: shake .35s; }
   @keyframes shake { 25% { transform: translateX(-6px); } 75% { transform: translateX(6px); } }
 </style>
-<link rel="stylesheet" href="stil.css?v=153">
+<link rel="stylesheet" href="stil.css?v=164">
 <link rel="stylesheet" href="ansichten.css?v=153">
 </head>
 <body>
@@ -449,40 +449,9 @@
   <!-- Dashboard -->
   <section class="screen active" id="screen-hub">
     <h1 class="nur-sr">Spiele</h1>
-    <div class="buehne" id="hubBuehne">
+    <div class="hub-leiste" id="hubBuehne">
+      <span class="hub-marke" aria-hidden="true">🎲 Spielekiste</span>
       <span class="hub-knoepfe"><button class="vollbild-btn ton-check-btn" id="tonCheckBtn" type="button" aria-label="Ton-Check" title="Ton-Check">🔊</button><button class="vollbild-btn" id="vollbildBtn" type="button" aria-label="Vollbild" title="Vollbild" hidden>⛶</button><button class="profil-btn" id="profilBtn" type="button" hidden></button></span>
-      <span class="bu-nebel" aria-hidden="true"></span>
-      <span class="bu-sterne" aria-hidden="true"></span>
-      <span class="bu-sterne bu-sterne2" aria-hidden="true"></span>
-      <span class="bu-schnuppe" aria-hidden="true"></span>
-      <svg class="bu-bahnen" aria-hidden="true"><ellipse/><ellipse/><ellipse/></svg>
-      <span class="bu-sonne" aria-hidden="true"><i></i></span>
-      <button class="bu-ding bu-farben" type="button" data-ziel="hubFarben" aria-label="Farb-Gedächtnis"><i></i><i></i><i></i><i></i><i></i></button>
-      <button class="bu-ding bu-cello" type="button" data-ziel="hubCello" aria-label="Noten &amp; Griffe"><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span><span><svg viewBox="0 0 24 40"><ellipse cx="8" cy="33" rx="7" ry="5.5" transform="rotate(-20 8 33)"/><path d="M14 32V4c0 6 9 8 9 16" fill="none" stroke-width="3"/></svg></span></button>
-      <button class="bu-ding bu-toene" type="button" data-ziel="hubToene" aria-label="Ton-Gedächtnis"><span class="bu-ton"><svg viewBox="0 0 400 40" preserveAspectRatio="none"><path d="M0 20 Q 12.5 2 25 20 Q 37.5 38 50 20 Q 62.5 2 75 20 Q 87.5 38 100 20 Q 112.5 2 125 20 Q 137.5 38 150 20 Q 162.5 2 175 20 Q 187.5 38 200 20 Q 212.5 2 225 20 Q 237.5 38 250 20 Q 262.5 2 275 20 Q 287.5 38 300 20 Q 312.5 2 325 20 Q 337.5 38 350 20 Q 362.5 2 375 20 Q 387.5 38 400 20"/></svg></span></button>
-      <button class="bu-ding bu-krimi" type="button" data-ziel="hubKrimi" aria-label="Wer war’s?"><span class="bu-licht"></span><img src="img/krimi/lupe.webp" alt=""></button>
-      <button class="bu-ding bu-takt" type="button" data-ziel="hubTakt" aria-label="Takt-Gefühl"><svg class="metronom" viewBox="0 0 60 80" aria-hidden="true"><path class="mt-korpus" d="M17 76h26l-7-66q-6-6-12 0z"/><path class="mt-skala" d="M24 22h12M23 30h14M22 38h16M21 46h18"/><g class="mt-arm"><path d="M30 66V12"/><rect x="25" y="24" width="10" height="7" rx="2"/></g><path class="mt-fuss" d="M14 76h32"/></svg></button>
-      <button class="bu-ding bu-punkte" type="button" data-ziel="hubPunkte" aria-label="Punktwolke"><svg class="pw-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="pm-linie" d="M8 50L52 10"/><circle cx="10" cy="46" r="3.2" style="--k:0"/><circle cx="16" cy="40" r="3.2" style="--k:1"/><circle cx="19" cy="47" r="3.2" style="--k:2"/><circle cx="24" cy="34" r="3.2" style="--k:3"/><circle cx="28" cy="38" r="3.2" style="--k:4"/><circle cx="33" cy="27" r="3.2" style="--k:5"/><circle cx="36" cy="32" r="3.2" style="--k:6"/><circle cx="41" cy="22" r="3.2" style="--k:7"/><circle cx="45" cy="25" r="3.2" style="--k:8"/><circle cx="50" cy="13" r="3.2" style="--k:9"/></svg></button>
-      <button class="bu-ding bu-augen" type="button" data-ziel="hubAugen" aria-label="Augenmaß"><svg class="ag-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="am-basis" d="M10 48H52"/><g class="am-arm"><path d="M10 48L46 14"/><circle cx="46" cy="14" r="4"/></g><path class="am-bogen" d="M26 48A16 16 0 0 0 21.7 37.1"/><circle class="am-ecke" cx="10" cy="48" r="3"/></svg></button>
-      <button class="bu-ding bu-karte" type="button" data-ziel="hubKarte" aria-label="Karten-Gefühl"><svg class="kt-mini" viewBox="0 0 60 60" aria-hidden="true"><circle class="km-rand" cx="30" cy="30" r="25"/><path class="km-striche" d="M30 7v6M30 47v6M7 30h6M47 30h6"/><g class="km-nadel"><path class="km-nord" d="M30 10l6 20h-12z"/><path class="km-sued" d="M30 50l-6-20h12z"/></g><circle cx="30" cy="30" r="3" class="km-mitte"/></svg></button>
-      <button class="bu-ding bu-funktion" type="button" data-ziel="hubFunktion" aria-label="Funktions-Detektiv"><svg class="fd-mini" viewBox="0 0 60 60" aria-hidden="true"><path class="fm-achse" d="M4 40H56M30 56V4"/><path class="fm-kurve" d="M10 8Q30 72 50 8"/><circle class="fm-punkt" cx="30" cy="40" r="3.5"/></svg></button>
-      <button class="bu-ding bu-zufall" type="button" data-ziel="hubZufall" aria-label="Zufalls-Gefühl"><span>⚄</span><span>⚂</span></button>
-      <button class="bu-ding bu-planet bu-ring" type="button" data-ziel="hubTiefgang" aria-label="Tiefgang" style="--p1:#38bdf8;--p2:#0c4a6e"><span>🤿</span></button>
-      <button class="bu-ding bu-planet" type="button" data-ziel="hubTierleben" aria-label="Tierleben" style="--p1:#86efac;--p2:#14532d"><span>🐔</span></button>
-      <button class="bu-ding bu-planet bu-ring" type="button" data-ziel="hubZahlen" aria-label="Du in Zahlen" style="--p1:#fde68a;--p2:#92400e"><span>🎂</span></button>
-      <button class="bu-ding bu-planet" type="button" data-ziel="hubSlo" aria-label="Slowenisch" style="--p1:#4ade80;--p2:#1e3a8a"><span>🐉</span></button>
-      <button class="bu-ding bu-planet bu-klassiker" type="button" data-ziel="hubKlassiker" aria-label="Klassiker" style="--p1:#fca5a5;--p2:#14532d"><span>🂡</span></button>
-      <button class="bu-ding bu-planet bu-falten" type="button" data-ziel="hubFalten" aria-label="Falten bis zum Mars" style="--p1:#fb923c;--p2:#7c2d12"><span>📄</span></button>
-      <button class="bu-ding bu-planet bu-zoom" type="button" data-ziel="hubZoom" aria-label="Zoom durchs Universum" style="--p1:#f472b6;--p2:#312e81"><span>🔭</span></button>
-      <button class="bu-ding bu-planet bu-glas" type="button" data-ziel="hubGlas" aria-label="Verdopplung im Glas" style="--p1:#86efac;--p2:#064e3b"><span>🦠</span></button>
-      <button class="bu-ding bu-planet bu-beat" type="button" data-ziel="hubBeat" aria-label="Beat-Bahnen" style="--p1:#c084fc;--p2:#831843"><span>🎸</span></button>
-      <button class="bu-ding bu-planet bu-wunder" type="button" data-ziel="hubWunder" aria-label="Wundermuster" style="--p1:#67e8f9;--p2:#4c1d95"><span>🌀</span></button>
-      <button class="bu-ding bu-planet bu-studio" type="button" data-ziel="hubStudio" aria-label="Beat-Studio" style="--p1:#fbbf24;--p2:#7c2d12"><span>🎛️</span></button>
-      <button class="bu-ding bu-planet bu-stimmen" type="button" data-ziel="hubStimmen" aria-label="Stimmgerät" style="--p1:#a3e635;--p2:#164e63"><span>🎚️</span></button>
-      <button class="bu-ding bu-planet bu-fitness" type="button" data-ziel="hubFitness" aria-label="Fitness" style="--p1:#fb923c;--p2:#7f1d1d"><span>💪</span></button>
-      <button class="bu-ding bu-planet bu-scan" type="button" data-ziel="hubScan" aria-label="Zutaten-Check" style="--p1:#34d399;--p2:#064e3b"><span>🔎</span></button>
-      <button class="bu-ding bu-planet bu-songs" type="button" data-ziel="hubSongs" aria-label="Song-Rätsel" style="--p1:#4ade80;--p2:#3b0764"><span>💿</span></button>
-      <button class="bu-ding bu-planet" type="button" data-ziel="hubRiff" aria-label="Riffbau" style="--p1:#f9a8d4;--p2:#831843"><span>🪸</span></button>
     </div>
     <div class="install-karte" id="installKarte" hidden>
       <img src="icons/apple-touch-icon.png?v=3" alt="" class="install-icon">
@@ -2336,7 +2305,7 @@
 <script src="app.js?v=153"></script>
 <script src="melden.js?v=153"></script>
 <script src="verlauf.js?v=153"></script>
-<script src="hub.js?v=153"></script>
+<script src="hub.js?v=164"></script>
 <script src="farben.js?v=153"></script>
 <script src="cello.js?v=153"></script>
 <script src="instrumente.js?v=153"></script>
@@ -2396,6 +2365,6 @@
 <script src="naehen.js?v=153"></script>
 <script src="experimente.js?v=153"></script>
 <script src="plattform.js?v=160"></script>
-<script src="sync.js?v=163"></script>
+<script src="sync.js?v=164"></script>
 </body>
 </html>

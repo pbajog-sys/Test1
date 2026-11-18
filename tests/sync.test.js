@@ -268,7 +268,20 @@ const caddy = http.createServer((req, res) => {
   await B.reload(); await ruhig(B, 1500);
   ck('Abmelden: danach nicht mehr angemeldet', (await B.textContent('#syncBtn')) === '👤');
 
+  // ---------- Top 3 ganz oben ----------
+  await C.evaluate(() => { zeigeHub(); syBestenliste(true); }); await ruhig(C, 800);
+  const top3 = await C.textContent('#syTop3').catch(() => '');
+  ck('Top 3 oben im Dashboard: Podest mit Anna, eigener Platz', /Anna/.test(top3) && /Du: Platz \d+ von \d+/.test(top3), top3.replace(/\s+/g, ' ').slice(0, 80));
+  ck('Planeten-Bühne entfernt, schlanke Kopfleiste mit ☁️', !(await C.$('.bu-ding')) && !!(await C.$('.hub-leiste #syncBtn')));
+
   // ---------- Ohne Server (z. B. GitHub Pages) ----------
+  apiAn = false;
+  await A.reload(); await ruhig(A, 1800);
+  ck('Server weg, Gerät war angemeldet: ☁️⚠️ statt verschwinden', (await A.textContent('#syncBtn').catch(() => '')) === '☁️⚠️');
+  await A.evaluate(() => document.getElementById('syncBtn').click()); await ruhig(A, 300);
+  ck('☁️⚠️ erklärt das Problem und bietet „Nochmal versuchen“', /Server nicht erreichbar/.test(await A.textContent('#skDlg')) && !!(await A.$('#syNochmal')));
+  apiAn = true; await A.click('#syNochmal'); await ruhig(A, 2000);
+  ck('Nochmal versuchen: wieder verbunden, ☁️ normal', (await A.textContent('#syncBtn')) === '☁️');
   apiAn = false;
   const F = await geraet('F');
   await F.goto(URL_); await ruhig(F, 1500);
