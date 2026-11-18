@@ -56,7 +56,7 @@ const server = http.createServer((req, res) => {
   const abgleich = async (p) => { await p.evaluate(() => syAbgleich()).catch(() => {}); await ruhig(p); };
 
   const antwortA = { wert: true }, antwortB = { wert: true };
-  const A = await geraet('A', antwortA), B = await geraet('B', antwortB, ['falsch', CODE]);
+  const A = await geraet('A', antwortA), B = await geraet('B', antwortB, ['falsch', ' Geheim-123 ']);
 
   // ---------- Gerät A: erster Start, Server leer ----------
   await A.goto(URL_); await ruhig(A, 1500);
@@ -69,7 +69,7 @@ const server = http.createServer((req, res) => {
 
   // ---------- Gerät B: frisch, übernimmt den Server-Stand ohne Rückfrage ----------
   await B.goto(URL_); await ruhig(B, 2500);
-  ck('B: falscher Code → nochmal gefragt, dann Stand von A übernommen', B.prompts === 2 && (await lesen(B, 'walquiz.farben.v1')) === '{"rekord":7}');
+  ck('B: falscher Code → nochmal gefragt; mit Großbuchstaben und Leerzeichen eingegeben → klappt, Stand von A übernommen', B.prompts === 2 && (await lesen(B, 'walquiz.farben.v1')) === '{"rekord":7}');
   ck('B: Code nicht im Server-Stand', !JSON.stringify(stand()).includes(CODE));
   ck('B: keine Konflikt-Frage beim ersten Start', B.dialogs.length === 0, B.dialogs.join(' | '));
   ck('B: Hinweis „übernommen“ sichtbar', await B.isVisible('.sync-hinweis').catch(() => false));

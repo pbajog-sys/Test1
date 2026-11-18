@@ -79,7 +79,8 @@ async function syErkennen() {
   for (let versuch = 0; z === 'code' && versuch < 2 && !sessionStorage.getItem('spielekiste-sync-nicht-fragen'); versuch++) {
     const c = prompt((versuch ? 'Der Sync-Code stimmt nicht. ' : '') + '☁️ Spielstand-Sync\n\nBitte den Sync-Code deines Homeservers eingeben (nur einmal pro Gerät nötig):');
     if (!c || !c.trim()) { sessionStorage.setItem('spielekiste-sync-nicht-fragen', '1'); break; }
-    localStorage.setItem(SY_CODE, c.trim());
+    // Handy-Tastaturen schreiben gern den ersten Buchstaben groß oder hängen Leerzeichen an → Code immer klein, ohne Leerzeichen
+    localStorage.setItem(SY_CODE, c.replace(/\s+/g, '').toLowerCase());
     z = await syPruefen();
   }
   return z === 'ok';
