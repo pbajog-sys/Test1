@@ -5,10 +5,13 @@ Läuft daneben `spielstand-server.js`, fragt die App beim ersten Besuch einmal n
 (Anmelden oder neues Konto). Das Gerät merkt sich die Anmeldung, der Spielstand ist auf allen Geräten gleich.
 
 ## Ablauf
-- Beim Öffnen und beim Zurückkehren in die App wird der Stand geholt, nach dem Spielen (alle 15 s und beim
-  Verlassen der App) hochgeladen. Jede Person hat ihren eigenen Spielstand.
-- Wurde auf zwei Geräten gleichzeitig gespielt, fragt die App, welcher Stand gelten soll. Der andere bleibt in
-  `daten/konflikte/`. Täglich entsteht eine Kopie in `daten/archiv/`.
+- Vollautomatisch, ohne Rückfragen: Nach dem Spielen (Prüfung alle 5 s, nur wenn das Spiel etwas gespeichert hat)
+  und beim Verlassen der App gehen die geänderten Einträge zum Server. Beim Öffnen und Zurückkehren holt sich das
+  Gerät nur, was andere Geräte seitdem geändert haben, und lädt dann einmal neu. Jede Person hat ihren eigenen Stand.
+- Zusammengeführt wird Eintrag für Eintrag (jedes Spiel hat eigene Einträge): Spielst du auf dem Handy Farben und
+  am Laptop Krimi, bleibt beides. Ändern zwei Geräte denselben Eintrag, gewinnt die zuletzt angekommene Änderung.
+  Was ein lange nicht benutztes Gerät beim Öffnen noch an altem Stand hat, überschreibt nie Neueres.
+- Täglich entsteht eine Kopie in `daten/archiv/`.
 - Namen sind eindeutig (Groß-/Kleinschreibung egal), PIN 4–8 Ziffern, nur als Hash gespeichert.
   Nach 5 falschen PINs ist der Name 15 Minuten gesperrt (danach jeweils doppelt so lange).
   Höchstens 5 neue Konten pro Stunde und Anschluss, höchstens 50 Konten.

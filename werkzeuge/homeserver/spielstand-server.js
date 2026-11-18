@@ -9,14 +9,20 @@
 //   POST /api/registrieren    { name, pin } → neues Konto, angemeldet (Cookie)
 //   POST /api/anmelden        { name, pin } → angemeldet (Cookie)
 //   POST /api/abmelden
-//   GET  /api/stand           → { version, zeit, geraet, stand, daten } oder 404
-//   PUT  /api/stand           { basis, geraet, stand, daten } → { version } oder 409 { aktuell } (anderes Gerät war schneller)
-//   POST /api/konflikt        { version, zeit, geraet, stand, daten } → Stand wird als Konflikt-Kopie aufgehoben
+//   POST /api/abgleich        { basis, geraet, stand, aenderungen: { schlüssel: { v: text|null, alt?: true } } }
+//                             → { version, neu? }  (neu = nur Einträge, die seit „basis“ ein anderes Gerät geändert hat;
+//                                                   v: null = gelöscht – so geht nach einer Runde kaum etwas über die Leitung)
+//
+// Abgleich Eintrag für Eintrag: Jeder Eintrag merkt sich die Server-Version, in der er zuletzt geändert wurde.
+//  • Normale Änderungen (gerade gespielt) gelten immer – die zuletzt angekommene gewinnt.
+//  • „alt“-Änderungen (beim Öffnen der App bemerkt, z. B. Kleinkram vom Programmstart) gelten nur, wenn den Eintrag
+//    seit „basis“ kein anderes Gerät geändert hat. So überschreibt ein länger nicht benutztes Gerät nie neueren Fortschritt.
+//  • v: null = Eintrag gelöscht.
 //
 // Schutz: PIN nur als scrypt-Hash; nach 5 Fehlversuchen wird der Name gesperrt (15 min, danach doppelt so lang);
 // höchstens 30 Fehlversuche und 5 neue Konten pro Stunde und Anschluss; höchstens 50 Konten; Anfragen bis 10 MB.
 // Anmeldung per Cookie (HttpOnly, 1 Jahr). Im Datenordner: konten.json, sitzungen.json, staende/<name>.json,
-// archiv/<name>-JJJJ-MM-TT.json (Tageskopie), konflikte/<name>-….json.
+// archiv/<name>-JJJJ-MM-TT.json (Tageskopie).
 'use strict';
 const http = require('http'), fs = require('fs'), path = require('path'), crypto = require('crypto');
 
@@ -26,7 +32,7 @@ const MAX_KONTEN = 50, MAX_BODY = 10 * 1024 * 1024, COOKIE = 'spielekiste_sitzun
 
 function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
   if (!daten) throw new Error('Datenordner fehlt');
-  for (const o of ['', 'staende', 'archiv', 'konflikte']) fs.mkdirSync(path.join(daten, o), { recursive: true });
+  for (const o of ['', 'staende', 'archiv']) fs.mkdirSync(path.join(daten, o), { recursive: true });
 
   // ---------- Dateien ----------
   const lesen = (datei, leer) => { try { return JSON.parse(fs.readFileSync(path.join(daten, datei), 'utf8')); } catch (e) { return leer; } };
@@ -72,7 +78,15 @@ function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
     req.on('end', () => { try { ok(teile.length ? JSON.parse(Buffer.concat(teile).toString('utf8')) : {}); } catch (e) { nein(Object.assign(new Error('kein JSON'), { status: 400 })); } });
     req.on('error', nein);
   });
-  const standPruefen = (b) => b && typeof b.daten === 'object' && b.daten && Object.entries(b.daten).every(([k, v]) => k.startsWith('walquiz.') && typeof v === 'string');
+  const aenderungenPruefen = (a) => a && typeof a === 'object' && Object.entries(a).every(([k, x]) => k.startsWith('walquiz.') && k.length < 200 && x && (typeof x.v === 'string' || x.v === null));
+  // Stand eines Kontos; ältere Dateien ({ version, daten }) werden beim Lesen umgewandelt
+  function standLesen(datei) {
+    const st = lesen(datei, null);
+    if (!st) return { version: 0, eintraege: {} };
+    if (st.eintraege) return st;
+    const eintraege = {}; Object.entries(st.daten || {}).forEach(([k, v]) => { eintraege[k] = { v, ver: st.version || 1 }; });
+    return { version: st.version || 1, eintraege };
+  }
 
   async function bearbeiten(req, res) {
     const url = new URL(req.url, 'http://x'), weg = url.pathname.replace(/^.*?\/api\//, '/');
@@ -129,26 +143,29 @@ function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
     if (!s) return senden(res, 401, { server: 'spielekiste' });
     const k = s.schluessel, standDatei = 'staende/' + dateiname(k) + '.json';
 
-    if (weg === '/stand' && m === 'GET') {
-      const st = lesen(standDatei, null);
-      return st ? senden(res, 200, st) : senden(res, 404, {});
-    }
-    if (weg === '/stand' && m === 'PUT') {
-      const b = await koerper(req);
-      if (!standPruefen(b) || typeof b.basis !== 'number') return senden(res, 400, { fehler: 'Ungültiger Spielstand' });
-      const alt = lesen(standDatei, null), version = alt ? alt.version : 0;
-      if (b.basis !== version) return senden(res, 409, { aktuell: alt });
-      const neu = { app: 'spielekiste', format: 1, version: version + 1, zeit: new Date(jetzt()).toISOString(), geraet: String(b.geraet || '').slice(0, 30), stand: String(b.stand || '').slice(0, 30), daten: b.daten };
-      schreiben(standDatei, neu);
-      const archiv = 'archiv/' + dateiname(k) + '-' + new Date(jetzt()).toISOString().slice(0, 10) + '.json';
-      if (!fs.existsSync(path.join(daten, archiv))) schreiben(archiv, neu);
-      return senden(res, 200, { version: neu.version, zeit: neu.zeit });
-    }
-    if (weg === '/konflikt' && m === 'POST') {
-      const b = await koerper(req);
-      if (!standPruefen(b)) return senden(res, 400, { fehler: 'Ungültiger Spielstand' });
-      schreiben('konflikte/' + dateiname(k) + '-' + new Date(jetzt()).toISOString().replace(/[:.]/g, '-') + '.json', b);
-      return senden(res, 200, {});
+    if (weg === '/abgleich' && m === 'POST') {
+      const b = await koerper(req), basis = Number(b.basis) || 0, aend = b.aenderungen || {};
+      if (!aenderungenPruefen(aend)) return senden(res, 400, { fehler: 'Ungültige Änderungen' });
+      const st = standLesen(standDatei), neueVersion = st.version + 1;
+      let geaendert = false; const vonHier = new Set();
+      for (const [schl, x] of Object.entries(aend)) {
+        const e = st.eintraege[schl];
+        if (x.alt && e && e.ver > basis) continue;                 // anderes Gerät war neuer – Kleinkram vom Öffnen verwirft sich
+        vonHier.add(schl);
+        if (e ? e.v === x.v : x.v === null) continue;              // nichts Neues
+        st.eintraege[schl] = { v: x.v, ver: neueVersion }; geaendert = true;
+      }
+      if (geaendert) {
+        st.version = neueVersion; st.zeit = new Date(jetzt()).toISOString();
+        st.geraet = String(b.geraet || '').slice(0, 30); st.stand = String(b.stand || '').slice(0, 30);
+        schreiben(standDatei, st);
+        const archiv = 'archiv/' + dateiname(k) + '-' + new Date(jetzt()).toISOString().slice(0, 10) + '.json';
+        if (!fs.existsSync(path.join(daten, archiv))) schreiben(archiv, st);
+      }
+      // Nur zurückschicken, was ein anderes Gerät seit „basis“ geändert hat (das eben Hochgeladene kennt das Gerät ja)
+      const neu = {}; let n = 0;
+      Object.entries(st.eintraege).forEach(([schl, e]) => { if (e.ver > basis && !vonHier.has(schl)) { neu[schl] = e.v; n++; } });
+      return senden(res, 200, n ? { version: st.version, zeit: st.zeit, geraet: st.geraet, neu } : { version: st.version });
     }
     return senden(res, 404, { fehler: 'Unbekannt' });
   }

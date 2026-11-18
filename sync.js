@@ -5,22 +5,30 @@
 // Anmelden: Beim ersten Besuch fragt die App einmal „Anmelden oder neu registrieren?“ (oder „Ohne Konto spielen“).
 // Danach merkt sich das Gerät die Anmeldung (Cookie, 1 Jahr). Über ☁️ kann man sich später an- und abmelden.
 //
-// Abgleich: Der komplette Stand (alle „walquiz.“-Einträge außer gerätebezogenen) liegt pro Konto auf dem Server, mit
-// fortlaufender Versionsnummer. Jedes Gerät merkt sich, auf welcher Version sein Stand beruht.
-//  • Server neuer, hier nichts Neues gespielt → Server-Stand übernehmen und neu laden.
-//  • Hier Neues gespielt, Server unverändert   → hochladen (der Server lehnt ab, wenn inzwischen ein anderes Gerät schneller war).
-//  • Beides                                     → fragen, welcher Stand gilt. Der andere wird auf dem Server als Konflikt-Kopie
-//                                                 aufgehoben, geht also nie verloren. Zusätzlich legt der Server täglich eine Kopie an.
+// Abgleich – vollautomatisch, ohne Rückfragen, Eintrag für Eintrag (jedes Spiel hat eigene „walquiz.“-Einträge):
+//  • Nach dem Spielen (Prüfung alle 5 s) und beim Verlassen der App werden geänderte Einträge hochgeladen.
+//  • Beim Öffnen und beim Zurückkehren in die App holt sich das Gerät den neuesten Stand; gab es Neues von einem
+//    anderen Gerät, lädt die App einmal neu („Spielstand aktualisiert“).
+//  • Was beim Öffnen schon anders ist (Kleinkram vom Programmstart, alter Stand eines lange nicht benutzten Geräts),
+//    zählt als „alt“: Es setzt sich nur durch, wo kein anderes Gerät inzwischen etwas geändert hat.
+//  • Haben zwei Geräte gleichzeitig denselben Eintrag geändert, gewinnt die zuletzt angekommene Änderung.
+//    Zusätzlich legt der Server täglich eine Kopie an.
 const SY_META = 'spielekiste-sync';   // bewusst ohne „walquiz.“ – wird selbst nicht synchronisiert und nicht gesichert
 const SY_SPAETER = 'spielekiste-konto-spaeter';
 const SY_API = new URL('api/', location.href).href;
 const SY_NIE = ['walquiz.sicherung.v1', 'walquiz.installhinweis.v1', 'walquiz.photos.v4'];   // gerätebezogen bzw. nur Zwischenspeicher
-const SY_TAKT = 15000;
+const SY_TAKT = 5000;
 
 let syZustand = 'aus';    // 'aus' (kein Server) | 'abgemeldet' | 'ok'
 let syName = '';
 let syLaeuft = false;     // gerade ein Abgleich unterwegs
 let syGestartet = false;  // Takt und Ereignisse schon eingerichtet
+let syGeaendert = true;   // hat das Spiel seit dem letzten Abgleich etwas gespeichert? (spart das Durchrechnen alle 5 s)
+try {
+  const setzen = Storage.prototype.setItem, loeschen = Storage.prototype.removeItem;
+  Storage.prototype.setItem = function (k, v) { if (this === window.localStorage && String(k).startsWith('walquiz.')) syGeaendert = true; return setzen.call(this, k, v); };
+  Storage.prototype.removeItem = function (k) { if (this === window.localStorage && String(k).startsWith('walquiz.')) syGeaendert = true; return loeschen.call(this, k); };
+} catch (e) { /* dann wird eben immer gerechnet */ }
 
 const syMeta = () => { try { return JSON.parse(localStorage.getItem(SY_META) || '{}'); } catch (e) { return {}; } };
 const syMetaSetzen = (x) => { try { localStorage.setItem(SY_META, JSON.stringify(Object.assign(syMeta(), x))); } catch (e) { /* voll */ } };
@@ -31,18 +39,16 @@ function sySchluessel() {
   return l.sort();
 }
 function syDaten() { const d = {}; sySchluessel().forEach((k) => { d[k] = localStorage.getItem(k); }); return d; }
-function syAbdruck(daten) {
-  let h = 5381;
-  Object.keys(daten).sort().forEach((k) => { const t = k + '=' + daten[k] + '\n'; for (let i = 0; i < t.length; i++) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0; });
-  return h.toString(36) + '.' + Object.keys(daten).length;
+const syHash = (t) => { let h = 5381; for (let i = 0; i < t.length; i++) h = ((h * 33) ^ t.charCodeAt(i)) >>> 0; return h.toString(36) + '.' + t.length; };
+const syHashes = (daten) => { const h = {}; Object.entries(daten).forEach(([k, v]) => { h[k] = syHash(v); }); return h; };
+// Was hat sich hier seit dem letzten Abgleich geändert? (v: null = gelöscht)
+function syAenderungen(daten, alt) {
+  const h = syMeta().h || {}, a = {};
+  Object.entries(daten).forEach(([k, v]) => { if (h[k] !== syHash(v)) a[k] = alt ? { v, alt: true } : { v }; });
+  Object.keys(h).forEach((k) => { if (!(k in daten)) a[k] = alt ? { v: null, alt: true } : { v: null }; });
+  return a;
 }
-// Hat dieses Gerät seit dem letzten Abgleich etwas Neues? Ohne früheren Abgleich zählt jeder echte Spielstand als neu.
-function syHierNeu() {
-  const m = syMeta(), d = syDaten();
-  if (m.abdruck) return syAbdruck(d) !== m.abdruck;
-  const egal = ['walquiz.profile.v1', 'walquiz.audio.v1', 'walquiz.zuletzt.v1', 'walquiz.gesehen.v1'];
-  return Object.keys(d).some((k) => !egal.includes(k));
-}
+const syHierNeu = () => Object.keys(syAenderungen(syDaten(), false)).length > 0;
 function syGeraet() {
   const u = navigator.userAgent;
   if (/iPhone/.test(u)) return 'iPhone'; if (/iPad/.test(u)) return 'iPad'; if (/Android/.test(u)) return 'Android';
@@ -66,58 +72,43 @@ async function syPruefen() {
   } catch (e) { /* offline oder kein Server */ }
   return 'aus';
 }
-const syPaket = (daten) => ({ geraet: syGeraet(), stand: typeof APP_STAND !== 'undefined' ? APP_STAND : '', daten });
 
 // ---------- Abgleich ----------
-function syUebernehmen(obj) {
-  const neu = obj.daten;
-  sySchluessel().forEach((k) => { if (!(k in neu)) localStorage.removeItem(k); });
-  Object.entries(neu).forEach(([k, v]) => { if (k.startsWith('walquiz.') && !SY_NIE.includes(k) && typeof v === 'string') localStorage.setItem(k, v); });
-  syMetaSetzen({ version: obj.version, abdruck: syAbdruck(syDaten()), zuletzt: Date.now() });
-}
-// → true: hochgeladen, false: ein anderes Gerät war schneller (beim nächsten Abgleich wird das geklärt)
-async function syHochladen(basis) {
-  const daten = syDaten();
-  const { status, json } = await syApi('stand', 'PUT', Object.assign({ basis }, syPaket(daten)));
-  if (status === 409) return false;
-  if (status !== 200) throw new Error('Sync: Hochladen fehlgeschlagen (HTTP ' + status + ')');
-  syMetaSetzen({ version: json.version, abdruck: syAbdruck(daten), zuletzt: Date.now() });
-  return true;
-}
-// Ein Abgleich. ladenErlaubt=false: nichts übernehmen, das einen Neuladen braucht (z. B. beim Verlassen der App).
-async function syAbgleich({ ladenErlaubt = true } = {}) {
+// alt: Änderungen gelten als „beim Öffnen bemerkt“ (siehe oben). ladenErlaubt: Neues vom Server übernehmen und neu laden.
+async function syAbgleich({ alt = false, ladenErlaubt = false } = {}) {
   if (syZustand !== 'ok' || syLaeuft) return;
   syLaeuft = true;
   try {
-    const hierNeu = syHierNeu(), basis = syMeta().version || 0;
-    const { status, json } = await syApi('stand');
+    if (!syGeaendert && !ladenErlaubt) return;
+    syGeaendert = false;
+    const m = syMeta(), vorher = syDaten(), aend = syAenderungen(vorher, alt), basis = m.h ? (m.version || 0) : 0;   // ohne Eintrags-Merkliste (frisch angemeldet, alte Version): alles vom Server ist neuer
+    if (!Object.keys(aend).length && !ladenErlaubt) return;
+    const { status, json } = await syApi('abgleich', 'POST', { basis, geraet: syGeraet(), stand: typeof APP_STAND !== 'undefined' ? APP_STAND : '', aenderungen: aend });
     if (status === 401) { syZustand = 'abgemeldet'; return; }
-    if (status === 404) { if (sySchluessel().length) await syHochladen(0); return; }
-    if (status !== 200) throw new Error('Sync: HTTP ' + status);
-    const server = json;
-    if (server.version === basis) { if (hierNeu) await syHochladen(basis); return; }
-    if (!hierNeu) {
-      if (!ladenErlaubt) return;
-      syUebernehmen(server);
-      sessionStorage.setItem('spielekiste-sync-hinweis', 'Spielstand vom ' + server.geraet + ' (' + syZeit(server.zeit) + ') übernommen');
-      location.reload();
+    if (status !== 200 || !json) throw new Error('Sync: HTTP ' + status);
+    const jetzt = syDaten(), h = Object.assign({}, syMeta().h || {});
+    // Das Hochgeladene gilt als abgeglichen (was der Server verworfen hat, steht unten in „neu“ und wird übernommen)
+    Object.entries(aend).forEach(([k, x]) => { if (x.v === null) delete h[k]; else h[k] = syHash(x.v); });
+    const neu = json.neu || {};
+    // Was hat ein anderes Gerät geändert, das hier anders ist? (Einträge, die sich während der Anfrage hier geändert haben, bleiben)
+    const unterschiede = Object.keys(neu).filter((k) => !SY_NIE.includes(k) && (neu[k] === null ? k in jetzt : neu[k] !== jetzt[k]) && jetzt[k] === vorher[k]);
+    if (!unterschiede.length || ladenErlaubt) {
+      const merk = syGeaendert;   // eigenes Übernehmen zählt nicht als „im Spiel gespeichert“
+      unterschiede.forEach((k) => { if (neu[k] === null) localStorage.removeItem(k); else localStorage.setItem(k, neu[k]); });
+      syGeaendert = merk;
+      Object.entries(neu).forEach(([k, v]) => { if (v === null) delete h[k]; else h[k] = syHash(v); });
+      syMetaSetzen({ version: json.version, h, zuletzt: Date.now() });
+      if (unterschiede.length) {
+        sessionStorage.setItem('spielekiste-sync-hinweis', 'Spielstand aktualisiert' + (json.geraet ? ' (zuletzt gespielt auf ' + json.geraet + ')' : ''));
+        location.reload();
+      }
       return;
     }
-    // Konflikt: hier und anderswo wurde gespielt
-    if (!ladenErlaubt) return;
-    const serverNehmen = confirm('☁️ Spielstand von ' + syName + '\n\nAuf einem anderen Gerät (' + server.geraet + ', ' + syZeit(server.zeit) + ') wurde ebenfalls gespielt.\n\n'
-      + 'OK = den Stand vom anderen Gerät übernehmen\nAbbrechen = den Stand von diesem Gerät behalten\n\n'
-      + 'Der jeweils andere Stand wird auf dem Homeserver aufgehoben.');
-    if (serverNehmen) {
-      await syApi('konflikt', 'POST', Object.assign({ version: basis, zeit: new Date().toISOString() }, syPaket(syDaten())));
-      syUebernehmen(server);
-      sessionStorage.setItem('spielekiste-sync-hinweis', 'Stand vom ' + server.geraet + ' übernommen – der Stand dieses Geräts ist auf dem Server aufgehoben');
-      location.reload();
-    } else {
-      await syApi('konflikt', 'POST', server);
-      if (await syHochladen(server.version)) syHinweis('Stand dieses Geräts gilt jetzt überall');
-    }
+    // Neues von einem anderen Gerät, aber gerade nicht der Moment zum Neuladen (mitten im Spiel / App im Hintergrund):
+    // Version nicht weiterzählen – der nächste Abgleich beim Öffnen/Zurückkehren holt den Rest.
+    syMetaSetzen({ h, zuletzt: Date.now() });
   } catch (e) {
+    syGeaendert = true;   // beim nächsten Mal nochmal versuchen
     console.warn(e);
   } finally {
     syLaeuft = false;
@@ -174,7 +165,7 @@ function syAnmeldeDialog() {
 }
 async function syAngemeldet(name, neu) {
   // anderes Konto als zuletzt auf diesem Gerät → der hiesige Stand gehört (noch) zu keiner Server-Version
-  if (syMeta().konto !== name.toLowerCase()) localStorage.setItem(SY_META, JSON.stringify({ konto: name.toLowerCase() }));
+  if (syMeta().konto !== name.toLowerCase()) localStorage.setItem(SY_META, JSON.stringify({ konto: name.toLowerCase() }));   // erster Abgleich: alles „alt“
   localStorage.removeItem(SY_SPAETER);
   syName = name; syZustand = 'ok'; syKnopf();
   syHinweis(neu ? 'Willkommen, ' + name + '! Dein Spielstand ist jetzt gesichert' : 'Angemeldet als ' + name);
@@ -187,9 +178,9 @@ function syKontoDialog() {
     + '<p class="ft-klein">Auf einem anderen Gerät einfach die Seite öffnen und mit demselben Namen und derselben PIN anmelden.</p>'
     + '<button type="button" class="btn secondary" id="syJetzt">🔄 Jetzt abgleichen</button>'
     + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>');
-  d.querySelector('#syJetzt').addEventListener('click', async () => { d.close(); await syAbgleich(); syHinweis('Abgeglichen ✓'); });
+  d.querySelector('#syJetzt').addEventListener('click', async () => { d.close(); await syAbgleich({ ladenErlaubt: true }); syHinweis('Abgeglichen ✓'); });
   d.querySelector('#syAbmelden').addEventListener('click', async () => {
-    await syAbgleich({ ladenErlaubt: false });   // letzten Stand noch sichern
+    await syAbgleich();   // letzten Stand noch sichern
     try { await syApi('abmelden', 'POST', {}); } catch (e) { /* offline – Cookie bleibt dann eben */ }
     syZustand = 'abgemeldet'; syName = ''; localStorage.setItem(SY_SPAETER, '1'); d.close(); syKnopf(); syHinweis('Abgemeldet');
   });
@@ -209,13 +200,13 @@ function syHinweis(text) {
 
 // ---------- Start ----------
 async function syLaufen() {
-  await syAbgleich();
+  await syAbgleich({ alt: true, ladenErlaubt: true });
   if (syGestartet) return;
   syGestartet = true;
-  setInterval(() => { if (document.visibilityState === 'visible' && syHierNeu()) syAbgleich({ ladenErlaubt: false }); }, SY_TAKT);
+  setInterval(() => { if (document.visibilityState === 'visible') syAbgleich(); }, SY_TAKT);
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden') syAbgleich({ ladenErlaubt: false });
-    else syAbgleich();   // zurück in der App: schauen, ob anderswo gespielt wurde
+    if (document.visibilityState === 'hidden') syAbgleich();
+    else syAbgleich({ alt: true, ladenErlaubt: true });   // zurück in der App: Neues von anderen Geräten holen
   });
 }
 async function syStart() {
