@@ -6,6 +6,7 @@
 # Läuft als SYSTEM: keine offenen Fenster, auch ohne angemeldeten Benutzer.
 param([string]$Basis = 'C:\homeserver')
 $ErrorActionPreference = 'Stop'
+$Basis = (Resolve-Path $Basis).Path.TrimEnd('\')
 function Schritt($t) { Write-Host ''; Write-Host "== $t" -ForegroundColor Cyan }
 
 Schritt 'Dateien prüfen'

@@ -5,6 +5,7 @@
 # kommt automatisch die vorige Version zurück. Protokoll: update.log
 param([string]$Basis = 'C:\homeserver', [switch]$Erzwingen)
 $ErrorActionPreference = 'Stop'
+$Basis = (Resolve-Path $Basis).Path.TrimEnd('\')
 $ProgressPreference = 'SilentlyContinue'
 [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
 $repo = 'pbajog-sys/Test1'
