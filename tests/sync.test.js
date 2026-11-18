@@ -92,10 +92,14 @@ const caddy = http.createServer((req, res) => {
   ck('B: keine Konflikt-Frage', B.dialogs.length === 0, B.dialogs.join(' | '));
 
   // ---------- Hin und zurück, ohne Rückfrage ----------
-  await setzen(B, 'walquiz.farben.v1', JSON.stringify({ rekord: 12 })); await abgleich(B);
+  await setzen(B, 'walquiz.farben.v1', JSON.stringify({ rekord: 12 }));
+  await ruhig(B, 3200);   // grünes Aufleuchten nach der Anmeldung abwarten (wird absichtlich nicht unterbrochen)
+  const puls = await B.evaluate(async () => { const p = syAbgleich(); await new Promise((r) => setTimeout(r, 30)); const an = document.getElementById('syncBtn').classList.contains('sy-laeuft'); await p; await new Promise((r) => setTimeout(r, 1100)); return [an, document.getElementById('syncBtn').classList.contains('sy-laeuft')]; });
+  ck('☁️ pulsiert während des Abgleichs und hört danach auf', puls[0] === true && puls[1] === false, JSON.stringify(puls));
   ck('B: Runde hochgeladen', wert('anna', 'walquiz.farben.v1') === '{"rekord":12}', 'v' + stand('anna').version);
   await zurueck(A);
-  ck('A: holt beim Zurückkehren den Stand von B', (await lesen(A, 'walquiz.farben.v1')) === '{"rekord":12}');
+  const animA = await A.evaluate(() => ({ neu: document.getElementById('syncBtn').classList.contains('sy-neu'), text: !!document.querySelector('.sync-hinweis') }));
+  ck('A: holt beim Zurückkehren den Stand von B – ☁️ leuchtet auf, kein Text', (await lesen(A, 'walquiz.farben.v1')) === '{"rekord":12}' && animA.neu && !animA.text, JSON.stringify(animA));
   const vA = stand('anna').version; antworten = [];
   await zurueck(A); await zurueck(B); await abgleich(A); await abgleich(B);
   ck('Ohne Änderungen: Version gleich, nur winzige Antworten', stand('anna').version === vA && antworten.every((n) => n < 40), antworten.join(',') + ' Bytes');

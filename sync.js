@@ -90,6 +90,7 @@ async function syAbgleich({ alt = false, ladenErlaubt = false } = {}) {
     syGeaendert = false;
     const m = syMeta(), vorher = syDaten(), aend = syAenderungen(vorher, alt), basis = m.h ? (m.version || 0) : 0;   // ohne Eintrags-Merkliste (frisch angemeldet, alte Version): alles vom Server ist neuer
     if (!Object.keys(aend).length && !ladenErlaubt) return;
+    syAnimation('laeuft');
     const oe = syOeffentlich(), oeHash = oe ? syHash(JSON.stringify(oe)) : null, oeNeu = oe && oeHash !== m.oh;
     const { status, json } = await syApi('abgleich', 'POST', Object.assign({ basis, geraet: syGeraet(), stand: typeof APP_STAND !== 'undefined' ? APP_STAND : '', aenderungen: aend }, oeNeu ? { oeffentlich: oe } : {}));
     if (status === 401) { syZustand = 'abgemeldet'; return; }
@@ -108,7 +109,7 @@ async function syAbgleich({ alt = false, ladenErlaubt = false } = {}) {
       Object.entries(neu).forEach(([k, v]) => { if (v === null) delete h[k]; else h[k] = syHash(v); });
       syMetaSetzen({ version: json.version, h, zuletzt: Date.now() });
       if (unterschiede.length) {
-        sessionStorage.setItem('spielekiste-sync-hinweis', 'Spielstand aktualisiert' + (json.geraet ? ' (zuletzt gespielt auf ' + json.geraet + ')' : ''));
+        sessionStorage.setItem('spielekiste-sync-neu', '1');   // nach dem Neuladen: ☁️ leuchtet kurz auf (kein Text)
         location.reload();
       }
       return;
@@ -122,6 +123,7 @@ async function syAbgleich({ alt = false, ladenErlaubt = false } = {}) {
   } finally {
     syLaeuft = false;
     syKnopf();
+    syAnimation('fertig');
   }
 }
 
@@ -345,6 +347,25 @@ function syDuelleZeigen() {
 }
 
 // ---------- ☁️-Knopf ----------
+// Animation statt Text: pulsiert während des Abgleichs, leuchtet grün auf, wenn Neues von einem anderen Gerät kam
+(function () {
+  const st = document.createElement('style');
+  st.textContent = '@keyframes sy-puls{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(.88);opacity:.55}}'
+    + '@keyframes sy-neu{0%{transform:scale(1);box-shadow:0 0 0 0 rgba(34,197,94,.9)}25%{transform:scale(1.25)}45%{transform:scale(.95)}65%{transform:scale(1.08)}100%{transform:scale(1);box-shadow:0 0 0 18px rgba(34,197,94,0)}}'
+    + '@keyframes sy-neu-ruhig{0%{box-shadow:0 0 0 0 rgba(34,197,94,.9)}100%{box-shadow:0 0 0 18px rgba(34,197,94,0)}}'
+    + '#syncBtn.sy-laeuft{animation:sy-puls 1s ease-in-out infinite}'
+    + '#syncBtn.sy-neu{animation:sy-neu 1.4s ease-out 2;background:rgba(34,197,94,.25)}'
+    + '@media (prefers-reduced-motion:reduce){#syncBtn.sy-laeuft{animation:none;opacity:.6}#syncBtn.sy-neu{animation:sy-neu-ruhig 1.4s ease-out 2}}';
+  document.head.appendChild(st);
+})();
+let syAnimSeit = 0;
+function syAnimation(art) {
+  const b = document.getElementById('syncBtn');
+  if (!b) return;
+  if (art === 'laeuft') { if (b.classList.contains('sy-neu')) return; syAnimSeit = Date.now(); b.classList.add('sy-laeuft'); return; }   // Aufleuchten nicht unterbrechen
+  if (art === 'fertig') { const rest = Math.max(0, 900 - (Date.now() - syAnimSeit)); setTimeout(() => b.classList.remove('sy-laeuft'), rest); return; }   // mind. 0,9 s sichtbar
+  if (art === 'neu') { b.classList.remove('sy-laeuft'); void b.offsetWidth; b.classList.add('sy-neu'); setTimeout(() => b.classList.remove('sy-neu'), 3000); }
+}
 function syKnopf() {
   let b = document.getElementById('syncBtn');
   if (syZustand === 'aus') { if (b) b.hidden = true; return; }
@@ -453,6 +474,7 @@ async function syStart() {
   syKnopf();
   const h = sessionStorage.getItem('spielekiste-sync-hinweis');
   if (h) { sessionStorage.removeItem('spielekiste-sync-hinweis'); syHinweis(h); }
+  if (sessionStorage.getItem('spielekiste-sync-neu')) { sessionStorage.removeItem('spielekiste-sync-neu'); setTimeout(() => syAnimation('neu'), 300); }
   if (syZustand === 'ok') return syLaufen();
   if (syZustand === 'abgemeldet' && !localStorage.getItem(SY_SPAETER)) setTimeout(syAnmeldeDialog, 600);
 }
