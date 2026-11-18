@@ -1,5 +1,5 @@
 // Service Worker: App offline verfügbar machen. Walfotos werden beim ersten Anzeigen zwischengespeichert.
-const VERSION = 'walquiz-v154';
+const VERSION = 'walquiz-v155';
 const SHELL = [
   './',
   'index.html',
@@ -41,6 +41,7 @@ const SHELL = [
   'gesten.js',
   'lib/zxing.min.js',
   'sicherung.js',
+  'sync.js',
   'werkzeuge/text-zu-ics.html',
   'nvl/',
   'nvl/index.html',
@@ -163,18 +164,23 @@ self.addEventListener('fetch', (event) => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // Eigene Dateien: erst Netz (damit Updates ankommen), sonst Cache.
+  // Spielstand-Sync mit dem Homeserver: nie zwischenspeichern, immer direkt ans Netz.
+  if (url.origin === location.origin && url.pathname.includes('/sync/')) return;
+
+  // Eigene Dateien: sofort aus dem Cache (schneller Start, auch wenn der Homeserver gerade nicht erreichbar ist),
+  // im Hintergrund frisch vom Server holen und für das nächste Öffnen merken. Nur was noch nicht im Cache ist,
+  // kommt direkt aus dem Netz. Neue App-Versionen (VERSION) legen beim Installieren einen kompletten neuen Cache an,
+  // danach lädt app.js die Seite einmal neu – so werden alte und neue Dateien nicht gemischt.
   if (url.origin === location.origin) {
-    event.respondWith(
+    event.respondWith(caches.open(VERSION).then((c) => c.match(req, { ignoreSearch: true }).then((cached) => {
       // cache: 'no-cache' – nicht die bis zu 10 Minuten alte Kopie aus dem Browser-Zwischenspeicher nehmen
-      fetch(req, { cache: 'no-cache' })
-        .then((res) => {
-          const copy = res.clone();
-          caches.open(VERSION).then((c) => c.put(req, copy));
-          return res;
-        })
-        .catch(() => caches.match(req, { ignoreSearch: true }).then((r) => r || caches.match('index.html')))
-    );
+      const netz = fetch(req, { cache: 'no-cache' }).then((res) => {
+        if (res.status === 200) c.put(req, res.clone()).catch(() => {});
+        return res;
+      });
+      if (cached) { event.waitUntil(netz.catch(() => {})); return cached; }
+      return netz.catch(() => caches.match('index.html'));
+    })));
     return;
   }
 

@@ -1,0 +1,33 @@
+# Caddyfile für den Homeserver: Spielekiste + Spielstand-Sync
+# Braucht Caddy MIT dem Modul „caddy-webdav“ (siehe LIESMICH.md).
+# DEIN-SYNC-CODE durch deinen eigenen Code ersetzen (keine Leerzeichen, kein *).
+
+{
+	order webdav before file_server
+}
+
+spielkiste.duckdns.org {
+	# Komprimieren: die App lädt etwa halb so viele Daten
+	encode zstd gzip
+
+	# Spielstand-Sync: nur mit dem richtigen Sync-Code
+	@sync path /sync /sync/*
+	handle @sync {
+		@codeOk header X-Sync-Code DEIN-SYNC-CODE
+		handle @codeOk {
+			uri strip_prefix /sync
+			root * C:/homeserver/daten
+			webdav
+		}
+		handle {
+			header X-Spielekiste-Sync code
+			respond "Sync-Code fehlt oder ist falsch" 401
+		}
+	}
+
+	# Die App selbst
+	handle {
+		root * C:/homeserver/spiel
+		file_server
+	}
+}
