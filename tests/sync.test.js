@@ -11,7 +11,13 @@ const DATEN = fs.mkdtempSync(path.join(os.tmpdir(), 'spielekiste-sync-'));
 const TYPEN = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json' };
 
 let apiAn = true;
-const api = erstelleServer({ daten: DATEN });
+// Admin „Anna“; statt der Windows-Aufgabe schreibt ein Platzhalter nach kurzer Zeit „Fertig“ ins Update-Protokoll
+let updatesGestartet = 0;
+fs.writeFileSync(path.join(DATEN, 'version.txt'), 'aaaaaaa1111\n');
+const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], updateStarten: async () => {
+  updatesGestartet++;
+  setTimeout(() => { fs.writeFileSync(path.join(DATEN, 'version.txt'), 'bbbbbbb2222\n'); fs.appendFileSync(path.join(DATEN, 'update.log'), '2026-11-18 22:00:00  Fertig: Version bbbbbbb läuft.\n'); }, 1500);
+} });
 const caddy = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
   if (u.pathname.startsWith('/api/')) {
@@ -92,8 +98,8 @@ const caddy = http.createServer((req, res) => {
   ck('B: keine Konflikt-Frage', B.dialogs.length === 0, B.dialogs.join(' | '));
 
   // ---------- Hin und zurück, ohne Rückfrage ----------
-  await setzen(B, 'walquiz.farben.v1', JSON.stringify({ rekord: 12 }));
   await ruhig(B, 3200);   // grünes Aufleuchten nach der Anmeldung abwarten (wird absichtlich nicht unterbrochen)
+  await setzen(B, 'walquiz.farben.v1', JSON.stringify({ rekord: 12 }));
   const puls = await B.evaluate(async () => { const p = syAbgleich(); await new Promise((r) => setTimeout(r, 30)); const an = document.getElementById('syncBtn').classList.contains('sy-laeuft'); await p; await new Promise((r) => setTimeout(r, 1100)); return [an, document.getElementById('syncBtn').classList.contains('sy-laeuft')]; });
   ck('☁️ pulsiert während des Abgleichs und hört danach auf', puls[0] === true && puls[1] === false, JSON.stringify(puls));
   ck('B: Runde hochgeladen', wert('anna', 'walquiz.farben.v1') === '{"rekord":12}', 'v' + stand('anna').version);
@@ -203,6 +209,22 @@ const caddy = http.createServer((req, res) => {
   ck('Alle 9 Duell-Spiele starten mit dem Duell-Seed', ergebnisse.every(([sp, seed]) => seed === 'duell-test-' + sp), ergebnisse.filter(([sp, seed]) => seed !== 'duell-test-' + sp).map((x) => x.join('=')).join(', '));
   const fremdDuell = await C.evaluate(async () => (await fetch('api/duell', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gegen: 'Niemand' }) })).status);
   ck('Duell gegen unbekannten Namen abgelehnt', fremdDuell === 400);
+
+  // ---------- Server-Menü (nur Admin) ----------
+  ck('Admin: Anna ist Admin, Ben nicht', (await A.evaluate(async () => (await syApi('ich')).json.admin)) === true && (await C.evaluate(async () => (await syApi('ich')).json.admin)) === undefined);
+  const benDarf = await C.evaluate(async () => [(await syApi('admin/aktualisieren', 'POST', {})).status, (await syApi('admin/status')).status]);
+  ck('Admin: Ben darf weder aktualisieren noch den Status sehen', benDarf[0] === 403 && benDarf[1] === 403 && updatesGestartet === 0);
+  ck('Admin: Ben sieht kein Server-Menü', !(await C.evaluate(() => { syKontoDialog(); return !!document.getElementById('syServerMenue'); })));
+  await C.evaluate(() => document.getElementById('skDlg').close());
+  await A.evaluate(() => { syAdmin = true; syKontoDialog(); }); await ruhig(A, 300);
+  await A.click('#syServerMenue'); await ruhig(A, 1000);
+  ck('Server-Menü: Version und Konten', (await A.textContent('#syServerVersion')) === 'aaaaaaa' && /\d+ · \d+ Duelle/.test(await A.textContent('#syServerKonten')));
+  await A.screenshot({ path: path.join(os.tmpdir(), 'sync-servermenue.png') });
+  await A.click('#syServerUpdate'); await ruhig(A, 7000);
+  ck('Server aktualisieren: gestartet, Fortschritt, danach „App neu laden“ und neue Version', updatesGestartet === 1 && (await A.textContent('#syServerUpdate')) === '🔄 App neu laden' && (await A.textContent('#syServerVersion')) === 'bbbbbbb', await A.textContent('#syServerUpdate'));
+  const gleichNochmal = await A.evaluate(async () => (await syApi('admin/aktualisieren', 'POST', {})).status);
+  ck('Server aktualisieren: höchstens einmal pro Minute', gleichNochmal === 429 && updatesGestartet === 1);
+  await A.evaluate(() => document.getElementById('skDlg').close());
 
   const ohne = await D0();
   ck('Bestenliste nur für Angemeldete', ohne === 401);

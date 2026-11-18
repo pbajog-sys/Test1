@@ -1,5 +1,5 @@
 ﻿# Spielekiste-Homeserver: neue Version von GitHub holen und einspielen.
-#   ohne -Erzwingen: nur wenn es auf GitHub etwas Neues gibt (so läuft es alle 5 Minuten über wachen.ps1)
+#   ohne -Erzwingen: nur wenn es auf GitHub etwas Neues gibt (Knopf „Server aktualisieren“ in der App, nachts 04:17)
 #   -Leise:          „schon aktuell“ nicht ins Protokoll schreiben
 #   -Erzwingen:      immer (Doppelklick auf aktualisieren.bat)
 # Spielstände (daten\), Caddyfile und Zertifikate bleiben unangetastet. Startet der neue Konto-Server nicht,
@@ -45,7 +45,7 @@ try {
   Move-Item $neuOrdner.FullName $spiel
   Copy-Item -Force (Join-Path $Basis 'spielstand-server.js') (Join-Path $Basis 'spielstand-server.vorher.js') -ErrorAction SilentlyContinue
   Copy-Item -Force "$spiel\werkzeuge\homeserver\spielstand-server.js" $Basis
-  foreach ($f in 'aktualisieren.ps1', 'aktualisieren.bat', 'einrichten.ps1', 'einrichten.bat', 'wachen.ps1', 'CLAUDE.md') { Copy-Item -Force "$spiel\werkzeuge\homeserver\windows\$f" $Basis -ErrorAction SilentlyContinue }
+  foreach ($f in 'aktualisieren.ps1', 'aktualisieren.bat', 'einrichten.ps1', 'einrichten.bat', 'CLAUDE.md') { Copy-Item -Force "$spiel\werkzeuge\homeserver\windows\$f" $Basis -ErrorAction SilentlyContinue }
 
   if ($aufgabe) {
     Start-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Konto-Server'

@@ -28,6 +28,7 @@ const SY_TAKT = 5000;
 
 let syZustand = 'aus';    // 'aus' (kein Server) | 'abgemeldet' | 'ok'
 let syName = '';
+let syAdmin = false;      // Betreiber: sieht „Server aktualisieren“
 let syLaeuft = false;     // gerade ein Abgleich unterwegs
 let syGestartet = false;  // Takt und Ereignisse schon eingerichtet
 let syGeaendert = true;   // hat das Spiel seit dem letzten Abgleich etwas gespeichert? (spart das Durchrechnen alle 5 s)
@@ -74,7 +75,7 @@ async function syApi(weg, methode = 'GET', koerper) {
 async function syPruefen() {
   try {
     const { status, json } = await syApi('ich');
-    if (status === 200 && json && json.name) { syName = json.name; return 'ok'; }
+    if (status === 200 && json && json.name) { syName = json.name; syAdmin = !!json.admin; return 'ok'; }
     if (status === 401 && json && json.server === 'spielekiste') return 'abgemeldet';
   } catch (e) { /* offline oder kein Server */ }
   return 'aus';
@@ -417,6 +418,7 @@ async function syAngemeldet(name, neu) {
   if (syMeta().konto !== name.toLowerCase()) localStorage.setItem(SY_META, JSON.stringify({ konto: name.toLowerCase() }));   // erster Abgleich: alles „alt“
   localStorage.removeItem(SY_SPAETER);
   syName = name; syZustand = 'ok'; syKnopf();
+  try { const r = await syApi('ich'); syAdmin = !!(r.json && r.json.admin); } catch (e) { /* egal */ }
   syHinweis(neu ? 'Willkommen, ' + name + '! Dein Spielstand ist jetzt gesichert' : 'Angemeldet als ' + name);
   await syLaufen();
 }
@@ -425,6 +427,7 @@ function syKontoDialog() {
   const d = skDialog('<h3>☁️ ' + syEsc(syName) + '</h3>'
     + '<ul class="ft-check"><li><b>Spielstand</b><span>auf allen Geräten gleich ✓</span></li><li><b>Zuletzt abgeglichen</b><span>' + (m.zuletzt ? syZeit(m.zuletzt) : '–') + '</span></li></ul>'
     + '<p class="ft-klein">Auf einem anderen Gerät einfach die Seite öffnen und mit demselben Namen und derselben PIN anmelden.</p>'
+    + (syAdmin ? '<button type="button" class="btn" id="syServerMenue">🖥️ Server-Menü</button>' : '')
     + '<button type="button" class="btn secondary" id="syJetzt">🔄 Jetzt abgleichen</button>'
     + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>'
     + '<button type="button" class="btn secondary" id="syLoeschen" style="opacity:.75">🗑️ Konto löschen</button>');
@@ -436,12 +439,63 @@ function syKontoDialog() {
     localStorage.removeItem(SY_META); localStorage.setItem(SY_SPAETER, '1');
     syZustand = 'abgemeldet'; syName = ''; d.close(); syKnopf(); syBestenliste(); syDuelleLaden(); syHinweis('Konto gelöscht');
   });
+  if (d.querySelector('#syServerMenue')) d.querySelector('#syServerMenue').addEventListener('click', syServerMenue);
   d.querySelector('#syJetzt').addEventListener('click', async () => { d.close(); await syAbgleich({ ladenErlaubt: true }); syHinweis('Abgeglichen ✓'); });
   d.querySelector('#syAbmelden').addEventListener('click', async () => {
     await syAbgleich();   // letzten Stand noch sichern
     try { await syApi('abmelden', 'POST', {}); } catch (e) { /* offline – Cookie bleibt dann eben */ }
     syZustand = 'abgemeldet'; syName = ''; localStorage.setItem(SY_SPAETER, '1'); d.close(); syKnopf(); syBestenliste(); syDuelleLaden(); syHinweis('Abgemeldet');
   });
+}
+
+// ---------- Betreiber: Server-Menü (nur für das Admin-Konto; der Server prüft das bei jeder Anfrage selbst) ----------
+function syServerMenue() {
+  const d = skDialog('<h3>🖥️ Server-Menü</h3>'
+    + '<ul class="ft-check"><li><b>Version</b><span id="syServerVersion">…</span></li><li><b>Konten</b><span id="syServerKonten">…</span></li></ul>'
+    + '<p class="ft-klein" id="syServerStand" style="min-height:1.3em">Wird geladen …</p>'
+    + '<button type="button" class="btn" id="syServerUpdate">🖥️ Server aktualisieren</button>'
+    + '<p class="ft-klein">Holt die neueste Version des Spiels und des Konto-Servers von GitHub. Spielstände bleiben unangetastet. Startet der neue Server nicht, kommt automatisch die vorige Version zurück.</p>'
+    + '<h4 style="margin:12px 0 4px">Letzte Updates</h4><pre id="syServerLog" style="white-space:pre-wrap;font-size:.72rem;line-height:1.4;color:#a3a3c2;margin:0;max-height:9em;overflow:auto"></pre>');
+  syServerStatus(d);
+  d.querySelector('#syServerUpdate').addEventListener('click', (e) => (e.currentTarget.dataset.neuLaden ? (typeof sbAktualisieren === 'function' ? sbAktualisieren() : location.reload()) : syServerAktualisieren(d)));
+}
+async function syServerStatus(d) {
+  const el = d.querySelector('#syServerStand'); if (!el) return null;
+  try {
+    const r = await syApi('admin/status');
+    if (r.status !== 200) throw new Error();
+    d.querySelector('#syServerVersion').textContent = r.json.version || '?';
+    d.querySelector('#syServerKonten').textContent = r.json.konten + ' · ' + r.json.duelle + ' Duelle';
+    d.querySelector('#syServerLog').textContent = (r.json.log || []).join('\n') || '–';
+    const letzte = (r.json.log || []).slice(-1)[0] || '';
+    el.textContent = letzte ? 'Zuletzt: ' + letzte.replace(/^\S+ (\S+)\s+/, '$1 ') : '';
+    return r.json;
+  } catch (e) { el.textContent = 'Server gerade nicht erreichbar (startet vielleicht neu) …'; return null; }
+}
+async function syServerAktualisieren(d) {
+  const knopf = d.querySelector('#syServerUpdate'), el = d.querySelector('#syServerStand');
+  const vorher = await syServerStatus(d), vorherLog = vorher ? (vorher.log || []).join('\n') : '';
+  knopf.disabled = true; knopf.textContent = '⏳ Update läuft …';
+  const r = await syApi('admin/aktualisieren', 'POST', {}).catch(() => ({ status: 0 }));
+  if (r.status !== 200) { el.textContent = '⚠️ ' + ((r.json && r.json.fehler) || 'Update konnte nicht gestartet werden.'); knopf.disabled = false; knopf.textContent = '🖥️ Server aktualisieren'; return; }
+  // Auf einen neuen Eintrag im Update-Protokoll warten (der Konto-Server startet dabei kurz neu)
+  const bis = Date.now() + 4 * 60e3;
+  while (Date.now() < bis && d.open) {
+    await new Promise((ok) => setTimeout(ok, 4000));
+    const st = await syServerStatus(d);
+    if (!st) continue;
+    const log = (st.log || []).join('\n');
+    if (log === vorherLog) continue;
+    const letzte = (st.log || []).slice(-1)[0] || '';
+    if (/Fertig|Schon aktuell/.test(letzte)) {
+      knopf.disabled = false;
+      if (/Fertig/.test(letzte)) { knopf.textContent = '🔄 App neu laden'; knopf.dataset.neuLaden = '1'; }
+      else knopf.textContent = '✓ Schon aktuell';
+      return;
+    }
+    if (/FEHLER|zurückgenommen/.test(letzte)) { knopf.disabled = false; knopf.textContent = '🖥️ Nochmal versuchen'; return; }
+  }
+  if (d.open) { knopf.disabled = false; knopf.textContent = '🖥️ Server aktualisieren'; el.textContent += ' (keine Rückmeldung – siehe update.log)'; }
 }
 
 function syHinweis(text) {

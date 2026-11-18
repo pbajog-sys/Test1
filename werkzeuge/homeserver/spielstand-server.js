@@ -2,13 +2,16 @@
 // Spielstand-Server für den Homeserver: Benutzerkonten (Name + PIN) und ein Spielstand pro Konto.
 // Läuft hinter Caddy (reverse_proxy /api/* localhost:8090), braucht nur Node.js – keine Zusatzpakete.
 //
-//   node spielstand-server.js [--daten C:\homeserver\daten] [--port 8090]
+//   node spielstand-server.js [--daten C:\homeserver\daten] [--port 8090] [--admin Name] [--basis C:\homeserver]
+//   --admin: dieses Konto sieht in der App „Server aktualisieren“; --basis: Ordner mit version.txt und update.log
 //
 // Endpunkte (alle unter /api/, JSON):
 //   GET  /api/ich             → { name } oder 401 { server: 'spielekiste' }
 //   POST /api/registrieren    { name, pin } → neues Konto, angemeldet (Cookie)
 //   POST /api/anmelden        { name, pin } → angemeldet (Cookie)
 //   POST /api/abmelden
+//   POST /api/admin/aktualisieren   (nur Admin) → startet die Windows-Aufgabe „Spielekiste\Update“ (neueste Version von GitHub)
+//   GET  /api/admin/status          (nur Admin) → { version, log: [letzte Zeilen von update.log] }
 //   POST /api/konto/loeschen  { pin } → Konto, Spielstand, Tageskopien, Bestenliste, Duelle und Anmeldungen löschen
 //   POST /api/abgleich        { basis, geraet, stand, aenderungen: { schlüssel: { v: text|null, alt?: true } } }
 //                             → { version, neu? }  (neu = nur Einträge, die seit „basis“ ein anderes Gerät geändert hat;
@@ -43,7 +46,10 @@ const DUELL_SPIELE = ['farben', 'toene', 'augen', 'takt', 'funktion', 'karte', '
 const DUELL_TAGE = 7, DUELL_OFFEN_MAX = 20;
 const MAX_KONTEN = 50, MAX_BODY = 10 * 1024 * 1024, COOKIE = 'spielekiste_sitzung', SITZUNG_TAGE = 365;
 
-function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
+const UPDATE_STARTEN = () => new Promise((ok, nein) => require('child_process').execFile('schtasks', ['/Run', '/TN', '\\Spielekiste\\Update'], { windowsHide: true }, (e) => (e ? nein(e) : ok())));
+function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = null, updateStarten = UPDATE_STARTEN } = {}) {
+  let letztesUpdate = 0;
+  const admins = new Set([].concat(admin).filter(Boolean).map((n) => String(n).normalize('NFC').toLowerCase()));
   if (!daten) throw new Error('Datenordner fehlt');
   for (const o of ['', 'staende', 'archiv']) fs.mkdirSync(path.join(daten, o), { recursive: true });
 
@@ -124,7 +130,7 @@ function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
 
     if (weg === '/ich' && m === 'GET') {
       const s = sitzungVon(req);
-      return s ? senden(res, 200, { name: konten[s.schluessel].name }) : senden(res, 401, { server: 'spielekiste' });
+      return s ? senden(res, 200, Object.assign({ name: konten[s.schluessel].name }, admins.has(s.schluessel) ? { admin: true } : {})) : senden(res, 401, { server: 'spielekiste' });
     }
 
     if ((weg === '/registrieren' || weg === '/anmelden') && m === 'POST') {
@@ -207,6 +213,21 @@ function erstelleServer({ daten, jetzt = () => Date.now() } = {}) {
         .sort((a, b) => b.xp - a.xp || b.level - a.level || a.name.localeCompare(b.name));
       return senden(res, 200, liste);
     }
+    // ---------- Admin: Server nach Bedarf aktualisieren ----------
+    if (weg.startsWith('/admin/')) {
+      if (!admins.has(k)) return senden(res, 403, { fehler: 'Nur für den Betreiber.' });
+      const lies = (f) => { try { return fs.readFileSync(path.join(basis || path.dirname(daten), f), 'utf8'); } catch (e) { return ''; } };
+      if (weg === '/admin/status' && m === 'GET') {
+        return senden(res, 200, { version: lies('version.txt').trim().slice(0, 7), log: lies('update.log').trim().split(/\r?\n/).filter(Boolean).slice(-6),
+          konten: Object.keys(konten).length, duelle: Object.keys(duelle).length });
+      }
+      if (weg === '/admin/aktualisieren' && m === 'POST') {
+        if (jetzt() - letztesUpdate < 60e3) return senden(res, 429, { fehler: 'Ein Update wurde gerade erst gestartet – bitte eine Minute warten.' });
+        letztesUpdate = jetzt();
+        try { await updateStarten(); } catch (e) { return senden(res, 500, { fehler: 'Update konnte nicht gestartet werden (Aufgabe „Spielekiste\\Update“ eingerichtet?).' }); }
+        return senden(res, 200, { gestartet: true });
+      }
+    }
     if (weg === '/konto/loeschen' && m === 'POST') {
       const b = await koerper(req), konto = konten[k];
       if (!PIN_RE.test(String(b.pin || '')) || !pinOk(konto, String(b.pin))) return senden(res, 401, { fehler: 'Die PIN stimmt nicht.' });
@@ -276,5 +297,6 @@ module.exports = { erstelleServer };
 if (require.main === module) {
   const arg = (n, std) => { const i = process.argv.indexOf('--' + n); return i > 0 ? process.argv[i + 1] : std; };
   const daten = path.resolve(arg('daten', path.join(__dirname, 'daten'))), port = Number(arg('port', 8090));
-  erstelleServer({ daten }).listen(port, '127.0.0.1', () => console.log('Spielstand-Server läuft auf http://127.0.0.1:' + port + ' – Daten in ' + daten));
+  const admin = String(arg('admin', '')).split(',').map((x) => x.trim()).filter(Boolean), basis = arg('basis', null);
+  erstelleServer({ daten, admin, basis: basis && path.resolve(basis) }).listen(port, '127.0.0.1', () => console.log('Spielstand-Server läuft auf http://127.0.0.1:' + port + ' – Daten in ' + daten));
 }

@@ -2,7 +2,8 @@
 # Legt in der Aufgabenplanung unter „Spielekiste“ drei Aufgaben an:
 #   Caddy         – Webserver, startet mit Windows, startet nach Absturz neu
 #   Konto-Server  – spielstand-server.js, ebenso
-#   Update        – schaut alle 5 Minuten nach einer neuen Version auf GitHub (wachen.ps1 → aktualisieren.ps1)
+#   Update        – holt die neueste Version von GitHub (aktualisieren.ps1): nach Bedarf über den Knopf
+#                   „Server aktualisieren“ in der App (nur für das Admin-Konto) und zur Sicherheit jede Nacht um 04:17
 # Läuft als SYSTEM: keine offenen Fenster, auch ohne angemeldeten Benutzer.
 param([string]$Basis = 'C:\homeserver')
 $ErrorActionPreference = 'Stop'
@@ -12,18 +13,28 @@ function Schritt($t) { Write-Host ''; Write-Host "== $t" -ForegroundColor Cyan }
 Schritt 'Skripte auf den neuesten Stand bringen'
 $neueSkripte = Join-Path $Basis 'spiel\werkzeuge\homeserver\windows'
 if (Test-Path $neueSkripte) {
-  foreach ($f in 'aktualisieren.ps1', 'aktualisieren.bat', 'wachen.ps1', 'CLAUDE.md') { if (Test-Path "$neueSkripte\$f") { Copy-Item -Force "$neueSkripte\$f" $Basis } }
+  foreach ($f in 'aktualisieren.ps1', 'aktualisieren.bat', 'CLAUDE.md') { if (Test-Path "$neueSkripte\$f") { Copy-Item -Force "$neueSkripte\$f" $Basis } }
   Write-Host 'Update-Skripte und CLAUDE.md aus der aktuellen Spielversion übernommen.'
 }
 
 Schritt 'Dateien prüfen'
 $caddy = @('caddy_windows_amd64.exe', 'caddy.exe') | ForEach-Object { Join-Path $Basis $_ } | Where-Object { Test-Path $_ } | Select-Object -First 1
 if (-not $caddy) { throw "Caddy nicht gefunden in $Basis" }
-foreach ($f in 'Caddyfile', 'spielstand-server.js', 'spiel\index.html', 'aktualisieren.ps1', 'wachen.ps1') { if (-not (Test-Path (Join-Path $Basis $f))) { throw "$f fehlt in $Basis" } }
+foreach ($f in 'Caddyfile', 'spielstand-server.js', 'spiel\index.html', 'aktualisieren.ps1') { if (-not (Test-Path (Join-Path $Basis $f))) { throw "$f fehlt in $Basis" } }
 $node = (Get-Command node -ErrorAction SilentlyContinue).Source
 if (-not $node -and (Test-Path "$env:ProgramFiles\nodejs\node.exe")) { $node = "$env:ProgramFiles\nodejs\node.exe" }
 if (-not $node) { throw 'Node.js nicht gefunden (winget install OpenJS.NodeJS.LTS)' }
 Write-Host "Caddy: $caddy"; Write-Host "Node:  $node"
+
+Schritt 'Admin-Konto (sieht in der App „Server aktualisieren“)'
+$adminDatei = Join-Path $Basis 'admin.txt'
+$admin = if (Test-Path $adminDatei) { (Get-Content $adminDatei -Raw).Trim() } else { '' }
+if ($admin) { Write-Host "Admin: $admin (ändern: admin.txt löschen und einrichten.bat erneut ausführen)" }
+else {
+  $admin = (Read-Host 'Wie heißt dein Konto in der Spielekiste? (genau wie beim Anmelden)').Trim()
+  if ($admin) { Set-Content -Path $adminDatei -Value $admin -Encoding UTF8 } else { Write-Host 'Kein Admin – der Knopf bleibt für alle verborgen.' }
+}
+if ($admin -match '["&|<>^%]') { throw 'Ungültiger Name' }
 
 Schritt 'Caddy-Zertifikate übernehmen'
 $caddyDaten = Join-Path $Basis 'caddy-daten'
@@ -51,19 +62,21 @@ $caddyAktion = New-ScheduledTaskAction -Execute 'cmd.exe' -WorkingDirectory $Bas
 Register-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Caddy' -Action $caddyAktion -Trigger $beimStart -Principal $wer -Settings $dauerhaft -Force | Out-Null
 
 $nodeAktion = New-ScheduledTaskAction -Execute 'cmd.exe' -WorkingDirectory $Basis `
-  -Argument "/c `"`"$node`" `"$Basis\spielstand-server.js`" --daten `"$Basis\daten`" >> `"$Basis\konto-server.log`" 2>&1`""
+  -Argument "/c `"`"$node`" `"$Basis\spielstand-server.js`" --daten `"$Basis\daten`" --basis `"$Basis`" --admin `"$admin`" >> `"$Basis\konto-server.log`" 2>&1`""
 Register-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Konto-Server' -Action $nodeAktion -Trigger $beimStart -Principal $wer -Settings $dauerhaft -Force | Out-Null
 
+Stop-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Update' -ErrorAction SilentlyContinue   # falls noch die alte 5-Minuten-Variante läuft
+Remove-Item -Force (Join-Path $Basis 'wachen.ps1') -ErrorAction SilentlyContinue
 $updAktion = New-ScheduledTaskAction -Execute 'powershell.exe' -WorkingDirectory $Basis `
-  -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$Basis\wachen.ps1`" -Basis `"$Basis`""
-Register-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Update' -Action $updAktion -Trigger $beimStart -Principal $wer -Settings $dauerhaft -Force | Out-Null
+  -Argument "-NoProfile -ExecutionPolicy Bypass -File `"$Basis\aktualisieren.ps1`" -Basis `"$Basis`""
+$nachts = New-ScheduledTaskTrigger -Daily -At '04:17'
+$updEinst = New-ScheduledTaskSettingsSet -ExecutionTimeLimit (New-TimeSpan -Minutes 30) -AllowStartIfOnBatteries -DontStopIfGoingOnBatteries -StartWhenAvailable -MultipleInstances IgnoreNew
+Register-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Update' -Action $updAktion -Trigger $nachts -Principal $wer -Settings $updEinst -Force | Out-Null
 Write-Host 'Caddy, Konto-Server und Update angelegt.'
 
 Schritt 'Starten und prüfen'
 Start-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Konto-Server'
 Start-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Caddy'
-Stop-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Update' -ErrorAction SilentlyContinue
-Start-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Update'
 Start-Sleep 8
 $ok = $true
 try { Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8090/api/ich' -TimeoutSec 5 | Out-Null } catch {
@@ -73,5 +86,5 @@ try { Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8090/api/ich' -T
 if (Get-Process -Name caddy_windows_amd64, caddy -ErrorAction SilentlyContinue) { Write-Host 'Caddy läuft ✓' -ForegroundColor Green }
 else { Write-Host "Caddy läuft nicht – siehe $Basis\caddy.log" -ForegroundColor Red; $ok = $false }
 Write-Host ''
-if ($ok) { Write-Host 'Fertig! Ab jetzt startet alles mit Windows, und alle 5 Minuten wird nach Updates geschaut.' -ForegroundColor Green }
+if ($ok) { Write-Host 'Fertig! Ab jetzt startet alles mit Windows, Updates holst du in der App über ☁️ → „Server aktualisieren“ (sonst nachts automatisch).' -ForegroundColor Green }
 else { Write-Host 'Bitte einen Screenshot dieses Fensters schicken.' -ForegroundColor Yellow }
