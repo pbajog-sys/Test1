@@ -41,9 +41,9 @@ Läuft daneben `spielstand-server.js`, fragt die App beim ersten Besuch einmal n
 ## Autostart und Updates unter Windows (`windows/`)
 - `einrichten.bat` (einmalig, fragt nach Administratorrechten): legt in der Aufgabenplanung unter „Spielekiste“ an:
   **Caddy** und **Konto-Server** (starten mit Windows als SYSTEM, ohne Fenster, nach Absturz neu) und **Update**
-  (jede Nacht 04:17). Übernimmt Caddys Zertifikat nach `caddy-daten\`. Protokolle: `caddy.log`, `konto-server.log`.
-- `aktualisieren.bat` (Doppelklick): holt sofort die neueste Version. Nachts läuft dasselbe automatisch, aber nur
-  wenn es auf GitHub etwas Neues gibt. Spielstände, Caddyfile und Zertifikate bleiben; startet der neue Konto-Server
+  (`wachen.ps1`: prüft alle 5 Minuten, ob es auf GitHub eine neue Version gibt). Übernimmt Caddys Zertifikat nach `caddy-daten\`. Protokolle: `caddy.log`, `konto-server.log`.
+- `aktualisieren.bat` (Doppelklick): holt sofort die neueste Version. Alle 5 Minuten läuft dasselbe automatisch, aber nur
+  wenn es auf GitHub etwas Neues gibt – eine Änderung auf dem Zweig ist also spätestens nach 5 Minuten live. Spielstände, Caddyfile und Zertifikate bleiben; startet der neue Konto-Server
   nicht, kommt die vorige Version zurück (`spiel-vorher\`). Protokoll: `update.log`.
 - Zweig: `spielstand-sync`, änderbar über eine Datei `update-zweig.txt` mit dem Zweignamen.
 - Die Caddyfile wird nie automatisch geändert.

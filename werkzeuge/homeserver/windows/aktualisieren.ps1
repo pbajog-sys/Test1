@@ -1,9 +1,10 @@
 ﻿# Spielekiste-Homeserver: neue Version von GitHub holen und einspielen.
-#   ohne -Erzwingen: nur wenn es auf GitHub etwas Neues gibt (so läuft es jede Nacht)
+#   ohne -Erzwingen: nur wenn es auf GitHub etwas Neues gibt (so läuft es alle 5 Minuten über wachen.ps1)
+#   -Leise:          „schon aktuell“ nicht ins Protokoll schreiben
 #   -Erzwingen:      immer (Doppelklick auf aktualisieren.bat)
 # Spielstände (daten\), Caddyfile und Zertifikate bleiben unangetastet. Startet der neue Konto-Server nicht,
 # kommt automatisch die vorige Version zurück. Protokoll: update.log
-param([string]$Basis = 'C:\homeserver', [switch]$Erzwingen)
+param([string]$Basis = 'C:\homeserver', [switch]$Erzwingen, [switch]$Leise)
 $ErrorActionPreference = 'Stop'
 $Basis = (Resolve-Path $Basis).Path.TrimEnd('\')
 $ProgressPreference = 'SilentlyContinue'
@@ -12,6 +13,10 @@ $repo = 'pbajog-sys/Test1'
 $zweigDatei = Join-Path $Basis 'update-zweig.txt'
 $zweig = if (Test-Path $zweigDatei) { (Get-Content $zweigDatei -Raw).Trim() } else { 'spielstand-sync' }
 $log = Join-Path $Basis 'update.log'
+# Immer nur ein Update gleichzeitig (5-Minuten-Prüfung und Doppelklick können sich sonst überschneiden)
+$sperre = New-Object System.Threading.Mutex($false, 'Global\SpielekisteUpdate')
+try { $frei = $sperre.WaitOne(0) } catch [System.Threading.AbandonedMutexException] { $frei = $true }
+if (-not $frei) { Write-Host 'Es läuft gerade schon ein Update.'; exit 0 }
 function Log($t) { $z = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + '  ' + $t; Add-Content -Path $log -Value $z -Encoding UTF8; Write-Host $t }
 function KontoServerOk { try { Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8090/api/ich' -TimeoutSec 5 | Out-Null; return $true } catch { return ($_.Exception.Response -and [int]$_.Exception.Response.StatusCode -eq 401) } }
 
@@ -19,7 +24,7 @@ try {
   $neu = (Invoke-RestMethod -UseBasicParsing -Uri "https://api.github.com/repos/$repo/commits/$zweig" -Headers @{ 'User-Agent' = 'spielekiste-update' }).sha
   $versionDatei = Join-Path $Basis 'version.txt'
   $jetzt = if (Test-Path $versionDatei) { (Get-Content $versionDatei -Raw).Trim() } else { '' }
-  if ($neu -eq $jetzt -and -not $Erzwingen) { Log "Schon aktuell ($($neu.Substring(0,7)))."; exit 0 }
+  if ($neu -eq $jetzt -and -not $Erzwingen) { if (-not $Leise) { Log "Schon aktuell ($($neu.Substring(0,7)))." }; exit 0 }
   Log "Neue Version $($neu.Substring(0,7)) wird eingespielt (vorher: $(if ($jetzt) { $jetzt.Substring(0,7) } else { 'unbekannt' }))."
 
   $tmp = Join-Path $env:TEMP ('spielekiste-update-' + [guid]::NewGuid().ToString('N'))
@@ -40,7 +45,7 @@ try {
   Move-Item $neuOrdner.FullName $spiel
   Copy-Item -Force (Join-Path $Basis 'spielstand-server.js') (Join-Path $Basis 'spielstand-server.vorher.js') -ErrorAction SilentlyContinue
   Copy-Item -Force "$spiel\werkzeuge\homeserver\spielstand-server.js" $Basis
-  foreach ($f in 'aktualisieren.ps1', 'aktualisieren.bat', 'einrichten.ps1', 'einrichten.bat', 'CLAUDE.md') { Copy-Item -Force "$spiel\werkzeuge\homeserver\windows\$f" $Basis -ErrorAction SilentlyContinue }
+  foreach ($f in 'aktualisieren.ps1', 'aktualisieren.bat', 'einrichten.ps1', 'einrichten.bat', 'wachen.ps1', 'CLAUDE.md') { Copy-Item -Force "$spiel\werkzeuge\homeserver\windows\$f" $Basis -ErrorAction SilentlyContinue }
 
   if ($aufgabe) {
     Start-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Konto-Server'

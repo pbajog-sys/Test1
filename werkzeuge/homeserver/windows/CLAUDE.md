@@ -20,7 +20,8 @@ Portweiterleitung TCP 80/443 auf diesen Laptop, feste lokale IP).
 - `Caddy` und `Konto-Server`: starten mit Windows, Neustart nach Absturz.
   Neu starten: `Stop-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Konto-Server'` und dann `Start-ScheduledTask …`
   (als Administrator). Caddy übernimmt eine geänderte Caddyfile erst nach Neustart der Aufgabe `Caddy`.
-- `Update`: täglich 04:17, `aktualisieren.ps1` – nur wenn es auf GitHub etwas Neues gibt.
+- `Update`: läuft dauerhaft (`wachen.ps1`) und prüft alle 5 Minuten, ob es auf GitHub eine neue Version gibt;
+  wenn ja, spielt `aktualisieren.ps1` sie ein (Protokoll `update.log`).
 - Einrichten/neu anlegen: `einrichten.bat` (als Administrator).
 
 ## Typische Aufgaben
