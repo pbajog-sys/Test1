@@ -12,6 +12,13 @@ const { chromium, devices } = require('playwright');
     const karten = await p.evaluate(() => [...document.querySelectorAll('#screen-hub .hub-game')].map((k) => k.id));
     for (const id of karten) {
       await p.evaluate(() => { zeigeHub(); document.querySelectorAll('dialog[open]').forEach((d) => d.close()); }); await p.waitForTimeout(250);
+      if (id === 'hubNvl') {   // NVL-Fallsimulator ist eine eigene Seite (nvl/): Karte muss dorthin führen, dann zurück
+        await Promise.all([p.waitForURL(/\/nvl\/\?kiste=1/, { timeout: 5000 }).then(() => true, () => false).then((g) => { g ? ok++ : (fail++, console.log('✗', name, id, 'öffnet nvl/ nicht')); }), p.evaluate((id) => $(id).click(), id)]);
+        await p.waitForTimeout(500);
+        if (!(await p.isVisible('#kisteBtn'))) { fail++; console.log('✗', name, 'nvl: „← Spielkiste“ fehlt'); }
+        await p.goto('http://localhost:8765/'); await p.waitForTimeout(1300);
+        continue;
+      }
       await p.evaluate((id) => $(id).click(), id); await p.waitForTimeout(900);
       const wo = await p.evaluate(() => document.querySelector('.screen.active').id);
       const gut = wo !== 'screen-hub';

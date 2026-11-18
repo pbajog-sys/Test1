@@ -295,6 +295,9 @@ function zoomZu(karte, weiter) {
   };
 }
 
+// NVL Hypertonie: eigener Fallsimulator im Ordner nvl/ (mit „← Spielkiste“-Knopf zurück)
+$('hubNvl').addEventListener('click', () => zoomZu($('hubNvl'), () => { location.href = 'nvl/?kiste=1'; }));
+
 // Noten & Griffe: öffnet das zuletzt gewählte Instrument (Cello, Klavier, Gitarre, Ukulele)
 $('hubCello').addEventListener('click', () => {
   merkeZuletzt('cello');

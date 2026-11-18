@@ -605,6 +605,17 @@ und je Spiel Anzahl, Bestwert, Schnitt der letzten 7 Runden und eine Verlaufskur
   Noten & Griffe (Cello, Klavier, Gitarre, Ukulele), Ton-Gedächtnis, Takt-Gefühl, Punktwolke, Augenmaß, Karten-Gefühl, Tiefgang, Riffbau und „Wer war’s?“. Die Quizzes führen zur Welt-Auswahl mit den bunten Karten jeder Welt.
 - Akku: Farbflecken als Verlauf statt Weichzeichner, Bühne und Diashow pausieren außerhalb des Bildschirms; „Bewegung reduzieren“ wird beachtet.
 
+## 🩺 NVL Hypertonie · Fallsimulator
+Eigene helle Seite im Ordner `nvl/` (Karte „NVL Hypertonie“ unter **Wissen & Sprache**). Ein Schulungstool zur
+Nationalen VersorgungsLeitlinie Hypertonie: Screening → Diagnostik (Praxis, ABPM, HBPM) → Basisdiagnostik → Risiko &
+Zielkorridor → Therapie → Monitoring, dazu Sonderfälle (Therapieresistenz, Schwangerschaft, hypertensiver Notfall,
+invasive Verfahren). Immer nur der aktuelle Schritt mit großen Entscheidungs-Buttons (Tasten 1–9), Pfad-Karte,
+„Zurück“ macht den letzten Schritt rückgängig. Sieben Assistenten als Seitenpanel mit Live-Ergebnis (Anamnese Tab. 5,
+Sekundär-Check Tab. 6, Zielkorridor Abb. 3, Medikation Abb. 5/Tab. 13, Tab. 19, 21, 22) und ein Live-Fallprotokoll zum
+Kopieren, Speichern (.txt) und Drucken. Aus der Spielekiste geöffnet (`nvl/?kiste=1`) führt „‹ Spielkiste“ zurück.
+Die Seite läuft auch allein als App (eigenes Manifest, Symbol, Startbilder, Offline-Speicher). Nur für Schulungszwecke,
+keine echten Patientendaten. Rauchtest: `tests/spiele-oeffnen.test.js` prüft, dass die Karte die Seite öffnet.
+
 ## 📅 Werkzeug: Text zu Kalender (offline)
 Eigene kleine Seite `werkzeuge/text-zu-ics.html` (auf GitHub Pages unter `…/werkzeuge/text-zu-ics.html`). Termine als
 Text schreiben, ein Termin pro Zeile („Zahnarzt morgen um 14:30 in der Hauptstraße 5“, „Teammeeting 12.11. 9–10:30 @ Raum 2“,

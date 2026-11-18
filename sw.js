@@ -1,5 +1,5 @@
 // Service Worker: App offline verfügbar machen. Walfotos werden beim ersten Anzeigen zwischengespeichert.
-const VERSION = 'walquiz-v153';
+const VERSION = 'walquiz-v154';
 const SHELL = [
   './',
   'index.html',
@@ -42,6 +42,9 @@ const SHELL = [
   'lib/zxing.min.js',
   'sicherung.js',
   'werkzeuge/text-zu-ics.html',
+  'nvl/',
+  'nvl/index.html',
+  'nvl/icons/apple-touch-icon.png?v=1',
   'takt.js',
   'punkte.js',
   'funktion.js',
