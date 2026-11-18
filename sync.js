@@ -1,24 +1,26 @@
-// ☁️ Spielstand-Sync über den eigenen Homeserver (WebDAV unter ./sync/ auf derselben Adresse wie die App).
-// Gibt es dort keinen Sync (z. B. GitHub Pages), bleibt alles wie bisher: nur lokaler Speicher.
+// ☁️ Spielstand-Sync mit Benutzerkonto (Name + PIN) über den eigenen Homeserver.
+// Server: werkzeuge/homeserver/spielstand-server.js hinter Caddy unter ./api/ auf derselben Adresse wie die App.
+// Gibt es dort keinen solchen Server (z. B. GitHub Pages), bleibt alles wie bisher: nur lokaler Speicher, kein ☁️-Knopf.
 //
-// Prinzip: Der komplette Stand (alle „walquiz.“-Einträge außer gerätebezogenen) liegt als eine Datei sync/stand.json
-// mit fortlaufender Versionsnummer auf dem Server. Jedes Gerät merkt sich, auf welcher Version sein Stand beruht.
+// Anmelden: Beim ersten Besuch fragt die App einmal „Anmelden oder neu registrieren?“ (oder „Ohne Konto spielen“).
+// Danach merkt sich das Gerät die Anmeldung (Cookie, 1 Jahr). Über ☁️ kann man sich später an- und abmelden.
+//
+// Abgleich: Der komplette Stand (alle „walquiz.“-Einträge außer gerätebezogenen) liegt pro Konto auf dem Server, mit
+// fortlaufender Versionsnummer. Jedes Gerät merkt sich, auf welcher Version sein Stand beruht.
 //  • Server neuer, hier nichts Neues gespielt → Server-Stand übernehmen und neu laden.
-//  • Hier Neues gespielt, Server unverändert   → hochladen (Version + 1).
-//  • Beides                                     → fragen, welcher Stand gilt. Der andere wird als
-//                                                 sync/konflikt-….json auf dem Server aufgehoben, geht also nie verloren.
-// Zusätzlich legt der Sync einmal am Tag eine Kopie sync/archiv-JJJJ-MM-TT.json an.
-// Schutz: Der Server lässt /sync/ nur mit dem richtigen Sync-Code (Kopfzeile X-Sync-Code) zu. Den Code gibt man
-// pro Gerät einmal ein; er bleibt nur auf diesem Gerät (nicht im Sync, nicht in der Sicherung).
-// Antwortet der Server ohne gültigen Code mit 401 und „X-Spielekiste-Sync: code“, fragt die App danach.
+//  • Hier Neues gespielt, Server unverändert   → hochladen (der Server lehnt ab, wenn inzwischen ein anderes Gerät schneller war).
+//  • Beides                                     → fragen, welcher Stand gilt. Der andere wird auf dem Server als Konflikt-Kopie
+//                                                 aufgehoben, geht also nie verloren. Zusätzlich legt der Server täglich eine Kopie an.
 const SY_META = 'spielekiste-sync';   // bewusst ohne „walquiz.“ – wird selbst nicht synchronisiert und nicht gesichert
-const SY_BASIS = new URL('sync/', location.href).href;
+const SY_SPAETER = 'spielekiste-konto-spaeter';
+const SY_API = new URL('api/', location.href).href;
 const SY_NIE = ['walquiz.sicherung.v1', 'walquiz.installhinweis.v1', 'walquiz.photos.v4'];   // gerätebezogen bzw. nur Zwischenspeicher
 const SY_TAKT = 15000;
-const SY_CODE = 'spielekiste-sync-code';   // ebenfalls ohne „walquiz.“
 
-let syAktiv = false;      // Server mit Sync gefunden
+let syZustand = 'aus';    // 'aus' (kein Server) | 'abgemeldet' | 'ok'
+let syName = '';
 let syLaeuft = false;     // gerade ein Abgleich unterwegs
+let syGestartet = false;  // Takt und Ereignisse schon eingerichtet
 
 const syMeta = () => { try { return JSON.parse(localStorage.getItem(SY_META) || '{}'); } catch (e) { return {}; } };
 const syMetaSetzen = (x) => { try { localStorage.setItem(SY_META, JSON.stringify(Object.assign(syMeta(), x))); } catch (e) { /* voll */ } };
@@ -47,72 +49,53 @@ function syGeraet() {
   if (/Windows/.test(u)) return 'Windows-PC'; if (/Macintosh/.test(u)) return 'Mac'; return 'Gerät';
 }
 const syZeit = (t) => { try { return new Date(t).toLocaleString('de-DE', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' }); } catch (e) { return String(t); } };
+const syEsc = (t) => String(t).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
-const syKopf = (extra) => Object.assign({ 'X-Sync-Code': localStorage.getItem(SY_CODE) || '' }, extra || {});
-async function syHolen() {
-  const r = await fetch(SY_BASIS + 'stand.json', { cache: 'no-store', headers: syKopf() });
-  if (r.status === 404) return null;
-  if (!r.ok) throw new Error('Sync: HTTP ' + r.status);
-  const obj = await r.json();
-  if (!obj || obj.app !== 'spielekiste' || typeof obj.daten !== 'object' || typeof obj.version !== 'number') throw new Error('Sync: unbekannte Datei');
-  return obj;
+// ---------- Server ----------
+async function syApi(weg, methode = 'GET', koerper) {
+  const r = await fetch(SY_API + weg, { method: methode, cache: 'no-store', credentials: 'same-origin', headers: koerper ? { 'Content-Type': 'application/json' } : {}, body: koerper ? JSON.stringify(koerper) : undefined });
+  let json = null; try { json = await r.json(); } catch (e) { /* keine JSON-Antwort */ }
+  return { status: r.status, json };
 }
-async function syAblegen(name, obj) {
-  const r = await fetch(SY_BASIS + name, { method: 'PUT', headers: syKopf({ 'Content-Type': 'application/json' }), body: JSON.stringify(obj) });
-  if (!r.ok) throw new Error('Sync: Speichern fehlgeschlagen (HTTP ' + r.status + ')');
-}
-const syPaket = (version, daten) => ({ app: 'spielekiste', format: 1, version, zeit: new Date().toISOString(), geraet: syGeraet(), stand: typeof APP_STAND !== 'undefined' ? APP_STAND : '', daten });
-
-// Gibt es auf dieser Adresse überhaupt einen Sync-Server? (WebDAV antwortet auf OPTIONS mit „DAV“)
-// → 'ok' | 'code' (Server da, Code fehlt/falsch) | 'aus'
+// Gibt es hier einen Spielstand-Server, und ist dieses Gerät angemeldet?
 async function syPruefen() {
   try {
-    const r = await fetch(SY_BASIS, { method: 'OPTIONS', cache: 'no-store', headers: syKopf() });
-    if (r.ok && r.headers.get('DAV')) return 'ok';
-    if (r.status === 401 && r.headers.get('X-Spielekiste-Sync') === 'code') return 'code';
-    return 'aus';
-  } catch (e) { return 'aus'; }
+    const { status, json } = await syApi('ich');
+    if (status === 200 && json && json.name) { syName = json.name; return 'ok'; }
+    if (status === 401 && json && json.server === 'spielekiste') return 'abgemeldet';
+  } catch (e) { /* offline oder kein Server */ }
+  return 'aus';
 }
-async function syErkennen() {
-  let z = await syPruefen();
-  // höchstens zweimal pro Sitzung nach dem Code fragen; „Abbrechen“ = in dieser Sitzung nicht mehr fragen
-  for (let versuch = 0; z === 'code' && versuch < 2 && !sessionStorage.getItem('spielekiste-sync-nicht-fragen'); versuch++) {
-    const c = prompt((versuch ? 'Der Sync-Code stimmt nicht. ' : '') + '☁️ Spielstand-Sync\n\nBitte den Sync-Code deines Homeservers eingeben (nur einmal pro Gerät nötig):');
-    if (!c || !c.trim()) { sessionStorage.setItem('spielekiste-sync-nicht-fragen', '1'); break; }
-    // Handy-Tastaturen schreiben gern den ersten Buchstaben groß oder hängen Leerzeichen an → Code immer klein, ohne Leerzeichen
-    localStorage.setItem(SY_CODE, c.replace(/\s+/g, '').toLowerCase());
-    z = await syPruefen();
-  }
-  return z === 'ok';
-}
+const syPaket = (daten) => ({ geraet: syGeraet(), stand: typeof APP_STAND !== 'undefined' ? APP_STAND : '', daten });
 
+// ---------- Abgleich ----------
 function syUebernehmen(obj) {
   const neu = obj.daten;
   sySchluessel().forEach((k) => { if (!(k in neu)) localStorage.removeItem(k); });
   Object.entries(neu).forEach(([k, v]) => { if (k.startsWith('walquiz.') && !SY_NIE.includes(k) && typeof v === 'string') localStorage.setItem(k, v); });
   syMetaSetzen({ version: obj.version, abdruck: syAbdruck(syDaten()), zuletzt: Date.now() });
 }
-
-async function syHochladen(version) {
+// → true: hochgeladen, false: ein anderes Gerät war schneller (beim nächsten Abgleich wird das geklärt)
+async function syHochladen(basis) {
   const daten = syDaten();
-  await syAblegen('stand.json', syPaket(version, daten));
-  const heute = new Date().toISOString().slice(0, 10), m = syMeta();
-  syMetaSetzen({ version, abdruck: syAbdruck(daten), zuletzt: Date.now() });
-  if (m.archiv !== heute) {
-    try { await syAblegen('archiv-' + heute + '.json', syPaket(version, daten)); syMetaSetzen({ archiv: heute }); } catch (e) { /* Archiv ist nur Zugabe */ }
-  }
+  const { status, json } = await syApi('stand', 'PUT', Object.assign({ basis }, syPaket(daten)));
+  if (status === 409) return false;
+  if (status !== 200) throw new Error('Sync: Hochladen fehlgeschlagen (HTTP ' + status + ')');
+  syMetaSetzen({ version: json.version, abdruck: syAbdruck(daten), zuletzt: Date.now() });
+  return true;
 }
-
-// Ein Abgleich. ladenErlaubt=false: nichts übernehmen, das einen Neuladen braucht (z. B. mitten im Spiel).
+// Ein Abgleich. ladenErlaubt=false: nichts übernehmen, das einen Neuladen braucht (z. B. beim Verlassen der App).
 async function syAbgleich({ ladenErlaubt = true } = {}) {
-  if (!syAktiv || syLaeuft) return;
+  if (syZustand !== 'ok' || syLaeuft) return;
   syLaeuft = true;
   try {
-    const hierNeu = syHierNeu();
-    const server = await syHolen(), basis = syMeta().version || 0;
-    if (!server) { if (hierNeu || sySchluessel().length) await syHochladen(1); return; }
-    const serverNeu = server.version !== basis;
-    if (!serverNeu) { if (hierNeu) await syHochladen(server.version + 1); return; }
+    const hierNeu = syHierNeu(), basis = syMeta().version || 0;
+    const { status, json } = await syApi('stand');
+    if (status === 401) { syZustand = 'abgemeldet'; return; }
+    if (status === 404) { if (sySchluessel().length) await syHochladen(0); return; }
+    if (status !== 200) throw new Error('Sync: HTTP ' + status);
+    const server = json;
+    if (server.version === basis) { if (hierNeu) await syHochladen(basis); return; }
     if (!hierNeu) {
       if (!ladenErlaubt) return;
       syUebernehmen(server);
@@ -122,25 +105,94 @@ async function syAbgleich({ ladenErlaubt = true } = {}) {
     }
     // Konflikt: hier und anderswo wurde gespielt
     if (!ladenErlaubt) return;
-    const serverNehmen = confirm('☁️ Spielstand-Sync\n\nAuf einem anderen Gerät (' + server.geraet + ', ' + syZeit(server.zeit) + ') wurde ebenfalls gespielt.\n\n'
+    const serverNehmen = confirm('☁️ Spielstand von ' + syName + '\n\nAuf einem anderen Gerät (' + server.geraet + ', ' + syZeit(server.zeit) + ') wurde ebenfalls gespielt.\n\n'
       + 'OK = den Stand vom anderen Gerät übernehmen\nAbbrechen = den Stand von diesem Gerät behalten\n\n'
       + 'Der jeweils andere Stand wird auf dem Homeserver aufgehoben.');
-    const stempel = new Date().toISOString().replace(/[:.]/g, '-');
     if (serverNehmen) {
-      await syAblegen('konflikt-' + stempel + '-' + syGeraet() + '.json', syPaket(basis, syDaten()));
+      await syApi('konflikt', 'POST', Object.assign({ version: basis, zeit: new Date().toISOString() }, syPaket(syDaten())));
       syUebernehmen(server);
-      sessionStorage.setItem('spielekiste-sync-hinweis', 'Stand vom ' + server.geraet + ' übernommen – der Stand dieses Geräts liegt als Konflikt-Datei auf dem Server');
+      sessionStorage.setItem('spielekiste-sync-hinweis', 'Stand vom ' + server.geraet + ' übernommen – der Stand dieses Geräts ist auf dem Server aufgehoben');
       location.reload();
     } else {
-      await syAblegen('konflikt-' + stempel + '-' + server.geraet + '.json', server);
-      await syHochladen(server.version + 1);
-      syHinweis('Stand dieses Geräts gilt jetzt überall');
+      await syApi('konflikt', 'POST', server);
+      if (await syHochladen(server.version)) syHinweis('Stand dieses Geräts gilt jetzt überall');
     }
   } catch (e) {
     console.warn(e);
   } finally {
     syLaeuft = false;
+    syKnopf();
   }
+}
+
+// ---------- ☁️-Knopf ----------
+function syKnopf() {
+  let b = document.getElementById('syncBtn');
+  if (syZustand === 'aus') { if (b) b.hidden = true; return; }
+  if (!b) {
+    const ziel = document.getElementById('sicherungBtn');
+    if (!ziel || !ziel.parentNode) return;
+    b = document.createElement('button'); b.type = 'button'; b.id = 'syncBtn'; b.className = 'vollbild-btn';
+    b.addEventListener('click', () => (syZustand === 'ok' ? syKontoDialog() : syAnmeldeDialog()));
+    ziel.parentNode.insertBefore(b, ziel);
+  }
+  b.hidden = false;
+  b.textContent = syZustand === 'ok' ? '☁️' : '👤';
+  b.title = syZustand === 'ok' ? 'Angemeldet als ' + syName : 'Anmelden – Spielstand auf allen Geräten';
+  b.setAttribute('aria-label', b.title);
+}
+
+// ---------- Anmelden / Registrieren ----------
+function syAnmeldeDialog() {
+  const feld = 'width:100%;padding:12px;font-size:17px;border-radius:10px;border:1px solid #888;box-sizing:border-box;margin:4px 0 10px';
+  const d = skDialog('<h3>👤 Dein Spielstand auf allen Geräten</h3>'
+    + '<p>Melde dich an – dann ist dein Fortschritt auf Handy, Laptop und überall gleich. Dieses Gerät merkt sich die Anmeldung.</p>'
+    + '<form id="syForm" autocomplete="on">'
+    + '<label class="ft-klein" for="syNameFeld">Name</label>'
+    + '<input id="syNameFeld" name="username" autocomplete="username" autocapitalize="none" spellcheck="false" maxlength="20" style="' + feld + '">'
+    + '<label class="ft-klein" for="syPinFeld">PIN (4–8 Ziffern)</label>'
+    + '<input id="syPinFeld" name="password" type="password" inputmode="numeric" pattern="[0-9]*" autocomplete="current-password" maxlength="8" style="' + feld + '">'
+    + '<p class="ft-klein" id="syMeldung" role="status" style="min-height:1.3em;color:#dc2626"></p>'
+    + '<button type="submit" class="btn" id="syAnmelden">Anmelden</button>'
+    + '<button type="button" class="btn secondary" id="syRegistrieren">Neu hier? Konto anlegen</button>'
+    + '</form>'
+    + '<button type="button" class="btn secondary" id="sySpaeter" style="opacity:.8">Ohne Konto spielen</button>');
+  const m = d.querySelector('#syMeldung');
+  const los = async (art) => {
+    const name = d.querySelector('#syNameFeld').value.trim(), pin = d.querySelector('#syPinFeld').value.trim();
+    if (!name || !pin) { m.textContent = 'Bitte Name und PIN eingeben.'; return; }
+    m.style.color = ''; m.textContent = art === 'registrieren' ? 'Konto wird angelegt …' : 'Anmelden …';
+    let r; try { r = await syApi(art, 'POST', { name, pin }); } catch (e) { m.style.color = '#dc2626'; m.textContent = 'Keine Verbindung zum Server.'; return; }
+    if (r.status !== 200) { m.style.color = '#dc2626'; m.textContent = (r.json && r.json.fehler) || 'Hat nicht geklappt.'; return; }
+    d.close();
+    await syAngemeldet(r.json.name, !!r.json.neu);
+  };
+  d.querySelector('#syForm').addEventListener('submit', (e) => { e.preventDefault(); los('anmelden'); });
+  d.querySelector('#syRegistrieren').addEventListener('click', () => los('registrieren'));
+  d.querySelector('#sySpaeter').addEventListener('click', () => { localStorage.setItem(SY_SPAETER, '1'); d.close(); syHinweis('Anmelden geht jederzeit über 👤 oben'); });
+  setTimeout(() => d.querySelector('#syNameFeld').focus(), 50);
+}
+async function syAngemeldet(name, neu) {
+  // anderes Konto als zuletzt auf diesem Gerät → der hiesige Stand gehört (noch) zu keiner Server-Version
+  if (syMeta().konto !== name.toLowerCase()) localStorage.setItem(SY_META, JSON.stringify({ konto: name.toLowerCase() }));
+  localStorage.removeItem(SY_SPAETER);
+  syName = name; syZustand = 'ok'; syKnopf();
+  syHinweis(neu ? 'Willkommen, ' + name + '! Dein Spielstand ist jetzt gesichert' : 'Angemeldet als ' + name);
+  await syLaufen();
+}
+function syKontoDialog() {
+  const m = syMeta();
+  const d = skDialog('<h3>☁️ ' + syEsc(syName) + '</h3>'
+    + '<ul class="ft-check"><li><b>Spielstand</b><span>auf allen Geräten gleich ✓</span></li><li><b>Zuletzt abgeglichen</b><span>' + (m.zuletzt ? syZeit(m.zuletzt) : '–') + '</span></li></ul>'
+    + '<p class="ft-klein">Auf einem anderen Gerät einfach die Seite öffnen und mit demselben Namen und derselben PIN anmelden.</p>'
+    + '<button type="button" class="btn secondary" id="syJetzt">🔄 Jetzt abgleichen</button>'
+    + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>');
+  d.querySelector('#syJetzt').addEventListener('click', async () => { d.close(); await syAbgleich(); syHinweis('Abgeglichen ✓'); });
+  d.querySelector('#syAbmelden').addEventListener('click', async () => {
+    await syAbgleich({ ladenErlaubt: false });   // letzten Stand noch sichern
+    try { await syApi('abmelden', 'POST', {}); } catch (e) { /* offline – Cookie bleibt dann eben */ }
+    syZustand = 'abgemeldet'; syName = ''; localStorage.setItem(SY_SPAETER, '1'); d.close(); syKnopf(); syHinweis('Abgemeldet');
+  });
 }
 
 function syHinweis(text) {
@@ -155,17 +207,24 @@ function syHinweis(text) {
   setTimeout(() => el.remove(), 4000);
 }
 
-async function syStart() {
-  syAktiv = await syErkennen();
-  if (!syAktiv) return;
-  const h = sessionStorage.getItem('spielekiste-sync-hinweis');
-  if (h) { sessionStorage.removeItem('spielekiste-sync-hinweis'); syHinweis(h); }
+// ---------- Start ----------
+async function syLaufen() {
   await syAbgleich();
+  if (syGestartet) return;
+  syGestartet = true;
   setInterval(() => { if (document.visibilityState === 'visible' && syHierNeu()) syAbgleich({ ladenErlaubt: false }); }, SY_TAKT);
   document.addEventListener('visibilitychange', () => {
     if (document.visibilityState === 'hidden') syAbgleich({ ladenErlaubt: false });
     else syAbgleich();   // zurück in der App: schauen, ob anderswo gespielt wurde
   });
+}
+async function syStart() {
+  syZustand = await syPruefen();
+  syKnopf();
+  const h = sessionStorage.getItem('spielekiste-sync-hinweis');
+  if (h) { sessionStorage.removeItem('spielekiste-sync-hinweis'); syHinweis(h); }
+  if (syZustand === 'ok') return syLaufen();
+  if (syZustand === 'abgemeldet' && !localStorage.getItem(SY_SPAETER)) setTimeout(syAnmeldeDialog, 600);
 }
 
 if (typeof window !== 'undefined' && 'fetch' in window && location.protocol !== 'file:') syStart();

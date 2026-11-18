@@ -1,28 +1,24 @@
-// Spielstand-Sync: zwei Geräte gegen einen nachgebauten Homeserver (statische Dateien + WebDAV-artiges /sync/).
-// Erstes Hochladen, Übernehmen auf dem zweiten Gerät, Änderungen hin und zurück, Konflikt (beide Wege),
-// Tagesarchiv, Sync-Code (einmal pro Gerät, falscher Code wird nochmal abgefragt), und: ohne Sync-Server
-// (GitHub Pages) passiert nichts.
-// Aufruf: node tests/sync.test.js   (startet seinen eigenen Server auf Port 8766)
+// Spielstand-Sync mit Konto: echter Spielstand-Server (werkzeuge/homeserver/spielstand-server.js) hinter einem
+// nachgebauten Caddy (statische Dateien + /api/ weitergeleitet). Mehrere Geräte und Personen:
+// Registrieren, Name schon vergeben, falsche PIN, Sperre, Anmeldung bleibt gespeichert, Abgleich hin und zurück,
+// Konflikt, zweite Person getrennt, „Ohne Konto spielen“, und ohne Server (GitHub Pages) passiert nichts.
+// Aufruf: node tests/sync.test.js   (startet alles selbst auf Port 8766/8768)
 const { chromium, devices } = require('playwright');
-const http = require('http'), fs = require('fs'), path = require('path');
+const http = require('http'), fs = require('fs'), path = require('path'), os = require('os');
+const { erstelleServer } = require('../werkzeuge/homeserver/spielstand-server.js');
 const WURZEL = path.join(__dirname, '..');
+const DATEN = fs.mkdtempSync(path.join(os.tmpdir(), 'spielekiste-sync-'));
 const TYPEN = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json' };
 
-let syncAn = true;
-const CODE = 'geheim-123';
-const ablage = new Map();   // name → text
-const server = http.createServer((req, res) => {
+let apiAn = true;
+const api = erstelleServer({ daten: DATEN });
+const caddy = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
-  if (u.pathname.startsWith('/sync/')) {
-    if (!syncAn) { res.writeHead(404); return res.end(); }
-    const name = u.pathname.slice('/sync/'.length);
-    if (req.headers['x-sync-code'] !== CODE) { res.writeHead(401, { 'X-Spielekiste-Sync': 'code' }); return res.end('Sync-Code fehlt'); }
-    if (req.method === 'OPTIONS') { res.writeHead(200, { DAV: '1, 2', Allow: 'OPTIONS, GET, PUT' }); return res.end(); }
-    if (req.method === 'GET') { if (!ablage.has(name)) { res.writeHead(404); return res.end(); } res.writeHead(200, { 'Content-Type': 'application/json' }); return res.end(ablage.get(name)); }
-    if (req.method === 'PUT') { let b = ''; req.on('data', (c) => { b += c; }); req.on('end', () => { ablage.set(name, b); res.writeHead(201); res.end(); }); return; }
-    res.writeHead(405); return res.end();
+  if (u.pathname.startsWith('/api/')) {
+    if (!apiAn) { res.writeHead(404); return res.end(); }
+    const p = http.request({ host: '127.0.0.1', port: 8768, path: req.url, method: req.method, headers: { ...req.headers, 'x-forwarded-for': '203.0.113.7' } }, (r) => { res.writeHead(r.statusCode, r.headers); r.pipe(res); });
+    return req.pipe(p);
   }
-  if (req.method === 'OPTIONS') { res.writeHead(405); return res.end(); }
   let datei = path.join(WURZEL, decodeURIComponent(u.pathname));
   if (datei.endsWith('/')) datei += 'index.html';
   fs.readFile(datei, (err, data) => {
@@ -32,95 +28,114 @@ const server = http.createServer((req, res) => {
 });
 
 (async () => {
-  await new Promise((ok) => server.listen(8766, ok));
+  await new Promise((ok) => api.listen(8768, '127.0.0.1', ok));
+  await new Promise((ok) => caddy.listen(8766, ok));
   const URL_ = 'http://localhost:8766/';
   const b = await chromium.launch();
   const checks = [], ck = (n, ok, info = '') => { checks.push([n, ok]); console.log((ok ? '✓ ' : '✗ ') + n + (info ? ' – ' + info : '')); };
   const fehler = [];
-  const geraet = async (name, dialogAntwort, codes = [CODE]) => {
+  const geraet = async (name, antwort = { wert: true }) => {
     const ctx = await b.newContext({ ...devices['iPhone 13'], serviceWorkers: 'block' });
     await ctx.addInitScript(() => { localStorage.setItem('walquiz.installhinweis.v1', 'weg'); });
     const p = await ctx.newPage();
     p.on('pageerror', (e) => fehler.push(name + ': ' + e.message));
-    p.dialogs = []; p.prompts = 0;
-    p.on('dialog', (d) => {
-      if (d.type() === 'prompt') { p.prompts++; const c = codes.shift(); return c ? d.accept(c) : d.dismiss(); }
-      p.dialogs.push(d.message()); dialogAntwort.wert ? d.accept() : d.dismiss();
-    });
+    p.dialogs = [];
+    p.on('dialog', (d) => { p.dialogs.push(d.message()); antwort.wert ? d.accept() : d.dismiss(); });
+    p.antwort = antwort;
     return p;
   };
   const ruhig = (p, ms = 1200) => p.waitForTimeout(ms);
-  const stand = () => (ablage.has('stand.json') ? JSON.parse(ablage.get('stand.json')) : null);
+  const stand = (name) => { try { return JSON.parse(fs.readFileSync(path.join(DATEN, 'staende', name + '.json'), 'utf8')); } catch (e) { return null; } };
   const lesen = (p, k) => p.evaluate((k) => localStorage.getItem(k), k);
   const setzen = (p, k, v) => p.evaluate(([k, v]) => localStorage.setItem(k, v), [k, v]);
   const abgleich = async (p) => { await p.evaluate(() => syAbgleich()).catch(() => {}); await ruhig(p); };
+  const dialogDa = (p) => p.isVisible('#syNameFeld').catch(() => false);
+  const eingeben = async (p, name, pin, knopf) => {
+    await p.fill('#syNameFeld', name); await p.fill('#syPinFeld', pin);
+    await p.click(knopf === 'neu' ? '#syRegistrieren' : '#syAnmelden'); await ruhig(p, 1500);
+  };
+  const meldung = (p) => p.textContent('#syMeldung').catch(() => '');
 
-  const antwortA = { wert: true }, antwortB = { wert: true };
-  const A = await geraet('A', antwortA), B = await geraet('B', antwortB, ['falsch', ' Geheim-123 ']);
-
-  // ---------- Gerät A: erster Start, Server leer ----------
+  // ---------- A: erster Besuch, registriert „Anna“ und nimmt den vorhandenen Spielstand mit ----------
+  const A = await geraet('A');
   await A.goto(URL_); await ruhig(A, 1500);
-  ck('A: Sync-Server erkannt, Code einmal abgefragt', (await A.evaluate(() => syAktiv)) && A.prompts === 1);
   await setzen(A, 'walquiz.farben.v1', JSON.stringify({ rekord: 7 }));
-  await abgleich(A);
-  ck('A: erster Stand hochgeladen (Version 1, mit Farben-Rekord)', stand() && stand().version === 1 && stand().daten['walquiz.farben.v1'] === '{"rekord":7}', stand() && ('v' + stand().version));
-  ck('Gerätebezogenes bleibt draußen', stand() && !('walquiz.installhinweis.v1' in stand().daten));
-  ck('Tagesarchiv angelegt', [...ablage.keys()].some((k) => /^archiv-\d{4}-\d\d-\d\d\.json$/.test(k)));
+  ck('A: Anmelde-Dialog beim ersten Besuch', await dialogDa(A));
+  await A.screenshot({ path: path.join(os.tmpdir(), 'sync-anmelden.png') });
+  await eingeben(A, 'Anna', '1234', 'neu');
+  ck('A: Konto angelegt, Dialog zu, ☁️ sichtbar', !(await dialogDa(A)) && (await A.textContent('#syncBtn')) === '☁️');
+  ck('A: Spielstand hochgeladen (Version 1)', stand('anna') && stand('anna').version === 1 && stand('anna').daten['walquiz.farben.v1'] === '{"rekord":7}');
+  ck('PIN nicht im Klartext gespeichert', !fs.readFileSync(path.join(DATEN, 'konten.json'), 'utf8').includes('1234'));
+  ck('Tageskopie angelegt', fs.readdirSync(path.join(DATEN, 'archiv')).some((f) => /^anna-\d{4}-\d\d-\d\d\.json$/.test(f)));
+  await A.reload(); await ruhig(A, 1500);
+  ck('A: nach Neuladen weiter angemeldet, kein Dialog', !(await dialogDa(A)) && (await A.textContent('#syncBtn')) === '☁️');
 
-  // ---------- Gerät B: frisch, übernimmt den Server-Stand ohne Rückfrage ----------
-  await B.goto(URL_); await ruhig(B, 2500);
-  ck('B: falscher Code → nochmal gefragt; mit Großbuchstaben und Leerzeichen eingegeben → klappt, Stand von A übernommen', B.prompts === 2 && (await lesen(B, 'walquiz.farben.v1')) === '{"rekord":7}');
-  ck('B: Code nicht im Server-Stand', !JSON.stringify(stand()).includes(CODE));
-  ck('B: keine Konflikt-Frage beim ersten Start', B.dialogs.length === 0, B.dialogs.join(' | '));
-  ck('B: Hinweis „übernommen“ sichtbar', await B.isVisible('.sync-hinweis').catch(() => false));
+  // ---------- B: zweites Gerät von Anna ----------
+  const B = await geraet('B');
+  await B.goto(URL_); await ruhig(B, 1500);
+  await eingeben(B, 'anna', '1234', 'neu');
+  ck('B: Name schon vergeben (auch in Kleinschreibung)', /gibt es schon/.test(await meldung(B)));
+  await eingeben(B, 'Anna', '9999');
+  ck('B: falsche PIN → Fehlermeldung', /stimmt nicht/.test(await meldung(B)));
+  await eingeben(B, 'Anna', '1234'); await ruhig(B, 1500);
+  ck('B: angemeldet und Stand von A übernommen', (await lesen(B, 'walquiz.farben.v1')) === '{"rekord":7}');
+  ck('B: keine Konflikt-Frage', B.dialogs.length === 0, B.dialogs.join(' | '));
 
-  // ---------- B spielt weiter → A holt es sich ----------
-  await setzen(B, 'walquiz.farben.v1', JSON.stringify({ rekord: 12 }));
-  await abgleich(B);
-  ck('B: neue Version hochgeladen', stand().version === 2 && stand().daten['walquiz.farben.v1'] === '{"rekord":12}', 'v' + stand().version);
+  // ---------- Hin und zurück ----------
+  await setzen(B, 'walquiz.farben.v1', JSON.stringify({ rekord: 12 })); await abgleich(B);
+  ck('B: neue Version hochgeladen', stand('anna').version === 2 && stand('anna').daten['walquiz.farben.v1'] === '{"rekord":12}', 'v' + stand('anna').version);
   await abgleich(A); await ruhig(A, 1500);
-  ck('A: holt Stand von B (ohne erneute Code-Abfrage nach dem Neuladen)', (await lesen(A, 'walquiz.farben.v1')) === '{"rekord":12}' && A.prompts === 1);
-  ck('A: keine Konflikt-Frage', A.dialogs.length === 0);
-
-  // ---------- Nichts geändert → kein Hochladen ----------
+  ck('A: holt Stand von B', (await lesen(A, 'walquiz.farben.v1')) === '{"rekord":12}' && A.dialogs.length === 0);
   await abgleich(A); await abgleich(B);
-  ck('Ohne Änderungen bleibt die Version gleich', stand().version === 2, 'v' + stand().version);
+  ck('Ohne Änderungen bleibt die Version gleich', stand('anna').version === 2);
 
-  // ---------- Konflikt 1: beide spielen, A nimmt den Server-Stand ----------
-  await setzen(B, 'walquiz.takt.v1', '"B-Runde"'); await abgleich(B);   // v3 von B
-  await setzen(A, 'walquiz.punkte.v1', '"A-Runde"');                    // A hat parallel gespielt
-  antwortA.wert = true;
+  // ---------- Konflikt ----------
+  await setzen(B, 'walquiz.takt.v1', '"B-Runde"'); await abgleich(B);
+  await setzen(A, 'walquiz.punkte.v1', '"A-Runde"');
   await abgleich(A); await ruhig(A, 1500);
-  ck('Konflikt: A wird gefragt', A.dialogs.length === 1);
-  ck('Konflikt (Server nehmen): A hat Stand von B', (await lesen(A, 'walquiz.takt.v1')) === '"B-Runde"' && (await lesen(A, 'walquiz.punkte.v1')) === null);
-  const k1 = [...ablage.keys()].find((k) => k.startsWith('konflikt-'));
-  ck('Konflikt (Server nehmen): Stand von A liegt als Konflikt-Datei auf dem Server', k1 && JSON.parse(ablage.get(k1)).daten['walquiz.punkte.v1'] === '"A-Runde"', k1);
+  ck('Konflikt: A wird gefragt und übernimmt den Stand von B', A.dialogs.length === 1 && (await lesen(A, 'walquiz.takt.v1')) === '"B-Runde"' && (await lesen(A, 'walquiz.punkte.v1')) === null);
+  const konf = fs.readdirSync(path.join(DATEN, 'konflikte'));
+  ck('Konflikt: Stand von A auf dem Server aufgehoben', konf.some((f) => f.startsWith('anna-') && JSON.parse(fs.readFileSync(path.join(DATEN, 'konflikte', f), 'utf8')).daten['walquiz.punkte.v1'] === '"A-Runde"'), konf.join(','));
 
-  // ---------- Konflikt 2: beide spielen, B behält seinen Stand ----------
-  await setzen(A, 'walquiz.zahlen.v1', '"A2"'); await abgleich(A);      // v4 von A
-  await setzen(B, 'walquiz.zufall.v1', '"B2"');
-  antwortB.wert = false;
-  const vorher = ablage.size;
-  await abgleich(B);
-  ck('Konflikt (eigenen behalten): Server hat jetzt den Stand von B', stand().daten['walquiz.zufall.v1'] === '"B2"' && !('walquiz.zahlen.v1' in stand().daten) && stand().version === 5, 'v' + stand().version);
-  ck('Konflikt (eigenen behalten): Stand von A als Konflikt-Datei aufgehoben', ablage.size === vorher + 1 && [...ablage.entries()].some(([k, v]) => k.startsWith('konflikt-') && JSON.parse(v).daten['walquiz.zahlen.v1'] === '"A2"'));
-  await abgleich(A); await ruhig(A, 1500);
-  ck('A: übernimmt danach den Stand von B ohne Rückfrage', (await lesen(A, 'walquiz.zufall.v1')) === '"B2"' && A.dialogs.length === 1);
-
-  // ---------- Ohne Sync-Server (z. B. GitHub Pages) ----------
-  syncAn = false;
-  const C = await geraet('C', { wert: true });
+  // ---------- Zweite Person ----------
+  const C = await geraet('C');
   await C.goto(URL_); await ruhig(C, 1500);
-  ck('Ohne Sync-Server: Sync bleibt aus, keine Code-Abfrage', (await C.evaluate(() => syAktiv)) === false && C.prompts === 0);
-  syncAn = true;
-  const D = await geraet('D', { wert: true }, []);
+  await setzen(C, 'walquiz.zahlen.v1', '"Ben"');
+  await eingeben(C, 'Ben', '4321', 'neu');
+  ck('C: zweite Person „Ben“ hat eigenen Stand', stand('ben') && stand('ben').daten['walquiz.zahlen.v1'] === '"Ben"' && !('walquiz.zahlen.v1' in stand('anna').daten));
+  const res409 = await C.evaluate(async () => (await fetch('api/stand', { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ basis: 0, daten: {} }) })).status);
+  ck('Server lehnt veraltete Version ab (409)', res409 === 409);
+  const fremd = await C.evaluate(async () => (await fetch('api/stand')).json());
+  ck('Ben sieht nur seinen eigenen Stand', fremd.daten && !('walquiz.farben.v1' in fremd.daten));
+
+  // ---------- Sperre nach 5 falschen PINs ----------
+  const E = await geraet('E');
+  await E.goto(URL_); await ruhig(E, 1500);
+  for (let i = 0; i < 5; i++) await eingeben(E, 'Ben', '0000');
+  await eingeben(E, 'Ben', '4321');
+  ck('Nach 5 falschen PINs gesperrt – auch die richtige PIN geht erst später', /gesperrt/.test(await meldung(E)), await meldung(E));
+
+  // ---------- Ohne Konto spielen ----------
+  const D = await geraet('D');
   await D.goto(URL_); await ruhig(D, 1500);
-  ck('Code-Abfrage abgebrochen: Sync aus, in dieser Sitzung keine weitere Frage', (await D.evaluate(() => syAktiv)) === false && D.prompts === 1);
+  await D.click('#sySpaeter'); await ruhig(D, 500);
   await D.reload(); await ruhig(D, 1500);
-  ck('… auch nach Neuladen nicht', D.prompts === 1);
+  ck('„Ohne Konto spielen“: kein Dialog mehr, 👤 zum späteren Anmelden', !(await dialogDa(D)) && (await D.textContent('#syncBtn')) === '👤');
+
+  // ---------- Abmelden ----------
+  await B.evaluate(() => syKontoDialog()); await ruhig(B, 300); await B.click('#syAbmelden'); await ruhig(B, 800);
+  await B.reload(); await ruhig(B, 1500);
+  ck('Abmelden: danach nicht mehr angemeldet', (await B.textContent('#syncBtn')) === '👤');
+
+  // ---------- Ohne Server (z. B. GitHub Pages) ----------
+  apiAn = false;
+  const F = await geraet('F');
+  await F.goto(URL_); await ruhig(F, 1500);
+  ck('Ohne Server: kein Dialog, kein Knopf', !(await dialogDa(F)) && !(await F.isVisible('#syncBtn').catch(() => false)));
 
   ck('Keine JavaScript-Fehler', fehler.length === 0, fehler.join(' | '));
-  await b.close(); server.close();
+  await b.close(); caddy.close(); api.close();
+  fs.rmSync(DATEN, { recursive: true, force: true });
   const ok = checks.filter((c) => c[1]).length;
   console.log(`\n${ok}/${checks.length} Prüfungen bestanden`);
   process.exit(ok === checks.length ? 0 : 1);
