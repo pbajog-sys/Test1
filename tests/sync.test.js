@@ -25,7 +25,26 @@ let erweiterungAufruf = null, adguardLaeuft = false; const aktionen = [];
 fs.writeFileSync(path.join(DATEN, 'caddy.log'), 'zeile 1\nCaddy-Testzeile\n');
 fs.mkdirSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen'), { recursive: true });
 fs.writeFileSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen', 'adguard.ps1'), '# Platzhalter');
+// Minecraft-Platzhalter: „RCON“ als Liste im Speicher, „Aufgabe starten“ wird nur notiert
+const mc = { laeuft: true, whitelist: [], online: [], befehle: [], aufgaben: [], aufruf: null };
+const mcBefehl = async (c) => {
+  mc.befehle.push(c);
+  if (!mc.laeuft) throw new Error('aus');
+  if (c === 'list') return 'There are ' + mc.online.length + ' of a max of 10 players online: ' + mc.online.join(', ');
+  if (c === 'whitelist list') return mc.whitelist.length ? 'There are ' + mc.whitelist.length + ' whitelisted player(s): ' + mc.whitelist.join(', ') : 'There are no whitelisted players';
+  let x = /^whitelist add (\w+)$/.exec(c); if (x) { mc.whitelist.push(x[1]); return 'Added ' + x[1] + ' to the whitelist'; }
+  x = /^whitelist remove (\w+)$/.exec(c); if (x) { mc.whitelist = mc.whitelist.filter((n) => n !== x[1]); return 'Removed ' + x[1]; }
+  if (c === 'stop') { mc.laeuft = false; return ''; }
+  return '';
+};
+fs.writeFileSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen', 'minecraft.ps1'), '# Platzhalter');
 const erweiterungStarten = (skript, basis, env) => {
+  if (/minecraft\.ps1$/.test(skript)) {
+    mc.aufruf = { skript, env };
+    setTimeout(() => { fs.mkdirSync(path.join(DATEN, 'minecraft'), { recursive: true }); fs.writeFileSync(path.join(DATEN, 'minecraft', 'paper.jar'), ''); fs.writeFileSync(path.join(DATEN, 'minecraft', 'paper-version.txt'), 'paper-26.3-256.jar');
+      fs.appendFileSync(path.join(DATEN, 'erweiterungen.log'), '2026-11-19 12:00:00  Minecraft: Fertig: Minecraft-Server läuft.\n'); }, 1500);
+    return;
+  }
   erweiterungAufruf = { skript, basis, env };
   setTimeout(() => { fs.mkdirSync(path.join(DATEN, 'AdGuardHome'), { recursive: true }); fs.writeFileSync(path.join(DATEN, 'AdGuardHome', 'AdGuardHome.exe'), ''); adguardLaeuft = true;
     fs.appendFileSync(path.join(DATEN, 'erweiterungen.log'), '2026-11-19 12:00:00  AdGuard: Fertig: AdGuard Home läuft.\n'); }, 2000);
@@ -33,6 +52,7 @@ const erweiterungStarten = (skript, basis, env) => {
 const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, erweiterungStarten, dnsPruefen: async () => adguardLaeuft, lanIp: () => '192.168.2.42',
   diensteAbfragen: async () => ({ dienste: { Caddy: 'Running', DuckDNS: 'Running', Update: 'Ready', AdGuard: 'fehlt' }, akku: 78, netz: true }),
   aktionStarten: (ps) => { aktionen.push(ps); },
+  mcBefehl, aufgabeAusfuehren: async (art) => { mc.aufgaben.push(art); mc.laeuft = true; },
   aufgabeAbfragen: async () => ({ zustand: 'Ready', letzterLauf: '2026-11-19T12:19:00', ergebnis: 2147942402, aktion: 'powershell.exe -File C:\\homeserver\\wachen.ps1' }), updateStarten: async () => {
   updatesGestartet++;
   setTimeout(() => { fs.writeFileSync(path.join(DATEN, 'version.txt'), 'bbbbbbb2222\n'); fs.appendFileSync(path.join(DATEN, 'update.log'), '2026-11-18 22:00:00  Fertig: Version bbbbbbb läuft.\n'); }, 1500);
@@ -280,6 +300,28 @@ const caddy = http.createServer((req, res) => {
   await A.click('[data-aktion="caddy-neustart"]'); await ruhig(A, 600);
   const nochmalAktion = await A.evaluate(async () => (await syApi('admin/aktion', 'POST', { aktion: 'adguard-neustart' })).status);
   ck('Steuerung: Caddy neu starten ausgelöst (festes Kommando), dann 30 s Sperre', aktionen.length === 1 && /TaskName 'Caddy'/.test(aktionen[0]) && /gestartet/.test(await A.textContent('#syAktionMeldung')) && nochmalAktion === 429);
+
+  // ---------- Minecraft ----------
+  await A.evaluate(() => { document.getElementById('skDlg').close(); syKontoDialog(); }); await ruhig(A, 1500);
+  ck('Minecraft: zunächst „installieren“ mit EULA-Häkchen', !!(await A.$('#syMcLos')) && !!(await A.$('#syMcEula')));
+  const ohneEula = await A.evaluate(async () => (await syApi('admin/erweiterung', 'POST', { name: 'minecraft' })).status);
+  const benMc = await C.evaluate(async () => [(await syApi('admin/minecraft')).status, (await syApi('admin/minecraft', 'POST', { aktion: 'freischalten', spieler: 'Ben' })).status]);
+  ck('Minecraft: ohne EULA abgelehnt, Ben darf nichts', ohneEula === 400 && benMc.every((x) => x === 403) && !mc.aufruf);
+  await A.check('#syMcEula'); await A.click('#syMcLos'); await ruhig(A, 9000);
+  const mcText = await A.textContent('#syMinecraft');
+  ck('Minecraft: installiert (EULA übergeben), läuft, Adresse für Freunde', mc.aufruf && mc.aufruf.env.SPIELEKISTE_EULA === 'ja' && /läuft ✓/.test(mcText) && /Adresse für Freunde: localhost/.test(mcText) && /paper-26\.3-256/.test(mcText), mcText.replace(/\s+/g, ' ').slice(0, 120));
+  await A.fill('#syMcName', 'Steve'); await A.click('#syMcPlus'); await ruhig(A, 2500);
+  ck('Minecraft: Spieler freischalten (whitelist add) und anzeigen', mc.befehle.includes('whitelist add Steve') && /Steve/.test(await A.textContent('#syMinecraft')));
+  const falschName = await A.evaluate(async () => (await syApi('admin/minecraft', 'POST', { aktion: 'freischalten', spieler: 'x; op Ben' })).status);
+  ck('Minecraft: ungültiger Name (Befehls-Einschleusung) abgelehnt', falschName === 400 && !mc.befehle.some((c) => /op Ben/.test(c)));
+  await A.locator('#syMinecraft').scrollIntoViewIfNeeded(); await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft.png') });
+  const breit = await A.evaluate(() => { const d = document.getElementById('skDlg'), R = d.getBoundingClientRect().right;
+    return { ok: d.scrollWidth <= d.clientWidth + 1, zu: [...d.querySelectorAll('*')].filter((e) => e.getBoundingClientRect().right > R + 1).slice(0, 6).map((e) => e.tagName + '#' + e.id + ' ' + (e.textContent || '').slice(0, 30) + ' +' + Math.round(e.getBoundingClientRect().right - R)) }; });
+  ck('☁️-Fenster: nichts ragt rechts heraus', breit.ok, breit.zu.join(' | '));
+  const stopp = await A.evaluate(async () => (await syApi('admin/minecraft', 'POST', { aktion: 'stopp' })).status);
+  ck('Minecraft: Stopp sendet „stop“ (Welt wird gespeichert) und merkt „absichtlich aus“', stopp === 200 && mc.befehle.includes('stop') && fs.existsSync(path.join(DATEN, 'minecraft-aus.txt')));
+  const start = await A.evaluate(async () => (await syApi('admin/minecraft', 'POST', { aktion: 'start' })).status);
+  ck('Minecraft: Start führt die Aufgabe aus und hebt „absichtlich aus“ auf', start === 200 && mc.aufgaben.includes('/Run') && !fs.existsSync(path.join(DATEN, 'minecraft-aus.txt')));
 
   const gleichNochmal = await A.evaluate(async () => (await syApi('admin/aktualisieren', 'POST', {})).status);
   ck('Server aktualisieren: höchstens einmal pro Minute', gleichNochmal === 429 && updatesGestartet === 1);

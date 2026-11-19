@@ -4696,4 +4696,8 @@ a.bb-datei { text-decoration: none; }
 
 /* Dialoge: nie höher als der Bildschirm, scrollen in sich; ✕ bleibt beim Scrollen oben sichtbar */
 .sk-dlg { max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
-.sk-dlg-zu { position: sticky; top: 8px; justify-self: end; margin: -10px -8px -46px 0; z-index: 3; backdrop-filter: blur(6px); background: rgba(40,40,52,.85); }
+.sk-dlg-zu { position: sticky; top: 8px; justify-self: end; margin: -10px 0 -46px 0; z-index: 3; backdrop-filter: blur(6px); background: rgba(40,40,52,.85); }
+/* Dialog-Inhalt nie breiter als das Fenster: Spalte darf schrumpfen, lange Wörter/Pfade brechen um */
+.sk-dlg-in { grid-template-columns: minmax(0, 1fr); }
+.sk-dlg-in > * { min-width: 0; }
+.sk-dlg-in p, .sk-dlg-in li, .sk-dlg-in small, .sk-dlg-in div { overflow-wrap: anywhere; }

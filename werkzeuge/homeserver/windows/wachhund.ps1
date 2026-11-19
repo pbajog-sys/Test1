@@ -3,6 +3,7 @@
 #   • Caddy läuft nicht / Port 443 zu   → Aufgabe „Caddy“ neu starten
 #   • DuckDNS-Aufgabe läuft nicht       → starten (nur wenn eingerichtet)
 #   • AdGuard-Dienst gestoppt           → starten (nur wenn installiert)
+#   • Minecraft-Aufgabe läuft nicht     → starten (nur wenn installiert und nicht absichtlich gestoppt: minecraft-aus.txt)
 #   • Internet weg: nach 10 Min. WLAN/LAN-Adapter neu starten, nach 30 Min. Laptop neu starten (höchstens alle 6 Std.)
 #   • Lebenszeichen an healthchecks.io (wenn healthchecks-url.txt existiert): bleibt es aus, kommt eine Nachricht.
 # Läuft dauerhaft als Aufgabe „Spielekiste\Wachhund“ (von einrichten.ps1 angelegt). Protokoll nur bei Eingriffen: wachhund.log
@@ -48,6 +49,9 @@ while ($true) {
     # AdGuard
     $ag = Get-Service -Name 'AdGuardHome' -ErrorAction SilentlyContinue
     if ($ag -and $ag.Status -ne 'Running') { Log 'AdGuard war gestoppt – starte.'; Start-Service -Name 'AdGuardHome' -ErrorAction SilentlyContinue }
+    # Minecraft (nicht, wenn in der App gestoppt)
+    $mcA = Aufgabe 'Minecraft'
+    if ($mcA -and $mcA.State -ne 'Running' -and -not (Test-Path (Join-Path $Basis 'minecraft-aus.txt'))) { Log 'Minecraft lief nicht – starte.'; Start-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Minecraft' }
 
     # Internet
     if (InternetOk) {

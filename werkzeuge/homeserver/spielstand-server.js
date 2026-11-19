@@ -12,7 +12,9 @@
 //   POST /api/abmelden
 //   POST /api/admin/aktualisieren   (nur Admin) → startet die Windows-Aufgabe „Spielekiste\Update“ (neueste Version von GitHub)
 //   GET  /api/admin/status          (nur Admin) → { version, log: [letzte Zeilen von update.log], konten, duelle }
-//   POST /api/admin/erweiterung     (nur Admin) { name: 'adguard', passwort } → startet ein fest eingebautes Installationsskript
+//   GET  /api/admin/minecraft       (nur Admin) → { installiert, laeuft, version, online: [namen], whitelist: [namen] }
+//   POST /api/admin/minecraft       (nur Admin) { aktion: 'freischalten'|'entfernen'|'start'|'stopp'|'neustart', spieler? }
+//   POST /api/admin/erweiterung     (nur Admin) { name: 'adguard', passwort } bzw. { name: 'minecraft', eula: true } → startet ein fest eingebautes Installationsskript
 //                                   (werkzeuge/homeserver/windows/erweiterungen/<name>.ps1 aus der installierten Version)
 //   GET  /api/admin/system          (nur Admin) → Laufzeit, RAM, Festplatte, CPU, Akku, Zustand der Dienste
 //   POST /api/admin/aktion          (nur Admin) { aktion } → fest eingebaute Aktion (Dienst neu starten, Laptop neu starten)
@@ -54,7 +56,31 @@ const MAX_KONTEN = 50, MAX_BODY = 10 * 1024 * 1024, COOKIE = 'spielekiste_sitzun
 
 const UPDATE_STARTEN = () => new Promise((ok, nein) => require('child_process').execFile('schtasks', ['/Run', '/TN', '\\Spielekiste\\Update'], { windowsHide: true }, (e) => (e ? nein(e) : ok())));
 // Erweiterungen: nur diese Skripte dürfen gestartet werden (aus der installierten Spielversion, nie aus der Anfrage)
-const ERWEITERUNGEN = { adguard: { skript: 'adguard.ps1', name: 'AdGuard Home' } };
+const ERWEITERUNGEN = { adguard: { skript: 'adguard.ps1', name: 'AdGuard Home', passwort: true }, minecraft: { skript: 'minecraft.ps1', name: 'Minecraft (Java)', eula: true } };
+
+// ---------- Minecraft über RCON (nur 127.0.0.1, Passwort aus server.properties) ----------
+// Paket: Länge (int32 LE), ID, Typ (3 = Anmelden, 2 = Befehl), Text, zwei Nullbytes
+function rcon(befehl, { port = 25575, passwort, timeout = 5000 } = {}) {
+  return new Promise((ok, nein) => {
+    const net = require('net'), sock = net.connect(port, '127.0.0.1');
+    const paket = (id, typ, text) => { const t = Buffer.from(text, 'utf8'), b = Buffer.alloc(14 + t.length); b.writeInt32LE(10 + t.length, 0); b.writeInt32LE(id, 4); b.writeInt32LE(typ, 8); t.copy(b, 12); return b; };
+    let puffer = Buffer.alloc(0), angemeldet = false, antwort = '';
+    const ende = (f, w) => { clearTimeout(uhr); sock.destroy(); f(w); };
+    const uhr = setTimeout(() => ende(nein, new Error('RCON antwortet nicht')), timeout);
+    sock.on('connect', () => sock.write(paket(1, 3, passwort || '')));
+    sock.on('error', (e) => ende(nein, e));
+    sock.on('data', (d) => {
+      puffer = Buffer.concat([puffer, d]);
+      while (puffer.length >= 4) {
+        const laenge = puffer.readInt32LE(0); if (puffer.length < laenge + 4) break;
+        const id = puffer.readInt32LE(4), text = puffer.slice(12, 4 + laenge - 2).toString('utf8');
+        puffer = puffer.slice(4 + laenge);
+        if (!angemeldet) { if (id === -1) return ende(nein, new Error('RCON-Passwort falsch')); angemeldet = true; sock.write(paket(2, 2, befehl)); if (befehl === 'stop') setTimeout(() => ende(ok, ''), 500); }
+        else { antwort += text; setTimeout(() => ende(ok, antwort.replace(/§./g, '')), 150); }
+      }
+    });
+  });
+}
 // PowerShell im Hintergrund starten – mit verstecktem Konsolenfenster (ganz ohne Konsole startet PowerShell unter
 // Windows oft gar nicht) und vollem Pfad. Scheitert es, landen Exit-Code und Fehlermeldung im angegebenen Protokoll.
 const POWERSHELL = () => path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
@@ -101,7 +127,7 @@ const PS = (befehl, timeout = 10000) => new Promise((ok) => {
     try { ok(JSON.parse(String(out).trim())); } catch (x) { ok(null); }
   });
 });
-const DIENSTE_ABFRAGEN = () => PS("$a = @{}; foreach ($n in 'Caddy','Konto-Server','DuckDNS','Wachhund','Update') { $t = Get-ScheduledTask -TaskPath '\\Spielekiste\\' -TaskName $n -ErrorAction SilentlyContinue; $a[$n] = $(if ($t) { [string]$t.State } else { 'fehlt' }) }"
+const DIENSTE_ABFRAGEN = () => PS("$a = @{}; foreach ($n in 'Caddy','Konto-Server','DuckDNS','Wachhund','Minecraft','Update') { $t = Get-ScheduledTask -TaskPath '\\Spielekiste\\' -TaskName $n -ErrorAction SilentlyContinue; $a[$n] = $(if ($t) { [string]$t.State } else { 'fehlt' }) }"
   + "; $g = Get-Service -Name 'AdGuardHome' -ErrorAction SilentlyContinue; $a['AdGuard'] = $(if ($g) { [string]$g.Status } else { 'fehlt' })"
   + "; $b = Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue | Select-Object -First 1"
   + "; @{ dienste = $a; akku = $(if ($b) { [int]$b.EstimatedChargeRemaining } else { $null }); netz = $(if ($b) { [int]$b.BatteryStatus -ne 1 } else { $true }) } | ConvertTo-Json -Compress");
@@ -114,17 +140,17 @@ const AKTIONEN = {
   'laptop-neustart': { name: 'Laptop neu starten', ps: "shutdown.exe /r /t 30 /c 'Neustart ueber die Spielekiste'" },
 };
 const AKTION_STARTEN = (ps, basis) => psHintergrund(['-EncodedCommand', Buffer.from(ps, 'utf16le').toString('base64')], { protokoll: basis && path.join(basis, 'update.log'), name: 'Steuerung' });
-const PROTOKOLLE = { update: 'update.log', wachhund: 'wachhund.log', konto: 'konto-server.log', caddy: 'caddy.log', duckdns: 'duckdns.log', erweiterungen: 'erweiterungen.log' };
+const PROTOKOLLE = { update: 'update.log', wachhund: 'wachhund.log', konto: 'konto-server.log', caddy: 'caddy.log', duckdns: 'duckdns.log', erweiterungen: 'erweiterungen.log', minecraft: 'minecraft/logs/latest.log' };
 const GITHUB = (repo) => async (pfad) => {
   const r = await fetch('https://api.github.com/repos/' + repo + pfad, { headers: { 'User-Agent': 'spielekiste-homeserver', Accept: 'application/vnd.github+json' } });
   if (!r.ok) throw new Error('GitHub ' + r.status);
   return r.json();
 };
 function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = null, updateStarten = UPDATE_STARTEN, repo = 'pbajog-sys/Test1', github = GITHUB(repo),
-  erweiterungStarten = ERWEITERUNG_STARTEN, dnsPruefen = DNS_PRUEFEN, lanIp = LAN_IP, aufgabeAbfragen = AUFGABE_ABFRAGEN,
+  erweiterungStarten = ERWEITERUNG_STARTEN, dnsPruefen = DNS_PRUEFEN, mcBefehl = null, aufgabeAusfuehren = null, lanIp = LAN_IP, aufgabeAbfragen = AUFGABE_ABFRAGEN,
   diensteAbfragen = DIENSTE_ABFRAGEN, aktionStarten = AKTION_STARTEN } = {}) {
   let letzteAktion = 0;
-  let letzteErweiterung = 0;
+  const letzteErweiterung = {};   // pro Erweiterung: wann zuletzt gestartet
   let pruefCache = null;
   let letztesUpdate = 0;
   const admins = new Set([].concat(admin).filter(Boolean).map((n) => String(n).normalize('NFC').toLowerCase()));
@@ -328,16 +354,67 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
         if (!datei) return senden(res, 400, { fehler: 'Unbekanntes Protokoll.' });
         return senden(res, 200, { zeilen: lies(datei).trim().split(/\r?\n/).filter(Boolean).slice(-40) });
       }
+      // ---------- Minecraft ----------
+      if (weg === '/admin/minecraft') {
+        const ordner = basis || path.dirname(daten), mcOrdner = path.join(ordner, 'minecraft');
+        const props = (() => { const d = {}; try { fs.readFileSync(path.join(mcOrdner, 'server.properties'), 'utf8').split(/\r?\n/).forEach((z) => { const i = z.indexOf('='); if (i > 0 && z[0] !== '#') d[z.slice(0, i).trim()] = z.slice(i + 1).trim(); }); } catch (e) { /* noch nicht installiert */ } return d; })();
+        const befehl = mcBefehl || ((c) => rcon(c, { port: Number(props['rcon.port']) || 25575, passwort: props['rcon.password'] }));
+        const schtasks = aufgabeAusfuehren || ((art) => new Promise((ok) => require('child_process').execFile('schtasks', [art, '/TN', '\\Spielekiste\\Minecraft'], { windowsHide: true }, () => ok())));
+        const installiert = fs.existsSync(path.join(mcOrdner, 'paper.jar'));
+        const ausFlagge = path.join(ordner, 'minecraft-aus.txt');
+        if (m === 'GET') {
+          if (!installiert) return senden(res, 200, { installiert: false });
+          let online = null, whitelist = [], laeuft = false;
+          try {
+            const l = await befehl('list'); laeuft = true;
+            const nach = l.split(':').slice(1).join(':').trim(); online = nach ? nach.split(/,\s*/).filter(Boolean) : [];
+            const w = await befehl('whitelist list'); const wn = w.split(':').slice(1).join(':').trim(); whitelist = wn ? wn.split(/,\s*(?:and\s+)?|\s+and\s+/).filter(Boolean) : [];
+          } catch (e) { /* läuft nicht */ }
+          let version = ''; try { version = fs.readFileSync(path.join(mcOrdner, 'paper-version.txt'), 'utf8').trim(); } catch (e) { /* egal */ }
+          return senden(res, 200, { installiert: true, laeuft, version, online, whitelist, gestoppt: fs.existsSync(ausFlagge) });
+        }
+        if (m === 'POST') {
+          const b = await koerper(req), aktion = String(b.aktion || ''), spieler = String(b.spieler || '').trim();
+          if (!installiert) return senden(res, 400, { fehler: 'Minecraft ist nicht installiert.' });
+          const protokoll = (t) => { try { fs.appendFileSync(path.join(ordner, 'update.log'), new Date(jetzt()).toISOString().replace('T', ' ').slice(0, 19) + '  Minecraft: ' + t + '\n'); } catch (e) { /* egal */ } };
+          if (aktion === 'freischalten' || aktion === 'entfernen') {
+            if (!/^[A-Za-z0-9_]{3,16}$/.test(spieler)) return senden(res, 400, { fehler: 'Minecraft-Namen bestehen aus 3–16 Buchstaben, Ziffern oder _.' });
+            try {
+              const a = await befehl('whitelist ' + (aktion === 'freischalten' ? 'add ' : 'remove ') + spieler);
+              if (aktion === 'entfernen') { try { await befehl('kick ' + spieler + ' Von der Whitelist entfernt'); } catch (e) { /* war nicht online */ } }
+              protokoll((aktion === 'freischalten' ? 'freigeschaltet: ' : 'entfernt: ') + spieler);
+              return senden(res, 200, { antwort: a });
+            } catch (e) { return senden(res, 409, { fehler: 'Der Server läuft gerade nicht – erst starten.' }); }
+          }
+          if (aktion === 'stopp' || aktion === 'neustart') {
+            try { fs.writeFileSync(ausFlagge, 'gestoppt über die App'); } catch (e) { /* egal */ }
+            try { await befehl('stop'); } catch (e) { /* lief nicht */ }
+            protokoll(aktion === 'stopp' ? 'gestoppt (Welt gespeichert)' : 'Neustart');
+            if (aktion === 'stopp') return senden(res, 200, { ok: true });
+            await new Promise((ok) => setTimeout(ok, mcBefehl ? 10 : 15000));
+          }
+          if (aktion === 'start' || aktion === 'neustart') {
+            try { fs.rmSync(ausFlagge, { force: true }); } catch (e) { /* egal */ }
+            await schtasks('/Run'); protokoll('gestartet');
+            return senden(res, 200, { ok: true });
+          }
+          return senden(res, 400, { fehler: 'Unbekannte Aktion.' });
+        }
+      }
       if (weg === '/admin/erweiterung' && m === 'POST') {
         const b = await koerper(req), e = ERWEITERUNGEN[String(b.name || '')];
         if (!e) return senden(res, 400, { fehler: 'Unbekannte Erweiterung.' });
-        const pw = String(b.passwort || '');
-        if (pw.length < 8 || pw.length > 64 || /["'`$\s]/.test(pw)) return senden(res, 400, { fehler: 'Passwort: 8–64 Zeichen, ohne Leerzeichen und ohne " \' ` $' });
-        if (jetzt() - letzteErweiterung < 60e3) return senden(res, 429, { fehler: 'Gerade läuft schon eine Installation – bitte eine Minute warten.' });
-        letzteErweiterung = jetzt();
+        const pw = String(b.passwort || ''), umgebung = {};
+        if (e.passwort) {
+          if (pw.length < 8 || pw.length > 64 || /["'`$\s]/.test(pw)) return senden(res, 400, { fehler: 'Passwort: 8–64 Zeichen, ohne Leerzeichen und ohne " \' ` $' });
+          umgebung.SPIELEKISTE_PASSWORT = pw;
+        }
+        if (e.eula) { if (b.eula !== true) return senden(res, 400, { fehler: 'Bitte die Minecraft-EULA akzeptieren.' }); umgebung.SPIELEKISTE_EULA = 'ja'; }
+        if (jetzt() - (letzteErweiterung[b.name] || 0) < 60e3) return senden(res, 429, { fehler: 'Gerade läuft schon eine Installation – bitte eine Minute warten.' });
+        letzteErweiterung[b.name] = jetzt();
         const ordner = basis || path.dirname(daten), skript = path.join(ordner, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen', e.skript);
         if (!fs.existsSync(skript)) return senden(res, 500, { fehler: 'Installationsskript fehlt – erst „Aktualisieren“.' });
-        try { erweiterungStarten(skript, ordner, { SPIELEKISTE_PASSWORT: pw }); } catch (x) { return senden(res, 500, { fehler: 'Konnte die Installation nicht starten.' }); }
+        try { erweiterungStarten(skript, ordner, umgebung); } catch (x) { return senden(res, 500, { fehler: 'Konnte die Installation nicht starten.' }); }
         return senden(res, 200, { gestartet: true, name: e.name });
       }
       if (weg === '/admin/pruefen' && m === 'GET') {

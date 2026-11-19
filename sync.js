@@ -487,6 +487,7 @@ function syKontoDialog() {
       + '<button type="button" class="btn secondary" id="syPruefen" style="margin:6px 0 0;width:100%">🔍 Updates prüfen</button>'
       + '<button type="button" class="btn" id="syServerUpdate" style="margin:6px 0 0;width:100%" hidden>⬆️ Aktualisieren</button>'
       + '<h4 style="margin:14px 0 4px">🧩 Erweiterungen</h4><div id="syErweiterungen" class="ft-klein">…</div>'
+      + '<div id="syMinecraft" class="ft-klein" style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)">…</div>'
       + '<details id="sySteuerung" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">🎛️ Steuerung</summary><div id="sySteuerInhalt" class="ft-klein" style="margin-top:6px">Wird geladen …</div></details></div>' : '')
     + '<button type="button" class="btn secondary" id="syJetzt">🔄 Jetzt abgleichen</button>'
     + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>'
@@ -543,7 +544,7 @@ async function sySteuerungZeigen(d) {
     + ' · RAM ' + syGB(j.ram.frei) + ' von ' + syGB(j.ram.gesamt) + ' frei'
     + (j.platte ? ' · Platte ' + syGB(j.platte.frei) + ' frei' : '')
     + (j.akku != null ? ' · Akku ' + j.akku + ' %' + (j.netz ? ' (am Netz)' : ' ⚠️ <b>nicht am Netz</b>') : '') + '</p>'
-    + '<p style="margin:4px 0">' + ['Caddy', 'Konto-Server', 'DuckDNS', 'AdGuard', 'Wachhund', 'Update'].map(dienst).join('') + '</p>'
+    + '<p style="margin:4px 0">' + ['Caddy', 'Konto-Server', 'DuckDNS', 'AdGuard', 'Minecraft', 'Wachhund', 'Update'].map(dienst).join('') + '</p>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0">'
     + '<button type="button" class="btn secondary" data-aktion="caddy-neustart" style="margin:0">🔁 Caddy</button>'
     + '<button type="button" class="btn secondary" data-aktion="duckdns-neustart" style="margin:0">🔁 DuckDNS</button>'
@@ -551,7 +552,7 @@ async function sySteuerungZeigen(d) {
     + '<button type="button" class="btn secondary" data-aktion="laptop-neustart" style="margin:0;color:#f87171">⏻ Laptop neu starten</button></div>'
     + '<p id="syAktionMeldung" style="margin:4px 0;min-height:1.2em"></p>'
     + '<div style="display:flex;gap:6px;align-items:center;margin-top:6px"><span>📜 Protokoll:</span><select id="syProtokollWahl" style="flex:1;padding:6px;border-radius:8px;font-size:15px">'
-    + [['update', 'Updates & Steuerung'], ['wachhund', 'Wachhund'], ['konto', 'Konto-Server'], ['caddy', 'Caddy'], ['duckdns', 'DuckDNS'], ['erweiterungen', 'Erweiterungen']].map(([k, n]) => '<option value="' + k + '">' + n + '</option>').join('')
+    + [['update', 'Updates & Steuerung'], ['wachhund', 'Wachhund'], ['konto', 'Konto-Server'], ['caddy', 'Caddy'], ['duckdns', 'DuckDNS'], ['minecraft', 'Minecraft'], ['erweiterungen', 'Erweiterungen']].map(([k, n]) => '<option value="' + k + '">' + n + '</option>').join('')
     + '</select></div><pre id="syProtokoll" style="white-space:pre-wrap;font-size:.7rem;line-height:1.35;max-height:14em;overflow:auto;margin:6px 0 0;opacity:.85"></pre>';
   const protokoll = async () => {
     const pre = box.querySelector('#syProtokoll'); pre.textContent = '…';
@@ -580,6 +581,63 @@ function syAufgabeZeigen(d, a) {
   const bedeutung = { 0: 'ok', 1: 'Fehler im Skript', 267009: 'läuft gerade', 267011: 'noch nie gelaufen', 2147942402: 'Datei nicht gefunden', 2147942405: 'Zugriff verweigert', 2147946720: 'Aufgabe abgebrochen' }[code] || 'Code ' + hex;
   el.textContent = 'Update-Aufgabe: ' + ({ Ready: 'bereit', Running: 'läuft', Disabled: 'deaktiviert', Queued: 'wartet' }[a.zustand] || a.zustand)
     + (a.letzterLauf ? ' · zuletzt ' + a.letzterLauf.replace('T', ' ').slice(0, 16) : '') + ' · Ergebnis: ' + bedeutung + (a.aktion ? ' · führt aus: ' + a.aktion : '');
+}
+
+// ---------- Minecraft (Java): installieren, Status, Spieler freischalten, Start/Stopp ----------
+async function syMinecraftZeigen(d) {
+  const box = d.querySelector('#syMinecraft'); if (!box || box.dataset.laeuft) return;
+  const r = await syApi('admin/minecraft').catch(() => ({ status: 0 }));
+  if (r.status !== 200) { box.textContent = ''; return; }
+  const j = r.json, host = location.hostname;
+  if (!j.installiert) {
+    box.innerHTML = '<b>⛏️ Minecraft (Java)</b> – eigener Server für dich und deine Freunde (Paper, nur freigeschaltete Spieler).'
+      + '<label style="display:flex;gap:8px;align-items:flex-start;margin:8px 0"><input type="checkbox" id="syMcEula" style="margin-top:3px"> <span>Ich akzeptiere die <a href="https://aka.ms/MinecraftEULA" target="_blank" rel="noopener">Minecraft-EULA</a>.</span></label>'
+      + '<button type="button" class="btn secondary" id="syMcLos" style="margin:0;width:100%">⛏️ Minecraft installieren</button>';
+    box.querySelector('#syMcLos').addEventListener('click', async () => {
+      const knopf = box.querySelector('#syMcLos');
+      if (!box.querySelector('#syMcEula').checked) { alert('Bitte zuerst die Minecraft-EULA akzeptieren.'); return; }
+      knopf.disabled = true; knopf.textContent = '⏳ Wird gestartet …';
+      const x = await syApi('admin/erweiterung', 'POST', { name: 'minecraft', eula: true }).catch(() => ({ status: 0 }));
+      if (x.status !== 200) { knopf.disabled = false; knopf.textContent = '⛏️ Minecraft installieren'; alert((x.json && x.json.fehler) || 'Konnte nicht starten.'); return; }
+      box.dataset.laeuft = '1'; knopf.textContent = '⏳ Installiert … (3–6 Minuten, erzeugt die Welt)';
+      const bis = Date.now() + 8 * 60e3;
+      while (Date.now() < bis && d.open) {
+        await new Promise((ok) => setTimeout(ok, 6000));
+        let st; try { const y = await syApi('admin/status'); if (y.status !== 200) continue; st = y.json; } catch (e) { continue; }
+        const l = (st.erweiterungenLog || []).filter((z) => /Minecraft:/.test(z)).slice(-1)[0] || '';
+        if (l) knopf.textContent = '⏳ ' + l.replace(/^\S+ \S+\s+Minecraft:\s*/, '');
+        if (/Fertig|FEHLER/.test(l)) { delete box.dataset.laeuft; if (/FEHLER/.test(l)) alert(l.replace(/^\S+ \S+\s+/, '')); syMinecraftZeigen(d); return; }
+      }
+      delete box.dataset.laeuft; if (d.open) syMinecraftZeigen(d);
+    });
+    return;
+  }
+  const liste = (j.whitelist || []).map((n) => '<span style="display:inline-flex;align-items:center;gap:4px;margin:2px 6px 2px 0;padding:2px 8px;border-radius:999px;background:rgba(255,255,255,.08)">'
+    + ((j.online || []).includes(n) ? '🟢 ' : '') + syEsc(n) + ' <button type="button" data-mcweg="' + syEsc(n) + '" aria-label="' + syEsc(n) + ' entfernen" style="border:0;background:none;color:inherit;cursor:pointer;padding:0 2px">✕</button></span>').join('');
+  box.innerHTML = '<b>⛏️ Minecraft (Java)</b> ' + (j.laeuft ? '· läuft ✓' : j.gestoppt ? '· gestoppt' : '· startet gerade oder ist abgestürzt')
+    + (j.version ? ' <span style="opacity:.7">(' + syEsc(j.version.replace(/\.jar$/, '')) + ')</span>' : '')
+    + '<br>Adresse für Freunde: <b>' + syEsc(host) + '</b> (Port 25565 – im Speedport für TCP 25565 freigeben)'
+    + (j.laeuft ? '<br>Online: ' + ((j.online || []).length ? (j.online || []).map(syEsc).join(', ') : 'niemand') : '')
+    + '<p style="margin:8px 0 4px">Freigeschaltet: ' + (liste || '<span style="opacity:.7">noch niemand</span>') + '</p>'
+    + '<div style="display:flex;gap:6px"><input id="syMcName" placeholder="Minecraft-Name" autocapitalize="none" spellcheck="false" maxlength="16" style="flex:1;min-width:0;padding:8px;font-size:16px;border-radius:10px;border:1px solid #888">'
+    + '<button type="button" class="btn secondary" id="syMcPlus" style="margin:0;width:auto;padding:8px 12px">Freischalten</button></div>'
+    + '<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-top:8px">'
+    + (j.laeuft ? '<button type="button" class="btn secondary" data-mc="stopp" style="margin:0">⏹ Stopp</button><button type="button" class="btn secondary" data-mc="neustart" style="margin:0">🔁 Neustart</button>'
+      : '<button type="button" class="btn secondary" data-mc="start" style="margin:0">▶️ Start</button>') + '</div>'
+    + '<p id="syMcMeldung" style="margin:6px 0 0;min-height:1.2em"></p>';
+  const melden = (t) => { box.querySelector('#syMcMeldung').textContent = t; };
+  const tun = async (body, text) => {
+    melden('⏳ ' + text + ' …');
+    const x = await syApi('admin/minecraft', 'POST', body).catch(() => ({ status: 0 }));
+    melden(x.status === 200 ? '✓ ' + text : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
+    setTimeout(() => syMinecraftZeigen(d), body.aktion === 'start' || body.aktion === 'neustart' ? 20000 : 1200);
+  };
+  box.querySelector('#syMcPlus').addEventListener('click', () => { const n = box.querySelector('#syMcName').value.trim(); if (n) tun({ aktion: 'freischalten', spieler: n }, n + ' freigeschaltet'); });
+  box.querySelectorAll('[data-mcweg]').forEach((b) => b.addEventListener('click', () => { if (confirm(b.dataset.mcweg + ' von der Whitelist entfernen?')) tun({ aktion: 'entfernen', spieler: b.dataset.mcweg }, b.dataset.mcweg + ' entfernt'); }));
+  box.querySelectorAll('[data-mc]').forEach((b) => b.addEventListener('click', () => {
+    const a = b.dataset.mc; if (a === 'stopp' && !confirm('Minecraft-Server stoppen? Die Welt wird vorher gespeichert.')) return;
+    tun({ aktion: a }, { start: 'Server startet (ca. 1 Minute)', stopp: 'Server gestoppt', neustart: 'Neustart (ca. 1 Minute)' }[a]);
+  }));
 }
 
 // Erweiterungen (zurzeit AdGuard Home): Status, Installieren per Knopf, danach Anleitung für zu Hause
@@ -626,6 +684,7 @@ async function syServerStatus(d) {
     d.querySelector('#syServerVersion').textContent = r.json.version || '?';
     d.querySelector('#syServerKonten').textContent = r.json.konten + ' · ' + r.json.duelle + ' Duelle';
     syErweiterungenZeigen(d, r.json);
+    syMinecraftZeigen(d);
     syAufgabeZeigen(d, r.json.aufgabe);
     const letzte = (r.json.log || []).slice(-1)[0] || '';
     el.textContent = letzte ? 'Letztes Update: ' + letzte.replace(/^(\S+) (\S+)\s+/, '$1 $2 · ') : '';

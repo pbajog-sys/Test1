@@ -27,6 +27,8 @@ Portweiterleitung TCP 80/443 auf diesen Laptop, feste lokale IP).
   Token/Subdomain nur lokal in `duckdns-token.txt` / `duckdns-domain.txt` (geheim, nie ins Repo). Protokoll `duckdns.log`.
 - `Wachhund`: läuft dauerhaft (`wachhund.ps1`), prüft alle 2 Min. Dienste und Internet, startet selbst neu,
   pingt healthchecks.io (`healthchecks-url.txt`). Protokoll `wachhund.log`.
+- `Minecraft` (optional): Paper-Server in `minecraft\` (portables Java), Port 25565, RCON nur lokal (Passwort in
+  `minecraft\server.properties`). Steuerung in der App; absichtlich gestoppt = `minecraft-aus.txt`.
 - Einrichten/neu anlegen: `einrichten.bat` (als Administrator).
 - `AdGuardHome` (Windows-Dienst, optional): Werbeblocker fürs Heimnetz, installiert über ☁️ → Server → Erweiterungen
   (`spiel\werkzeuge\homeserver\windows\erweiterungen\adguard.ps1`). Verwaltung http://<Laptop-IP>:3000 (nur Heimnetz),

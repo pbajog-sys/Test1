@@ -72,3 +72,13 @@ neu starten; Caddy-Port 443 zu → neu starten; DuckDNS-Aufgabe / AdGuard-Dienst
 nach 10 Min. Netzwerkadapter neu starten, nach 30 Min. Laptop neu starten (höchstens alle 6 Std.). Protokoll nur bei
 Eingriffen: `wachhund.log`. Lebenszeichen an **healthchecks.io** (Adresse in `healthchecks-url.txt`, fragt
 `einrichten.bat`): bleibt es aus (Laptop aus, schläft, kein Internet), schickt healthchecks.io eine Nachricht.
+
+## Erweiterung Minecraft (Java) (`windows/erweiterungen/minecraft.ps1`)
+Per Knopf (☁️ → Server → Erweiterungen, EULA-Häkchen nötig): neueste **stabile Paper**-Version von fill.papermc.io
+(SHA-256 geprüft), passendes **Java als portables Temurin-JRE** (Version laut PaperMC), Ordner `minecraft\`.
+Sicher voreingestellt: `online-mode=true`, Whitelist an, RCON nur lokal (Port 25575 nicht in der Firewall).
+Aufgabe **Minecraft** (startet mit Windows, Neustart nach Absturz; `-Xmx2G` + empfohlene Paper-Flags). Firewall TCP 25565.
+**Im Speedport TCP 25565 auf den Laptop freigeben.** In der App: Status, wer online ist, Spieler freischalten/entfernen
+(RCON `whitelist add/remove`), Start/Stopp (speichert die Welt; „absichtlich aus“ = `minecraft-aus.txt`, dann startet
+weder Windows noch der Wachhund den Server)/Neustart. Protokoll „Minecraft“ = `minecraft\logs\latest.log`.
+Erneutes Installieren aktualisiert Paper/Java, Welt und Einstellungen bleiben.
