@@ -484,7 +484,8 @@ function syKontoDialog() {
       + '<p class="ft-klein" id="syServerStand" style="min-height:1.2em;margin:4px 0"></p>'
       + '<div id="syServerNeu" class="ft-klein" style="margin:4px 0"></div>'
       + '<button type="button" class="btn secondary" id="syPruefen" style="margin:6px 0 0;width:100%">🔍 Updates prüfen</button>'
-      + '<button type="button" class="btn" id="syServerUpdate" style="margin:6px 0 0;width:100%" hidden>⬆️ Aktualisieren</button></div>' : '')
+      + '<button type="button" class="btn" id="syServerUpdate" style="margin:6px 0 0;width:100%" hidden>⬆️ Aktualisieren</button>'
+      + '<h4 style="margin:14px 0 4px">🧩 Erweiterungen</h4><div id="syErweiterungen" class="ft-klein">…</div></div>' : '')
     + '<button type="button" class="btn secondary" id="syJetzt">🔄 Jetzt abgleichen</button>'
     + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>'
     + '<button type="button" class="btn secondary" id="syLoeschen" style="opacity:.75">🗑️ Konto löschen</button>'
@@ -524,6 +525,37 @@ async function syUpdatesPruefen(d) {
     + (j.aenderungen && j.aenderungen.length ? '<ul style="margin:4px 0 0;padding-left:1.2em">' + j.aenderungen.map((t) => '<li>' + syEsc(t) + '</li>').join('') + '</ul>' : '');
   los.hidden = false; los.disabled = false; los.textContent = '⬆️ Aktualisieren'; delete los.dataset.neuLaden;
 }
+// Erweiterungen (zurzeit AdGuard Home): Status, Installieren per Knopf, danach Anleitung für zu Hause
+function syErweiterungenZeigen(d, st) {
+  const box = d.querySelector('#syErweiterungen'); if (!box || box.dataset.laeuft) return;
+  const ag = (st.erweiterungen && st.erweiterungen.adguard) || {}, ip = st.lanIp || 'IP des Laptops';
+  const letzte = (st.erweiterungenLog || []).slice(-1)[0] || '';
+  if (ag.laeuft) {
+    box.innerHTML = '<b>🛡️ AdGuard Home läuft ✓</b><br>Zu Hause am Handy: Einstellungen → WLAN → (i) beim Heim-WLAN → <b>DNS konfigurieren → Manuell</b> → alle Server löschen, <b>' + syEsc(ip) + '</b> hinzufügen.'
+      + '<br>Verwaltung (nur im Heimnetz): <b>http://' + syEsc(ip) + ':3000</b> · Benutzer <b>admin</b>';
+    return;
+  }
+  box.innerHTML = '<b>🛡️ AdGuard Home</b> – blockt Werbung und Tracker für alle Geräte im Heim-WLAN.'
+    + (ag.installiert ? '<br>⚠️ Installiert, antwortet aber gerade nicht.' : '')
+    + (letzte ? '<br><span style="opacity:.8">' + syEsc(letzte.replace(/^\S+ (\S+)\s+/, '$1 ')) + '</span>' : '')
+    + '<input type="password" id="syAgPw" autocomplete="new-password" placeholder="Neues Passwort für die AdGuard-Verwaltung (mind. 8 Zeichen)" style="width:100%;padding:10px;margin:8px 0 6px;font-size:16px;border-radius:10px;border:1px solid #888;box-sizing:border-box">'
+    + '<button type="button" class="btn secondary" id="syAgLos" style="margin:0;width:100%">🛡️ AdGuard installieren</button>';
+  box.querySelector('#syAgLos').addEventListener('click', async () => {
+    const pw = box.querySelector('#syAgPw').value, knopf = box.querySelector('#syAgLos');
+    knopf.disabled = true; knopf.textContent = '⏳ Wird gestartet …';
+    const r = await syApi('admin/erweiterung', 'POST', { name: 'adguard', passwort: pw }).catch(() => ({ status: 0 }));
+    if (r.status !== 200) { knopf.disabled = false; knopf.textContent = '🛡️ AdGuard installieren'; alert((r.json && r.json.fehler) || 'Konnte nicht starten.'); return; }
+    box.dataset.laeuft = '1'; knopf.textContent = '⏳ Installiert … (bis zu 2 Minuten)';
+    const bis = Date.now() + 3 * 60e3;
+    while (Date.now() < bis && d.open) {
+      await new Promise((ok) => setTimeout(ok, 5000));
+      let st2; try { const x = await syApi('admin/status'); if (x.status !== 200) continue; st2 = x.json; } catch (e) { continue; }
+      const l = (st2.erweiterungenLog || []).slice(-1)[0] || '';
+      if (st2.erweiterungen && st2.erweiterungen.adguard && st2.erweiterungen.adguard.laeuft || /FEHLER|Fertig/.test(l)) { delete box.dataset.laeuft; syErweiterungenZeigen(d, st2); if (/FEHLER/.test(l)) alert(l.replace(/^\S+ \S+\s+/, '')); return; }
+    }
+    delete box.dataset.laeuft; if (d.open) { knopf.disabled = false; knopf.textContent = '🛡️ Nochmal prüfen / installieren'; }
+  });
+}
 // App auf diesem Gerät auf die neue Version bringen (Service Worker prüfen lassen, dann neu laden – Daten bleiben)
 async function syAppNeuLaden() {
   try { const r = navigator.serviceWorker && await navigator.serviceWorker.getRegistration(); if (r) await r.update(); } catch (e) { /* offline – dann einfach neu laden */ }
@@ -536,6 +568,7 @@ async function syServerStatus(d) {
     if (r.status !== 200) throw new Error();
     d.querySelector('#syServerVersion').textContent = r.json.version || '?';
     d.querySelector('#syServerKonten').textContent = r.json.konten + ' · ' + r.json.duelle + ' Duelle';
+    syErweiterungenZeigen(d, r.json);
     const letzte = (r.json.log || []).slice(-1)[0] || '';
     el.textContent = letzte ? 'Letztes Update: ' + letzte.replace(/^(\S+) (\S+)\s+/, '$1 $2 · ') : '';
     return r.json;

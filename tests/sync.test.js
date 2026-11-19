@@ -20,7 +20,16 @@ const github = async (pfad) => {
   if (pfad.startsWith('/compare/')) return { ahead_by: 2, commits: [{ commit: { message: 'Bestenliste' } }, { commit: { message: 'Duelle' } }] };
   throw new Error('unbekannt');
 };
-const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, updateStarten: async () => {
+// Erweiterungen-Platzhalter: statt PowerShell „installiert“ er nach kurzer Zeit AdGuard
+let erweiterungAufruf = null, adguardLaeuft = false;
+fs.mkdirSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen'), { recursive: true });
+fs.writeFileSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen', 'adguard.ps1'), '# Platzhalter');
+const erweiterungStarten = (skript, basis, env) => {
+  erweiterungAufruf = { skript, basis, env };
+  setTimeout(() => { fs.mkdirSync(path.join(DATEN, 'AdGuardHome'), { recursive: true }); fs.writeFileSync(path.join(DATEN, 'AdGuardHome', 'AdGuardHome.exe'), ''); adguardLaeuft = true;
+    fs.appendFileSync(path.join(DATEN, 'erweiterungen.log'), '2026-11-19 12:00:00  AdGuard: Fertig: AdGuard Home läuft.\n'); }, 2000);
+};
+const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, erweiterungStarten, dnsPruefen: async () => adguardLaeuft, lanIp: () => '192.168.2.42', updateStarten: async () => {
   updatesGestartet++;
   setTimeout(() => { fs.writeFileSync(path.join(DATEN, 'version.txt'), 'bbbbbbb2222\n'); fs.appendFileSync(path.join(DATEN, 'update.log'), '2026-11-18 22:00:00  Fertig: Version bbbbbbb läuft.\n'); }, 1500);
 } });
@@ -235,6 +244,17 @@ const caddy = http.createServer((req, res) => {
   ck('Aktualisieren: Fortschritt, danach „Fertig – App neu laden“ und neue Version', updatesGestartet === 1 && /Fertig – App neu laden/.test(await A.textContent('#syServerUpdate')) && (await A.textContent('#syServerVersion')) === 'bbbbbbb', await A.textContent('#syServerUpdate'));
   await A.click('#syPruefen'); await ruhig(A, 800);
   ck('Danach prüfen: „Alles aktuell“, kein Aktualisieren-Knopf', /Alles aktuell/.test(await A.textContent('#syServerNeu')) && !(await A.isVisible('#syServerUpdate')));
+  // ---------- Erweiterung AdGuard ----------
+  const benErw = await C.evaluate(async () => (await syApi('admin/erweiterung', 'POST', { name: 'adguard', passwort: 'sicher12345' })).status);
+  const falsch = await A.evaluate(async () => [(await syApi('admin/erweiterung', 'POST', { name: 'adguard', passwort: 'kurz' })).status, (await syApi('admin/erweiterung', 'POST', { name: 'cmd.exe', passwort: 'sicher12345' })).status]);
+  ck('Erweiterung: Ben darf nicht, kurzes Passwort und unbekannte Erweiterung abgelehnt', benErw === 403 && falsch[0] === 400 && falsch[1] === 400 && !erweiterungAufruf);
+  ck('Erweiterung: AdGuard zunächst „nicht installiert“ mit Passwortfeld', /AdGuard Home/.test(await A.textContent('#syErweiterungen')) && !!(await A.$('#syAgPw')));
+  await A.fill('#syAgPw', 'Sicher-1234'); await A.click('#syAgLos'); await ruhig(A, 9000);
+  ck('Erweiterung: nur das feste Skript, Passwort nur über die Umgebung (nicht in der Befehlszeile)', erweiterungAufruf && /erweiterungen[\\/]adguard\.ps1$/.test(erweiterungAufruf.skript) && erweiterungAufruf.env.SPIELEKISTE_PASSWORT === 'Sicher-1234' && !erweiterungAufruf.skript.includes('Sicher'));
+  const agText = await A.textContent('#syErweiterungen');
+  ck('Erweiterung: danach „läuft ✓“ mit Anleitung (DNS-IP, Verwaltung im Heimnetz)', /läuft ✓/.test(agText) && /192\.168\.2\.42/.test(agText) && /:3000/.test(agText), agText.replace(/\s+/g, ' ').slice(0, 90));
+  await A.locator('#syErweiterungen').scrollIntoViewIfNeeded(); await A.screenshot({ path: path.join(os.tmpdir(), 'sync-adguard.png') });
+
   const gleichNochmal = await A.evaluate(async () => (await syApi('admin/aktualisieren', 'POST', {})).status);
   ck('Server aktualisieren: höchstens einmal pro Minute', gleichNochmal === 429 && updatesGestartet === 1);
   await A.evaluate(() => document.getElementById('skDlg').close());

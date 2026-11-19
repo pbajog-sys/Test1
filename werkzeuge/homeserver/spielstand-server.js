@@ -12,6 +12,8 @@
 //   POST /api/abmelden
 //   POST /api/admin/aktualisieren   (nur Admin) → startet die Windows-Aufgabe „Spielekiste\Update“ (neueste Version von GitHub)
 //   GET  /api/admin/status          (nur Admin) → { version, log: [letzte Zeilen von update.log], konten, duelle }
+//   POST /api/admin/erweiterung     (nur Admin) { name: 'adguard', passwort } → startet ein fest eingebautes Installationsskript
+//                                   (werkzeuge/homeserver/windows/erweiterungen/<name>.ps1 aus der installierten Version)
 //   GET  /api/admin/pruefen         (nur Admin) → { aktuell, neu, neuer, anzahl, aenderungen: [Commit-Titel] } – fragt GitHub
 //   POST /api/konto/loeschen  { pin } → Konto, Spielstand, Tageskopien, Bestenliste, Duelle und Anmeldungen löschen
 //   POST /api/abgleich        { basis, geraet, stand, aenderungen: { schlüssel: { v: text|null, alt?: true } } }
@@ -48,12 +50,32 @@ const DUELL_TAGE = 7, DUELL_OFFEN_MAX = 20;
 const MAX_KONTEN = 50, MAX_BODY = 10 * 1024 * 1024, COOKIE = 'spielekiste_sitzung', SITZUNG_TAGE = 365;
 
 const UPDATE_STARTEN = () => new Promise((ok, nein) => require('child_process').execFile('schtasks', ['/Run', '/TN', '\\Spielekiste\\Update'], { windowsHide: true }, (e) => (e ? nein(e) : ok())));
+// Erweiterungen: nur diese Skripte dürfen gestartet werden (aus der installierten Spielversion, nie aus der Anfrage)
+const ERWEITERUNGEN = { adguard: { skript: 'adguard.ps1', name: 'AdGuard Home' } };
+const ERWEITERUNG_STARTEN = (skript, basis, env) => {
+  const kind = require('child_process').spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', skript, '-Basis', basis],
+    { detached: true, stdio: 'ignore', windowsHide: true, env: Object.assign({}, process.env, env) });
+  kind.unref();
+};
+// Läuft auf diesem Rechner ein DNS-Server (AdGuard)? Fragt 127.0.0.1 nach example.com.
+const DNS_PRUEFEN = () => new Promise((ok) => {
+  const r = new (require('dns').promises.Resolver)({ timeout: 1500, tries: 1 });
+  r.setServers(['127.0.0.1']);
+  r.resolve4('example.com').then(() => ok(true), () => ok(false));
+});
+const LAN_IP = () => {
+  const l = Object.values(require('os').networkInterfaces()).flat().filter((x) => x && x.family === 'IPv4' && !x.internal);
+  const heim = l.find((x) => /^(192\.168|10\.|172\.(1[6-9]|2\d|3[01]))/.test(x.address));
+  return (heim || l[0] || {}).address || null;
+};
 const GITHUB = (repo) => async (pfad) => {
   const r = await fetch('https://api.github.com/repos/' + repo + pfad, { headers: { 'User-Agent': 'spielekiste-homeserver', Accept: 'application/vnd.github+json' } });
   if (!r.ok) throw new Error('GitHub ' + r.status);
   return r.json();
 };
-function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = null, updateStarten = UPDATE_STARTEN, repo = 'pbajog-sys/Test1', github = GITHUB(repo) } = {}) {
+function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = null, updateStarten = UPDATE_STARTEN, repo = 'pbajog-sys/Test1', github = GITHUB(repo),
+  erweiterungStarten = ERWEITERUNG_STARTEN, dnsPruefen = DNS_PRUEFEN, lanIp = LAN_IP } = {}) {
+  let letzteErweiterung = 0;
   let pruefCache = null;
   let letztesUpdate = 0;
   const admins = new Set([].concat(admin).filter(Boolean).map((n) => String(n).normalize('NFC').toLowerCase()));
@@ -228,7 +250,21 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
       const lies = (f) => { try { return fs.readFileSync(path.join(basis || path.dirname(daten), f), 'utf8'); } catch (e) { return ''; } };
       if (weg === '/admin/status' && m === 'GET') {
         return senden(res, 200, { version: lies('version.txt').trim().slice(0, 7), log: lies('update.log').trim().split(/\r?\n/).filter(Boolean).slice(-6),
-          konten: Object.keys(konten).length, duelle: Object.keys(duelle).length });
+          konten: Object.keys(konten).length, duelle: Object.keys(duelle).length,
+          erweiterungen: { adguard: { installiert: fs.existsSync(path.join(basis || path.dirname(daten), 'AdGuardHome', 'AdGuardHome.exe')), laeuft: await dnsPruefen() } },
+          erweiterungenLog: lies('erweiterungen.log').trim().split(/\r?\n/).filter(Boolean).slice(-4), lanIp: lanIp() });
+      }
+      if (weg === '/admin/erweiterung' && m === 'POST') {
+        const b = await koerper(req), e = ERWEITERUNGEN[String(b.name || '')];
+        if (!e) return senden(res, 400, { fehler: 'Unbekannte Erweiterung.' });
+        const pw = String(b.passwort || '');
+        if (pw.length < 8 || pw.length > 64 || /["'`$\s]/.test(pw)) return senden(res, 400, { fehler: 'Passwort: 8–64 Zeichen, ohne Leerzeichen und ohne " \' ` $' });
+        if (jetzt() - letzteErweiterung < 60e3) return senden(res, 429, { fehler: 'Gerade läuft schon eine Installation – bitte eine Minute warten.' });
+        letzteErweiterung = jetzt();
+        const ordner = basis || path.dirname(daten), skript = path.join(ordner, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen', e.skript);
+        if (!fs.existsSync(skript)) return senden(res, 500, { fehler: 'Installationsskript fehlt – erst „Aktualisieren“.' });
+        try { erweiterungStarten(skript, ordner, { SPIELEKISTE_PASSWORT: pw }); } catch (x) { return senden(res, 500, { fehler: 'Konnte die Installation nicht starten.' }); }
+        return senden(res, 200, { gestartet: true, name: e.name });
       }
       if (weg === '/admin/pruefen' && m === 'GET') {
         if (pruefCache && jetzt() - pruefCache.zeit < 20e3) return senden(res, 200, pruefCache.antwort);   // GitHub nicht mit Klicks fluten

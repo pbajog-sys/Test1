@@ -51,3 +51,11 @@ Läuft daneben `spielstand-server.js`, fragt die App beim ersten Besuch einmal n
 - DuckDNS: `einrichten.bat` fragt einmal nach Token und Subdomain (nur lokal gespeichert in `duckdns-token.txt` /
   `duckdns-domain.txt`) und legt die Aufgabe **DuckDNS** an: alle 5 Minuten wird die aktuelle IP (die Telekom vergibt
   sie dynamisch) an DuckDNS gemeldet, wenn sie sich geändert hat. Protokoll `duckdns.log`.
+
+## Erweiterungen (☁️ → Server → 🧩 Erweiterungen, nur Admin)
+Der Konto-Server darf nur fest eingebaute Skripte aus `windows/erweiterungen/` der installierten Version starten
+(`POST /api/admin/erweiterung`, höchstens eine pro Minute); das Passwort geht nur über eine Umgebungsvariable.
+- **AdGuard Home** (`adguard.ps1`): lädt AdGuard Home nach `AdGuardHome\`, richtet es als Windows-Dienst ein und
+  konfiguriert es über AdGuards eigene Einrichtungs-Schnittstelle (Verwaltung Port 3000, DNS Port 53, Benutzer
+  `admin`). Firewall nur fürs Heimnetz (`remoteip=localsubnet`), kein Port nach außen. Protokoll `erweiterungen.log`.
+  Nutzen: am Gerät im Heim-WLAN den DNS manuell auf die IP des Laptops stellen (die App zeigt sie an).

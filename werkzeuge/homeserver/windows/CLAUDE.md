@@ -26,6 +26,9 @@ Portweiterleitung TCP 80/443 auf diesen Laptop, feste lokale IP).
 - `DuckDNS`: läuft dauerhaft (`duckdns.ps1`), meldet alle 5 Minuten die IP an DuckDNS, wenn sie sich geändert hat.
   Token/Subdomain nur lokal in `duckdns-token.txt` / `duckdns-domain.txt` (geheim, nie ins Repo). Protokoll `duckdns.log`.
 - Einrichten/neu anlegen: `einrichten.bat` (als Administrator).
+- `AdGuardHome` (Windows-Dienst, optional): Werbeblocker fürs Heimnetz, installiert über ☁️ → Server → Erweiterungen
+  (`spiel\werkzeuge\homeserver\windows\erweiterungen\adguard.ps1`). Verwaltung http://<Laptop-IP>:3000 (nur Heimnetz),
+  DNS Port 53. Protokoll `erweiterungen.log`.
 
 ## Typische Aufgaben
 - Sofort aktualisieren: `aktualisieren.bat` (oder `powershell -ExecutionPolicy Bypass -File aktualisieren.ps1 -Erzwingen`).
