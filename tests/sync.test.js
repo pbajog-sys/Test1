@@ -53,6 +53,8 @@ const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Ann
   diensteAbfragen: async () => ({ dienste: { Caddy: 'Running', DuckDNS: 'Running', Update: 'Ready', AdGuard: 'fehlt' }, akku: 78, netz: true }),
   aktionStarten: (ps) => { aktionen.push(ps); },
   mcBefehl, aufgabeAusfuehren: async (art) => { mc.aufgaben.push(art); mc.laeuft = true; },
+  mcWarten: 60, modrinth: async (pfad) => { mc.modrinth = pfad; return [{ version_type: 'release', version_number: '1.4.4', files: [{ primary: true, url: 'https://cdn.example/squaremap-paper-mc26.3-1.4.4.jar', filename: 'squaremap-paper-mc26.3-1.4.4.jar' }] }]; },
+  herunterladen: async (q, ziel) => { mc.download = q; fs.writeFileSync(ziel, 'jar'); },
   aufgabeAbfragen: async () => ({ zustand: 'Ready', letzterLauf: '2026-11-19T12:19:00', ergebnis: 2147942402, aktion: 'powershell.exe -File C:\\homeserver\\wachen.ps1' }), updateStarten: async () => {
   updatesGestartet++;
   setTimeout(() => { fs.writeFileSync(path.join(DATEN, 'version.txt'), 'bbbbbbb2222\n'); fs.appendFileSync(path.join(DATEN, 'update.log'), '2026-11-18 22:00:00  Fertig: Version bbbbbbb läuft.\n'); }, 1500);
@@ -325,6 +327,76 @@ const caddy = http.createServer((req, res) => {
 
   const gleichNochmal = await A.evaluate(async () => (await syApi('admin/aktualisieren', 'POST', {})).status);
   ck('Server aktualisieren: höchstens einmal pro Minute', gleichNochmal === 429 && updatesGestartet === 1);
+  // ---------- Minecraft-Seite ----------
+  const MC = path.join(DATEN, 'minecraft');
+  fs.writeFileSync(path.join(MC, 'server.properties'), '#Minecraft server properties\r\nlevel-name=world\r\ndifficulty=easy\r\npvp=true\r\nmax-players=10\r\nmotd=Hallo\r\nlevel-seed=\r\nrcon.port=25575\r\n');
+  fs.mkdirSync(path.join(MC, 'world', 'stats'), { recursive: true });
+  fs.writeFileSync(path.join(MC, 'usercache.json'), JSON.stringify([{ name: 'Steve', uuid: 'aaaa-1' }, { name: 'Alex', uuid: 'bbbb-2' }]));
+  fs.writeFileSync(path.join(MC, 'world', 'stats', 'aaaa-1.json'), JSON.stringify({ stats: { 'minecraft:custom': { 'minecraft:deaths': 7, 'minecraft:play_time': 72000 * 2, 'minecraft:mob_kills': 31, 'minecraft:walk_one_cm': 1234500, 'minecraft:sprint_one_cm': 500000 } } }));
+  fs.writeFileSync(path.join(MC, 'world', 'stats', 'bbbb-2.json'), JSON.stringify({ stats: { 'minecraft:custom': { 'minecraft:deaths': 2, 'minecraft:play_time': 36000, 'minecraft:player_kills': 3 } } }));
+  fs.mkdirSync(path.join(MC, 'world', 'advancements'), { recursive: true });
+  fs.writeFileSync(path.join(MC, 'world', 'advancements', 'aaaa-1.json'), JSON.stringify({ 'minecraft:story/mine_stone': { done: true }, 'minecraft:story/root': { done: true }, 'minecraft:recipes/misc/x': { done: true }, 'minecraft:story/smelt_iron': { done: false }, DataVersion: 4000 }));
+  fs.mkdirSync(path.join(MC, 'logs'), { recursive: true });
+  const tag = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+  const zlib = require('zlib');
+  fs.writeFileSync(path.join(MC, 'logs', tag(3) + '-1.log.gz'), zlib.gzipSync('[18:01:02 INFO]: Steve joined the game\n[18:05:00 INFO]: Alex joined the game\n[19:00:00 INFO]: Steve joined the game\n'));
+  fs.writeFileSync(path.join(MC, 'logs', tag(1) + '-1.log.gz'), zlib.gzipSync('[18:01:02 INFO]: Alex joined the game\n'));
+  fs.writeFileSync(path.join(MC, 'logs', tag(200) + '-1.log.gz'), zlib.gzipSync('[18:01:02 INFO]: Uralt joined the game\n'));
+  fs.writeFileSync(path.join(MC, 'logs', 'latest.log'), '[10:00:00 INFO]: Steve joined the game\n');
+  mc.online = ['Steve'];
+  const benInfo = await C.evaluate(async () => { const r = await syApi('minecraft/info'); return [r.status, r.json]; });
+  const steve = (benInfo[1].spieler || []).find((x) => x.name === 'Steve');
+  ck('Minecraft-Seite: jeder Angemeldete sieht Tode, Spielzeit, Kills, km', benInfo[0] === 200 && steve && steve.tode === 7 && steve.spielzeitMin === 120 && steve.mobKills === 31 && steve.km === 17.3 && benInfo[1].spieler[1].spielerKills === 3 && benInfo[1].seed === undefined && steve.erfolge === 2, JSON.stringify(benInfo[1].spieler));
+  const akt = benInfo[1].aktivitaet || [];
+  ck('Minecraft-Seite: Online pro Tag aus den Server-Logs (einmal je Spieler und Tag, nur letzte 90 Tage)', akt.length === 3 && akt[0].tag === tag(3) && akt[0].spieler.join() === 'Alex,Steve' && akt[2].spieler.join() === 'Steve' && !JSON.stringify(akt).includes('Uralt'), JSON.stringify(akt));
+  ck('Minecraft-Seite: ohne Anmeldung nichts', (await fetch('http://localhost:8766/api/minecraft/info')).status === 401);
+  await A.goto(URL_ + 'minecraft.html'); await ruhig(A, 1500);
+  const seite = await A.textContent('main');
+  ck('Minecraft-Seite: Status, Adresse, Tabelle (meiste Tode oben), Admin-Bereich', /Online/.test(seite) && /localhost/.test(seite) && /🟢 Steve/.test(seite) && (await A.textContent('#balken .wer')).includes('Steve') && (await A.$$('#verlauf path')).length === 3 && /Steve/.test(await A.textContent('#koepfe')) && await A.isVisible('#admin') && /easy/.test(await A.inputValue('[name=difficulty]')));
+  await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-seite.png'), fullPage: true });
+  await C.goto(URL_ + 'minecraft.html'); await ruhig(C, 1500);
+  ck('Minecraft-Seite: Ben sieht Statistik, aber keine Einstellungen', /Alex/.test(await C.textContent('#zeilen')) && !(await C.isVisible('#admin')));
+  const benAdmin = await C.evaluate(async () => (await (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'neue-welt' }) })).status));
+  ck('Minecraft-Seite: Ben darf keine neue Welt erzeugen', benAdmin === 403);
+  // Einstellungen speichern
+  await A.selectOption('[name=difficulty]', 'hard'); await A.uncheck('[name=pvp]'); await A.fill('[name=motd]', 'Spielekiste!');
+  const vorher = mc.befehle.length; await A.click('#speichern'); await ruhig(A, 2500);
+  const props = fs.readFileSync(path.join(MC, 'server.properties'), 'utf8');
+  ck('Einstellungen: geschrieben (Rest bleibt), Server neu gestartet', /difficulty=hard\r\n/.test(props) && /pvp=false/.test(props) && /motd=Spielekiste!/.test(props) && /rcon\.port=25575/.test(props) && /^#Minecraft/.test(props) && mc.befehle.slice(vorher).includes('stop') && mc.laeuft, props);
+  const boese = await A.evaluate(async () => [(await (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'einstellungen', werte: { 'rcon.password': 'x' } }) })).status),
+    (await (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'einstellungen', werte: { motd: 'a\nenable-rcon=false' } }) })).status)]);
+  ck('Einstellungen: fremde Schlüssel und Zeilenumbrüche abgelehnt', boese.every((x) => x === 400) && !/enable-rcon=false/.test(fs.readFileSync(path.join(MC, 'server.properties'), 'utf8')));
+  // Neue Welt
+  await A.fill('#seed', 'ggwp'); await A.click('#neueWelt'); await ruhig(A, 3000);
+  const archiv = fs.readdirSync(path.join(MC, 'welten-archiv'));
+  ck('Neue Welt: alte Welt archiviert, Seed gesetzt, Server läuft wieder', archiv.length === 1 && fs.existsSync(path.join(MC, 'welten-archiv', archiv[0], 'world', 'stats', 'aaaa-1.json')) && !fs.existsSync(path.join(MC, 'world'))
+    && /level-seed=ggwp/.test(fs.readFileSync(path.join(MC, 'server.properties'), 'utf8')) && mc.laeuft && !fs.existsSync(path.join(DATEN, 'minecraft-aus.txt')), archiv.join(','));
+  for (let i = 0; i < 3; i++) { fs.mkdirSync(path.join(MC, 'welten-archiv', '2020-01-0' + (i + 1)), { recursive: true }); }
+  await A.evaluate(async () => fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'neue-welt', seed: '' }) })); await ruhig(A, 2500);
+  ck('Neue Welt: nur die letzten 3 Archive bleiben', fs.readdirSync(path.join(MC, 'welten-archiv')).length === 3 && !fs.existsSync(path.join(MC, 'welten-archiv', '2020-01-01')));
+  // Karte installieren + anzeigen
+  const sqm = http.createServer((q, r) => { r.writeHead(200, { 'Content-Type': 'text/html' }); r.end('<title>squaremap</title>Karte ' + q.url); });
+  await new Promise((ok) => sqm.listen(8771, '127.0.0.1', ok));
+  fs.mkdirSync(path.join(MC, 'plugins', 'squaremap'), { recursive: true });
+  fs.writeFileSync(path.join(MC, 'plugins', 'squaremap', 'config.yml'), 'settings:\n  internal-webserver:\n    enabled: true\n    bind: 0.0.0.0\n    port: 8771\n');
+  await A.goto(URL_ + 'minecraft.html'); await ruhig(A, 1500);
+  await A.click('#karteLos'); await ruhig(A, 2500);
+  ck('Karte: passende squaremap-Version von Modrinth geladen und installiert', /game_versions=.*26\.3/.test(decodeURIComponent(mc.modrinth)) && fs.existsSync(path.join(MC, 'plugins', 'squaremap-paper-mc26.3-1.4.4.jar')), mc.modrinth);
+  await C.reload(); await ruhig(C, 2000);
+  const kartenText = await C.evaluate(async () => (await fetch('api/minecraft/karte/tiles/x.png?v=1')).text());
+  ck('Karte: für Angemeldete durchgereicht (squaremap nur lokal), in der Seite eingebettet', /Karte \/tiles\/x\.png\?v=1/.test(kartenText) && !!(await C.$('#karteFrame')), kartenText);
+  { const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' }); await ctx.addCookies(await A.context().cookies());
+    const P = await ctx.newPage(); P.on('pageerror', (e) => fehler.push('Desktop: ' + e.message)); await P.goto(URL_ + 'minecraft.html'); await ruhig(P, 2500);
+    await P.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-desktop.png'), fullPage: true });
+    const lay = await P.evaluate(() => { const r = (id) => document.getElementById(id).getBoundingClientRect(); return { rang: r('rangliste').top, verlauf: r('tage').top, karteH: r('karte').height, breit: document.documentElement.scrollWidth <= innerWidth }; });
+    ck('Minecraft-Seite am PC: Rangliste und Verlauf nebeneinander, große Karte, nichts ragt heraus', Math.abs(lay.rang - lay.verlauf) < 2 && lay.karteH > 550 && lay.breit, JSON.stringify(lay));
+    await ctx.close(); }
+  sqm.close(); await C.goto(URL_); await ruhig(C, 1500);
+  await A.goto(URL_); await ruhig(A, 1500);
+  await A.evaluate(() => syKontoDialog()); await ruhig(A, 1200);
+  ck('☁️-Fenster: Link zur Minecraft-Seite', await A.isVisible('#syMcSeite'));
+  await A.evaluate(() => document.getElementById('skDlg').close());
+
   await A.evaluate(() => document.getElementById('skDlg').close());
 
   const ohne = await D0();

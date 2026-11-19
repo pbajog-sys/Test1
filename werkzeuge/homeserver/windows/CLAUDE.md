@@ -29,6 +29,8 @@ Portweiterleitung TCP 80/443 auf diesen Laptop, feste lokale IP).
   pingt healthchecks.io (`healthchecks-url.txt`). Protokoll `wachhund.log`.
 - `Minecraft` (optional): Paper-Server in `minecraft\` (portables Java), Port 25565, RCON nur lokal (Passwort in
   `minecraft\server.properties`). Steuerung in der App; absichtlich gestoppt = `minecraft-aus.txt`.
+  Seite `minecraft.html` (Statistik, Karte, Einstellungen, neue Welt). Archivierte Welten: `minecraft\welten-archiv\`.
+  Karte: Plugin squaremap, intern Port 8080 (nicht freigeben).
 - Einrichten/neu anlegen: `einrichten.bat` (als Administrator).
 - `AdGuardHome` (Windows-Dienst, optional): Werbeblocker fürs Heimnetz, installiert über ☁️ → Server → Erweiterungen
   (`spiel\werkzeuge\homeserver\windows\erweiterungen\adguard.ps1`). Verwaltung http://<Laptop-IP>:3000 (nur Heimnetz),

@@ -1,0 +1,347 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>⛏️ Minecraft</title>
+<link rel="stylesheet" href="fonts/fonts.css?v=153">
+<style>
+  :root { --bg: #0b0b14; --karte: rgba(255,255,255,.05); --linie: rgba(255,255,255,.1); --text: #f2f2fa; --muted: #a3a3c2; --accent: #a78bfa; --gut: #4ade80; }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: "Nunito", system-ui, sans-serif; line-height: 1.45; }
+  main { max-width: 760px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 14px 60px; }
+  a { color: var(--accent); }
+  h1 { font-size: 1.7rem; margin: 10px 0 2px; }
+  h2 { font-size: 1.1rem; margin: 0 0 8px; }
+  .karte { background: var(--karte); border-radius: 16px; padding: 14px; margin: 14px 0; }
+  .muted { color: var(--muted); }
+  .klein { font-size: .9rem; }
+  .punkt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #f87171; margin-right: 6px; }
+  .punkt.an { background: var(--gut); }
+  .adresse { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
+  .adresse code { font-size: 1.05rem; background: rgba(0,0,0,.3); padding: 4px 10px; border-radius: 8px; overflow-wrap: anywhere; }
+  button, .knopf { font: inherit; font-weight: 700; border: 0; border-radius: 12px; padding: 9px 14px; background: rgba(255,255,255,.1); color: var(--text); cursor: pointer; text-decoration: none; display: inline-block; }
+  button.haupt { background: var(--accent); color: #140d2b; }
+  button.gefahr { background: #7f1d1d; }
+  button:disabled { opacity: .5; cursor: default; }
+  .tabelle { width: 100%; overflow-x: auto; }
+  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  th, td { padding: 7px 6px; text-align: right; border-bottom: 1px solid var(--linie); white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  th { cursor: pointer; user-select: none; color: var(--muted); font-weight: 700; }
+  th.aktiv { color: var(--text); }
+  .kopf { display: inline-flex; align-items: center; gap: 6px; }
+  iframe { width: 100%; height: min(70vh, 560px); border: 0; border-radius: 12px; background: #000; display: block; }
+  .raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 10px; }
+  label { display: flex; flex-direction: column; gap: 4px; font-size: .9rem; color: var(--muted); }
+  label.haken { flex-direction: row; align-items: center; gap: 8px; color: var(--text); }
+  input, select { font: inherit; font-size: 16px; padding: 8px; border-radius: 10px; border: 1px solid #555; background: #15152a; color: var(--text); min-width: 0; }
+  .zeile { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; margin: 3px 6px 3px 0; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.08); }
+  .chip button { padding: 0 4px; background: none; }
+  #meldung { min-height: 1.3em; margin: 8px 0 0; }
+  [hidden] { display: none !important; }
+  main { max-width: 1100px; }
+  .gitter { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 0 14px; }
+  .kopfbild { --g: 40px; width: var(--g); height: var(--g); border-radius: 6px; flex: none; position: relative; overflow: hidden; background: #3b3b5c; color: #fff; font-weight: 800;
+    display: grid; place-items: center; font-size: calc(var(--g) * .45); image-rendering: pixelated; }
+  .kopfbild.skin { background-repeat: no-repeat; background-size: calc(var(--g) * 8) auto; background-position: calc(var(--g) * -1) calc(var(--g) * -1); color: transparent; }
+  .kopfbild.skin::after { content: ""; position: absolute; inset: 0; background: inherit; background-position: calc(var(--g) * -5) calc(var(--g) * -1); }
+  .koepfe { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: thin; }
+  .spielerkarte { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 76px; padding: 10px 6px; border-radius: 14px; background: rgba(255,255,255,.04); border: 0; color: var(--text); cursor: pointer; font-weight: 600; }
+  .spielerkarte .kopfbild { --g: 52px; }
+  .spielerkarte.aus { outline: 2px solid var(--accent); }
+  .spielerkarte small { color: var(--muted); font-weight: 600; font-size: .78rem; }
+  .online-punkt { position: absolute; right: -2px; bottom: -2px; width: 12px; height: 12px; border-radius: 50%; background: var(--gut); border: 2px solid var(--bg); z-index: 1; }
+  .reiter { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; scrollbar-width: none; }
+  .reiter button { padding: 6px 12px; border-radius: 999px; font-size: .9rem; white-space: nowrap; background: rgba(255,255,255,.06); }
+  .reiter button[aria-pressed="true"] { background: var(--accent); color: #140d2b; }
+  .balken { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 10px; align-items: center; }
+  .balken .wer { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: .95rem; max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .balken .wer .kopfbild { --g: 24px; border-radius: 4px; }
+  .spur { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .fuell { height: 18px; border-radius: 0 4px 4px 0; background: var(--accent); min-width: 2px; transition: width .4s ease; }
+  .fuell.leer { background: rgba(255,255,255,.12); }
+  .wert { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
+  .zahlen { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-top: 10px; }
+  .zahl { background: rgba(255,255,255,.04); border-radius: 12px; padding: 10px; }
+  .zahl b { display: block; font-size: 1.4rem; font-variant-numeric: tabular-nums; }
+  .zahl span { color: var(--muted); font-size: .82rem; }
+  .verlauf { position: relative; }
+  .verlauf svg { width: 100%; height: 170px; display: block; overflow: visible; }
+  .verlauf .achse { fill: var(--muted); font-size: 11px; }
+  .verlauf .gitterlinie { stroke: rgba(255,255,255,.07); }
+  .verlauf rect.ziel { fill: transparent; cursor: pointer; }
+  .verlauf g:hover path { fill: #c4b5fd; }
+  .tipp { position: absolute; pointer-events: none; background: #1d1d33; border: 1px solid var(--linie); border-radius: 10px; padding: 6px 10px; font-size: .85rem; white-space: nowrap; transform: translate(-50%, -100%); box-shadow: 0 6px 20px rgba(0,0,0,.4); }
+  @media (min-width: 1000px) {
+    main { max-width: 1320px; padding-left: 28px; padding-right: 28px; }
+    h1 { font-size: 2.1rem; }
+    .gitter { grid-template-columns: 1fr 1fr; }
+    #status { display: grid; grid-template-columns: minmax(260px, auto) 1fr; gap: 4px 28px; align-items: center; }
+    #status > h2, #status > .adresse { grid-column: 1; }
+    #status > .koepfe { grid-column: 2; grid-row: 1 / span 2; justify-content: flex-end; }
+    #status > #einzeln, #status > #keiner { grid-column: 1 / -1; }
+    #einzeln .zahlen { grid-template-columns: repeat(7, 1fr); }
+    .balken .wer { max-width: 14em; }
+    .verlauf svg { height: 220px; }
+    iframe { height: calc(100vh - 140px); min-height: 600px; }
+    .admin-spalten { display: grid; grid-template-columns: 3fr 2fr; gap: 36px; }
+    .admin-spalten > div:last-child > h2:first-child { margin-top: 0 !important; }
+    .admin-spalten > div:last-child { border-left: 1px solid var(--linie); padding-left: 36px; }
+  }
+  details summary { cursor: pointer; color: var(--muted); font-weight: 700; margin-top: 10px; }
+</style>
+</head>
+<body>
+<main>
+  <a href="./">← Zurück zur Spielekiste</a>
+  <h1>⛏️ Minecraft</h1>
+  <p class="muted" id="unter">Wird geladen …</p>
+
+  <section class="karte" id="status" hidden>
+    <h2><span class="punkt" id="punkt"></span><span id="statusText"></span> <small class="muted klein" id="version"></small></h2>
+    <div class="adresse">Server-Adresse: <code id="adresse"></code><button type="button" id="kopieren">📋 Kopieren</button></div>
+    <div class="koepfe" id="koepfe" aria-label="Spieler"></div>
+    <p class="klein muted" id="keiner" hidden>Noch hat niemand gespielt – Werte erscheinen nach dem ersten Besuch in der Welt (der Server speichert sie alle paar Minuten).</p>
+    <div id="einzeln" hidden></div>
+  </section>
+
+  <div class="gitter" id="statistik" hidden>
+    <section class="karte" id="rangliste">
+      <h2>🏅 Rangliste</h2>
+      <div class="reiter" id="reiter" role="group" aria-label="Wert wählen"></div>
+      <div class="balken" id="balken"></div>
+      <details><summary>Alle Werte als Tabelle</summary>
+        <div class="tabelle"><table>
+          <thead><tr><th data-s="name">Spieler</th><th data-s="tode">💀 Tode</th><th data-s="spielzeitMin">⏱️ Zeit</th><th data-s="erfolge">🏆</th><th data-s="mobKills">🧟 Mobs</th><th data-s="spielerKills">⚔️ PvP</th><th data-s="km">🚶 km</th></tr></thead>
+          <tbody id="zeilen"></tbody>
+        </table></div>
+      </details>
+    </section>
+    <section class="karte" id="tage">
+      <h2>📅 Online pro Tag</h2>
+      <div class="reiter" id="zeitraum" role="group" aria-label="Zeitraum"><button type="button" data-t="14" aria-pressed="false">14 Tage</button><button type="button" data-t="30" aria-pressed="true">30 Tage</button><button type="button" data-t="90" aria-pressed="false">90 Tage</button></div>
+      <div class="verlauf" id="verlauf"></div>
+      <div class="zahlen" id="zahlen"></div>
+    </section>
+  </div>
+
+  <section class="karte" id="karte" hidden>
+    <h2>🗺️ Weltkarte</h2>
+    <div id="karteInhalt"></div>
+  </section>
+
+  <section class="karte" id="admin" hidden>
+    <div class="admin-spalten"><div>
+    <h2>⚙️ Server-Einstellungen <small class="muted">· nur für dich</small></h2>
+    <form id="formular" class="raster">
+      <label>Schwierigkeit<select name="difficulty"><option value="peaceful">Friedlich</option><option value="easy">Leicht</option><option value="normal">Normal</option><option value="hard">Schwer</option></select></label>
+      <label>Spielmodus<select name="gamemode"><option value="survival">Überleben</option><option value="creative">Kreativ</option><option value="adventure">Abenteuer</option><option value="spectator">Zuschauer</option></select></label>
+      <label>Max. Spieler<input name="max-players" type="number" min="1" max="50"></label>
+      <label>Sichtweite (Chunks, 4–16)<input name="view-distance" type="number" min="4" max="16"></label>
+      <label>Simulationsweite (4–12)<input name="simulation-distance" type="number" min="4" max="12"></label>
+      <label>Spawn-Schutz (Blöcke)<input name="spawn-protection" type="number" min="0" max="64"></label>
+      <label style="grid-column:1/-1">Nachricht in der Serverliste<input name="motd" maxlength="59"></label>
+      <label class="haken"><input type="checkbox" name="pvp"> PvP erlaubt</label>
+      <label class="haken"><input type="checkbox" name="allow-flight"> Fliegen erlaubt (gegen Fehl-Kicks)</label>
+      <label class="haken"><input type="checkbox" name="white-list"> Nur freigeschaltete Spieler</label>
+      <label class="haken"><input type="checkbox" name="hardcore"> Hardcore (nur neue Welt)</label>
+    </form>
+    <div class="zeile"><button type="button" class="haupt" id="speichern">💾 Speichern &amp; neu starten</button></div>
+    </div><div>
+
+    <h2 style="margin-top:20px">👥 Freigeschaltet</h2>
+    <div id="whitelist" class="klein"></div>
+    <div class="zeile"><input id="mcName" placeholder="Minecraft-Name" autocapitalize="none" spellcheck="false" maxlength="16" style="flex:1"><button type="button" id="freischalten">Freischalten</button></div>
+
+    <h2 style="margin-top:20px">🌍 Neue Welt</h2>
+    <p class="klein muted">Die aktuelle Welt wird nicht gelöscht, sondern archiviert (die letzten 3 bleiben im Ordner <code>minecraft\welten-archiv</code>). Aktueller Seed: <code id="seedAlt">–</code></p>
+    <div class="zeile"><input id="seed" placeholder="Seed (leer = zufällig)" maxlength="64" style="flex:1"><button type="button" class="gefahr" id="neueWelt">🌍 Neue Welt erzeugen</button></div>
+
+    <h2 style="margin-top:20px">🎛️ Server</h2>
+    <div class="zeile" id="steuer"></div>
+    <p id="meldung" class="klein"></p>
+    </div></div>
+  </section>
+</main>
+<script>
+const API = new URL('api/', location.href);
+async function api(weg, methode = 'GET', koerper) {
+  const r = await fetch(API + weg, { method: methode, cache: 'no-store', credentials: 'same-origin', headers: koerper ? { 'Content-Type': 'application/json' } : {}, body: koerper ? JSON.stringify(koerper) : undefined });
+  let json = null; try { json = await r.json(); } catch (e) { /* keine JSON-Antwort */ }
+  return { status: r.status, json };
+}
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const zeit = (min) => (min >= 60 ? Math.floor(min / 60) + ' h ' + (min % 60) + ' min' : min + ' min');
+let info = null, sortierung = { s: 'tode', ab: true }, adminDaten = null, beschaeftigtVorher = '';
+const melden = (t) => { $('meldung').textContent = t; };
+
+const WERTE = [
+  { s: 'tode', t: '💀 Tode', f: (v) => v },
+  { s: 'spielzeitMin', t: '⏱️ Spielzeit', f: (v) => zeit(v) },
+  { s: 'erfolge', t: '🏆 Erfolge', f: (v) => v },
+  { s: 'mobKills', t: '🧟 Mobs', f: (v) => v },
+  { s: 'spielerKills', t: '⚔️ PvP', f: (v) => v },
+  { s: 'km', t: '🚶 km', f: (v) => String(v).replace('.', ',') + ' km' },
+];
+let wert = 'tode', zeitraum = 30, gewaehlt = '';
+const skins = {};
+// Kopf aus dem Skin (8×8-Gesicht + Hut-Ebene), Fallback: Anfangsbuchstabe
+function kopf(p, extra = '') {
+  const u = p.uuid, gut = u && skins[u] === true;
+  if (u && !(u in skins)) { skins[u] = 'laedt'; const i = new Image(); i.onload = () => { skins[u] = true; zeichnen(); }; i.onerror = () => { skins[u] = false; }; i.src = 'api/minecraft/kopf/' + u; }
+  return '<span class="kopfbild' + (gut ? ' skin' : '') + '"' + (gut ? ' style="background-image:url(api/minecraft/kopf/' + u + ')"' : '') + ' aria-hidden="true">' + esc(p.name[0].toUpperCase()) + extra + '</span>';
+}
+function zeichnen() {
+  const sp = info.spieler || [], online = new Set(info.online || []);
+  $('keiner').hidden = sp.length > 0;
+  // Köpfe (online zuerst)
+  const reihe = sp.slice().sort((a, b) => (online.has(b.name) - online.has(a.name)) || b.spielzeitMin - a.spielzeitMin);
+  $('koepfe').innerHTML = reihe.map((p) => '<button type="button" class="spielerkarte' + (gewaehlt === p.name ? ' aus' : '') + '" data-name="' + esc(p.name) + '" aria-pressed="' + (gewaehlt === p.name) + '">'
+    + kopf(p, online.has(p.name) ? '<i class="online-punkt" title="online"></i>' : '') + esc(p.name) + '<small>' + (online.has(p.name) ? 'online' : zeit(p.spielzeitMin)) + '</small></button>').join('');
+  $('koepfe').querySelectorAll('[data-name]').forEach((b) => b.addEventListener('click', () => { gewaehlt = gewaehlt === b.dataset.name ? '' : b.dataset.name; zeichnen(); }));
+  // Einzelansicht
+  const g = sp.find((p) => p.name === gewaehlt);
+  $('einzeln').hidden = !g;
+  if (g) $('einzeln').innerHTML = '<div class="zahlen">' + WERTE.map((w) => '<div class="zahl"><b>' + w.f(g[w.s]) + '</b><span>' + w.t + '</span></div>').join('')
+    + '<div class="zahl"><b>' + (g.tode ? zeit(Math.round(g.spielzeitMin / g.tode)) : '–') + '</b><span>⌛ Ø Leben</span></div></div>';
+  // Reiter + Balken
+  $('reiter').innerHTML = WERTE.map((w) => '<button type="button" data-w="' + w.s + '" aria-pressed="' + (w.s === wert) + '">' + w.t + '</button>').join('');
+  $('reiter').querySelectorAll('[data-w]').forEach((b) => b.addEventListener('click', () => { wert = b.dataset.w; zeichnen(); }));
+  const w = WERTE.find((x) => x.s === wert), max = Math.max(1, ...sp.map((p) => p[wert]));
+  $('balken').innerHTML = sp.slice().sort((a, b) => b[wert] - a[wert]).map((p, i) => '<div class="wer" title="' + esc(p.name) + '">' + kopf(p) + (i < 3 && p[wert] ? ['🥇', '🥈', '🥉'][i] + ' ' : '') + esc(p.name) + '</div>'
+    + '<div class="spur" title="' + esc(p.name) + ': ' + esc(w.f(p[wert])) + '"><div class="fuell' + (p[wert] ? '' : ' leer') + '" style="width:calc(' + (p[wert] / max * 100) + '% - 4.5em)"></div><span class="wert">' + w.f(p[wert]) + '</span></div>').join('');
+  tabelle(); verlauf();
+}
+function verlauf() {
+  const akt = new Map((info.aktivitaet || []).map((x) => [x.tag, x.spieler])), tage = [];
+  for (let i = zeitraum - 1; i >= 0; i--) { const t = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10); tage.push({ tag: t, spieler: akt.get(t) || [] }); }
+  const max = Math.max(2, ...tage.map((t) => t.spieler.length)), B = Math.max(260, $('verlauf').clientWidth || 600), H = innerWidth >= 1000 ? 200 : 150, L = 22, schritt = (B - L) / tage.length, breit = Math.max(2, schritt - 2);
+  const y = (v) => H - (v / max) * (H - 10), schr = Math.ceil(max / 4);
+  let svg = '<svg viewBox="0 0 ' + B + ' ' + (H + 20) + '" style="height:' + (H + 20) + 'px" role="img" aria-label="Spieler online pro Tag">';
+  for (let v = 0; v <= max; v += schr) svg += '<line class="gitterlinie" x1="' + L + '" x2="' + B + '" y1="' + y(v) + '" y2="' + y(v) + '"/><text class="achse" x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + v + '</text>';
+  tage.forEach((t, i) => {
+    const x = L + i * schritt + 1, n = t.spieler.length, r = Math.min(4, breit / 2);
+    svg += '<g data-i="' + i + '"><rect class="ziel" x="' + (L + i * schritt) + '" y="0" width="' + schritt + '" height="' + H + '"/>'
+      + (n ? '<path class="saeule-p" d="M' + x + ',' + H + 'V' + (y(n) + r) + 'q0,-' + r + ' ' + r + ',-' + r + 'h' + (breit - 2 * r) + 'q' + r + ',0 ' + r + ',' + r + 'V' + H + 'Z" fill="var(--accent)"/>' : '') + '</g>';
+  });
+  const f = (t) => new Date(t + 'T12:00').toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' });
+  [0, Math.floor(tage.length / 2), tage.length - 1].forEach((i) => { svg += '<text class="achse" x="' + (L + i * schritt + schritt / 2) + '" y="' + (H + 16) + '" text-anchor="' + (i === 0 ? 'start' : i === tage.length - 1 ? 'end' : 'middle') + '">' + f(tage[i].tag) + '</text>'; });
+  $('verlauf').innerHTML = svg + '</svg><div class="tipp" hidden></div>';
+  const tipp = $('verlauf').querySelector('.tipp');
+  $('verlauf').querySelectorAll('g[data-i]').forEach((g) => {
+    const zeig = () => { const t = tage[+g.dataset.i], r = g.getBoundingClientRect(), o = $('verlauf').getBoundingClientRect();
+      tipp.innerHTML = '<b>' + new Date(t.tag + 'T12:00').toLocaleDateString('de-DE', { weekday: 'short', day: 'numeric', month: 'long' }) + '</b><br>' + (t.spieler.length ? t.spieler.map(esc).join(', ') : '<span class="muted">niemand</span>');
+      tipp.hidden = false; tipp.style.left = Math.min(Math.max(r.left - o.left + r.width / 2, 70), o.width - 70) + 'px'; tipp.style.top = (y(Math.max(1, t.spieler.length)) - 6) + 'px'; };
+    g.addEventListener('pointerenter', zeig); g.addEventListener('click', zeig); g.addEventListener('pointerleave', () => { tipp.hidden = true; });
+  });
+  const aktiv = tage.filter((t) => t.spieler.length), alle = new Set(tage.flatMap((t) => t.spieler));
+  const top = [...alle].map((n) => [n, tage.filter((t) => t.spieler.includes(n)).length]).sort((a, b) => b[1] - a[1])[0];
+  $('zahlen').innerHTML = '<div class="zahl"><b>' + aktiv.length + '</b><span>Tage mit Spielern</span></div><div class="zahl"><b>' + alle.size + '</b><span>verschiedene Spieler</span></div>'
+    + '<div class="zahl"><b>' + (top ? esc(top[0]) : '–') + '</b><span>' + (top ? 'am öftesten da (' + top[1] + ' Tage)' : 'am öftesten da') + '</span></div>';
+}
+$('zeitraum').querySelectorAll('[data-t]').forEach((b) => b.addEventListener('click', () => {
+  zeitraum = +b.dataset.t; $('zeitraum').querySelectorAll('[data-t]').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); verlauf();
+}));
+function tabelle() {
+  const sp = (info.spieler || []).slice().sort((a, b) => {
+    const x = a[sortierung.s], y = b[sortierung.s];
+    const v = typeof x === 'string' ? x.localeCompare(y) : x - y; return sortierung.ab ? -v : v;
+  });
+  document.querySelectorAll('th').forEach((th) => { th.classList.toggle('aktiv', th.dataset.s === sortierung.s); });
+  $('zeilen').innerHTML = sp.map((p) => '<tr><td>' + esc(p.name) + '</td><td><b>' + p.tode + '</b></td><td>' + zeit(p.spielzeitMin) + '</td><td>' + p.erfolge + '</td><td>' + p.mobKills + '</td><td>' + p.spielerKills + '</td><td>' + p.km + '</td></tr>').join('');
+}
+document.querySelectorAll('th').forEach((th) => th.addEventListener('click', () => {
+  sortierung = { s: th.dataset.s, ab: sortierung.s === th.dataset.s ? !sortierung.ab : th.dataset.s !== 'name' }; tabelle();
+}));
+
+async function laden() {
+  let r; try { r = await api('minecraft/info'); } catch (e) { r = { status: 0 }; }
+  if (r.status === 401) { $('unter').innerHTML = 'Bitte zuerst in der <a href="./">Spielekiste</a> über ☁️ anmelden.'; return; }
+  if (r.status !== 200) { $('unter').textContent = 'Der Server ist gerade nicht erreichbar.'; return; }
+  info = r.json;
+  if (!info.installiert) { $('unter').textContent = 'Auf diesem Server ist (noch) kein Minecraft installiert.' + (info.admin ? ' Installieren kannst du es im ☁️-Menü unter „Erweiterungen“.' : ''); return; }
+  $('unter').textContent = 'Java Edition · eigener Server';
+  $('status').hidden = false; $('statistik').hidden = false; $('karte').hidden = false;
+  $('punkt').classList.toggle('an', info.laeuft);
+  $('statusText').textContent = info.beschaeftigt ? '⏳ ' + info.beschaeftigt + ' läuft …' : info.laeuft ? 'Online' : 'Offline';
+  $('version').textContent = info.version ? '· ' + info.version.replace(/^paper-|\.jar$/g, '').replace(/-(\d+)$/, ' (Paper-Build $1)') : '';
+  $('adresse').textContent = info.adresse;
+  zeichnen();
+  if (info.karte) {
+    if (!$('karteFrame')) $('karteInhalt').innerHTML = '<iframe id="karteFrame" src="api/minecraft/karte/" title="Weltkarte" loading="lazy"></iframe><p class="klein"><a href="api/minecraft/karte/" target="_blank" rel="noopener">Karte im Vollbild öffnen ↗</a></p>';
+  } else {
+    $('karteInhalt').innerHTML = '<p class="klein muted">Noch keine Karte installiert.' + (info.admin ? '</p><button type="button" id="karteLos">🗺️ Karte installieren (squaremap)</button><p class="klein muted">Der Server startet dafür einmal kurz neu. Die Karte zeichnet sich danach nach und nach, während gespielt wird.</p>' : ' Frag den Admin.</p>');
+    const k = $('karteLos'); if (k) k.addEventListener('click', () => tun({ aktion: 'karte' }, 'Karte wird installiert, Server startet neu (ca. 1–2 Minuten)', k));
+  }
+  if (info.admin) await adminLaden();
+  if (beschaeftigtVorher && !info.beschaeftigt) melden('✓ ' + beschaeftigtVorher + ' fertig');
+  beschaeftigtVorher = info.beschaeftigt || '';
+}
+
+async function adminLaden() {
+  const r = await api('admin/minecraft').catch(() => ({ status: 0 }));
+  if (r.status !== 200) return;
+  adminDaten = r.json; $('admin').hidden = false;
+  const e = adminDaten.einstellungen || {}, f = $('formular');
+  if (!f.dataset.geaendert) {
+    [...f.elements].forEach((el) => { if (!(el.name in e)) return; if (el.type === 'checkbox') el.checked = e[el.name] === 'true'; else el.value = e[el.name]; });
+  }
+  $('seedAlt').textContent = e['level-seed'] || 'zufällig';
+  $('whitelist').innerHTML = (adminDaten.whitelist || []).map((n) => '<span class="chip">' + ((adminDaten.online || []).includes(n) ? '🟢 ' : '') + esc(n)
+    + ' <button type="button" data-weg="' + esc(n) + '" aria-label="' + esc(n) + ' entfernen">✕</button></span>').join('') || (adminDaten.laeuft ? '<span class="muted">noch niemand</span>' : '<span class="muted">sichtbar, sobald der Server läuft</span>');
+  $('whitelist').querySelectorAll('[data-weg]').forEach((b) => b.addEventListener('click', () => {
+    if (confirm(b.dataset.weg + ' entfernen?')) tun({ aktion: 'entfernen', spieler: b.dataset.weg }, b.dataset.weg + ' entfernt');
+  }));
+  $('steuer').innerHTML = adminDaten.laeuft
+    ? '<button type="button" data-a="neustart">🔁 Neustart</button><button type="button" data-a="stopp">⏹ Stopp</button>'
+    : '<button type="button" class="haupt" data-a="start">▶️ Start</button>';
+  $('steuer').querySelectorAll('[data-a]').forEach((b) => b.addEventListener('click', () => {
+    const a = b.dataset.a; if (a === 'stopp' && !confirm('Server stoppen? Die Welt wird vorher gespeichert.')) return;
+    tun({ aktion: a }, { start: 'Server startet (ca. 1 Minute)', stopp: 'Server gestoppt', neustart: 'Neustart läuft (ca. 1 Minute)' }[a], b);
+  }));
+}
+
+async function tun(body, text, knopf) {
+  if (knopf) knopf.disabled = true;
+  melden('⏳ ' + text + ' …');
+  const x = await api('admin/minecraft', 'POST', body).catch(() => ({ status: 0 }));
+  if (knopf) knopf.disabled = false;
+  melden(x.status === 200 ? '✓ ' + text : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
+  setTimeout(laden, 1200);
+  return x.status === 200;
+}
+
+$('kopieren').addEventListener('click', async () => {
+  try { await navigator.clipboard.writeText(info.adresse); $('kopieren').textContent = '✓ Kopiert'; } catch (e) { prompt('Adresse:', info.adresse); }
+  setTimeout(() => { $('kopieren').textContent = '📋 Kopieren'; }, 2000);
+});
+$('formular').addEventListener('input', () => { $('formular').dataset.geaendert = '1'; });
+$('speichern').addEventListener('click', async () => {
+  const werte = {};
+  [...$('formular').elements].forEach((el) => { if (el.name && (el.type === 'checkbox' || el.value.trim() !== '')) werte[el.name] = el.type === 'checkbox' ? String(el.checked) : el.value.trim(); });
+  const x = await api('admin/minecraft', 'POST', { aktion: 'einstellungen', werte }).catch(() => ({ status: 0 }));
+  if (x.status !== 200) { melden('⚠️ ' + ((x.json && x.json.fehler) || 'Speichern hat nicht geklappt.')); return; }
+  delete $('formular').dataset.geaendert;
+  if (adminDaten && adminDaten.laeuft) await tun({ aktion: 'neustart' }, 'Gespeichert – Server startet neu (ca. 1 Minute)', $('speichern'));
+  else melden('✓ Gespeichert – gilt beim nächsten Start');
+});
+$('freischalten').addEventListener('click', async () => {
+  const n = $('mcName').value.trim(); if (!n) return;
+  if (await tun({ aktion: 'freischalten', spieler: n }, n + ' freigeschaltet', $('freischalten'))) $('mcName').value = '';
+});
+$('neueWelt').addEventListener('click', async () => {
+  const seed = $('seed').value.trim();
+  if (!confirm('Wirklich eine neue Welt erzeugen' + (seed ? ' (Seed „' + seed + '“)' : ' (zufälliger Seed)') + '?\n\nDer Server stoppt, die aktuelle Welt wird archiviert, alle Spieler starten neu. Das dauert 1–3 Minuten.')) return;
+  if (await tun({ aktion: 'neue-welt', seed }, 'Neue Welt wird erzeugt (1–3 Minuten)', $('neueWelt'))) $('seed').value = '';
+});
+
+laden();
+addEventListener('resize', () => { if (info && info.installiert) verlauf(); });
+setInterval(() => { if (!document.hidden) laden(); }, 15000);
+</script>
+</body>
+</html>

@@ -82,3 +82,11 @@ Aufgabe **Minecraft** (startet mit Windows, Neustart nach Absturz; `-Xmx2G` + em
 (RCON `whitelist add/remove`), Start/Stopp (speichert die Welt; „absichtlich aus“ = `minecraft-aus.txt`, dann startet
 weder Windows noch der Wachhund den Server)/Neustart. Protokoll „Minecraft“ = `minecraft\logs\latest.log`.
 Erneutes Installieren aktualisiert Paper/Java, Welt und Einstellungen bleiben.
+
+**Minecraft-Seite** (`minecraft.html`, verlinkt im ☁️-Fenster, für alle Angemeldeten): Spielerköpfe (Skins holt der
+Server einmal täglich von Mojang, Cache `minecraft\koepfe\`), Rangliste (Tode, Spielzeit, Erfolge, Mobs, PvP, km – aus
+`<welt>\stats\` und `<welt>\advancements\`), „Online pro Tag“ (aus `minecraft\logs\*.log.gz`), Weltkarte.
+Nur Admin: Einstellungen (`server.properties`, nur erlaubte Schlüssel, danach Neustart), Whitelist, **Neue Welt** mit
+optionalem Seed (alte Welt → `minecraft\welten-archiv\<Datum>`, die letzten 3 bleiben), **Karte installieren**
+(squaremap-Plugin von Modrinth passend zur Version; läuft nur lokal auf Port 8080, der Konto-Server reicht sie unter
+`/api/minecraft/karte/` an Angemeldete durch – Port 8080 also NICHT freigeben).

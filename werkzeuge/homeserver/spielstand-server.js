@@ -12,8 +12,10 @@
 //   POST /api/abmelden
 //   POST /api/admin/aktualisieren   (nur Admin) → startet die Windows-Aufgabe „Spielekiste\Update“ (neueste Version von GitHub)
 //   GET  /api/admin/status          (nur Admin) → { version, log: [letzte Zeilen von update.log], konten, duelle }
-//   GET  /api/admin/minecraft       (nur Admin) → { installiert, laeuft, version, online: [namen], whitelist: [namen] }
-//   POST /api/admin/minecraft       (nur Admin) { aktion: 'freischalten'|'entfernen'|'start'|'stopp'|'neustart', spieler? }
+//   GET  /api/minecraft/info        (angemeldet) → Status, Adresse, Statistik je Spieler (Tode, Spielzeit, Kills, km), Karte ja/nein
+//   GET  /api/minecraft/karte/…     (angemeldet) → Weltkarte (squaremap-Plugin, nur lokal erreichbar, hier durchgereicht)
+//   GET  /api/admin/minecraft       (nur Admin) → { installiert, laeuft, version, online, whitelist, einstellungen }
+//   POST /api/admin/minecraft       (nur Admin) { aktion: 'freischalten'|'entfernen'|'start'|'stopp'|'neustart'|'einstellungen'|'neue-welt'|'karte', … }
 //   POST /api/admin/erweiterung     (nur Admin) { name: 'adguard', passwort } bzw. { name: 'minecraft', eula: true } → startet ein fest eingebautes Installationsskript
 //                                   (werkzeuge/homeserver/windows/erweiterungen/<name>.ps1 aus der installierten Version)
 //   GET  /api/admin/system          (nur Admin) → Laufzeit, RAM, Festplatte, CPU, Akku, Zustand der Dienste
@@ -147,7 +149,17 @@ const GITHUB = (repo) => async (pfad) => {
   return r.json();
 };
 function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = null, updateStarten = UPDATE_STARTEN, repo = 'pbajog-sys/Test1', github = GITHUB(repo),
-  erweiterungStarten = ERWEITERUNG_STARTEN, dnsPruefen = DNS_PRUEFEN, mcBefehl = null, aufgabeAusfuehren = null, lanIp = LAN_IP, aufgabeAbfragen = AUFGABE_ABFRAGEN,
+  erweiterungStarten = ERWEITERUNG_STARTEN, dnsPruefen = DNS_PRUEFEN, mcBefehl = null, aufgabeAusfuehren = null, mcWarten = 4000,
+  modrinth = (pfad) => fetch('https://api.modrinth.com/v2' + pfad, { headers: { 'User-Agent': 'spielekiste-homeserver' } }).then((r) => { if (!r.ok) throw new Error('Modrinth ' + r.status); return r.json(); }),
+  herunterladen = async (quelle, ziel) => { const r = await fetch(quelle); if (!r.ok) throw new Error('Download ' + r.status); fs.writeFileSync(ziel, Buffer.from(await r.arrayBuffer())); },
+  karteHost = '127.0.0.1',
+  skinHolen = async (uuid) => {
+    const r = await fetch('https://sessionserver.mojang.com/session/minecraft/profile/' + uuid.replace(/-/g, ''));
+    if (!r.ok) throw new Error('Mojang ' + r.status);
+    const t = JSON.parse(Buffer.from(((await r.json()).properties || []).find((x) => x.name === 'textures').value, 'base64').toString());
+    const u = t.textures && t.textures.SKIN && t.textures.SKIN.url; if (!u || !/^https?:\/\/textures\.minecraft\.net\//.test(u)) throw new Error('kein Skin');
+    const b = await fetch(u); if (!b.ok) throw new Error('Skin ' + b.status); return Buffer.from(await b.arrayBuffer());
+  }, lanIp = LAN_IP, aufgabeAbfragen = AUFGABE_ABFRAGEN,
   diensteAbfragen = DIENSTE_ABFRAGEN, aktionStarten = AKTION_STARTEN } = {}) {
   let letzteAktion = 0;
   const letzteErweiterung = {};   // pro Erweiterung: wann zuletzt gestartet
@@ -226,6 +238,101 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
     return { version: st.version || 1, eintraege };
   }
 
+  // ---------- Minecraft: gemeinsame Helfer ----------
+  const mcBasis = () => basis || path.dirname(daten);
+  const mcOrdner = () => path.join(mcBasis(), 'minecraft');
+  const mcAusFlagge = () => path.join(mcBasis(), 'minecraft-aus.txt');
+  const mcInstalliert = () => fs.existsSync(path.join(mcOrdner(), 'paper.jar'));
+  function mcProps() {
+    const d = {};
+    try { fs.readFileSync(path.join(mcOrdner(), 'server.properties'), 'utf8').split(/\r?\n/).forEach((z) => { const i = z.indexOf('='); if (i > 0 && z[0] !== '#') d[z.slice(0, i).trim()] = z.slice(i + 1).trim(); }); } catch (e) { /* noch nicht da */ }
+    return d;
+  }
+  function mcPropsSchreiben(werte) {
+    const datei = path.join(mcOrdner(), 'server.properties');
+    const zeilen = fs.existsSync(datei) ? fs.readFileSync(datei, 'utf8').split(/\r?\n/) : [], gesetzt = new Set();
+    const neu = zeilen.map((z) => { const i = z.indexOf('='); if (i > 0 && z[0] !== '#') { const k = z.slice(0, i).trim(); if (k in werte) { gesetzt.add(k); return k + '=' + werte[k]; } } return z; });
+    Object.keys(werte).forEach((k) => { if (!gesetzt.has(k)) neu.push(k + '=' + werte[k]); });
+    fs.writeFileSync(datei, neu.filter((z, i, a) => z !== '' || i < a.length - 1).join('\r\n') + '\r\n');
+  }
+  const mcRcon = (c) => (mcBefehl ? mcBefehl(c) : rcon(c, { port: Number(mcProps()['rcon.port']) || 25575, passwort: mcProps()['rcon.password'] }));
+  const mcAufgabe = (art) => (aufgabeAusfuehren ? aufgabeAusfuehren(art) : new Promise((ok) => require('child_process').execFile('schtasks', [art, '/TN', '\\Spielekiste\\Minecraft'], { windowsHide: true }, () => ok())));
+  const mcProtokoll = (t) => { try { fs.appendFileSync(path.join(mcBasis(), 'update.log'), new Date(jetzt()).toISOString().replace('T', ' ').slice(0, 19) + '  Minecraft: ' + t + '\n'); } catch (e) { /* egal */ } };
+  const schlafen = (ms) => new Promise((ok) => setTimeout(ok, ms));
+  let mcBeschaeftigt = '';
+  // Server sauber stoppen (Welt wird gespeichert), warten bis er wirklich aus ist, optional etwas erledigen, wieder starten
+  async function mcNeustarten(zwischendurch) {
+    try { fs.writeFileSync(mcAusFlagge(), 'kurz gestoppt (Neustart)'); } catch (e) { /* egal */ }
+    try { await mcRcon('stop'); } catch (e) { /* lief nicht */ }
+    for (let i = 0; i < 40; i++) { try { await mcRcon('list'); } catch (e) { break; } await schlafen(mcWarten / 3); }
+    await schlafen(mcWarten);
+    if (zwischendurch) await zwischendurch();
+    try { fs.rmSync(mcAusFlagge(), { force: true }); } catch (e) { /* egal */ }
+    await mcAufgabe('/Run');
+  }
+  async function mcImHintergrund(was, f) {
+    if (mcBeschaeftigt) return false;
+    mcBeschaeftigt = was;
+    f().then(() => mcProtokoll(was + ': fertig'), (e) => mcProtokoll(was + ': FEHLER ' + e.message)).finally(() => { mcBeschaeftigt = ''; });
+    return true;
+  }
+  const mcKarteDa = () => { try { return fs.readdirSync(path.join(mcOrdner(), 'plugins')).some((f) => /^squaremap.*\.jar$/i.test(f)); } catch (e) { return false; } };
+  const mcKartePort = () => { try { const t = fs.readFileSync(path.join(mcOrdner(), 'plugins', 'squaremap', 'config.yml'), 'utf8'); const m = /internal-webserver:[\s\S]*?port:\s*(\d+)/.exec(t); return m ? Number(m[1]) : 8080; } catch (e) { return 8080; } };
+  // Statistik je Spieler aus <welt>/stats/<uuid>.json, Namen aus usercache.json
+  function mcStatistik() {
+    const welt = path.join(mcOrdner(), mcProps()['level-name'] || 'world'), namen = {};
+    try { JSON.parse(fs.readFileSync(path.join(mcOrdner(), 'usercache.json'), 'utf8')).forEach((e) => { namen[e.uuid] = e.name; }); } catch (e) { /* noch niemand */ }
+    let dateien = []; try { dateien = fs.readdirSync(path.join(welt, 'stats')).filter((f) => f.endsWith('.json')); } catch (e) { /* noch keine */ }
+    const WEGE = ['walk_one_cm', 'sprint_one_cm', 'crouch_one_cm', 'swim_one_cm', 'walk_on_water_one_cm', 'walk_under_water_one_cm', 'aviate_one_cm', 'boat_one_cm', 'horse_one_cm', 'minecart_one_cm', 'climb_one_cm', 'fly_one_cm'];
+    return dateien.map((f) => {
+      const datei = path.join(welt, 'stats', f), uuid = f.replace(/\.json$/, '');
+      let j = {}; try { j = JSON.parse(fs.readFileSync(datei, 'utf8')); } catch (e) { /* kaputt */ }
+      const c = (j.stats || {})['minecraft:custom'] || {}, g = (k) => Number(c['minecraft:' + k] || 0);
+      let erfolge = 0;
+      try { const a = JSON.parse(fs.readFileSync(path.join(welt, 'advancements', f), 'utf8')); erfolge = Object.entries(a).filter(([x, v]) => v && v.done === true && !/^minecraft:recipes\//.test(x)).length; } catch (e) { /* noch keine */ }
+      return { name: namen[uuid] || uuid.slice(0, 8), uuid: /^[0-9a-f-]{32,36}$/i.test(uuid) ? uuid : '', erfolge, tode: g('deaths'), spielzeitMin: Math.round((g('play_time') || g('play_one_minute')) / 1200),
+        mobKills: g('mob_kills'), spielerKills: g('player_kills'), km: Math.round(WEGE.reduce((a, k) => a + g(k), 0) / 10000) / 10, zuletzt: fs.statSync(datei).mtimeMs };
+    }).sort((a, b) => b.spielzeitMin - a.spielzeitMin);
+  }
+  // Wer war an welchem Tag online? Aus den Server-Logs (logs/JJJJ-MM-TT-n.log.gz + latest.log); gepackte Logs ändern sich nie → zwischenspeichern
+  const logCache = new Map();
+  function mcAktivitaet(tage = 90) {
+    const ordner = path.join(mcOrdner(), 'logs'), proTag = {};
+    const namenIn = (text) => { const n = new Set(), re = /\]: ([A-Za-z0-9_]{3,16}) joined the game/g; let x; while ((x = re.exec(text))) n.add(x[1]); return n; };
+    const dazu = (tag, namen) => { if (namen.size) namen.forEach((n) => (proTag[tag] = proTag[tag] || new Set()).add(n)); };
+    let dateien = []; try { dateien = fs.readdirSync(ordner); } catch (e) { return []; }
+    const grenze = new Date(jetzt() - tage * 864e5).toISOString().slice(0, 10);
+    for (const f of dateien) {
+      const m = /^(\d{4}-\d{2}-\d{2})-\d+\.log\.gz$/.exec(f);
+      if (!m || m[1] < grenze) continue;
+      if (!logCache.has(f)) { let t = ''; try { t = require('zlib').gunzipSync(fs.readFileSync(path.join(ordner, f))).toString('utf8'); } catch (e) { /* kaputt */ } logCache.set(f, namenIn(t)); }
+      dazu(m[1], logCache.get(f));
+    }
+    try { const lf = path.join(ordner, 'latest.log'); dazu(new Date(fs.statSync(lf).mtimeMs).toISOString().slice(0, 10), namenIn(fs.readFileSync(lf, 'utf8'))); } catch (e) { /* noch keins */ }
+    return Object.keys(proTag).filter((t) => t >= grenze).sort().map((t) => ({ tag: t, spieler: [...proTag[t]].sort() }));
+  }
+  // Skins einmal am Tag von Mojang holen (der Server fragt, nicht das Handy der Spieler) und auf der Platte merken
+  const skinLaeuft = new Map();
+  async function mcSkin(uuid) {
+    const ordner = path.join(mcOrdner(), 'koepfe'), datei = path.join(ordner, uuid + '.png');
+    let st = null; try { st = fs.statSync(datei); } catch (e) { /* noch nicht da */ }
+    if (st && jetzt() - st.mtimeMs < 864e5) return st.size ? fs.readFileSync(datei) : null;
+    if (!skinLaeuft.has(uuid)) skinLaeuft.set(uuid, skinHolen(uuid).then((b) => { fs.mkdirSync(ordner, { recursive: true }); fs.writeFileSync(datei, b); return b; },
+      () => { if (st) { try { fs.utimesSync(datei, new Date(), new Date()); } catch (e) { /* egal */ } return st.size ? fs.readFileSync(datei) : null; } fs.mkdirSync(ordner, { recursive: true }); fs.writeFileSync(datei, ''); return null; }).finally(() => skinLaeuft.delete(uuid)));
+    return skinLaeuft.get(uuid);
+  }
+  async function mcLaeuft() {
+    try { const l = await mcRcon('list'); const nach = l.split(':').slice(1).join(':').trim(); return { laeuft: true, online: nach ? nach.split(/,\s*/).filter(Boolean) : [] }; }
+    catch (e) { return { laeuft: false, online: [] }; }
+  }
+  const EINSTELLUNGEN = {
+    difficulty: (v) => ['peaceful', 'easy', 'normal', 'hard'].includes(v), gamemode: (v) => ['survival', 'creative', 'adventure', 'spectator'].includes(v),
+    pvp: (v) => ['true', 'false'].includes(v), hardcore: (v) => ['true', 'false'].includes(v), 'allow-flight': (v) => ['true', 'false'].includes(v),
+    'white-list': (v) => ['true', 'false'].includes(v), 'max-players': (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 50,
+    'view-distance': (v) => /^\d+$/.test(v) && +v >= 4 && +v <= 16, 'simulation-distance': (v) => /^\d+$/.test(v) && +v >= 4 && +v <= 12,
+    'spawn-protection': (v) => /^\d+$/.test(v) && +v <= 64, motd: (v) => v.length <= 59 && !/[\r\n]/.test(v),
+  };
+
   async function bearbeiten(req, res) {
     const url = new URL(req.url, 'http://x'), weg = url.pathname.replace(/^.*?\/api\//, '/');
     // hinter Caddy: der echte Anschluss steht im letzten X-Forwarded-For-Eintrag
@@ -280,6 +387,31 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
     const s = sitzungVon(req);
     if (!s) return senden(res, 401, { server: 'spielekiste' });
     const k = s.schluessel, standDatei = 'staende/' + dateiname(k) + '.json';
+
+    // ---------- Minecraft-Seite (alle Angemeldeten) ----------
+    if (weg === '/minecraft/info' && m === 'GET') {
+      if (!mcInstalliert()) return senden(res, 200, { installiert: false, admin: admins.has(k) });
+      const st = await mcLaeuft();
+      let version = ''; try { version = fs.readFileSync(path.join(mcOrdner(), 'paper-version.txt'), 'utf8').trim(); } catch (e) { /* egal */ }
+      return senden(res, 200, Object.assign({ installiert: true, admin: admins.has(k), adresse: String(req.headers.host || '').replace(/:\d+$/, ''), version, karte: mcKarteDa(),
+        beschaeftigt: mcBeschaeftigt, spieler: mcStatistik(), aktivitaet: mcAktivitaet(), seed: admins.has(k) ? mcProps()['level-seed'] || '' : undefined }, st));
+    }
+    if (weg.startsWith('/minecraft/kopf/') && m === 'GET') {
+      const uuid = weg.slice('/minecraft/kopf/'.length);
+      if (!/^[0-9a-f]{8}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{4}-?[0-9a-f]{12}$/i.test(uuid)) return senden(res, 400, { fehler: 'ungültig' });
+      const b = await mcSkin(uuid.toLowerCase()).catch(() => null);
+      if (!b) return senden(res, 404, { fehler: 'kein Skin' });
+      res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'private, max-age=86400' }); return res.end(b);
+    }
+    if (weg === '/minecraft/karte' && m === 'GET') { res.writeHead(302, { Location: url.pathname + '/' }); return res.end(); }
+    if (weg.startsWith('/minecraft/karte/') && m === 'GET') {
+      if (!mcKarteDa()) return senden(res, 404, { fehler: 'Karte nicht installiert.' });
+      const p = http.request({ host: karteHost, port: mcKartePort(), path: weg.slice('/minecraft/karte'.length) + url.search, method: 'GET' }, (r) => {
+        res.writeHead(r.statusCode, { 'Content-Type': r.headers['content-type'] || 'application/octet-stream', 'Cache-Control': 'no-cache' }); r.pipe(res);
+      });
+      p.on('error', () => { if (!res.headersSent) senden(res, 502, { fehler: 'Karte gerade nicht erreichbar – läuft der Minecraft-Server?' }); });
+      return p.end();
+    }
 
     if (weg === '/abgleich' && m === 'POST') {
       const b = await koerper(req), basis = Number(b.basis) || 0, aend = b.aenderungen || {};
@@ -354,49 +486,80 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
         if (!datei) return senden(res, 400, { fehler: 'Unbekanntes Protokoll.' });
         return senden(res, 200, { zeilen: lies(datei).trim().split(/\r?\n/).filter(Boolean).slice(-40) });
       }
-      // ---------- Minecraft ----------
+      // ---------- Minecraft (Admin) ----------
       if (weg === '/admin/minecraft') {
-        const ordner = basis || path.dirname(daten), mcOrdner = path.join(ordner, 'minecraft');
-        const props = (() => { const d = {}; try { fs.readFileSync(path.join(mcOrdner, 'server.properties'), 'utf8').split(/\r?\n/).forEach((z) => { const i = z.indexOf('='); if (i > 0 && z[0] !== '#') d[z.slice(0, i).trim()] = z.slice(i + 1).trim(); }); } catch (e) { /* noch nicht installiert */ } return d; })();
-        const befehl = mcBefehl || ((c) => rcon(c, { port: Number(props['rcon.port']) || 25575, passwort: props['rcon.password'] }));
-        const schtasks = aufgabeAusfuehren || ((art) => new Promise((ok) => require('child_process').execFile('schtasks', [art, '/TN', '\\Spielekiste\\Minecraft'], { windowsHide: true }, () => ok())));
-        const installiert = fs.existsSync(path.join(mcOrdner, 'paper.jar'));
-        const ausFlagge = path.join(ordner, 'minecraft-aus.txt');
         if (m === 'GET') {
-          if (!installiert) return senden(res, 200, { installiert: false });
-          let online = null, whitelist = [], laeuft = false;
-          try {
-            const l = await befehl('list'); laeuft = true;
-            const nach = l.split(':').slice(1).join(':').trim(); online = nach ? nach.split(/,\s*/).filter(Boolean) : [];
-            const w = await befehl('whitelist list'); const wn = w.split(':').slice(1).join(':').trim(); whitelist = wn ? wn.split(/,\s*(?:and\s+)?|\s+and\s+/).filter(Boolean) : [];
-          } catch (e) { /* läuft nicht */ }
-          let version = ''; try { version = fs.readFileSync(path.join(mcOrdner, 'paper-version.txt'), 'utf8').trim(); } catch (e) { /* egal */ }
-          return senden(res, 200, { installiert: true, laeuft, version, online, whitelist, gestoppt: fs.existsSync(ausFlagge) });
+          if (!mcInstalliert()) return senden(res, 200, { installiert: false });
+          const st = await mcLaeuft(); let whitelist = [];
+          if (st.laeuft) { try { const w = await mcRcon('whitelist list'); const wn = w.split(':').slice(1).join(':').trim(); whitelist = wn ? wn.split(/,\s*(?:and\s+)?|\s+and\s+/).filter(Boolean) : []; } catch (e) { /* egal */ } }
+          let version = ''; try { version = fs.readFileSync(path.join(mcOrdner(), 'paper-version.txt'), 'utf8').trim(); } catch (e) { /* egal */ }
+          const p = mcProps(), einstellungen = {}; Object.keys(EINSTELLUNGEN).concat(['level-seed']).forEach((x) => { if (x in p) einstellungen[x] = p[x]; });
+          return senden(res, 200, Object.assign({ installiert: true, version, whitelist, einstellungen, gestoppt: fs.existsSync(mcAusFlagge()), beschaeftigt: mcBeschaeftigt, karte: mcKarteDa() }, st));
         }
         if (m === 'POST') {
           const b = await koerper(req), aktion = String(b.aktion || ''), spieler = String(b.spieler || '').trim();
-          if (!installiert) return senden(res, 400, { fehler: 'Minecraft ist nicht installiert.' });
-          const protokoll = (t) => { try { fs.appendFileSync(path.join(ordner, 'update.log'), new Date(jetzt()).toISOString().replace('T', ' ').slice(0, 19) + '  Minecraft: ' + t + '\n'); } catch (e) { /* egal */ } };
+          if (!mcInstalliert()) return senden(res, 400, { fehler: 'Minecraft ist nicht installiert.' });
           if (aktion === 'freischalten' || aktion === 'entfernen') {
             if (!/^[A-Za-z0-9_]{3,16}$/.test(spieler)) return senden(res, 400, { fehler: 'Minecraft-Namen bestehen aus 3–16 Buchstaben, Ziffern oder _.' });
             try {
-              const a = await befehl('whitelist ' + (aktion === 'freischalten' ? 'add ' : 'remove ') + spieler);
-              if (aktion === 'entfernen') { try { await befehl('kick ' + spieler + ' Von der Whitelist entfernt'); } catch (e) { /* war nicht online */ } }
-              protokoll((aktion === 'freischalten' ? 'freigeschaltet: ' : 'entfernt: ') + spieler);
+              const a = await mcRcon('whitelist ' + (aktion === 'freischalten' ? 'add ' : 'remove ') + spieler);
+              if (aktion === 'entfernen') { try { await mcRcon('kick ' + spieler + ' Von der Whitelist entfernt'); } catch (e) { /* war nicht online */ } }
+              mcProtokoll((aktion === 'freischalten' ? 'freigeschaltet: ' : 'entfernt: ') + spieler);
               return senden(res, 200, { antwort: a });
             } catch (e) { return senden(res, 409, { fehler: 'Der Server läuft gerade nicht – erst starten.' }); }
           }
-          if (aktion === 'stopp' || aktion === 'neustart') {
-            try { fs.writeFileSync(ausFlagge, 'gestoppt über die App'); } catch (e) { /* egal */ }
-            try { await befehl('stop'); } catch (e) { /* lief nicht */ }
-            protokoll(aktion === 'stopp' ? 'gestoppt (Welt gespeichert)' : 'Neustart');
-            if (aktion === 'stopp') return senden(res, 200, { ok: true });
-            await new Promise((ok) => setTimeout(ok, mcBefehl ? 10 : 15000));
+          if (aktion === 'einstellungen') {
+            const werte = b.werte || {}, sauber = {};
+            for (const [x, v] of Object.entries(werte)) {
+              if (!EINSTELLUNGEN[x]) return senden(res, 400, { fehler: 'Unbekannte Einstellung: ' + x });
+              if (!EINSTELLUNGEN[x](String(v))) return senden(res, 400, { fehler: 'Ungültiger Wert für ' + x });
+              sauber[x] = String(v);
+            }
+            mcPropsSchreiben(sauber); mcProtokoll('Einstellungen geändert: ' + Object.keys(sauber).join(', '));
+            return senden(res, 200, { ok: true, neustartNoetig: true });
           }
-          if (aktion === 'start' || aktion === 'neustart') {
-            try { fs.rmSync(ausFlagge, { force: true }); } catch (e) { /* egal */ }
-            await schtasks('/Run'); protokoll('gestartet');
-            return senden(res, 200, { ok: true });
+          if (mcBeschaeftigt) return senden(res, 409, { fehler: 'Gerade läuft schon: ' + mcBeschaeftigt + ' – bitte kurz warten.' });
+          if (aktion === 'stopp') {
+            try { fs.writeFileSync(mcAusFlagge(), 'gestoppt über die App'); } catch (e) { /* egal */ }
+            try { await mcRcon('stop'); } catch (e) { /* lief nicht */ }
+            mcProtokoll('gestoppt (Welt gespeichert)'); return senden(res, 200, { ok: true });
+          }
+          if (aktion === 'start') { try { fs.rmSync(mcAusFlagge(), { force: true }); } catch (e) { /* egal */ } await mcAufgabe('/Run'); mcProtokoll('gestartet'); return senden(res, 200, { ok: true }); }
+          if (aktion === 'neustart') { await mcImHintergrund('Neustart', () => mcNeustarten()); return senden(res, 200, { gestartet: true }); }
+          if (aktion === 'neue-welt') {
+            const seed = String(b.seed || '').trim();
+            if (seed.length > 64 || /[\r\n]/.test(seed)) return senden(res, 400, { fehler: 'Seed: höchstens 64 Zeichen.' });
+            await mcImHintergrund('Neue Welt', () => mcNeustarten(async () => {
+              const name = mcProps()['level-name'] || 'world', stempel = new Date(jetzt()).toISOString().replace(/[:T]/g, '-').slice(0, 19);
+              const archiv = path.join(mcOrdner(), 'welten-archiv', stempel); fs.mkdirSync(archiv, { recursive: true });
+              for (const w of [name, name + '_nether', name + '_the_end']) {
+                const quelle = path.join(mcOrdner(), w); if (!fs.existsSync(quelle)) continue;
+                for (let i = 0; ; i++) { try { fs.renameSync(quelle, path.join(archiv, w)); break; } catch (e) { if (i >= 10) throw e; await schlafen(2000); } }
+              }
+              // nur die letzten 3 archivierten Welten behalten
+              const alle = fs.readdirSync(path.join(mcOrdner(), 'welten-archiv')).sort();
+              alle.slice(0, Math.max(0, alle.length - 3)).forEach((x) => fs.rmSync(path.join(mcOrdner(), 'welten-archiv', x), { recursive: true, force: true }));
+              mcPropsSchreiben({ 'level-seed': seed });
+              mcProtokoll('alte Welt archiviert (welten-archiv\\' + stempel + '), neuer Seed: ' + (seed || 'zufällig'));
+            }));
+            return senden(res, 200, { gestartet: true });
+          }
+          if (aktion === 'karte') {
+            let mcVersion = ''; try { mcVersion = (/^paper-(.+)-\d+\.jar$/.exec(fs.readFileSync(path.join(mcOrdner(), 'paper-version.txt'), 'utf8').trim()) || [])[1] || ''; } catch (e) { /* egal */ }
+            if (!mcVersion) return senden(res, 400, { fehler: 'Minecraft-Version unbekannt.' });
+            let versionen;
+            try { versionen = await modrinth('/project/squaremap/version?loaders=' + encodeURIComponent('["paper"]') + '&game_versions=' + encodeURIComponent(JSON.stringify([mcVersion]))); }
+            catch (e) { return senden(res, 502, { fehler: 'Modrinth gerade nicht erreichbar.' }); }
+            const v = (versionen || []).find((x) => x.version_type === 'release') || (versionen || [])[0];
+            const datei = v && ((v.files || []).find((f) => f.primary) || (v.files || [])[0]);
+            if (!datei) return senden(res, 404, { fehler: 'Für Minecraft ' + mcVersion + ' gibt es die Karte (squaremap) noch nicht.' });
+            await mcImHintergrund('Karte installieren', () => mcNeustarten(async () => {
+              const plugins = path.join(mcOrdner(), 'plugins'); fs.mkdirSync(plugins, { recursive: true });
+              fs.readdirSync(plugins).filter((f) => /^squaremap.*\.jar$/i.test(f)).forEach((f) => fs.rmSync(path.join(plugins, f), { force: true }));
+              await herunterladen(datei.url, path.join(plugins, datei.filename));
+              mcProtokoll('Karte (squaremap ' + v.version_number + ') installiert');
+            }));
+            return senden(res, 200, { gestartet: true, version: v.version_number });
           }
           return senden(res, 400, { fehler: 'Unbekannte Aktion.' });
         }

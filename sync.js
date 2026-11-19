@@ -489,12 +489,14 @@ function syKontoDialog() {
       + '<h4 style="margin:14px 0 4px">🧩 Erweiterungen</h4><div id="syErweiterungen" class="ft-klein">…</div>'
       + '<div id="syMinecraft" class="ft-klein" style="margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)">…</div>'
       + '<details id="sySteuerung" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">🎛️ Steuerung</summary><div id="sySteuerInhalt" class="ft-klein" style="margin-top:6px">Wird geladen …</div></details></div>' : '')
+    + '<a class="btn secondary" id="syMcSeite" href="minecraft.html" style="display:none;text-align:center;text-decoration:none">⛏️ Minecraft-Server · Statistik &amp; Karte</a>'
     + '<button type="button" class="btn secondary" id="syJetzt">🔄 Jetzt abgleichen</button>'
     + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>'
     + '<button type="button" class="btn secondary" id="syLoeschen" style="opacity:.75">🗑️ Konto löschen</button>'
     + '<button type="button" class="btn" id="sySchliessen">Schließen</button>'
     + syVersionText());
   d.querySelector('#sySchliessen').addEventListener('click', () => d.close());
+  syApi('minecraft/info').then((r) => { const l = d.querySelector('#syMcSeite'); if (l && r.status === 200 && r.json && r.json.installiert) l.style.display = 'block'; }).catch(() => {});
   d.querySelector('#syLoeschen').addEventListener('click', async () => {
     const pin = prompt('Konto „' + syName + '“ endgültig löschen?\n\nDein Spielstand, deine Einträge in Bestenliste und Duellen werden vom Server gelöscht. Auf diesem Gerät bleibt dein Spielstand.\n\nZur Bestätigung deine PIN eingeben:');
     if (!pin) return;
