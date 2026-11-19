@@ -33,7 +33,11 @@ try {
   }
 
   if (-not (Get-Service -Name 'AdGuardHome' -ErrorAction SilentlyContinue)) {
+    # AdGuard schreibt beim Einrichten Info-Zeilen nach stderr – PowerShell 5.1 hielte das sonst für einen Fehler
+    $vorher = $ErrorActionPreference; $ErrorActionPreference = 'Continue'
     & $exe -s install 2>&1 | Out-Null
+    $ErrorActionPreference = $vorher
+    if (-not (Get-Service -Name 'AdGuardHome' -ErrorAction SilentlyContinue)) { throw 'Windows-Dienst konnte nicht eingerichtet werden.' }
     Log 'Als Windows-Dienst eingerichtet.'
   }
   Start-Service -Name 'AdGuardHome' -ErrorAction SilentlyContinue
