@@ -7,97 +7,162 @@
 <title>⛏️ Minecraft</title>
 <link rel="stylesheet" href="fonts/fonts.css?v=153">
 <style>
-  :root { --bg: #0b0b14; --karte: rgba(255,255,255,.05); --linie: rgba(255,255,255,.1); --text: #f2f2fa; --muted: #a3a3c2; --accent: #a78bfa; --gut: #4ade80; }
+  @font-face { font-family: "Pixel"; src: url(fonts/pixelify-400.woff2) format("woff2"); font-weight: 400; font-display: swap; }
+  @font-face { font-family: "Pixel"; src: url(fonts/pixelify-700.woff2) format("woff2"); font-weight: 700; font-display: swap; }
+  :root {
+    --bg: #0d1014; --flaeche: #151a20; --flaeche2: #1c232b; --slot: #10151a; --linie: rgba(255,255,255,.07);
+    --text: #e9eef3; --muted: #8d9aa7; --accent: #7cd152; --accent-hell: #a6ec74; --accent-dunkel: #3f7f26; --auf-accent: #0c1a05;
+    --gold: #f2c94c; --diamant: #63e0d8; --rot: #e5534b; --gut: #7cd152;
+    --pixel: "Pixel", "Nunito", system-ui, sans-serif; --r: 10px;
+  }
   * { box-sizing: border-box; }
-  body { margin: 0; background: var(--bg); color: var(--text); font-family: "Nunito", system-ui, sans-serif; line-height: 1.45; }
-  main { max-width: 760px; margin: 0 auto; padding: max(16px, env(safe-area-inset-top)) 14px 60px; }
+
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: "Nunito", system-ui, sans-serif; line-height: 1.45; display: flex; flex-direction: column; }
   a { color: var(--accent); }
-  h1 { font-size: 1.7rem; margin: 10px 0 2px; }
-  h2 { font-size: 1.1rem; margin: 0 0 8px; }
-  .karte { background: var(--karte); border-radius: 16px; padding: 14px; margin: 14px 0; }
+  h1, h2, h3 { font-family: var(--pixel); font-weight: 700; letter-spacing: .02em; }
+  h2 { font-size: 1.05rem; margin: 0 0 10px; display: flex; align-items: center; gap: 8px; }
   .muted { color: var(--muted); }
-  .klein { font-size: .9rem; }
-  .punkt { display: inline-block; width: 10px; height: 10px; border-radius: 50%; background: #f87171; margin-right: 6px; }
-  .punkt.an { background: var(--gut); }
-  .adresse { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-top: 6px; }
-  .adresse code { font-size: 1.05rem; background: rgba(0,0,0,.3); padding: 4px 10px; border-radius: 8px; overflow-wrap: anywhere; }
-  button, .knopf { font: inherit; font-weight: 700; border: 0; border-radius: 12px; padding: 9px 14px; background: rgba(255,255,255,.1); color: var(--text); cursor: pointer; text-decoration: none; display: inline-block; }
-  button.haupt { background: var(--accent); color: #140d2b; }
-  button.gefahr { background: #7f1d1d; }
+  h1 small, h2 small, h3 small { font-family: "Nunito", system-ui, sans-serif; font-weight: 700; letter-spacing: 0; }
+  .klein { font-size: .88rem; }
+  [hidden] { display: none !important; }
+
+  /* ---------- Kopfleiste mit Grasstreifen ---------- */
+  .kopf { background: var(--flaeche); position: relative; padding: max(12px, env(safe-area-inset-top)) clamp(14px, 2vw, 28px) 18px; }
+  .kopf::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 6px;
+    background: linear-gradient(90deg, #5aa83a 0 8px, #6fc04a 8px 16px, #4f9a33 16px 24px, #66b843 24px 32px) 0 0 / 32px 3px repeat-x,
+                linear-gradient(90deg, #6b4a2e 0 8px, #5a3d25 8px 16px, #75523a 16px 24px, #5f4128 24px 32px) 0 3px / 32px 3px repeat-x; image-rendering: pixelated; }
+  .kopf-innen { display: flex; align-items: center; gap: 14px 18px; flex-wrap: wrap; }
+  .marke { display: flex; align-items: center; gap: 12px; margin-right: auto; min-width: 0; }
+  .marke svg { width: 40px; height: 40px; flex: none; image-rendering: pixelated; filter: drop-shadow(0 3px 0 rgba(0,0,0,.35)); }
+  .marke h1 { font-size: 1.55rem; margin: 0; line-height: 1.1; }
+  .marke p { margin: 2px 0 0; font-size: .85rem; color: var(--muted); }
+  .marke p a { color: var(--muted); }
+  .pille { display: inline-flex; align-items: center; gap: 8px; padding: 7px 12px; border-radius: 999px; background: var(--slot); font-weight: 700; font-size: .9rem; white-space: nowrap; }
+  .punkt { display: inline-block; width: 10px; height: 10px; border-radius: 2px; background: var(--rot); box-shadow: 0 0 0 3px rgba(229,83,75,.18); }
+  .punkt.an { background: var(--accent); box-shadow: 0 0 0 3px rgba(124,209,82,.2); }
+  .adresse { display: inline-flex; align-items: center; gap: 4px; background: var(--slot); border-radius: 999px; padding: 4px 4px 4px 14px; max-width: 100%; }
+  .adresse code { font-family: ui-monospace, Consolas, monospace; font-size: .95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .adresse button { border-radius: 999px; padding: 6px 12px; font-size: .85rem; }
+
+  /* ---------- Knöpfe, Felder ---------- */
+  button, .knopf { font: inherit; font-weight: 700; border: 0; border-radius: 8px; padding: 9px 14px; background: var(--flaeche2); color: var(--text); cursor: pointer; text-decoration: none; display: inline-block; transition: background .15s, transform .05s; }
+  button:hover { background: #26303a; }
+  button:active { transform: translateY(1px); }
+  button.haupt, #verwaltungKnopf { background: var(--accent); color: var(--auf-accent); box-shadow: inset 0 -3px 0 var(--accent-dunkel); }
+  button.haupt:hover, #verwaltungKnopf:hover { background: var(--accent-hell); }
+  button.gefahr { background: #8a2b26; box-shadow: inset 0 -3px 0 #5c1a16; }
   button:disabled { opacity: .5; cursor: default; }
+  input, select { font: inherit; font-size: 16px; padding: 8px 10px; border-radius: 8px; border: 1px solid #2c3640; background: var(--slot); color: var(--text); min-width: 0; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .zeile { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
+  .chip { display: inline-flex; align-items: center; gap: 4px; margin: 3px 6px 3px 0; padding: 3px 10px; border-radius: 999px; background: var(--flaeche2); }
+  .chip button { padding: 0 4px; background: none; }
+
+  /* ---------- Aufbau: Seitenleiste + große Karte ---------- */
+  .layout { flex: 1; display: flex; flex-direction: column; gap: 14px; padding: 14px clamp(14px, 2vw, 28px) 40px; }
+  .seite { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  .karte { background: var(--flaeche); border-radius: var(--r); padding: 16px; border: 1px solid var(--linie); min-width: 0; }
+  #statistik { display: contents; }
+  #unter { margin: 0; }
+  .karte-gross { display: flex; flex-direction: column; padding: 0; overflow: hidden; }
+  .karte-gross > h2 { margin: 0; padding: 14px 16px; border-bottom: 1px solid var(--linie); }
+  .karte-gross > h2 a { margin-left: auto; font-family: "Nunito", sans-serif; font-weight: 700; font-size: .85rem; }
+  #karteInhalt { flex: 1; display: flex; flex-direction: column; min-height: 0; }
+  iframe { width: 100%; height: 65vh; border: 0; background: #0a1a2e; display: block; flex: 1; }
+  .karte-leer { flex: 1; display: grid; place-items: center; text-align: center; padding: 40px 20px; min-height: 260px;
+    background: repeating-linear-gradient(45deg, rgba(255,255,255,.015) 0 12px, transparent 12px 24px); }
+  .karte-leer div { max-width: 420px; }
+  .karte-tipp { margin: 0; padding: 8px 16px; font-size: .82rem; color: var(--muted); border-top: 1px solid var(--linie); }
+  @media (min-width: 1100px) {
+    html, body { height: 100%; } body { height: 100dvh; overflow: hidden; }
+    .layout { min-height: 0; }
+    .layout { flex-direction: row; padding-bottom: 16px; }
+    .seite { width: clamp(380px, 27vw, 540px); flex: none; overflow-y: auto; padding-right: 4px; scrollbar-width: thin; scrollbar-color: #2c3640 transparent; }
+    .karte-gross { flex: 1; }
+    iframe { height: auto; }
+  }
+
+  @media (max-width: 1099px) {
+    .seite, #statistik { display: contents; }
+    #status { order: 1; } #karte { order: 2; } #rangliste { order: 3; } #tage { order: 4; }
+  }
+  @media (max-width: 640px) {
+    .kopf-innen { gap: 10px; }
+    .marke { flex: 1 1 calc(100% - 64px); }
+    .marke h1 { white-space: nowrap; }
+    .marke h1 { font-size: 1.25rem; }
+    .marke svg { width: 34px; height: 34px; }
+    #verwaltungKnopf { order: 1; padding: 9px 12px; }
+    #verwaltungKnopf span { display: none; }
+    .pille, .adresse { order: 2; font-size: .82rem; }
+    .adresse code { font-size: .85rem; }
+  }
+  /* ---------- Spieler ---------- */
+  .kopfbild { --g: 40px; width: var(--g); height: var(--g); border-radius: 4px; flex: none; position: relative; overflow: hidden; background: #3d6b2c; color: #fff; font-family: var(--pixel); font-weight: 700;
+    display: grid; place-items: center; font-size: calc(var(--g) * .5); image-rendering: pixelated; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
+  .kopfbild.skin { background-repeat: no-repeat; background-size: calc(var(--g) * 8) auto; background-position: calc(var(--g) * -1) calc(var(--g) * -1); color: transparent; box-shadow: none; }
+  .kopfbild.skin::after { content: ""; position: absolute; inset: 0; background: inherit; background-position: calc(var(--g) * -5) calc(var(--g) * -1); }
+  .koepfe { display: grid; grid-template-columns: repeat(auto-fill, minmax(84px, 1fr)); gap: 8px; }
+  .spielerkarte { display: flex; flex-direction: column; align-items: center; gap: 6px; padding: 12px 4px 10px; border-radius: 8px; background: var(--slot); border: 0; color: var(--text); cursor: pointer; font-weight: 700; font-size: .88rem; min-width: 0;
+    box-shadow: inset 2px 2px 0 rgba(0,0,0,.35), inset -2px -2px 0 rgba(255,255,255,.04); }
+  .spielerkarte > :not(.kopfbild) { max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .spielerkarte .kopfbild { --g: 48px; overflow: visible; }
+  .spielerkarte .kopfbild.skin { overflow: hidden; }
+  .spielerkarte.aus { outline: 2px solid var(--accent); background: #17220f; }
+  .spielerkarte small { color: var(--muted); font-weight: 600; font-size: .75rem; }
+  .online-punkt { position: absolute; right: -3px; bottom: -3px; width: 12px; height: 12px; border-radius: 2px; background: var(--accent); border: 2px solid var(--slot); z-index: 1; }
+  .kopfbild.skin .online-punkt { right: 1px; bottom: 1px; }
+
+  /* ---------- Reiter, Rangliste als XP-Leisten ---------- */
+  .reiter { display: flex; gap: 4px; overflow-x: auto; margin-bottom: 12px; scrollbar-width: none; background: var(--slot); padding: 4px; border-radius: 10px; }
+  .reiter button { padding: 6px 10px; border-radius: 7px; font-size: .84rem; white-space: nowrap; background: transparent; flex: 1; }
+  .reiter button[aria-pressed="true"] { background: var(--flaeche2); color: var(--accent-hell); box-shadow: inset 0 -2px 0 var(--accent); }
+  .balken { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px 12px; align-items: center; }
+  .balken .wer { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: .92rem; max-width: 10em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .balken .wer .kopfbild { --g: 24px; border-radius: 3px; }
+  .spur { display: flex; align-items: center; gap: 8px; min-width: 0; }
+  .fuell { height: 14px; border-radius: 2px; min-width: 4px; transition: width .5s ease;
+    background: repeating-linear-gradient(90deg, transparent 0 13px, rgba(0,0,0,.35) 13px 15px), linear-gradient(#b8f57c, #74c83e 55%, #4f9a2a);
+    box-shadow: 0 0 0 2px #0a1306, 0 0 12px rgba(124,209,82,.18); }
+  .fuell.leer { background: #2a333c; box-shadow: 0 0 0 2px #0a1306; }
+  .wert { font-weight: 800; font-size: .95rem; font-variant-numeric: tabular-nums; white-space: nowrap; color: var(--accent-hell); text-shadow: 0 2px 0 rgba(0,0,0,.5); }
+
+  /* ---------- Kacheln wie Inventar-Slots ---------- */
+  .zahlen { display: grid; grid-template-columns: repeat(auto-fit, minmax(100px, 1fr)); gap: 8px; margin-top: 12px; }
+  .zahl { background: var(--slot); border-radius: 6px; padding: 10px 12px; box-shadow: inset 2px 2px 0 rgba(0,0,0,.35), inset -2px -2px 0 rgba(255,255,255,.04); min-width: 0; }
+  .zahl b { display: block; font-weight: 800; font-size: 1.4rem; font-variant-numeric: tabular-nums; line-height: 1.2; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .zahl span { color: var(--muted); font-size: .78rem; }
+  #einzeln { margin-top: 12px; }
+  #einzeln .zahlen { grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); }
+
+  /* ---------- Verlauf ---------- */
+  .verlauf { position: relative; }
+  .verlauf svg { width: 100%; display: block; overflow: visible; }
+  .verlauf .achse { fill: var(--muted); font-size: 11px; }
+  .verlauf .gitterlinie { stroke: rgba(255,255,255,.06); }
+  .verlauf rect.ziel { fill: transparent; cursor: pointer; }
+  .verlauf g:hover path { fill: var(--accent-hell); }
+  .tipp { position: absolute; pointer-events: none; background: #0b0f14; border: 2px solid #2a1a4a; outline: 2px solid #0b0f14; border-radius: 4px; padding: 6px 10px; font-size: .85rem; white-space: nowrap; transform: translate(-50%, -100%); box-shadow: 0 6px 20px rgba(0,0,0,.5); }
+
+  /* ---------- Tabelle ---------- */
+  details summary { cursor: pointer; color: var(--muted); font-weight: 700; margin-top: 12px; font-size: .9rem; }
   .tabelle { width: 100%; overflow-x: auto; }
-  table { width: 100%; border-collapse: collapse; font-size: .95rem; }
+  table { width: 100%; border-collapse: collapse; font-size: .9rem; }
   th, td { padding: 7px 6px; text-align: right; border-bottom: 1px solid var(--linie); white-space: nowrap; }
   th:first-child, td:first-child { text-align: left; }
   th { cursor: pointer; user-select: none; color: var(--muted); font-weight: 700; }
   th.aktiv { color: var(--text); }
-  .kopf { display: inline-flex; align-items: center; gap: 6px; }
-  iframe { width: 100%; height: min(70vh, 560px); border: 0; border-radius: 12px; background: #000; display: block; }
   .raster { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 210px), 1fr)); gap: 10px; }
   label { display: flex; flex-direction: column; gap: 4px; font-size: .9rem; color: var(--muted); }
   label.haken { flex-direction: row; align-items: center; gap: 8px; color: var(--text); }
-  input, select { font: inherit; font-size: 16px; padding: 8px; border-radius: 10px; border: 1px solid #555; background: #15152a; color: var(--text); min-width: 0; }
-  .zeile { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-  .chip { display: inline-flex; align-items: center; gap: 4px; margin: 3px 6px 3px 0; padding: 3px 10px; border-radius: 999px; background: rgba(255,255,255,.08); }
-  .chip button { padding: 0 4px; background: none; }
-  #meldung { min-height: 1.3em; margin: 8px 0 0; }
-  [hidden] { display: none !important; }
-  main { max-width: 1100px; }
-  .gitter { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 340px), 1fr)); gap: 0 14px; }
-  .kopfbild { --g: 40px; width: var(--g); height: var(--g); border-radius: 6px; flex: none; position: relative; overflow: hidden; background: #3b3b5c; color: #fff; font-weight: 800;
-    display: grid; place-items: center; font-size: calc(var(--g) * .45); image-rendering: pixelated; }
-  .kopfbild.skin { background-repeat: no-repeat; background-size: calc(var(--g) * 8) auto; background-position: calc(var(--g) * -1) calc(var(--g) * -1); color: transparent; }
-  .kopfbild.skin::after { content: ""; position: absolute; inset: 0; background: inherit; background-position: calc(var(--g) * -5) calc(var(--g) * -1); }
-  .koepfe { display: flex; gap: 12px; overflow-x: auto; padding: 4px 2px 6px; scrollbar-width: thin; }
-  .spielerkarte { display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 76px; padding: 10px 6px; border-radius: 14px; background: rgba(255,255,255,.04); border: 0; color: var(--text); cursor: pointer; font-weight: 600; }
-  .spielerkarte .kopfbild { --g: 52px; }
-  .spielerkarte.aus { outline: 2px solid var(--accent); }
-  .spielerkarte small { color: var(--muted); font-weight: 600; font-size: .78rem; }
-  .online-punkt { position: absolute; right: -2px; bottom: -2px; width: 12px; height: 12px; border-radius: 50%; background: var(--gut); border: 2px solid var(--bg); z-index: 1; }
-  .reiter { display: flex; gap: 6px; overflow-x: auto; margin-bottom: 10px; scrollbar-width: none; }
-  .reiter button { padding: 6px 12px; border-radius: 999px; font-size: .9rem; white-space: nowrap; background: rgba(255,255,255,.06); }
-  .reiter button[aria-pressed="true"] { background: var(--accent); color: #140d2b; }
-  .balken { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 8px 10px; align-items: center; }
-  .balken .wer { display: flex; align-items: center; gap: 8px; font-weight: 700; font-size: .95rem; max-width: 9.5em; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-  .balken .wer .kopfbild { --g: 24px; border-radius: 4px; }
-  .spur { display: flex; align-items: center; gap: 8px; min-width: 0; }
-  .fuell { height: 18px; border-radius: 0 4px 4px 0; background: var(--accent); min-width: 2px; transition: width .4s ease; }
-  .fuell.leer { background: rgba(255,255,255,.12); }
-  .wert { font-variant-numeric: tabular-nums; font-weight: 700; white-space: nowrap; }
-  .zahlen { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; margin-top: 10px; }
-  .zahl { background: rgba(255,255,255,.04); border-radius: 12px; padding: 10px; }
-  .zahl b { display: block; font-size: 1.4rem; font-variant-numeric: tabular-nums; }
-  .zahl span { color: var(--muted); font-size: .82rem; }
-  .verlauf { position: relative; }
-  .verlauf svg { width: 100%; height: 170px; display: block; overflow: visible; }
-  .verlauf .achse { fill: var(--muted); font-size: 11px; }
-  .verlauf .gitterlinie { stroke: rgba(255,255,255,.07); }
-  .verlauf rect.ziel { fill: transparent; cursor: pointer; }
-  .verlauf g:hover path { fill: #c4b5fd; }
-  .tipp { position: absolute; pointer-events: none; background: #1d1d33; border: 1px solid var(--linie); border-radius: 10px; padding: 6px 10px; font-size: .85rem; white-space: nowrap; transform: translate(-50%, -100%); box-shadow: 0 6px 20px rgba(0,0,0,.4); }
-  @media (min-width: 1000px) {
-    main { max-width: 1320px; padding-left: 28px; padding-right: 28px; }
-    h1 { font-size: 2.1rem; }
-    .gitter { grid-template-columns: 1fr 1fr; }
-    #status { display: grid; grid-template-columns: minmax(260px, auto) 1fr; gap: 4px 28px; align-items: center; }
-    #status > h2, #status > .adresse { grid-column: 1; }
-    #status > .koepfe { grid-column: 2; grid-row: 1 / span 2; justify-content: flex-end; }
-    #status > #einzeln, #status > #keiner { grid-column: 1 / -1; }
-    #einzeln .zahlen { grid-template-columns: repeat(7, 1fr); }
-    .balken .wer { max-width: 14em; }
-    .verlauf svg { height: 220px; }
-    iframe { height: calc(100vh - 140px); min-height: 600px; }
-  }
-  .kopfzeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-  #verwaltungKnopf { background: var(--accent); color: #140d2b; }
-  dialog#verwaltung { padding: 0; border: 1px solid var(--linie); border-radius: 20px; background: #12121f; color: var(--text); width: min(1080px, 100vw - 24px); height: min(760px, 100dvh - 24px); max-width: none; max-height: none; overflow: hidden; }
-  dialog#verwaltung::backdrop { background: rgba(5,5,12,.7); backdrop-filter: blur(4px); }
+  dialog#verwaltung { padding: 0; border: 1px solid var(--linie); border-radius: 14px; background: var(--flaeche); color: var(--text); width: min(1080px, 100vw - 24px); height: min(760px, 100dvh - 24px); max-width: none; max-height: none; overflow: hidden; }
+  dialog#verwaltung::backdrop { background: rgba(3,5,8,.72); backdrop-filter: blur(4px); }
   .vw { display: grid; grid-template-rows: auto auto 1fr; height: 100%; }
   .vw-kopf { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; border-bottom: 1px solid var(--linie); }
-  .vw-kopf h2 { margin: 0; flex: 1; }
+  .vw-kopf h2 { margin: 0; flex: 1; font-size: 1.15rem; }
   .vw-nav { display: flex; gap: 6px; overflow-x: auto; padding: 10px 14px; border-bottom: 1px solid var(--linie); scrollbar-width: none; }
   .vw-nav button { white-space: nowrap; padding: 8px 12px; background: transparent; }
-  .vw-nav button[aria-selected="true"] { background: rgba(167,139,250,.18); color: #ddd6fe; }
+  .vw-nav button[aria-selected="true"] { background: rgba(124,209,82,.14); color: var(--accent-hell); }
   .vw-inhalt { overflow-y: auto; padding: 16px; }
   .vw-inhalt h3 { margin: 18px 0 8px; font-size: 1rem; }
   .vw-inhalt h3:first-child { margin-top: 0; }
@@ -113,7 +178,7 @@
   .plugin img, .plugin .icon { width: 40px; height: 40px; border-radius: 9px; background: #2a2a44; display: grid; place-items: center; object-fit: cover; }
   .plugin b { display: block; }
   .plugin small { color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
-  .hinweis { background: rgba(167,139,250,.08); border-radius: 12px; padding: 10px 12px; font-size: .88rem; color: var(--muted); }
+  .hinweis { background: rgba(124,209,82,.07); border-radius: 12px; padding: 10px 12px; font-size: .88rem; color: var(--muted); }
   #vwMeldung { padding: 0 16px 12px; margin: 0; min-height: 1.2em; }
   @media (min-width: 860px) {
     .vw { grid-template-columns: 200px 1fr; grid-template-rows: auto 1fr; }
@@ -125,71 +190,82 @@
     pre#konsole { height: 340px; }
   }
   @media (max-width: 600px) { dialog#verwaltung { width: 100vw; height: 100dvh; border-radius: 0; border: 0; } }
-  #toast { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #1d1d33; border: 1px solid var(--linie); padding: 10px 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); max-width: calc(100vw - 32px); z-index: 5; }
+  #toast { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #0b0f14; border: 1px solid var(--linie); padding: 10px 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); max-width: calc(100vw - 32px); z-index: 5; }
   .gruppe { margin: 0 0 18px; }
   .gruppe h3 { display: flex; align-items: baseline; gap: 8px; margin: 18px 0 6px; }
   .gruppe h3 small { color: var(--muted); font-weight: 600; font-size: .78rem; }
   .opt { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 14px; align-items: center; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.035); margin-bottom: 6px; }
-  .opt.geaendert { box-shadow: inset 3px 0 0 var(--accent); background: rgba(167,139,250,.08); }
+  .opt.geaendert { box-shadow: inset 3px 0 0 var(--accent); background: rgba(124,209,82,.07); }
   .opt b { display: block; font-size: .95rem; }
   .opt small { color: var(--muted); font-size: .82rem; display: block; }
-  .opt code { font-size: .72rem; color: #6f6f94; }
+  .opt code { font-size: .72rem; color: #5d6b78; }
   .opt select, .opt input[type=number] { width: 150px; }
   .opt input[type=text] { width: min(320px, 100%); }
   .opt.breit { grid-template-columns: 1fr; }
   .schalter { position: relative; width: 46px; height: 26px; flex: none; }
   .schalter input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
-  .schalter span { position: absolute; inset: 0; border-radius: 999px; background: #3a3a55; transition: background .15s; }
+  .schalter span { position: absolute; inset: 0; border-radius: 999px; background: #2c3640; transition: background .15s; }
   .schalter span::after { content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .15s; }
   .schalter input:checked + span { background: var(--gut); }
   .schalter input:checked + span::after { transform: translateX(20px); }
   .schalter input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
   .gruppe.aus .opt { opacity: .45; pointer-events: none; }
-  .speichern-leiste { position: sticky; bottom: -16px; margin: 10px -16px -16px; padding: 12px 16px; display: flex; gap: 8px; align-items: center; background: #1a1a2e; border-top: 1px solid var(--linie); }
+  .speichern-leiste { position: sticky; bottom: -16px; margin: 10px -16px -16px; padding: 12px 16px; display: flex; gap: 8px; align-items: center; background: var(--flaeche2); border-top: 1px solid var(--linie); }
   .speichern-leiste span { flex: 1; font-size: .9rem; color: var(--muted); }
   @media (min-width: 860px) { .speichern-leiste { bottom: -20px; margin: 10px -26px -20px; padding: 12px 26px; } .konfig-spalten { columns: 2; column-gap: 22px; } .gruppe { break-inside: avoid; } }
   details summary { cursor: pointer; color: var(--muted); font-weight: 700; margin-top: 10px; }
 </style>
 </head>
 <body>
-<main>
-  <a href="./">← Zurück zur Spielekiste</a>
-  <div class="kopfzeile"><h1>⛏️ Minecraft</h1><button type="button" id="verwaltungKnopf" hidden>⚙️ Verwaltung</button></div>
-  <p class="muted" id="unter">Wird geladen …</p>
-
-  <section class="karte" id="status" hidden>
-    <h2><span class="punkt" id="punkt"></span><span id="statusText"></span> <small class="muted klein" id="version"></small></h2>
-    <div class="adresse">Server-Adresse: <code id="adresse"></code><button type="button" id="kopieren">📋 Kopieren</button></div>
-    <div class="koepfe" id="koepfe" aria-label="Spieler"></div>
-    <p class="klein muted" id="keiner" hidden>Noch hat niemand gespielt – Werte erscheinen nach dem ersten Besuch in der Welt (der Server speichert sie alle paar Minuten).</p>
-    <div id="einzeln" hidden></div>
-  </section>
-
-  <div class="gitter" id="statistik" hidden>
-    <section class="karte" id="rangliste">
-      <h2>🏅 Rangliste</h2>
-      <div class="reiter" id="reiter" role="group" aria-label="Wert wählen"></div>
-      <div class="balken" id="balken"></div>
-      <details><summary>Alle Werte als Tabelle</summary>
-        <div class="tabelle"><table>
-          <thead><tr><th data-s="name">Spieler</th><th data-s="tode">💀 Tode</th><th data-s="spielzeitMin">⏱️ Zeit</th><th data-s="erfolge">🏆</th><th data-s="mobKills">🧟 Mobs</th><th data-s="spielerKills">⚔️ PvP</th><th data-s="km">🚶 km</th></tr></thead>
-          <tbody id="zeilen"></tbody>
-        </table></div>
-      </details>
-    </section>
-    <section class="karte" id="tage">
-      <h2>📅 Online pro Tag</h2>
-      <div class="reiter" id="zeitraum" role="group" aria-label="Zeitraum"><button type="button" data-t="14" aria-pressed="false">14 Tage</button><button type="button" data-t="30" aria-pressed="true">30 Tage</button><button type="button" data-t="90" aria-pressed="false">90 Tage</button></div>
-      <div class="verlauf" id="verlauf"></div>
-      <div class="zahlen" id="zahlen"></div>
-    </section>
+<header class="kopf">
+  <div class="kopf-innen">
+    <div class="marke">
+      <svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">
+        <rect width="8" height="8" fill="#7a5233"/><rect width="8" height="2" fill="#6fbf45"/><rect y="2" width="8" height="1" fill="#5aa83a"/>
+        <rect x="1" y="3" width="1" height="1" fill="#5aa83a"/><rect x="4" y="3" width="1" height="1" fill="#5aa83a"/><rect x="6" y="3" width="1" height="2" fill="#5aa83a"/>
+        <rect x="2" width="1" height="1" fill="#8ad65c"/><rect x="5" y="1" width="1" height="1" fill="#8ad65c"/><rect x="0" y="1" width="1" height="1" fill="#4f9a33"/>
+        <rect x="2" y="5" width="1" height="1" fill="#5c3d25"/><rect x="5" y="6" width="1" height="1" fill="#5c3d25"/><rect x="0" y="6" width="1" height="1" fill="#946540"/>
+        <rect x="4" y="4" width="1" height="1" fill="#946540"/><rect x="7" y="5" width="1" height="1" fill="#5c3d25"/><rect x="3" y="7" width="1" height="1" fill="#946540"/>
+      </svg>
+      <div><h1>Minecraft-Server</h1><p><a href="./">← Spielekiste</a> · <span id="unter">Wird geladen …</span></p></div>
+    </div>
+    <span class="pille" id="statusPille" hidden><span class="punkt" id="punkt"></span><span id="statusText"></span> <small class="muted" id="version"></small></span>
+    <span class="adresse" id="adresseBox" hidden><code id="adresse"></code><button type="button" id="kopieren">📋 Kopieren</button></span>
+    <button type="button" id="verwaltungKnopf" hidden aria-label="Verwaltung">⚙️<span> Verwaltung</span></button>
   </div>
-
-  <section class="karte" id="karte" hidden>
-    <h2>🗺️ Weltkarte</h2>
+</header>
+<main class="layout">
+  <aside class="seite">
+    <section class="karte" id="status" hidden>
+      <h2>🧑‍🤝‍🧑 Spieler <small class="muted" id="spielerZahl"></small></h2>
+      <div class="koepfe" id="koepfe" aria-label="Spieler"></div>
+      <p class="klein muted" id="keiner" hidden>Noch hat niemand gespielt – Werte erscheinen nach dem ersten Besuch in der Welt (der Server speichert sie alle paar Minuten).</p>
+      <div id="einzeln" hidden></div>
+    </section>
+    <div id="statistik" hidden>
+      <section class="karte" id="rangliste">
+        <h2>🏅 Rangliste</h2>
+        <div class="reiter" id="reiter" role="group" aria-label="Wert wählen"></div>
+        <div class="balken" id="balken"></div>
+        <details><summary>Alle Werte als Tabelle</summary>
+          <div class="tabelle"><table>
+            <thead><tr><th data-s="name">Spieler</th><th data-s="tode">💀</th><th data-s="spielzeitMin">⏱️</th><th data-s="erfolge">🏆</th><th data-s="mobKills">🧟</th><th data-s="spielerKills">⚔️</th><th data-s="km">km</th></tr></thead>
+            <tbody id="zeilen"></tbody>
+          </table></div>
+        </details>
+      </section>
+      <section class="karte" id="tage">
+        <h2>📅 Online pro Tag</h2>
+        <div class="reiter" id="zeitraum" role="group" aria-label="Zeitraum"><button type="button" data-t="14" aria-pressed="false">14 Tage</button><button type="button" data-t="30" aria-pressed="true">30 Tage</button><button type="button" data-t="90" aria-pressed="false">90 Tage</button></div>
+        <div class="verlauf" id="verlauf"></div>
+        <div class="zahlen" id="zahlen"></div>
+      </section>
+    </div>
+  </aside>
+  <section class="karte karte-gross" id="karte" hidden>
+    <h2>🗺️ Weltkarte <a id="karteVoll" href="api/minecraft/karte/" target="_blank" rel="noopener" hidden>Vollbild ↗</a></h2>
     <div id="karteInhalt"></div>
   </section>
-
   <div id="toast" role="status" hidden></div>
 </main>
 <dialog id="verwaltung" aria-label="Server-Verwaltung">
@@ -304,7 +380,7 @@ function zeichnen() {
 function verlauf() {
   const akt = new Map((info.aktivitaet || []).map((x) => [x.tag, x.spieler])), tage = [];
   for (let i = zeitraum - 1; i >= 0; i--) { const t = new Date(Date.now() - i * 864e5).toISOString().slice(0, 10); tage.push({ tag: t, spieler: akt.get(t) || [] }); }
-  const max = Math.max(2, ...tage.map((t) => t.spieler.length)), B = Math.max(260, $('verlauf').clientWidth || 600), H = innerWidth >= 1000 ? 200 : 150, L = 22, schritt = (B - L) / tage.length, breit = Math.max(2, schritt - 2);
+  const max = Math.max(2, ...tage.map((t) => t.spieler.length)), B = Math.max(260, $('verlauf').clientWidth || 600), H = 150, L = 22, schritt = (B - L) / tage.length, breit = Math.max(2, schritt - 2);
   const y = (v) => H - (v / max) * (H - 10), schr = Math.ceil(max / 4);
   let svg = '<svg viewBox="0 0 ' + B + ' ' + (H + 20) + '" style="height:' + (H + 20) + 'px" role="img" aria-label="Spieler online pro Tag">';
   for (let v = 0; v <= max; v += schr) svg += '<line class="gitterlinie" x1="' + L + '" x2="' + B + '" y1="' + y(v) + '" y2="' + y(v) + '"/><text class="achse" x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + v + '</text>';
@@ -349,17 +425,20 @@ async function laden() {
   if (r.status !== 200) { $('unter').textContent = 'Der Server ist gerade nicht erreichbar.'; return; }
   info = r.json;
   if (!info.installiert) { $('unter').textContent = 'Auf diesem Server ist (noch) kein Minecraft installiert.' + (info.admin ? ' Installieren kannst du es im ☁️-Menü unter „Erweiterungen“.' : ''); return; }
-  $('unter').textContent = 'Java Edition · eigener Server';
-  $('status').hidden = false; $('statistik').hidden = false; $('karte').hidden = false;
+  $('unter').textContent = 'Java Edition';
+  $('status').hidden = false; $('statistik').hidden = false; $('karte').hidden = false; $('statusPille').hidden = false; $('adresseBox').hidden = false;
   $('punkt').classList.toggle('an', info.laeuft);
-  $('statusText').textContent = info.beschaeftigt ? '⏳ ' + info.beschaeftigt + ' läuft …' : info.laeuft ? 'Online' : 'Offline';
-  $('version').textContent = info.version ? '· ' + info.version.replace(/^paper-|\.jar$/g, '').replace(/-(\d+)$/, ' (Paper-Build $1)') : '';
+  $('statusText').textContent = info.beschaeftigt ? '⏳ ' + info.beschaeftigt + ' …' : info.laeuft ? 'Online · ' + (info.online || []).length + '/' + (info.maxSpieler || '–') : 'Offline';
+  $('spielerZahl').textContent = (info.spieler || []).length ? '· ' + info.spieler.length : '';
+  $('version').textContent = info.version ? '' + info.version.replace(/^paper-|\.jar$/g, '').replace(/-(\d+)$/, ' (Paper-Build $1)') : '';
   $('adresse').textContent = info.adresse;
   zeichnen();
+  $('karteVoll').hidden = !info.karte;
   if (info.karte) {
-    if (!$('karteFrame')) $('karteInhalt').innerHTML = '<iframe id="karteFrame" src="api/minecraft/karte/" title="Weltkarte" loading="lazy"></iframe><p class="klein"><a href="api/minecraft/karte/" target="_blank" rel="noopener">Karte im Vollbild öffnen ↗</a></p>';
+    if (!$('karteFrame')) $('karteInhalt').innerHTML = '<iframe id="karteFrame" src="api/minecraft/karte/" title="Weltkarte" loading="lazy"></iframe><p class="karte-tipp">Die Karte zeichnet sich nach und nach – überall dort, wo schon jemand war.</p>';
   } else {
-    $('karteInhalt').innerHTML = '<p class="klein muted">Noch keine Karte installiert.' + (info.admin ? '</p><button type="button" id="karteLos">🗺️ Karte installieren (squaremap)</button><p class="klein muted">Der Server startet dafür einmal kurz neu. Die Karte zeichnet sich danach nach und nach, während gespielt wird.</p>' : ' Frag den Admin.</p>');
+    $('karteInhalt').innerHTML = '<div class="karte-leer"><div><h2 style="justify-content:center">🗺️ Noch keine Karte</h2><p class="klein muted">Mit dem Plugin squaremap siehst du hier die Welt von oben – live, mit allen Spielern.</p>'
+      + (info.admin ? '<button type="button" class="haupt" id="karteLos">🗺️ Karte installieren</button><p class="klein muted">Der Server startet dafür einmal kurz neu.</p>' : '<p class="klein muted">Frag den Admin.</p>') + '</div></div>';
     const k = $('karteLos'); if (k) k.addEventListener('click', () => tun({ aktion: 'karte' }, 'Karte wird installiert, Server startet neu (ca. 1–2 Minuten)', k));
   }
   if (info.admin) await adminLaden();

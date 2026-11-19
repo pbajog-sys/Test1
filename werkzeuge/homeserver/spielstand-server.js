@@ -433,7 +433,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
       const st = await mcLaeuft();
       let version = ''; try { version = fs.readFileSync(path.join(mcOrdner(), 'paper-version.txt'), 'utf8').trim(); } catch (e) { /* egal */ }
       return senden(res, 200, Object.assign({ installiert: true, admin: admins.has(k), adresse: String(req.headers.host || '').replace(/:\d+$/, ''), version, karte: mcKarteDa(),
-        beschaeftigt: mcBeschaeftigt, spieler: mcStatistik(), aktivitaet: mcAktivitaet(), seed: admins.has(k) ? mcProps()['level-seed'] || '' : undefined }, st));
+        beschaeftigt: mcBeschaeftigt, spieler: mcStatistik(), aktivitaet: mcAktivitaet(), maxSpieler: Number(mcProps()['max-players']) || 20, seed: admins.has(k) ? mcProps()['level-seed'] || '' : undefined }, st));
     }
     if (weg.startsWith('/minecraft/kopf/') && m === 'GET') {
       const uuid = weg.slice('/minecraft/kopf/'.length);

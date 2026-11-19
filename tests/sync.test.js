@@ -356,7 +356,7 @@ const caddy = http.createServer((req, res) => {
   ck('Minecraft-Seite: Online pro Tag aus den Server-Logs (einmal je Spieler und Tag, nur letzte 90 Tage)', akt.length === 3 && akt[0].tag === tag(3) && akt[0].spieler.join() === 'Alex,Steve' && akt[2].spieler.join() === 'Steve' && !JSON.stringify(akt).includes('Uralt'), JSON.stringify(akt));
   ck('Minecraft-Seite: ohne Anmeldung nichts', (await fetch('http://localhost:8766/api/minecraft/info')).status === 401);
   await A.goto(URL_ + 'minecraft.html'); await ruhig(A, 1500);
-  const seite = await A.textContent('main');
+  const seite = await A.textContent('body');
   ck('Minecraft-Seite: Status, Adresse, Tabelle (meiste Tode oben), Admin-Bereich', /Online/.test(seite) && /localhost/.test(seite) && !!(await A.$('[data-name=Steve] .online-punkt')) && (await A.textContent('#balken .wer')).includes('Steve') && (await A.$$('#verlauf path')).length === 3 && /Steve/.test(await A.textContent('#koepfe')) && await A.isVisible('#verwaltungKnopf'));
   await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-seite.png'), fullPage: true });
   await C.goto(URL_ + 'minecraft.html'); await ruhig(C, 1500);
@@ -422,8 +422,17 @@ const caddy = http.createServer((req, res) => {
   { const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' }); await ctx.addCookies(await A.context().cookies());
     const P = await ctx.newPage(); P.on('pageerror', (e) => fehler.push('Desktop: ' + e.message)); await P.goto(URL_ + 'minecraft.html'); await ruhig(P, 2500);
     await P.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-desktop.png'), fullPage: true });
-    const lay = await P.evaluate(() => { const r = (id) => document.getElementById(id).getBoundingClientRect(); return { rang: r('rangliste').top, verlauf: r('tage').top, karteH: r('karte').height, breit: document.documentElement.scrollWidth <= innerWidth }; });
-    ck('Minecraft-Seite am PC: Rangliste und Verlauf nebeneinander, große Karte, nichts ragt heraus', Math.abs(lay.rang - lay.verlauf) < 2 && lay.karteH > 550 && lay.breit, JSON.stringify(lay));
+    const lay = await P.evaluate(() => { const r = (id) => document.getElementById(id).getBoundingClientRect(), k = r('karte'), seite = document.querySelector('.seite').getBoundingClientRect();
+      return { kLinks: Math.round(k.left), sRechts: Math.round(seite.right), kBreit: Math.round(k.width), kHoch: Math.round(k.height), unten: Math.round(innerHeight - k.bottom), breit: document.documentElement.scrollWidth <= innerWidth }; });
+    ck('Minecraft-Seite am PC: volle Breite, Seitenleiste links, Karte füllt den Rest bis unten', lay.kLinks > lay.sRechts && lay.kBreit > 1440 * 0.6 && lay.kHoch > 650 && lay.unten < 30 && lay.breit, JSON.stringify(lay));
+    // breiter Bildschirm mit echten Daten
+    const W = path.join(MC, 'world', 'stats'); fs.mkdirSync(W, { recursive: true });
+    const leute = [['Steve', 'aaaa-1', 7, 9000, 31], ['Alex', 'bbbb-2', 2, 3000, 12], ['Philip', 'cccc-3', 16, 14000, 88], ['Ben', 'dddd-4', 4, 600, 5], ['Mia', 'eeee-5', 1, 7200, 40]];
+    fs.writeFileSync(path.join(MC, 'usercache.json'), JSON.stringify(leute.map(([name, uuid]) => ({ name, uuid }))));
+    leute.forEach(([, uuid, tode, min, mobs]) => fs.writeFileSync(path.join(W, uuid + '.json'), JSON.stringify({ stats: { 'minecraft:custom': { 'minecraft:deaths': tode, 'minecraft:play_time': min * 1200, 'minecraft:mob_kills': mobs, 'minecraft:walk_one_cm': min * 4000 } } })));
+    for (let n = 1; n < 25; n += 1 + (n % 3)) fs.writeFileSync(path.join(MC, 'logs', tag(n) + '-1.log.gz'), zlib.gzipSync(leute.slice(0, 1 + (n * 7) % 5).map((l) => '[18:00:00 INFO]: ' + l[0] + ' joined the game').join('\n')));
+    await P.setViewportSize({ width: 2000, height: 1000 }); await P.reload(); await ruhig(P, 2500);
+    await P.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-breit.png') });
     await P.click('#verwaltungKnopf'); await ruhig(P, 1200); await P.click('[data-tab=spieler]'); await ruhig(P, 300);
     await P.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-verwaltung-pc.png') });
     await P.click('[data-tab=einstellungen]'); await ruhig(P, 500); await P.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-konfig-pc.png') });
