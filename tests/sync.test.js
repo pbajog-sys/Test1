@@ -29,7 +29,8 @@ const erweiterungStarten = (skript, basis, env) => {
   setTimeout(() => { fs.mkdirSync(path.join(DATEN, 'AdGuardHome'), { recursive: true }); fs.writeFileSync(path.join(DATEN, 'AdGuardHome', 'AdGuardHome.exe'), ''); adguardLaeuft = true;
     fs.appendFileSync(path.join(DATEN, 'erweiterungen.log'), '2026-11-19 12:00:00  AdGuard: Fertig: AdGuard Home läuft.\n'); }, 2000);
 };
-const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, erweiterungStarten, dnsPruefen: async () => adguardLaeuft, lanIp: () => '192.168.2.42', updateStarten: async () => {
+const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, erweiterungStarten, dnsPruefen: async () => adguardLaeuft, lanIp: () => '192.168.2.42',
+  aufgabeAbfragen: async () => ({ zustand: 'Ready', letzterLauf: '2026-11-19T12:19:00', ergebnis: 2147942402, aktion: 'powershell.exe -File C:\\homeserver\\wachen.ps1' }), updateStarten: async () => {
   updatesGestartet++;
   setTimeout(() => { fs.writeFileSync(path.join(DATEN, 'version.txt'), 'bbbbbbb2222\n'); fs.appendFileSync(path.join(DATEN, 'update.log'), '2026-11-18 22:00:00  Fertig: Version bbbbbbb läuft.\n'); }, 1500);
 } });
@@ -236,6 +237,7 @@ const caddy = http.createServer((req, res) => {
   await C.evaluate(() => document.getElementById('skDlg').close());
   ck('Admin: Ben darf nicht nach Updates fragen', (await C.evaluate(async () => (await syApi('admin/pruefen')).status)) === 403);
   await A.evaluate(() => { syAdmin = true; syKontoDialog(); }); await ruhig(A, 1000);
+  ck('Server-Bereich zeigt Zustand der Update-Aufgabe (hier: Skript nicht gefunden)', /Update-Aufgabe: bereit · zuletzt 2026-11-19 12:19 · Ergebnis: Datei nicht gefunden · führt aus: .*wachen\.ps1/.test(await A.textContent('#syServerAufgabe')), await A.textContent('#syServerAufgabe'));
   ck('☁️ (Admin): Server-Bereich mit Version und Konten, „Aktualisieren“ noch versteckt', (await A.textContent('#syServerVersion')) === 'aaaaaaa' && /\d+ · \d+ Duelle/.test(await A.textContent('#syServerKonten')) && !(await A.isVisible('#syServerUpdate')));
   await A.click('#syPruefen'); await ruhig(A, 800);
   ck('Updates prüfen: neue Version mit Liste der Änderungen, „Aktualisieren“ erscheint', /Neue Version bbbbbbb – 2 Änderungen/.test(await A.textContent('#syServerNeu')) && /Duelle/.test(await A.textContent('#syServerNeu')) && (await A.isVisible('#syServerUpdate')), (await A.textContent('#syServerNeu')).replace(/\s+/g, ' '));

@@ -13,11 +13,15 @@ $repo = 'pbajog-sys/Test1'
 $zweigDatei = Join-Path $Basis 'update-zweig.txt'
 $zweig = if (Test-Path $zweigDatei) { (Get-Content $zweigDatei -Raw).Trim() } else { 'spielstand-sync' }
 $log = Join-Path $Basis 'update.log'
-# Immer nur ein Update gleichzeitig (5-Minuten-Prüfung und Doppelklick können sich sonst überschneiden)
-$sperre = New-Object System.Threading.Mutex($false, 'Global\SpielekisteUpdate')
-try { $frei = $sperre.WaitOne(0) } catch [System.Threading.AbandonedMutexException] { $frei = $true }
-if (-not $frei) { Write-Host 'Es läuft gerade schon ein Update.'; exit 0 }
 function Log($t) { $z = (Get-Date -Format 'yyyy-MM-dd HH:mm:ss') + '  ' + $t; Add-Content -Path $log -Value $z -Encoding UTF8; Write-Host $t }
+# Als Allererstes protokollieren – so ist immer sichtbar, ob das Skript überhaupt gestartet wurde (und von wem)
+Log ("Gestartet (" + [Security.Principal.WindowsIdentity]::GetCurrent().Name + $(if ($Erzwingen) { ', erzwungen' } else { '' }) + ").")
+# Immer nur ein Update gleichzeitig (Knopf, Nacht-Aufgabe und Doppelklick könnten sich sonst überschneiden)
+try {
+  $sperre = New-Object System.Threading.Mutex($false, 'Global\SpielekisteUpdate')
+  try { $frei = $sperre.WaitOne(0) } catch [System.Threading.AbandonedMutexException] { $frei = $true }
+} catch { Log "Sperre nicht verfügbar ($($_.Exception.Message)) – mache trotzdem weiter."; $frei = $true }
+if (-not $frei) { Log 'Es läuft gerade schon ein Update – abgebrochen.'; exit 0 }
 function KontoServerOk { try { Invoke-WebRequest -UseBasicParsing -Uri 'http://127.0.0.1:8090/api/ich' -TimeoutSec 5 | Out-Null; return $true } catch { return ($_.Exception.Response -and [int]$_.Exception.Response.StatusCode -eq 401) } }
 
 try {

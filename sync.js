@@ -482,6 +482,7 @@ function syKontoDialog() {
       + '<b>🖥️ Server</b> <small style="color:#8b8bab">· nur für dich sichtbar</small>'
       + '<ul class="ft-check" style="margin:6px 0"><li><b>Version</b><span id="syServerVersion">…</span></li><li><b>Konten</b><span id="syServerKonten">…</span></li></ul>'
       + '<p class="ft-klein" id="syServerStand" style="min-height:1.2em;margin:4px 0"></p>'
+      + '<p class="ft-klein" id="syServerAufgabe" style="margin:2px 0;opacity:.75"></p>'
       + '<div id="syServerNeu" class="ft-klein" style="margin:4px 0"></div>'
       + '<button type="button" class="btn secondary" id="syPruefen" style="margin:6px 0 0;width:100%">🔍 Updates prüfen</button>'
       + '<button type="button" class="btn" id="syServerUpdate" style="margin:6px 0 0;width:100%" hidden>⬆️ Aktualisieren</button>'
@@ -525,6 +526,18 @@ async function syUpdatesPruefen(d) {
     + (j.aenderungen && j.aenderungen.length ? '<ul style="margin:4px 0 0;padding-left:1.2em">' + j.aenderungen.map((t) => '<li>' + syEsc(t) + '</li>').join('') + '</ul>' : '');
   los.hidden = false; los.disabled = false; los.textContent = '⬆️ Aktualisieren'; delete los.dataset.neuLaden;
 }
+// Zustand der Windows-Aufgabe „Update“ – hilft, wenn „Aktualisieren“ nichts tut
+function syAufgabeZeigen(d, a) {
+  const el = d.querySelector('#syServerAufgabe'); if (!el) return;
+  if (!a) { el.textContent = ''; return; }
+  if (a.fehlt) { el.textContent = '⚠️ Update-Aufgabe fehlt – auf dem Laptop einrichten.bat ausführen.'; return; }
+  if (a.fehler) { el.textContent = 'Update-Aufgabe: nicht abfragbar (' + a.fehler + ')'; return; }
+  const code = Number(a.ergebnis) >>> 0, hex = '0x' + code.toString(16).toUpperCase();
+  const bedeutung = { 0: 'ok', 1: 'Fehler im Skript', 267009: 'läuft gerade', 267011: 'noch nie gelaufen', 2147942402: 'Datei nicht gefunden', 2147942405: 'Zugriff verweigert', 2147946720: 'Aufgabe abgebrochen' }[code] || 'Code ' + hex;
+  el.textContent = 'Update-Aufgabe: ' + ({ Ready: 'bereit', Running: 'läuft', Disabled: 'deaktiviert', Queued: 'wartet' }[a.zustand] || a.zustand)
+    + (a.letzterLauf ? ' · zuletzt ' + a.letzterLauf.replace('T', ' ').slice(0, 16) : '') + ' · Ergebnis: ' + bedeutung + (a.aktion ? ' · führt aus: ' + a.aktion : '');
+}
+
 // Erweiterungen (zurzeit AdGuard Home): Status, Installieren per Knopf, danach Anleitung für zu Hause
 function syErweiterungenZeigen(d, st) {
   const box = d.querySelector('#syErweiterungen'); if (!box || box.dataset.laeuft) return;
@@ -569,6 +582,7 @@ async function syServerStatus(d) {
     d.querySelector('#syServerVersion').textContent = r.json.version || '?';
     d.querySelector('#syServerKonten').textContent = r.json.konten + ' · ' + r.json.duelle + ' Duelle';
     syErweiterungenZeigen(d, r.json);
+    syAufgabeZeigen(d, r.json.aufgabe);
     const letzte = (r.json.log || []).slice(-1)[0] || '';
     el.textContent = letzte ? 'Letztes Update: ' + letzte.replace(/^(\S+) (\S+)\s+/, '$1 $2 · ') : '';
     return r.json;

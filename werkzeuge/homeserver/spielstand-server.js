@@ -68,13 +68,25 @@ const LAN_IP = () => {
   const heim = l.find((x) => /^(192\.168|10\.|172\.(1[6-9]|2\d|3[01]))/.test(x.address));
   return (heim || l[0] || {}).address || null;
 };
+// Zustand der Windows-Aufgabe „Spielekiste\Update“ (für die Fehlersuche im Server-Bereich der App); null, wenn nicht Windows
+const AUFGABE_ABFRAGEN = () => new Promise((ok) => {
+  if (process.platform !== 'win32') return ok(null);
+  const befehl = "$t = Get-ScheduledTask -TaskPath '\\Spielekiste\\' -TaskName 'Update' -ErrorAction SilentlyContinue; if (-not $t) { '{\"fehlt\":true}'; exit }"
+    + "; $i = $t | Get-ScheduledTaskInfo; @{ zustand = [string]$t.State; letzterLauf = $(if ($i.LastRunTime) { $i.LastRunTime.ToString('s') } else { '' }); ergebnis = [int64]$i.LastTaskResult"
+    + "; aktion = (($t.Actions | ForEach-Object { $_.Execute + ' ' + $_.Arguments }) -join '; ') } | ConvertTo-Json -Compress";
+  // -EncodedCommand: kein Ärger mit Anführungszeichen in der Befehlszeile
+  require('child_process').execFile('powershell.exe', ['-NoProfile', '-EncodedCommand', Buffer.from(befehl, 'utf16le').toString('base64')], { windowsHide: true, timeout: 8000 }, (e, out) => {
+    if (e) return ok({ fehler: String(e.message).slice(0, 200) });
+    try { ok(JSON.parse(String(out).trim())); } catch (x) { ok({ fehler: String(out).slice(0, 200) }); }
+  });
+});
 const GITHUB = (repo) => async (pfad) => {
   const r = await fetch('https://api.github.com/repos/' + repo + pfad, { headers: { 'User-Agent': 'spielekiste-homeserver', Accept: 'application/vnd.github+json' } });
   if (!r.ok) throw new Error('GitHub ' + r.status);
   return r.json();
 };
 function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = null, updateStarten = UPDATE_STARTEN, repo = 'pbajog-sys/Test1', github = GITHUB(repo),
-  erweiterungStarten = ERWEITERUNG_STARTEN, dnsPruefen = DNS_PRUEFEN, lanIp = LAN_IP } = {}) {
+  erweiterungStarten = ERWEITERUNG_STARTEN, dnsPruefen = DNS_PRUEFEN, lanIp = LAN_IP, aufgabeAbfragen = AUFGABE_ABFRAGEN } = {}) {
   let letzteErweiterung = 0;
   let pruefCache = null;
   let letztesUpdate = 0;
@@ -252,7 +264,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
         return senden(res, 200, { version: lies('version.txt').trim().slice(0, 7), log: lies('update.log').trim().split(/\r?\n/).filter(Boolean).slice(-6),
           konten: Object.keys(konten).length, duelle: Object.keys(duelle).length,
           erweiterungen: { adguard: { installiert: fs.existsSync(path.join(basis || path.dirname(daten), 'AdGuardHome', 'AdGuardHome.exe')), laeuft: await dnsPruefen() } },
-          erweiterungenLog: lies('erweiterungen.log').trim().split(/\r?\n/).filter(Boolean).slice(-4), lanIp: lanIp() });
+          erweiterungenLog: lies('erweiterungen.log').trim().split(/\r?\n/).filter(Boolean).slice(-4), lanIp: lanIp(), aufgabe: await aufgabeAbfragen() });
       }
       if (weg === '/admin/erweiterung' && m === 'POST') {
         const b = await koerper(req), e = ERWEITERUNGEN[String(b.name || '')];
