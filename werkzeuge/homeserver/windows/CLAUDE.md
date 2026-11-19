@@ -25,6 +25,8 @@ Portweiterleitung TCP 80/443 auf diesen Laptop, feste lokale IP).
   der Konto-Server startet dafür die Aufgabe) und zur Sicherheit täglich 04:17. Protokoll `update.log`.
 - `DuckDNS`: läuft dauerhaft (`duckdns.ps1`), meldet alle 5 Minuten die IP an DuckDNS, wenn sie sich geändert hat.
   Token/Subdomain nur lokal in `duckdns-token.txt` / `duckdns-domain.txt` (geheim, nie ins Repo). Protokoll `duckdns.log`.
+- `Wachhund`: läuft dauerhaft (`wachhund.ps1`), prüft alle 2 Min. Dienste und Internet, startet selbst neu,
+  pingt healthchecks.io (`healthchecks-url.txt`). Protokoll `wachhund.log`.
 - Einrichten/neu anlegen: `einrichten.bat` (als Administrator).
 - `AdGuardHome` (Windows-Dienst, optional): Werbeblocker fürs Heimnetz, installiert über ☁️ → Server → Erweiterungen
   (`spiel\werkzeuge\homeserver\windows\erweiterungen\adguard.ps1`). Verwaltung http://<Laptop-IP>:3000 (nur Heimnetz),

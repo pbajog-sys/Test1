@@ -541,7 +541,7 @@ async function sySteuerungZeigen(d) {
     + ' · RAM ' + syGB(j.ram.frei) + ' von ' + syGB(j.ram.gesamt) + ' frei'
     + (j.platte ? ' · Platte ' + syGB(j.platte.frei) + ' frei' : '')
     + (j.akku != null ? ' · Akku ' + j.akku + ' %' + (j.netz ? ' (am Netz)' : ' ⚠️ <b>nicht am Netz</b>') : '') + '</p>'
-    + '<p style="margin:4px 0">' + ['Caddy', 'Konto-Server', 'DuckDNS', 'AdGuard', 'Update'].map(dienst).join('') + '</p>'
+    + '<p style="margin:4px 0">' + ['Caddy', 'Konto-Server', 'DuckDNS', 'AdGuard', 'Wachhund', 'Update'].map(dienst).join('') + '</p>'
     + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0">'
     + '<button type="button" class="btn secondary" data-aktion="caddy-neustart" style="margin:0">🔁 Caddy</button>'
     + '<button type="button" class="btn secondary" data-aktion="duckdns-neustart" style="margin:0">🔁 DuckDNS</button>'
@@ -549,7 +549,7 @@ async function sySteuerungZeigen(d) {
     + '<button type="button" class="btn secondary" data-aktion="laptop-neustart" style="margin:0;color:#f87171">⏻ Laptop neu starten</button></div>'
     + '<p id="syAktionMeldung" style="margin:4px 0;min-height:1.2em"></p>'
     + '<div style="display:flex;gap:6px;align-items:center;margin-top:6px"><span>📜 Protokoll:</span><select id="syProtokollWahl" style="flex:1;padding:6px;border-radius:8px;font-size:15px">'
-    + [['update', 'Updates & Steuerung'], ['konto', 'Konto-Server'], ['caddy', 'Caddy'], ['duckdns', 'DuckDNS'], ['erweiterungen', 'Erweiterungen']].map(([k, n]) => '<option value="' + k + '">' + n + '</option>').join('')
+    + [['update', 'Updates & Steuerung'], ['wachhund', 'Wachhund'], ['konto', 'Konto-Server'], ['caddy', 'Caddy'], ['duckdns', 'DuckDNS'], ['erweiterungen', 'Erweiterungen']].map(([k, n]) => '<option value="' + k + '">' + n + '</option>').join('')
     + '</select></div><pre id="syProtokoll" style="white-space:pre-wrap;font-size:.7rem;line-height:1.35;max-height:14em;overflow:auto;margin:6px 0 0;opacity:.85"></pre>';
   const protokoll = async () => {
     const pre = box.querySelector('#syProtokoll'); pre.textContent = '…';

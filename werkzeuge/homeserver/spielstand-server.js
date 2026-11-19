@@ -91,7 +91,7 @@ const PS = (befehl, timeout = 10000) => new Promise((ok) => {
     try { ok(JSON.parse(String(out).trim())); } catch (x) { ok(null); }
   });
 });
-const DIENSTE_ABFRAGEN = () => PS("$a = @{}; foreach ($n in 'Caddy','Konto-Server','DuckDNS','Update') { $t = Get-ScheduledTask -TaskPath '\\Spielekiste\\' -TaskName $n -ErrorAction SilentlyContinue; $a[$n] = $(if ($t) { [string]$t.State } else { 'fehlt' }) }"
+const DIENSTE_ABFRAGEN = () => PS("$a = @{}; foreach ($n in 'Caddy','Konto-Server','DuckDNS','Wachhund','Update') { $t = Get-ScheduledTask -TaskPath '\\Spielekiste\\' -TaskName $n -ErrorAction SilentlyContinue; $a[$n] = $(if ($t) { [string]$t.State } else { 'fehlt' }) }"
   + "; $g = Get-Service -Name 'AdGuardHome' -ErrorAction SilentlyContinue; $a['AdGuard'] = $(if ($g) { [string]$g.Status } else { 'fehlt' })"
   + "; $b = Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue | Select-Object -First 1"
   + "; @{ dienste = $a; akku = $(if ($b) { [int]$b.EstimatedChargeRemaining } else { $null }); netz = $(if ($b) { [int]$b.BatteryStatus -ne 1 } else { $true }) } | ConvertTo-Json -Compress");
@@ -107,7 +107,7 @@ const AKTION_STARTEN = (ps) => {
   const kind = require('child_process').spawn('powershell.exe', ['-NoProfile', '-EncodedCommand', Buffer.from(ps, 'utf16le').toString('base64')], { detached: true, stdio: 'ignore', windowsHide: true });
   kind.unref();
 };
-const PROTOKOLLE = { update: 'update.log', konto: 'konto-server.log', caddy: 'caddy.log', duckdns: 'duckdns.log', erweiterungen: 'erweiterungen.log' };
+const PROTOKOLLE = { update: 'update.log', wachhund: 'wachhund.log', konto: 'konto-server.log', caddy: 'caddy.log', duckdns: 'duckdns.log', erweiterungen: 'erweiterungen.log' };
 const GITHUB = (repo) => async (pfad) => {
   const r = await fetch('https://api.github.com/repos/' + repo + pfad, { headers: { 'User-Agent': 'spielekiste-homeserver', Accept: 'application/vnd.github+json' } });
   if (!r.ok) throw new Error('GitHub ' + r.status);

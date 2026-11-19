@@ -65,3 +65,10 @@ Zustand des Laptops (Laufzeit, CPU, RAM, Festplatte, Akku/Netzteil) und der Dien
 AdGuard, Update). Knöpfe für fest eingebaute Aktionen: Caddy / DuckDNS / AdGuard neu starten, Laptop neu starten
 (nach 30 s). Höchstens eine Aktion pro 30 Sekunden; jede Aktion steht in `update.log`. Protokolle: Updates & Steuerung,
 Konto-Server, Caddy, DuckDNS, Erweiterungen (letzte 40 Zeilen). Für den kompletten Bildschirm: Chrome Remote Desktop.
+
+## Wachhund und Ausfall-Benachrichtigung (`windows/wachhund.ps1`)
+Aufgabe **Wachhund** (läuft dauerhaft, prüft alle 2 Minuten): Konto-Server antwortet nicht (2× hintereinander) →
+neu starten; Caddy-Port 443 zu → neu starten; DuckDNS-Aufgabe / AdGuard-Dienst gestoppt → starten. Internet weg:
+nach 10 Min. Netzwerkadapter neu starten, nach 30 Min. Laptop neu starten (höchstens alle 6 Std.). Protokoll nur bei
+Eingriffen: `wachhund.log`. Lebenszeichen an **healthchecks.io** (Adresse in `healthchecks-url.txt`, fragt
+`einrichten.bat`): bleibt es aus (Laptop aus, schläft, kein Internet), schickt healthchecks.io eine Nachricht.

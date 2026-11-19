@@ -5,6 +5,7 @@
 #   Update        – holt die neueste Version von GitHub (aktualisieren.ps1): nach Bedarf über den Knopf
 #                   „Server aktualisieren“ in der App (nur für das Admin-Konto) und zur Sicherheit jede Nacht um 04:17
 #   DuckDNS       – meldet alle 5 Minuten die aktuelle IP an DuckDNS (nur wenn ein Token hinterlegt ist)
+#   Wachhund      – prüft alle 2 Minuten alle Dienste und das Internet, repariert selbst, meldet sich bei healthchecks.io
 # Läuft als SYSTEM: keine offenen Fenster, auch ohne angemeldeten Benutzer.
 param([string]$Basis = 'C:\homeserver')
 $ErrorActionPreference = 'Stop'
@@ -14,7 +15,7 @@ function Schritt($t) { Write-Host ''; Write-Host "== $t" -ForegroundColor Cyan }
 Schritt 'Skripte auf den neuesten Stand bringen'
 $neueSkripte = Join-Path $Basis 'spiel\werkzeuge\homeserver\windows'
 if (Test-Path $neueSkripte) {
-  foreach ($f in 'aktualisieren.ps1', 'aktualisieren.bat', 'duckdns.ps1', 'CLAUDE.md') { if (Test-Path "$neueSkripte\$f") { Copy-Item -Force "$neueSkripte\$f" $Basis } }
+  foreach ($f in 'aktualisieren.ps1', 'aktualisieren.bat', 'duckdns.ps1', 'wachhund.ps1', 'CLAUDE.md') { if (Test-Path "$neueSkripte\$f") { Copy-Item -Force "$neueSkripte\$f" $Basis } }
   Write-Host 'Update-Skripte und CLAUDE.md aus der aktuellen Spielversion übernommen.'
 }
 
@@ -62,6 +63,17 @@ powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0 | Out-Null
 powercfg /setactive SCHEME_CURRENT | Out-Null
 Write-Host 'Im Netzbetrieb: kein Ruhezustand, Deckel zu = nichts tun.'
 
+Schritt 'Benachrichtigung, wenn der Server ausfällt (healthchecks.io, optional)'
+$hcDatei = Join-Path $Basis 'healthchecks-url.txt'
+if (Test-Path $hcDatei) { Write-Host 'Ist hinterlegt (ändern: healthchecks-url.txt löschen und einrichten.bat erneut ausführen).' }
+else {
+  $hc = (Read-Host 'Ping-Adresse von healthchecks.io (https://hc-ping.com/…; Enter = überspringen)').Trim()
+  if ($hc) {
+    if ($hc -notmatch '^https://hc-ping\.com/[A-Za-z0-9/_-]+$') { throw 'Das sieht nicht wie eine healthchecks.io-Ping-Adresse aus.' }
+    Set-Content -Path $hcDatei -Value $hc -Encoding ASCII
+  }
+}
+
 Schritt 'Caddy-Zertifikate übernehmen'
 $caddyDaten = Join-Path $Basis 'caddy-daten'
 New-Item -ItemType Directory -Force -Path $caddyDaten | Out-Null
@@ -105,6 +117,14 @@ if ((Test-Path $tokenDatei) -and (Test-Path (Join-Path $Basis 'duckdns.ps1'))) {
   Register-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'DuckDNS' -Action $ddAktion -Trigger $beimStart -Principal $wer -Settings $dauerhaft -Force | Out-Null
   Start-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'DuckDNS'
   Write-Host 'DuckDNS-Aufgabe angelegt.'
+}
+if (Test-Path (Join-Path $Basis 'wachhund.ps1')) {
+  Stop-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Wachhund' -ErrorAction SilentlyContinue
+  $whAktion = New-ScheduledTaskAction -Execute 'powershell.exe' -WorkingDirectory $Basis `
+    -Argument "-NoProfile -ExecutionPolicy Bypass -WindowStyle Hidden -File `"$Basis\wachhund.ps1`" -Basis `"$Basis`""
+  Register-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Wachhund' -Action $whAktion -Trigger $beimStart -Principal $wer -Settings $dauerhaft -Force | Out-Null
+  Start-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Wachhund'
+  Write-Host 'Wachhund-Aufgabe angelegt.'
 }
 Write-Host 'Caddy, Konto-Server und Update angelegt.'
 
