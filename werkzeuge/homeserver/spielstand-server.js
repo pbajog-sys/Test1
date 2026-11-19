@@ -120,10 +120,11 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
   }
   const aenderungenPruefen = (a) => a && typeof a === 'object' && Object.entries(a).every(([k, x]) => k.startsWith('walquiz.') && k.length < 200 && x && (typeof x.v === 'string' || x.v === null));
   // Stand eines Kontos; ältere Dateien ({ version, daten }) werden beim Lesen umgewandelt
+  const NIE_SPEICHERN = ['walquiz.spotify.v1'];   // Zugangsschlüssel fremder Dienste bleiben auf dem Gerät
   function standLesen(datei) {
     const st = lesen(datei, null);
     if (!st) return { version: 0, eintraege: {} };
-    if (st.eintraege) return st;
+    if (st.eintraege) { NIE_SPEICHERN.forEach((k) => delete st.eintraege[k]); return st; }
     const eintraege = {}; Object.entries(st.daten || {}).forEach(([k, v]) => { eintraege[k] = { v, ver: st.version || 1 }; });
     return { version: st.version || 1, eintraege };
   }
@@ -189,6 +190,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
       const st = standLesen(standDatei), neueVersion = st.version + 1;
       let geaendert = false; const vonHier = new Set();
       for (const [schl, x] of Object.entries(aend)) {
+        if (NIE_SPEICHERN.includes(schl)) continue;
         const e = st.eintraege[schl];
         if (x.alt && e && e.ver > basis) continue;                 // anderes Gerät war neuer – Kleinkram vom Öffnen verwirft sich
         vonHier.add(schl);

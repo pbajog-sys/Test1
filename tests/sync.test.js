@@ -88,6 +88,8 @@ const caddy = http.createServer((req, res) => {
   await eingeben(A, 'Anna', '1234', 'neu');
   ck('A: Konto angelegt, Dialog zu, ☁️ sichtbar', !(await dialogDa(A)) && (await A.textContent('#syncBtn')) === '☁️');
   ck('A: Spielstand hochgeladen (Version 1)', stand('anna') && stand('anna').version === 1 && wert('anna', 'walquiz.farben.v1') === '{"rekord":7}');
+  await setzen(A, 'walquiz.spotify.v1', JSON.stringify({ zugang: 'GEHEIM-TOKEN' })); await abgleich(A);
+  ck('Spotify-Zugangsschlüssel bleiben auf dem Gerät (nie auf dem Server)', wert('anna', 'walquiz.spotify.v1') === undefined && !fs.readFileSync(path.join(DATEN, 'staende', 'anna.json'), 'utf8').includes('GEHEIM-TOKEN'));
   ck('PIN nicht im Klartext gespeichert', !fs.readFileSync(path.join(DATEN, 'konten.json'), 'utf8').includes('1234'));
   ck('Tageskopie angelegt', fs.readdirSync(path.join(DATEN, 'archiv')).some((f) => /^anna-\d{4}-\d\d-\d\d\.json$/.test(f)));
   await A.reload(); await ruhig(A, 1500);

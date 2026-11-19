@@ -23,7 +23,8 @@
 const SY_META = 'spielekiste-sync';   // bewusst ohne „walquiz.“ – wird selbst nicht synchronisiert und nicht gesichert
 const SY_SPAETER = 'spielekiste-konto-spaeter';
 const SY_API = new URL('api/', location.href).href;
-const SY_NIE = ['walquiz.sicherung.v1', 'walquiz.installhinweis.v1', 'walquiz.photos.v4'];   // gerätebezogen bzw. nur Zwischenspeicher
+// gerätebezogen, nur Zwischenspeicher oder geheim (Spotify-Zugangsschlüssel bleiben auf dem Gerät)
+const SY_NIE = ['walquiz.sicherung.v1', 'walquiz.installhinweis.v1', 'walquiz.photos.v4', 'walquiz.spotify.v1'];
 const SY_TAKT = 5000;
 
 let syZustand = 'aus';    // 'aus' (kein Server) | 'abgemeldet' | 'ok' | 'offline' (war angemeldet, Server gerade nicht erreichbar)
