@@ -491,7 +491,9 @@ function syKontoDialog() {
     + '<button type="button" class="btn secondary" id="syJetzt">🔄 Jetzt abgleichen</button>'
     + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>'
     + '<button type="button" class="btn secondary" id="syLoeschen" style="opacity:.75">🗑️ Konto löschen</button>'
+    + '<button type="button" class="btn" id="sySchliessen">Schließen</button>'
     + syVersionText());
+  d.querySelector('#sySchliessen').addEventListener('click', () => d.close());
   d.querySelector('#syLoeschen').addEventListener('click', async () => {
     const pin = prompt('Konto „' + syName + '“ endgültig löschen?\n\nDein Spielstand, deine Einträge in Bestenliste und Duellen werden vom Server gelöscht. Auf diesem Gerät bleibt dein Spielstand.\n\nZur Bestätigung deine PIN eingeben:');
     if (!pin) return;

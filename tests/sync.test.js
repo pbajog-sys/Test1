@@ -270,6 +270,13 @@ const caddy = http.createServer((req, res) => {
   ck('Steuerung: Zustand (CPU, RAM, Akku am Netz) und Dienste', /CPU \d+ %/.test(stText) && /RAM .* frei/.test(stText) && /Akku 78 % \(am Netz\)/.test(stText) && /Caddy \(läuft\)/.test(stText) && /AdGuard \(nicht eingerichtet\)/.test(stText), stText.replace(/\s+/g, ' ').slice(0, 140));
   ck('Steuerung: Protokoll wird angezeigt', /Caddy-Testzeile/.test(await A.evaluate(async () => { document.getElementById('syProtokollWahl').value = 'caddy'; document.getElementById('syProtokollWahl').dispatchEvent(new Event('change')); await new Promise((r) => setTimeout(r, 800)); return document.getElementById('syProtokoll').textContent; })));
   await A.locator('#sySteuerung').scrollIntoViewIfNeeded(); await A.screenshot({ path: path.join(os.tmpdir(), 'sync-steuerung.png') });
+  const dlg = await A.evaluate(() => {
+    const d = document.getElementById('skDlg'), zu = d.querySelector('.sk-dlg-zu');
+    d.scrollTop = d.scrollHeight; const r = d.getBoundingClientRect(), z = zu.getBoundingClientRect();
+    return { scrollbar: d.scrollHeight > d.clientHeight, passt: r.height <= innerHeight, xSichtbar: z.top >= r.top - 1 && z.bottom <= r.top + 70, unten: !!d.querySelector('#sySchliessen') };
+  });
+  ck('Langes ☁️-Fenster passt auf den Bildschirm, scrollt, ✕ bleibt oben sichtbar, „Schließen“ unten', dlg.scrollbar && dlg.passt && dlg.xSichtbar && dlg.unten, JSON.stringify(dlg));
+  await A.screenshot({ path: path.join(os.tmpdir(), 'sync-dialog-unten.png') });
   await A.click('[data-aktion="caddy-neustart"]'); await ruhig(A, 600);
   const nochmalAktion = await A.evaluate(async () => (await syApi('admin/aktion', 'POST', { aktion: 'adguard-neustart' })).status);
   ck('Steuerung: Caddy neu starten ausgelöst (festes Kommando), dann 30 s Sperre', aktionen.length === 1 && /TaskName 'Caddy'/.test(aktionen[0]) && /gestartet/.test(await A.textContent('#syAktionMeldung')) && nochmalAktion === 429);

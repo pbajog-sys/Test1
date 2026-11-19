@@ -4693,3 +4693,7 @@ a.bb-datei { text-decoration: none; }
 .sy-chip.wichtig { background: #f59e0b; color: #111; font-weight: 700; }
 /* Tageskarten: lange Wörter („Wahrnehmungsprobe“) umbrechen statt abschneiden */
 .sk-tageskarte small, .sk-tageskarte b { hyphens: auto; -webkit-hyphens: auto; overflow-wrap: anywhere; }
+
+/* Dialoge: nie höher als der Bildschirm, scrollen in sich; ✕ bleibt beim Scrollen oben sichtbar */
+.sk-dlg { max-height: calc(100dvh - 24px); overflow-y: auto; overscroll-behavior: contain; -webkit-overflow-scrolling: touch; }
+.sk-dlg-zu { position: sticky; top: 8px; justify-self: end; margin: -10px -8px -46px 0; z-index: 3; backdrop-filter: blur(6px); background: rgba(40,40,52,.85); }
