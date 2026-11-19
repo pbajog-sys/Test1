@@ -54,6 +54,14 @@ if ((Test-Path $tokenDatei) -and -not (Test-Path $domainDatei)) {
   Set-Content -Path $domainDatei -Value $sub -Encoding ASCII
 }
 
+Schritt 'Energie: am Netzteil nie schlafen, Zuklappen ignorieren'
+# Ein schlafender Laptop ist der häufigste Grund, warum die Seite nicht erreichbar ist. Gilt nur im Netzbetrieb (Akku bleibt sparsam).
+powercfg /change standby-timeout-ac 0 | Out-Null
+powercfg /change hibernate-timeout-ac 0 | Out-Null
+powercfg /setacvalueindex SCHEME_CURRENT SUB_BUTTONS LIDACTION 0 | Out-Null
+powercfg /setactive SCHEME_CURRENT | Out-Null
+Write-Host 'Im Netzbetrieb: kein Ruhezustand, Deckel zu = nichts tun.'
+
 Schritt 'Caddy-Zertifikate übernehmen'
 $caddyDaten = Join-Path $Basis 'caddy-daten'
 New-Item -ItemType Directory -Force -Path $caddyDaten | Out-Null

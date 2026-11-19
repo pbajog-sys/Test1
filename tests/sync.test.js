@@ -10,7 +10,7 @@ const WURZEL = path.join(__dirname, '..');
 const DATEN = fs.mkdtempSync(path.join(os.tmpdir(), 'spielekiste-sync-'));
 const TYPEN = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.json': 'application/json', '.png': 'image/png', '.svg': 'image/svg+xml', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.woff2': 'font/woff2', '.webmanifest': 'application/manifest+json' };
 
-let apiAn = true;
+let apiAn = true, apiFehler = 0;   // apiFehler: so antwortet „Caddy“, wenn der Konto-Server dahinter fehlt (502)
 // Admin „Anna“; statt der Windows-Aufgabe schreibt ein Platzhalter nach kurzer Zeit „Fertig“ ins Update-Protokoll
 let updatesGestartet = 0;
 fs.writeFileSync(path.join(DATEN, 'version.txt'), 'aaaaaaa1111\n');
@@ -27,6 +27,7 @@ const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Ann
 const caddy = http.createServer((req, res) => {
   const u = new URL(req.url, 'http://x');
   if (u.pathname.startsWith('/api/')) {
+    if (apiFehler) { res.writeHead(apiFehler); return res.end('Bad Gateway'); }
     if (!apiAn) { res.writeHead(404); return res.end(); }
     const p = http.request({ host: '127.0.0.1', port: 8768, path: req.url, method: req.method, headers: { ...req.headers, 'x-forwarded-for': '203.0.113.7' } }, (r) => { res.writeHead(r.statusCode, r.headers); r.pipe(res); });
     return req.pipe(p);
@@ -285,6 +286,11 @@ const caddy = http.createServer((req, res) => {
   apiAn = false;
   const F = await geraet('F');
   await F.goto(URL_); await ruhig(F, 1500);
+  apiFehler = 502;
+  const G = await geraet('G');
+  await G.goto(URL_); await ruhig(G, 1500);
+  ck('Konto-Server hinter Caddy weg (502), Gerät war nie angemeldet: trotzdem ☁️⚠️', (await G.textContent('#syncBtn').catch(() => '')) === '☁️⚠️');
+  apiFehler = 0;
   ck('Ohne Server: kein Dialog, kein Knopf', !(await dialogDa(F)) && !(await F.isVisible('#syncBtn').catch(() => false)));
 
   ck('Keine JavaScript-Fehler', fehler.length === 0, fehler.join(' | '));

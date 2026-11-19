@@ -77,6 +77,7 @@ async function syPruefen() {
     const { status, json } = await syApi('ich');
     if (status === 200 && json && json.name) { syName = json.name; syAdmin = !!json.admin; return 'ok'; }
     if (status === 401 && json && json.server === 'spielekiste') return 'abgemeldet';
+    if (status === 502 || status === 503 || status === 504) return 'offline';   // Caddy da, Konto-Server dahinter nicht (GitHub Pages sagt 404)
   } catch (e) { /* offline oder kein Server */ }
   return 'aus';
 }
@@ -426,7 +427,7 @@ function syOfflineDialog() {
 }
 async function syErneutVerbinden() {
   const z = await syPruefen();
-  if (z === 'aus') return false;
+  if (z === 'aus' || z === 'offline') return false;
   syZustand = z; syKnopf();
   if (z === 'ok') { syAnimation('neu'); await syLaufen(); }
   return true;
@@ -591,7 +592,7 @@ async function syLaufen() {
 }
 async function syStart() {
   syZustand = await syPruefen();
-  if (syZustand === 'aus' && syMeta().konto) {   // war schon angemeldet → Server nur gerade weg
+  if ((syZustand === 'aus' && syMeta().konto) || syZustand === 'offline') {   // Server nur gerade weg (oder dieses Gerät war schon angemeldet)
     syZustand = 'offline';
     const t = setInterval(async () => { if (document.visibilityState === 'visible' && await syErneutVerbinden()) clearInterval(t); }, 30e3);
   }
