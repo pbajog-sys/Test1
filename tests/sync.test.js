@@ -21,7 +21,8 @@ const github = async (pfad) => {
   throw new Error('unbekannt');
 };
 // Erweiterungen-Platzhalter: statt PowerShell „installiert“ er nach kurzer Zeit AdGuard
-let erweiterungAufruf = null, adguardLaeuft = false;
+let erweiterungAufruf = null, adguardLaeuft = false; const aktionen = [];
+fs.writeFileSync(path.join(DATEN, 'caddy.log'), 'zeile 1\nCaddy-Testzeile\n');
 fs.mkdirSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen'), { recursive: true });
 fs.writeFileSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen', 'adguard.ps1'), '# Platzhalter');
 const erweiterungStarten = (skript, basis, env) => {
@@ -30,6 +31,8 @@ const erweiterungStarten = (skript, basis, env) => {
     fs.appendFileSync(path.join(DATEN, 'erweiterungen.log'), '2026-11-19 12:00:00  AdGuard: Fertig: AdGuard Home läuft.\n'); }, 2000);
 };
 const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, erweiterungStarten, dnsPruefen: async () => adguardLaeuft, lanIp: () => '192.168.2.42',
+  diensteAbfragen: async () => ({ dienste: { Caddy: 'Running', DuckDNS: 'Running', Update: 'Ready', AdGuard: 'fehlt' }, akku: 78, netz: true }),
+  aktionStarten: (ps) => { aktionen.push(ps); },
   aufgabeAbfragen: async () => ({ zustand: 'Ready', letzterLauf: '2026-11-19T12:19:00', ergebnis: 2147942402, aktion: 'powershell.exe -File C:\\homeserver\\wachen.ps1' }), updateStarten: async () => {
   updatesGestartet++;
   setTimeout(() => { fs.writeFileSync(path.join(DATEN, 'version.txt'), 'bbbbbbb2222\n'); fs.appendFileSync(path.join(DATEN, 'update.log'), '2026-11-18 22:00:00  Fertig: Version bbbbbbb läuft.\n'); }, 1500);
@@ -256,6 +259,20 @@ const caddy = http.createServer((req, res) => {
   const agText = await A.textContent('#syErweiterungen');
   ck('Erweiterung: danach „läuft ✓“ mit Anleitung (DNS-IP, Verwaltung im Heimnetz)', /läuft ✓/.test(agText) && /192\.168\.2\.42/.test(agText) && /:3000/.test(agText), agText.replace(/\s+/g, ' ').slice(0, 90));
   await A.locator('#syErweiterungen').scrollIntoViewIfNeeded(); await A.screenshot({ path: path.join(os.tmpdir(), 'sync-adguard.png') });
+
+  // ---------- Steuerung ----------
+  const benSt = await C.evaluate(async () => [(await syApi('admin/system')).status, (await syApi('admin/aktion', 'POST', { aktion: 'laptop-neustart' })).status, (await syApi('admin/protokoll?datei=caddy')).status]);
+  ck('Steuerung: Ben darf weder Status, Aktionen noch Protokolle', benSt.every((x) => x === 403) && aktionen.length === 0, benSt.join(','));
+  const falschSt = await A.evaluate(async () => [(await syApi('admin/aktion', 'POST', { aktion: 'format c:' })).status, (await syApi('admin/protokoll?datei=../../konten.json')).status]);
+  ck('Steuerung: unbekannte Aktion und fremde Datei abgelehnt', falschSt[0] === 400 && falschSt[1] === 400 && aktionen.length === 0);
+  await A.evaluate(() => { const x = document.getElementById('sySteuerung'); x.open = true; }); await ruhig(A, 2000);
+  const stText = await A.textContent('#sySteuerInhalt');
+  ck('Steuerung: Zustand (CPU, RAM, Akku am Netz) und Dienste', /CPU \d+ %/.test(stText) && /RAM .* frei/.test(stText) && /Akku 78 % \(am Netz\)/.test(stText) && /Caddy \(läuft\)/.test(stText) && /AdGuard \(nicht eingerichtet\)/.test(stText), stText.replace(/\s+/g, ' ').slice(0, 140));
+  ck('Steuerung: Protokoll wird angezeigt', /Caddy-Testzeile/.test(await A.evaluate(async () => { document.getElementById('syProtokollWahl').value = 'caddy'; document.getElementById('syProtokollWahl').dispatchEvent(new Event('change')); await new Promise((r) => setTimeout(r, 800)); return document.getElementById('syProtokoll').textContent; })));
+  await A.locator('#sySteuerung').scrollIntoViewIfNeeded(); await A.screenshot({ path: path.join(os.tmpdir(), 'sync-steuerung.png') });
+  await A.click('[data-aktion="caddy-neustart"]'); await ruhig(A, 600);
+  const nochmalAktion = await A.evaluate(async () => (await syApi('admin/aktion', 'POST', { aktion: 'adguard-neustart' })).status);
+  ck('Steuerung: Caddy neu starten ausgelöst (festes Kommando), dann 30 s Sperre', aktionen.length === 1 && /TaskName 'Caddy'/.test(aktionen[0]) && /gestartet/.test(await A.textContent('#syAktionMeldung')) && nochmalAktion === 429);
 
   const gleichNochmal = await A.evaluate(async () => (await syApi('admin/aktualisieren', 'POST', {})).status);
   ck('Server aktualisieren: höchstens einmal pro Minute', gleichNochmal === 429 && updatesGestartet === 1);

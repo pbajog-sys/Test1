@@ -59,3 +59,9 @@ Der Konto-Server darf nur fest eingebaute Skripte aus `windows/erweiterungen/` d
   konfiguriert es über AdGuards eigene Einrichtungs-Schnittstelle (Verwaltung Port 3000, DNS Port 53, Benutzer
   `admin`). Firewall nur fürs Heimnetz (`remoteip=localsubnet`), kein Port nach außen. Protokoll `erweiterungen.log`.
   Nutzen: am Gerät im Heim-WLAN den DNS manuell auf die IP des Laptops stellen (die App zeigt sie an).
+
+## Steuerung (☁️ → Server → 🎛️ Steuerung, nur Admin)
+Zustand des Laptops (Laufzeit, CPU, RAM, Festplatte, Akku/Netzteil) und der Dienste (Caddy, Konto-Server, DuckDNS,
+AdGuard, Update). Knöpfe für fest eingebaute Aktionen: Caddy / DuckDNS / AdGuard neu starten, Laptop neu starten
+(nach 30 s). Höchstens eine Aktion pro 30 Sekunden; jede Aktion steht in `update.log`. Protokolle: Updates & Steuerung,
+Konto-Server, Caddy, DuckDNS, Erweiterungen (letzte 40 Zeilen). Für den kompletten Bildschirm: Chrome Remote Desktop.

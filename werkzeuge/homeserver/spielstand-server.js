@@ -14,6 +14,9 @@
 //   GET  /api/admin/status          (nur Admin) → { version, log: [letzte Zeilen von update.log], konten, duelle }
 //   POST /api/admin/erweiterung     (nur Admin) { name: 'adguard', passwort } → startet ein fest eingebautes Installationsskript
 //                                   (werkzeuge/homeserver/windows/erweiterungen/<name>.ps1 aus der installierten Version)
+//   GET  /api/admin/system          (nur Admin) → Laufzeit, RAM, Festplatte, CPU, Akku, Zustand der Dienste
+//   POST /api/admin/aktion          (nur Admin) { aktion } → fest eingebaute Aktion (Dienst neu starten, Laptop neu starten)
+//   GET  /api/admin/protokoll?datei=update|konto|caddy|duckdns|erweiterungen → letzte 40 Zeilen
 //   GET  /api/admin/pruefen         (nur Admin) → { aktuell, neu, neuer, anzahl, aenderungen: [Commit-Titel] } – fragt GitHub
 //   POST /api/konto/loeschen  { pin } → Konto, Spielstand, Tageskopien, Bestenliste, Duelle und Anmeldungen löschen
 //   POST /api/abgleich        { basis, geraet, stand, aenderungen: { schlüssel: { v: text|null, alt?: true } } }
@@ -80,13 +83,40 @@ const AUFGABE_ABFRAGEN = () => new Promise((ok) => {
     try { ok(JSON.parse(String(out).trim())); } catch (x) { ok({ fehler: String(out).slice(0, 200) }); }
   });
 });
+// ---------- Steuerung (nur Windows): fest eingebaute Aktionen, nie Befehle aus der Anfrage ----------
+const PS = (befehl, timeout = 10000) => new Promise((ok) => {
+  if (process.platform !== 'win32') return ok(null);
+  require('child_process').execFile('powershell.exe', ['-NoProfile', '-EncodedCommand', Buffer.from(befehl, 'utf16le').toString('base64')], { windowsHide: true, timeout }, (e, out) => {
+    if (e) return ok(null);
+    try { ok(JSON.parse(String(out).trim())); } catch (x) { ok(null); }
+  });
+});
+const DIENSTE_ABFRAGEN = () => PS("$a = @{}; foreach ($n in 'Caddy','Konto-Server','DuckDNS','Update') { $t = Get-ScheduledTask -TaskPath '\\Spielekiste\\' -TaskName $n -ErrorAction SilentlyContinue; $a[$n] = $(if ($t) { [string]$t.State } else { 'fehlt' }) }"
+  + "; $g = Get-Service -Name 'AdGuardHome' -ErrorAction SilentlyContinue; $a['AdGuard'] = $(if ($g) { [string]$g.Status } else { 'fehlt' })"
+  + "; $b = Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue | Select-Object -First 1"
+  + "; @{ dienste = $a; akku = $(if ($b) { [int]$b.EstimatedChargeRemaining } else { $null }); netz = $(if ($b) { [int]$b.BatteryStatus -ne 1 } else { $true }) } | ConvertTo-Json -Compress");
+const STOPP_START = (aufgabe, prozess) => "Stop-ScheduledTask -TaskPath '\\Spielekiste\\' -TaskName '" + aufgabe + "' -ErrorAction SilentlyContinue; " + prozess
+  + "; Start-Sleep 2; Start-ScheduledTask -TaskPath '\\Spielekiste\\' -TaskName '" + aufgabe + "'";
+const AKTIONEN = {
+  'caddy-neustart': { name: 'Caddy neu starten', ps: STOPP_START('Caddy', "Get-Process -Name caddy_windows_amd64, caddy -ErrorAction SilentlyContinue | Stop-Process -Force") },
+  'duckdns-neustart': { name: 'DuckDNS neu starten', ps: STOPP_START('DuckDNS', "Get-CimInstance Win32_Process -Filter \"Name='powershell.exe'\" | Where-Object { $_.CommandLine -like '*duckdns.ps1*' } | ForEach-Object { Invoke-CimMethod -InputObject $_ -MethodName Terminate | Out-Null }") },
+  'adguard-neustart': { name: 'AdGuard neu starten', ps: "Restart-Service -Name 'AdGuardHome' -Force" },
+  'laptop-neustart': { name: 'Laptop neu starten', ps: "shutdown.exe /r /t 30 /c 'Neustart ueber die Spielekiste'" },
+};
+const AKTION_STARTEN = (ps) => {
+  const kind = require('child_process').spawn('powershell.exe', ['-NoProfile', '-EncodedCommand', Buffer.from(ps, 'utf16le').toString('base64')], { detached: true, stdio: 'ignore', windowsHide: true });
+  kind.unref();
+};
+const PROTOKOLLE = { update: 'update.log', konto: 'konto-server.log', caddy: 'caddy.log', duckdns: 'duckdns.log', erweiterungen: 'erweiterungen.log' };
 const GITHUB = (repo) => async (pfad) => {
   const r = await fetch('https://api.github.com/repos/' + repo + pfad, { headers: { 'User-Agent': 'spielekiste-homeserver', Accept: 'application/vnd.github+json' } });
   if (!r.ok) throw new Error('GitHub ' + r.status);
   return r.json();
 };
 function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = null, updateStarten = UPDATE_STARTEN, repo = 'pbajog-sys/Test1', github = GITHUB(repo),
-  erweiterungStarten = ERWEITERUNG_STARTEN, dnsPruefen = DNS_PRUEFEN, lanIp = LAN_IP, aufgabeAbfragen = AUFGABE_ABFRAGEN } = {}) {
+  erweiterungStarten = ERWEITERUNG_STARTEN, dnsPruefen = DNS_PRUEFEN, lanIp = LAN_IP, aufgabeAbfragen = AUFGABE_ABFRAGEN,
+  diensteAbfragen = DIENSTE_ABFRAGEN, aktionStarten = AKTION_STARTEN } = {}) {
+  let letzteAktion = 0;
   let letzteErweiterung = 0;
   let pruefCache = null;
   let letztesUpdate = 0;
@@ -265,6 +295,31 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
           konten: Object.keys(konten).length, duelle: Object.keys(duelle).length,
           erweiterungen: { adguard: { installiert: fs.existsSync(path.join(basis || path.dirname(daten), 'AdGuardHome', 'AdGuardHome.exe')), laeuft: await dnsPruefen() } },
           erweiterungenLog: lies('erweiterungen.log').trim().split(/\r?\n/).filter(Boolean).slice(-4), lanIp: lanIp(), aufgabe: await aufgabeAbfragen() });
+      }
+      if (weg === '/admin/system' && m === 'GET') {
+        const os = require('os'), ordner = basis || path.dirname(daten);
+        // CPU-Last: zwei Messungen im Abstand von 400 ms
+        const zeiten = () => os.cpus().reduce((a, c) => { const t = c.times; a.ruhe += t.idle; a.alle += t.user + t.nice + t.sys + t.idle + t.irq; return a; }, { ruhe: 0, alle: 0 });
+        const z1 = zeiten(); await new Promise((ok) => setTimeout(ok, 400)); const z2 = zeiten();
+        const cpu = Math.round(100 * (1 - (z2.ruhe - z1.ruhe) / Math.max(1, z2.alle - z1.alle)));
+        let platte = null; try { const st = fs.statfsSync(ordner); platte = { frei: st.bavail * st.bsize, gesamt: st.blocks * st.bsize }; } catch (e) { /* ältere Node-Version */ }
+        const w = (await diensteAbfragen()) || {};
+        return senden(res, 200, { laeuftSeit: Math.round(os.uptime()), ram: { frei: os.freemem(), gesamt: os.totalmem() }, cpu, platte, akku: w.akku ?? null, netz: w.netz ?? null,
+          dienste: Object.assign({ 'Konto-Server': 'Running' }, w.dienste || {}), name: os.hostname() });
+      }
+      if (weg === '/admin/aktion' && m === 'POST') {
+        const b = await koerper(req), a = AKTIONEN[String(b.aktion || '')];
+        if (!a) return senden(res, 400, { fehler: 'Unbekannte Aktion.' });
+        if (jetzt() - letzteAktion < 30e3) return senden(res, 429, { fehler: 'Bitte 30 Sekunden zwischen zwei Aktionen warten.' });
+        letzteAktion = jetzt();
+        try { aktionStarten(a.ps); } catch (e) { return senden(res, 500, { fehler: 'Konnte nicht gestartet werden.' }); }
+        fs.appendFileSync(path.join(basis || path.dirname(daten), 'update.log'), new Date(jetzt()).toISOString().replace('T', ' ').slice(0, 19) + '  Steuerung: ' + a.name + '\n');
+        return senden(res, 200, { gestartet: true, name: a.name });
+      }
+      if (weg === '/admin/protokoll' && m === 'GET') {
+        const datei = PROTOKOLLE[url.searchParams.get('datei') || ''];
+        if (!datei) return senden(res, 400, { fehler: 'Unbekanntes Protokoll.' });
+        return senden(res, 200, { zeilen: lies(datei).trim().split(/\r?\n/).filter(Boolean).slice(-40) });
       }
       if (weg === '/admin/erweiterung' && m === 'POST') {
         const b = await koerper(req), e = ERWEITERUNGEN[String(b.name || '')];

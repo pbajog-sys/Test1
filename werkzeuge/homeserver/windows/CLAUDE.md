@@ -30,6 +30,10 @@ Portweiterleitung TCP 80/443 auf diesen Laptop, feste lokale IP).
   (`spiel\werkzeuge\homeserver\windows\erweiterungen\adguard.ps1`). Verwaltung http://<Laptop-IP>:3000 (nur Heimnetz),
   DNS Port 53. Protokoll `erweiterungen.log`.
 
+## Steuerung aus der App
+☁️ → Server → 🎛️ Steuerung (nur Admin): Zustand, Dienste neu starten, Laptop neu starten, Protokolle ansehen.
+Fernzugriff auf den Bildschirm: Chrome Remote Desktop (falls eingerichtet).
+
 ## Typische Aufgaben
 - Sofort aktualisieren: `aktualisieren.bat` (oder `powershell -ExecutionPolicy Bypass -File aktualisieren.ps1 -Erzwingen`).
 - Läuft alles? Konto-Server: `http://127.0.0.1:8090/api/ich` muss mit 401 antworten. Caddy: Prozess `caddy_windows_amd64`.

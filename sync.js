@@ -486,7 +486,8 @@ function syKontoDialog() {
       + '<div id="syServerNeu" class="ft-klein" style="margin:4px 0"></div>'
       + '<button type="button" class="btn secondary" id="syPruefen" style="margin:6px 0 0;width:100%">🔍 Updates prüfen</button>'
       + '<button type="button" class="btn" id="syServerUpdate" style="margin:6px 0 0;width:100%" hidden>⬆️ Aktualisieren</button>'
-      + '<h4 style="margin:14px 0 4px">🧩 Erweiterungen</h4><div id="syErweiterungen" class="ft-klein">…</div></div>' : '')
+      + '<h4 style="margin:14px 0 4px">🧩 Erweiterungen</h4><div id="syErweiterungen" class="ft-klein">…</div>'
+      + '<details id="sySteuerung" style="margin-top:14px"><summary style="cursor:pointer;font-weight:700">🎛️ Steuerung</summary><div id="sySteuerInhalt" class="ft-klein" style="margin-top:6px">Wird geladen …</div></details></div>' : '')
     + '<button type="button" class="btn secondary" id="syJetzt">🔄 Jetzt abgleichen</button>'
     + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>'
     + '<button type="button" class="btn secondary" id="syLoeschen" style="opacity:.75">🗑️ Konto löschen</button>'
@@ -502,6 +503,7 @@ function syKontoDialog() {
   if (syAdmin) {
     syServerStatus(d);
     d.querySelector('#syPruefen').addEventListener('click', () => syUpdatesPruefen(d));
+    d.querySelector('#sySteuerung').addEventListener('toggle', (e) => { if (e.target.open) sySteuerungZeigen(d); });
     d.querySelector('#syServerUpdate').addEventListener('click', (e) => (e.currentTarget.dataset.neuLaden ? syAppNeuLaden() : syServerAktualisieren(d)));
   }
   d.querySelector('#syJetzt').addEventListener('click', async () => { d.close(); await syAbgleich({ ladenErlaubt: true }); syHinweis('Abgeglichen ✓'); });
@@ -526,6 +528,46 @@ async function syUpdatesPruefen(d) {
     + (j.aenderungen && j.aenderungen.length ? '<ul style="margin:4px 0 0;padding-left:1.2em">' + j.aenderungen.map((t) => '<li>' + syEsc(t) + '</li>').join('') + '</ul>' : '');
   los.hidden = false; los.disabled = false; los.textContent = '⬆️ Aktualisieren'; delete los.dataset.neuLaden;
 }
+// ---------- Steuerung des Laptops (nur Admin; nur fest eingebaute Aktionen) ----------
+const syGB = (b) => (b / 1073741824).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' GB';
+const syDauer = (s) => (s < 3600 ? Math.round(s / 60) + ' Min.' : s < 172800 ? Math.round(s / 3600) + ' Std.' : Math.round(s / 86400) + ' Tagen');
+async function sySteuerungZeigen(d) {
+  const box = d.querySelector('#sySteuerInhalt'); if (!box) return;
+  const r = await syApi('admin/system').catch(() => ({ status: 0 }));
+  if (r.status !== 200) { box.textContent = '⚠️ Laptop gerade nicht erreichbar.'; return; }
+  const j = r.json, gut = { Running: '✅', Ready: '✅' }, text = { Running: 'läuft', Ready: 'bereit', Disabled: 'aus', Stopped: 'gestoppt', fehlt: 'nicht eingerichtet' };
+  const dienst = (n) => { const z = (j.dienste || {})[n]; if (!z) return ''; return '<span style="display:inline-block;margin:2px 8px 2px 0">' + (gut[z] || (z === 'fehlt' ? '➖' : '⚠️')) + ' ' + n + ' <span style="opacity:.7">(' + (text[z] || z) + ')</span></span>'; };
+  box.innerHTML = '<p style="margin:4px 0">🖥️ <b>' + syEsc(j.name || 'Laptop') + '</b> · läuft seit ' + syDauer(j.laeuftSeit) + ' · CPU ' + j.cpu + ' %'
+    + ' · RAM ' + syGB(j.ram.frei) + ' von ' + syGB(j.ram.gesamt) + ' frei'
+    + (j.platte ? ' · Platte ' + syGB(j.platte.frei) + ' frei' : '')
+    + (j.akku != null ? ' · Akku ' + j.akku + ' %' + (j.netz ? ' (am Netz)' : ' ⚠️ <b>nicht am Netz</b>') : '') + '</p>'
+    + '<p style="margin:4px 0">' + ['Caddy', 'Konto-Server', 'DuckDNS', 'AdGuard', 'Update'].map(dienst).join('') + '</p>'
+    + '<div style="display:grid;grid-template-columns:1fr 1fr;gap:6px;margin:8px 0">'
+    + '<button type="button" class="btn secondary" data-aktion="caddy-neustart" style="margin:0">🔁 Caddy</button>'
+    + '<button type="button" class="btn secondary" data-aktion="duckdns-neustart" style="margin:0">🔁 DuckDNS</button>'
+    + ((j.dienste || {}).AdGuard && j.dienste.AdGuard !== 'fehlt' ? '<button type="button" class="btn secondary" data-aktion="adguard-neustart" style="margin:0">🔁 AdGuard</button>' : '')
+    + '<button type="button" class="btn secondary" data-aktion="laptop-neustart" style="margin:0;color:#f87171">⏻ Laptop neu starten</button></div>'
+    + '<p id="syAktionMeldung" style="margin:4px 0;min-height:1.2em"></p>'
+    + '<div style="display:flex;gap:6px;align-items:center;margin-top:6px"><span>📜 Protokoll:</span><select id="syProtokollWahl" style="flex:1;padding:6px;border-radius:8px;font-size:15px">'
+    + [['update', 'Updates & Steuerung'], ['konto', 'Konto-Server'], ['caddy', 'Caddy'], ['duckdns', 'DuckDNS'], ['erweiterungen', 'Erweiterungen']].map(([k, n]) => '<option value="' + k + '">' + n + '</option>').join('')
+    + '</select></div><pre id="syProtokoll" style="white-space:pre-wrap;font-size:.7rem;line-height:1.35;max-height:14em;overflow:auto;margin:6px 0 0;opacity:.85"></pre>';
+  const protokoll = async () => {
+    const pre = box.querySelector('#syProtokoll'); pre.textContent = '…';
+    const x = await syApi('admin/protokoll?datei=' + box.querySelector('#syProtokollWahl').value).catch(() => ({ status: 0 }));
+    pre.textContent = x.status === 200 ? (x.json.zeilen.join('\n') || '(leer)') : 'nicht verfügbar';
+    pre.scrollTop = pre.scrollHeight;
+  };
+  box.querySelector('#syProtokollWahl').addEventListener('change', protokoll);
+  protokoll();
+  box.querySelectorAll('[data-aktion]').forEach((b) => b.addEventListener('click', async () => {
+    const a = b.dataset.aktion, m = box.querySelector('#syAktionMeldung');
+    if (a === 'laptop-neustart' && !confirm('Laptop wirklich neu starten?\n\nDie Seite ist dann 2–3 Minuten nicht erreichbar; danach startet alles von selbst wieder.')) return;
+    const x = await syApi('admin/aktion', 'POST', { aktion: a }).catch(() => ({ status: 0 }));
+    m.textContent = x.status === 200 ? '✓ ' + x.json.name + ' – gestartet' + (a === 'laptop-neustart' ? ' (in 30 Sekunden)' : '') : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.');
+    if (x.status === 200 && a !== 'laptop-neustart') setTimeout(() => sySteuerungZeigen(d), 6000);
+  }));
+}
+
 // Zustand der Windows-Aufgabe „Update“ – hilft, wenn „Aktualisieren“ nichts tut
 function syAufgabeZeigen(d, a) {
   const el = d.querySelector('#syServerAufgabe'); if (!el) return;
