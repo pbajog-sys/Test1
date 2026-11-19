@@ -409,12 +409,16 @@ function syKnopf() {
   b.setAttribute('aria-label', b.title);
 }
 
+// Welche App-Version läuft auf diesem Gerät? (früher im 💾-Fenster)
+const syVersionText = () => '<p class="ft-klein" style="text-align:center;opacity:.6;margin-top:12px">App ' + (typeof APP_STAND !== 'undefined' ? APP_STAND.replace('walquiz-', '') : '?') + '</p>';
+
 // Server nicht erreichbar, obwohl dieses Gerät schon angemeldet war: zeigen statt verstecken, alle 30 s neu versuchen
 function syOfflineDialog() {
   const d = skDialog('<h3>☁️⚠️ Server nicht erreichbar</h3>'
     + '<p>Dein Homeserver antwortet gerade nicht. Du kannst normal weiterspielen – dein Fortschritt wird abgeglichen, sobald er wieder erreichbar ist.</p>'
     + '<p class="ft-klein">Häufige Gründe: Laptop aus oder im Ruhezustand, kein Internet zu Hause, Konto-Server gestoppt (auf dem Laptop <code>einrichten.bat</code> ausführen).</p>'
-    + '<button type="button" class="btn" id="syNochmal">🔄 Nochmal versuchen</button><p class="ft-klein" id="syMeldung" role="status"></p>');
+    + '<button type="button" class="btn" id="syNochmal">🔄 Nochmal versuchen</button><p class="ft-klein" id="syMeldung" role="status"></p>'
+    + syVersionText());
   d.querySelector('#syNochmal').addEventListener('click', async () => {
     d.querySelector('#syMeldung').textContent = 'Versuche …';
     if (await syErneutVerbinden()) d.close(); else d.querySelector('#syMeldung').textContent = 'Immer noch nicht erreichbar.';
@@ -481,7 +485,8 @@ function syKontoDialog() {
       + '<button type="button" class="btn" id="syServerUpdate" style="margin:6px 0 0;width:100%" hidden>⬆️ Aktualisieren</button></div>' : '')
     + '<button type="button" class="btn secondary" id="syJetzt">🔄 Jetzt abgleichen</button>'
     + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>'
-    + '<button type="button" class="btn secondary" id="syLoeschen" style="opacity:.75">🗑️ Konto löschen</button>');
+    + '<button type="button" class="btn secondary" id="syLoeschen" style="opacity:.75">🗑️ Konto löschen</button>'
+    + syVersionText());
   d.querySelector('#syLoeschen').addEventListener('click', async () => {
     const pin = prompt('Konto „' + syName + '“ endgültig löschen?\n\nDein Spielstand, deine Einträge in Bestenliste und Duellen werden vom Server gelöscht. Auf diesem Gerät bleibt dein Spielstand.\n\nZur Bestätigung deine PIN eingeben:');
     if (!pin) return;
