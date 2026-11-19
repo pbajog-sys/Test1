@@ -44,6 +44,12 @@
   .adresse code { font-family: ui-monospace, Consolas, monospace; font-size: .95rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .adresse button { border-radius: 999px; padding: 6px 12px; font-size: .85rem; }
 
+  .leistung { display: inline-flex; gap: 2px; background: var(--slot); border-radius: 999px; padding: 4px; }
+  .leistung span { padding: 3px 10px; border-radius: 999px; font-weight: 700; font-size: .84rem; white-space: nowrap; font-variant-numeric: tabular-nums; cursor: help; }
+  .leistung .gut { color: var(--accent-hell); } .leistung .mittel { color: var(--gold); } .leistung .schlecht { color: #fff; background: #8a2b26; }
+  .werte { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+  .werte .zahl small { display: block; color: var(--muted); font-size: .75rem; margin-top: 2px; }
+  .werte .zahl.gut b { color: var(--accent-hell); } .werte .zahl.mittel b { color: var(--gold); } .werte .zahl.schlecht b { color: #ff8a80; }
   /* ---------- Knöpfe, Felder ---------- */
   button, .knopf { font: inherit; font-weight: 700; border: 0; border-radius: 8px; padding: 9px 14px; background: var(--flaeche2); color: var(--text); cursor: pointer; text-decoration: none; display: inline-block; transition: background .15s, transform .05s; }
   button:hover { background: #26303a; }
@@ -238,6 +244,7 @@
       <div><h1>Minecraft-Server</h1><p><a href="./">← Spielekiste</a> · <span id="unter">Wird geladen …</span></p></div>
     </div>
     <span class="pille" id="statusPille" hidden><span class="punkt" id="punkt"></span><span id="statusText"></span> <small class="muted" id="version"></small></span>
+    <span class="leistung" id="leistung" hidden></span>
     <span class="adresse" id="adresseBox" hidden><code id="adresse"></code><button type="button" id="kopieren">📋 Kopieren</button></span>
     <button type="button" id="verwaltungKnopf" hidden aria-label="Verwaltung">⚙️<span> Verwaltung</span></button>
   </div>
@@ -291,6 +298,9 @@
     <div class="vw-inhalt">
       <section data-panel="server">
         <div class="zeile" id="steuer" style="margin-top:0"></div>
+        <h3>📈 Leistung</h3>
+        <div class="werte" id="werte"></div>
+        <div class="zeile"><label class="haken" style="color:var(--text)">🧠 Arbeitsspeicher für Minecraft <select id="ramWahl"></select> GB</label><button type="button" id="ramLos">Übernehmen &amp; neu starten</button></div>
         <h3>🖥️ Konsole</h3>
         <pre id="konsole">…</pre>
         <div class="zeile"><input id="befehl" placeholder="Befehl, z. B. time set day" autocapitalize="none" spellcheck="false" maxlength="200" style="flex:1"><button type="button" class="haupt" id="befehlLos">Senden</button></div>
@@ -448,6 +458,38 @@ document.querySelectorAll('th').forEach((th) => th.addEventListener('click', () 
   sortierung = { s: th.dataset.s, ab: sortierung.s === th.dataset.s ? !sortierung.ab : th.dataset.s !== 'name' }; tabelle();
 }));
 
+const stufe = (v, gut, mittel, umgekehrt) => (v == null ? '' : umgekehrt ? (v <= gut ? 'gut' : v <= mittel ? 'mittel' : 'schlecht') : (v >= gut ? 'gut' : v >= mittel ? 'mittel' : 'schlecht'));
+function leistungZeigen() {
+  const l = info.leistung || {}, box = $('leistung'), teile = [];
+  const tps = l.tps != null ? Math.min(20, l.tps) : null;
+  if (tps != null) teile.push('<span class="' + stufe(tps, 19, 15) + '" title="Ticks pro Sekunde – 20 ist perfekt, darunter ruckelt es">⚡ ' + tps.toFixed(1).replace('.', ',') + ' TPS</span>');
+  if (l.ramGB != null) teile.push('<span class="' + stufe(l.ramMaxGB ? l.ramGB / l.ramMaxGB : 0, .85, .95, true) + '" title="Arbeitsspeicher von Minecraft (eingestellt: ' + (l.ramMaxGB || '?') + ' GB)">🧠 ' + String(l.ramGB).replace('.', ',') + (l.ramMaxGB ? '/' + l.ramMaxGB : '') + ' GB</span>');
+  if (l.tempC != null) teile.push('<span class="' + stufe(l.tempC, 70, 85, true) + '" title="Temperatur des Laptops">🌡️ ' + l.tempC + ' °C</span>');
+  if (l.cpu != null) teile.push('<span class="' + stufe(l.cpu, 70, 90, true) + '" title="Prozessor-Auslastung des Laptops">🖥️ ' + l.cpu + ' %</span>');
+  box.innerHTML = teile.join(''); box.hidden = !teile.length;
+  // ausführlich in der Verwaltung
+  const z = (wert, text, erkl, kl) => '<div class="zahl ' + (kl || '') + '"><b>' + wert + '</b><span>' + text + '</span>' + (erkl ? '<small>' + erkl + '</small>' : '') + '</div>';
+  $('werte').innerHTML = [
+    tps != null ? z(tps.toFixed(1).replace('.', ','), '⚡ TPS (1 Min.)', '20 = flüssig · 15-Min.-Schnitt ' + (l.tps15 != null ? l.tps15.toFixed(1).replace('.', ',') : '–'), stufe(tps, 19, 15)) : '',
+    l.mspt != null ? z(l.mspt.toFixed(1).replace('.', ',') + ' ms', '⏱️ pro Tick', 'unter 50 ms = kein Ruckeln', stufe(l.mspt, 35, 50, true)) : '',
+    l.ramGB != null ? z(String(l.ramGB).replace('.', ',') + ' GB', '🧠 Minecraft-RAM', 'eingestellt: ' + (l.ramMaxGB || '?') + ' GB') : '',
+    z(String(l.laptopRamGB - l.laptopFreiGB > 0 ? Math.round((l.laptopRamGB - l.laptopFreiGB) * 10) / 10 : '–').replace('.', ',') + ' / ' + String(l.laptopRamGB).replace('.', ',') + ' GB', '💾 RAM Laptop gesamt', '', stufe(l.laptopFreiGB, 1.5, .7)),
+    l.cpu != null ? z(l.cpu + ' %', '🖥️ CPU', l.takt != null ? 'Takt ' + l.takt + ' % ' + (l.takt < 60 ? '– drosselt (Hitze/Akku?)' : '') : '', stufe(l.cpu, 70, 90, true)) : '',
+    l.tempC != null ? z(l.tempC + ' °C', '🌡️ Temperatur', l.tempC >= 85 ? 'heiß – Lüftung frei? Untergrund hart?' : 'Thermalzone laut Windows', stufe(l.tempC, 70, 85, true)) : z('–', '🌡️ Temperatur', 'liefert dieser Laptop nicht an Windows'),
+    l.akku != null ? z(l.akku + ' %', l.netz ? '🔌 Akku (am Netz)' : '🔋 Akku – NICHT am Netz!', '', l.netz ? '' : 'schlecht') : '',
+    l.diskFreiGB != null ? z(String(l.diskFreiGB).replace('.', ',') + ' GB', '💽 frei auf C:', '', stufe(l.diskFreiGB, 20, 8)) : '',
+    l.laufzeitStd != null ? z(l.laufzeitStd >= 48 ? Math.round(l.laufzeitStd / 24) + ' Tage' : String(l.laufzeitStd).replace('.', ',') + ' h', '⏳ Laptop läuft seit', '') : '',
+  ].join('');
+  const sel = $('ramWahl'), max = Math.max(1, Math.floor(l.laptopRamGB || 8) - 2);
+  if (document.activeElement !== sel) { sel.innerHTML = Array.from({ length: max }, (_, i) => '<option>' + (i + 1) + '</option>').join(''); sel.value = String(l.ramMaxGB || 2); }
+}
+$('ramLos').addEventListener('click', async () => {
+  const gb = Number($('ramWahl').value);
+  if (!confirm('Minecraft bekommt ' + gb + ' GB Arbeitsspeicher. Der Server startet dafür neu. Weiter?')) return;
+  const x = await api('admin/minecraft', 'POST', { aktion: 'ram', gb }).catch(() => ({ status: 0 }));
+  if (x.status !== 200) { melden('⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.')); return; }
+  if (adminDaten && adminDaten.laeuft) tun({ aktion: 'neustart' }, gb + ' GB eingestellt – Server startet neu', $('ramLos')); else melden('✓ ' + gb + ' GB – gilt beim nächsten Start');
+});
 function mitspielen() {
   const z = info.zugang || { modus: 'aus' }, box = $('mitspielen');
   if (z.mein) {
@@ -497,7 +539,7 @@ async function laden() {
   $('spielerZahl').textContent = (info.spieler || []).length ? '· ' + info.spieler.length : '';
   $('version').textContent = info.version ? '' + info.version.replace(/^paper-|\.jar$/g, '').replace(/-(\d+)$/, ' (Paper-Build $1)') : '';
   $('adresse').textContent = info.adresse;
-  zeichnen(); mitspielen();
+  zeichnen(); mitspielen(); leistungZeigen();
   $('karteVoll').hidden = !info.karte;
   if (info.karte) {
     if (!$('karteFrame')) $('karteInhalt').innerHTML = '<iframe id="karteFrame" src="api/minecraft/karte/" title="Weltkarte" loading="lazy"></iframe><p class="karte-tipp">Die Karte zeichnet sich nach und nach – überall dort, wo schon jemand war.</p>';

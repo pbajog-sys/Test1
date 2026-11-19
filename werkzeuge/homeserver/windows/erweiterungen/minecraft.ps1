@@ -81,12 +81,16 @@ try {
 
   # ---------- Aufgabe ----------
   $flags = ($info.version.java.flags.recommended -join ' ')
+  # Arbeitsspeicher: in der App einstellbar (minecraft-ram.txt), sonst 2 GB
+  $ram = 2; $ramDatei = Join-Path $Basis 'minecraft-ram.txt'
+  if (Test-Path $ramDatei) { $r = 0; if ([int]::TryParse((Get-Content $ramDatei -Raw).Trim(), [ref]$r) -and $r -ge 1 -and $r -le 32) { $ram = $r } }
+  $ramMin = [Math]::Min($ram, 2)
   $start = Join-Path $mc 'start.cmd'
   Set-Content -Path $start -Encoding ASCII -Value @"
 @echo off
 cd /d "$mc"
 if exist "$Basis\minecraft-aus.txt" exit /b 0
-"$($java.FullName)" -Xms1G -Xmx2G $flags -jar paper.jar --nogui
+"$($java.FullName)" -Xms$($ramMin)G -Xmx$($ram)G $flags -jar paper.jar --nogui
 "@
   Stop-ScheduledTask -TaskPath '\Spielekiste\' -TaskName 'Minecraft' -ErrorAction SilentlyContinue
   $wer = New-ScheduledTaskPrincipal -UserId 'SYSTEM' -LogonType ServiceAccount -RunLevel Highest

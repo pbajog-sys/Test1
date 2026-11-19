@@ -125,6 +125,17 @@ const AUFGABE_ABFRAGEN = () => new Promise((ok) => {
     try { ok(JSON.parse(String(out).trim())); } catch (x) { ok({ fehler: String(out).slice(0, 200) }); }
   });
 });
+// Laptop-Zustand für die Leistungsanzeige: RAM von Java, Temperatur (Thermalzone, falls Windows sie liefert), Akku,
+// freier Speicher auf C:, Laufzeit, CPU-Takt in % (unter 100 % über längere Zeit = Laptop drosselt, z. B. wegen Hitze)
+const SYSTEM_WERTE = "$j = (Get-Process java -ErrorAction SilentlyContinue | Measure-Object WorkingSet64 -Sum).Sum; $t = $null"
+  + "; try { $z = Get-CimInstance -ClassName Win32_PerfFormattedData_Counters_ThermalZoneInformation -ErrorAction Stop | ForEach-Object { if ($_.HighPrecisionTemperature) { $_.HighPrecisionTemperature / 10 - 273.15 } else { $_.Temperature - 273.15 } } | Where-Object { $_ -gt 1 -and $_ -lt 120 }; if ($z) { $t = ($z | Measure-Object -Maximum).Maximum } } catch {}"
+  + "; if ($t -eq $null) { try { $z = Get-CimInstance -Namespace root/wmi -ClassName MSAcpi_ThermalZoneTemperature -ErrorAction Stop | ForEach-Object { $_.CurrentTemperature / 10 - 273.15 } | Where-Object { $_ -gt 1 -and $_ -lt 120 }; if ($z) { $t = ($z | Measure-Object -Maximum).Maximum } } catch {} }"
+  + "; $b = Get-CimInstance Win32_Battery -ErrorAction SilentlyContinue | Select-Object -First 1; $d = Get-PSDrive C"
+  + "; $p = (Get-CimInstance Win32_PerfFormattedData_Counters_ProcessorInformation -Filter \"Name='_Total'\" -ErrorAction SilentlyContinue).PercentProcessorPerformance"
+  + "; $u = (Get-Date) - (Get-CimInstance Win32_OperatingSystem).LastBootUpTime"
+  + "; @{ javaMB = [math]::Round($j / 1MB); tempC = $(if ($t -ne $null) { [math]::Round($t) } else { $null }); akku = $(if ($b) { [int]$b.EstimatedChargeRemaining } else { $null })"
+  + "; netz = $(if ($b) { $b.BatteryStatus -ne 1 } else { $true }); diskFreiGB = [math]::Round($d.Free / 1GB, 1); laufzeitStd = [math]::Round($u.TotalHours, 1)"
+  + "; takt = $(if ($p) { [int]$p } else { $null }) } | ConvertTo-Json -Compress";
 // ---------- Steuerung (nur Windows): fest eingebaute Aktionen, nie Befehle aus der Anfrage ----------
 const PS = (befehl, timeout = 10000) => new Promise((ok) => {
   if (process.platform !== 'win32') return ok(null);
@@ -157,6 +168,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
   modrinth = (pfad) => fetch('https://api.modrinth.com/v2' + pfad, { headers: { 'User-Agent': 'spielekiste-homeserver' } }).then((r) => { if (!r.ok) throw new Error('Modrinth ' + r.status); return r.json(); }),
   herunterladen = async (quelle, ziel) => { const r = await fetch(quelle); if (!r.ok) throw new Error('Download ' + r.status); fs.writeFileSync(ziel, Buffer.from(await r.arrayBuffer())); },
   karteHost = '127.0.0.1', logTakt = 5000,
+  systemWerte = () => PS(SYSTEM_WERTE, 15000),
   discordSenden = async (url, nachricht) => {
     const r = await fetch(url + (url.includes('?') ? '&' : '?') + 'wait=true', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nachricht) });
     if (r.status === 429) { const j = await r.json().catch(() => ({})); throw Object.assign(new Error('Discord bremst'), { warten: (j.retry_after || 2) * 1000 }); }
@@ -405,6 +417,27 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
   const neuerCode = () => { const w = ['creeper', 'diamant', 'enderman', 'redstone', 'smaragd', 'netherit', 'lava', 'obsidian', 'axolotl', 'golem', 'kaktus', 'kiste', 'fackel', 'portal'];
     return w[crypto.randomInt(w.length)] + '-' + w[crypto.randomInt(w.length)] + '-' + crypto.randomInt(10, 100); };
 
+  // ---------- Leistung: TPS/MSPT (RCON), RAM von Java, CPU/RAM des Laptops ----------
+  let cpuVorher = null, sysCache = { zeit: 0, w: null };
+  function cpuProzent() {
+    const c = require('os').cpus().map((x) => x.times), sum = (t) => t.user + t.nice + t.sys + t.irq + t.idle;
+    const jetztT = { ges: c.reduce((a, t) => a + sum(t), 0), leer: c.reduce((a, t) => a + t.idle, 0) }, alt = cpuVorher; cpuVorher = jetztT;
+    if (!alt || jetztT.ges <= alt.ges) return null;
+    return Math.round(100 * (1 - (jetztT.leer - alt.leer) / (jetztT.ges - alt.ges)));
+  }
+  const mcRamEinstellung = () => { try { const x = /-Xmx(\d+)G/i.exec(fs.readFileSync(path.join(mcOrdner(), 'start.cmd'), 'utf8')); return x ? Number(x[1]) : null; } catch (e) { return null; } };
+  async function mcLeistung(laeuft) {
+    const os = require('os'), l = { cpu: cpuProzent(), laptopRamGB: Math.round(os.totalmem() / 1073741824 * 10) / 10, laptopFreiGB: Math.round(os.freemem() / 1073741824 * 10) / 10, ramMaxGB: mcRamEinstellung() };
+    if (jetzt() - sysCache.zeit > 30000) sysCache = { zeit: jetzt(), w: await systemWerte().catch(() => null) };
+    const w = sysCache.w || {};
+    ['tempC', 'akku', 'netz', 'diskFreiGB', 'laufzeitStd', 'takt'].forEach((x) => { if (w[x] !== undefined && w[x] !== null) l[x] = w[x]; });
+    if (laeuft && w.javaMB) l.ramGB = Math.round(w.javaMB / 102.4) / 10;
+    if (!laeuft) return l;
+    try { const t = (await mcRcon('tps')).replace(/§./g, ''); const x = /:\s*\*?([\d.]+),\s*\*?([\d.]+),\s*\*?([\d.]+)/.exec(t); if (x) { l.tps = Math.min(20, Number(x[1])); l.tps15 = Math.min(20, Number(x[3])); } } catch (e) { /* egal */ }
+    try { const t = (await mcRcon('mspt')).replace(/§./g, ''); const x = /([\d.]+)\/([\d.]+)\/([\d.]+)/.exec(t); if (x) l.mspt = Number(x[1]); } catch (e) { /* egal */ }
+    return l;
+  }
+
   // ---------- Discord-Webhook ----------
   // minecraft-discord.json: { url, an: { beitritt, tod, erfolg, server, chat } } – die URL ist geheim, geht nie zurück an den Browser
   let discord = lesen('minecraft-discord.json', { url: '', an: { beitritt: true, tod: true, erfolg: true, server: true, chat: false } });
@@ -525,7 +558,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
       let version = ''; try { version = fs.readFileSync(path.join(mcOrdner(), 'paper-version.txt'), 'utf8').trim(); } catch (e) { /* egal */ }
       return senden(res, 200, Object.assign({ installiert: true, admin: admins.has(k), adresse: String(req.headers.host || '').replace(/:\d+$/, ''), version, karte: mcKarteDa(),
         beschaeftigt: mcBeschaeftigt, spieler: mcStatistik(), aktivitaet: mcAktivitaet(),
-        zugang: { modus: zugang.modus, mein: zugang.konten[k] ? zugang.konten[k].mc : '' }, maxSpieler: Number(mcProps()['max-players']) || 20, seed: admins.has(k) ? mcProps()['level-seed'] || '' : undefined }, st));
+        zugang: { modus: zugang.modus, mein: zugang.konten[k] ? zugang.konten[k].mc : '' }, leistung: await mcLeistung(st.laeuft), maxSpieler: Number(mcProps()['max-players']) || 20, seed: admins.has(k) ? mcProps()['level-seed'] || '' : undefined }, st));
     }
     if (weg === '/minecraft/beitreten' && m === 'POST') {
       if (!mcInstalliert() || zugang.modus === 'aus') return senden(res, 403, { fehler: 'Selbst eintragen ist gerade ausgeschaltet – frag den Admin.' });
@@ -677,6 +710,17 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
             }
             mcPropsSchreiben(sauber); mcProtokoll('Einstellungen geändert: ' + Object.keys(sauber).join(', '));
             return senden(res, 200, { ok: true, neustartNoetig: true });
+          }
+          if (aktion === 'ram') {
+            const gb = Number(b.gb), max = Math.max(1, Math.floor(require('os').totalmem() / 1073741824) - 2);
+            if (!Number.isInteger(gb) || gb < 1 || gb > max) return senden(res, 400, { fehler: 'Arbeitsspeicher: 1 bis ' + max + ' GB (der Laptop braucht selbst etwa 2 GB).' });
+            const datei = path.join(mcOrdner(), 'start.cmd');
+            let t; try { t = fs.readFileSync(datei, 'utf8'); } catch (e) { return senden(res, 404, { fehler: 'start.cmd fehlt – Minecraft neu installieren.' }); }
+            if (!/-Xmx\d+G/i.test(t)) return senden(res, 400, { fehler: 'start.cmd hat ein unbekanntes Format.' });
+            fs.writeFileSync(datei, t.replace(/-Xms\d+G/i, '-Xms' + Math.min(gb, 2) + 'G').replace(/-Xmx\d+G/i, '-Xmx' + gb + 'G'));
+            try { fs.writeFileSync(path.join(mcBasis(), 'minecraft-ram.txt'), String(gb)); } catch (e) { /* egal */ }
+            mcProtokoll('Arbeitsspeicher: ' + gb + ' GB');
+            return senden(res, 200, { gb, neustartNoetig: true });
           }
           if (aktion === 'discord') {
             if (b.url !== undefined) {

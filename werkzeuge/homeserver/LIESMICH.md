@@ -105,3 +105,5 @@ optionalem Seed (alte Welt → `minecraft\welten-archiv\<Datum>`, die letzten 3 
   Konto löschen/austreten nimmt ihn wieder raus. Bei gestopptem Server direkt in `whitelist.json`. Daten: `daten\minecraft-zugang.json`.
 - **Discord**: Webhook-Link einfügen (Kanal → Integrationen → Webhooks). Der Konto-Server liest `latest.log` mit und postet Beitritte,
   Tode (deutsch), Erfolge, Server an/aus, optional Chat. Link liegt nur in `daten\minecraft-discord.json`, geht nie an den Browser.
+- **Leistung** (Kopfleiste der Minecraft-Seite + Verwaltung → Server): TPS/MSPT per RCON, RAM von Java, CPU, Temperatur (Windows-Thermalzone,
+  falls der Laptop sie liefert), Akku, freier Platz, Laufzeit, CPU-Takt (Drosselung). Arbeitsspeicher einstellbar → `start.cmd` (-Xmx) und `minecraft-ram.txt`.

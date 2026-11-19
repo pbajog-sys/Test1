@@ -36,6 +36,8 @@ const mcBefehl = async (c) => {
   let x = /^whitelist add (\w+)$/.exec(c); if (x) { mc.whitelist.push(x[1]); return 'Added ' + x[1] + ' to the whitelist'; }
   x = /^whitelist remove (\w+)$/.exec(c); if (x) { mc.whitelist = mc.whitelist.filter((n) => n !== x[1]); return 'Removed ' + x[1]; }
   if (c === 'stop') { mc.laeuft = false; return ''; }
+  if (c === 'tps') return '§6TPS from last 1m, 5m, 15m: §e17.5, §a*20.0, §a19.9';
+  if (c === 'mspt') return '§6Server tick times §e(§7avg§e/§7min§e/§7max§e)§6 from last 5s§7,§6 10s§7,§6 1m§e:\n§6◴ §a12.3§7/§a4.0§7/§a30.1§e, §a11.0§7/§a4.0§7/§a30.1';
   x = /^gamerule (\w+)(?: (\S+))?$/.exec(c);
   if (x) { mc.regeln = mc.regeln || {}; if (x[2]) { mc.regeln[x[1]] = x[2]; return 'Gamerule ' + x[1] + ' is now set to: ' + x[2]; } return 'Gamerule ' + x[1] + ' is currently set to: ' + (mc.regeln[x[1]] || (x[1] === 'players_sleeping_percentage' ? '100' : 'true')); }
   return '';
@@ -45,6 +47,7 @@ const erweiterungStarten = (skript, basis, env) => {
   if (/minecraft\.ps1$/.test(skript)) {
     mc.aufruf = { skript, env };
     setTimeout(() => { fs.mkdirSync(path.join(DATEN, 'minecraft'), { recursive: true }); fs.writeFileSync(path.join(DATEN, 'minecraft', 'paper.jar'), ''); fs.writeFileSync(path.join(DATEN, 'minecraft', 'paper-version.txt'), 'paper-26.3-256.jar');
+      fs.writeFileSync(path.join(DATEN, 'minecraft', 'start.cmd'), '@echo off\r\n"C:\\java\\bin\\java.exe" -Xms1G -Xmx2G -XX:+UseG1GC -jar paper.jar --nogui\r\n');
       fs.appendFileSync(path.join(DATEN, 'erweiterungen.log'), '2026-11-19 12:00:00  Minecraft: Fertig: Minecraft-Server läuft.\n'); }, 1500);
     return;
   }
@@ -56,7 +59,7 @@ const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Ann
   diensteAbfragen: async () => ({ dienste: { Caddy: 'Running', DuckDNS: 'Running', Update: 'Ready', AdGuard: 'fehlt' }, akku: 78, netz: true }),
   aktionStarten: (ps) => { aktionen.push(ps); },
   mcBefehl, aufgabeAusfuehren: async (art) => { mc.aufgaben.push(art); mc.laeuft = true; },
-  logTakt: 0, discordSenden: async (url, n) => { if (/kaputt/.test(url)) throw new Error('Discord 404'); dcPosts.push(n); },
+  logTakt: 0, systemWerte: async () => ({ javaMB: 1536, tempC: 63, akku: 100, netz: true, diskFreiGB: 120.5, laufzeitStd: 30.2, takt: 95 }), discordSenden: async (url, n) => { if (/kaputt/.test(url)) throw new Error('Discord 404'); dcPosts.push(n); },
   mojangProfil: async (n) => ({ notch: { id: '069a79f444e94726a5befca90e38aaf5', name: 'Notch' }, jeb_: { id: '853c80ef3c3749fdaa49938b674adae6', name: 'jeb_' } })[n.toLowerCase()] || null,
   mcWarten: 60, modrinth: async (pfad) => {
     if (pfad.startsWith('/search')) { mc.suche = pfad; return { hits: [{ slug: 'graves', title: 'Graves', description: 'Grabstein mit deinen Sachen', downloads: 1234567, icon_url: 'https://cdn.modrinth.com/i.png' }, { slug: 'squaremap', title: 'squaremap', description: 'Karte', downloads: 900000, icon_url: 'http://boese.example/x.png' }] }; }
@@ -370,6 +373,15 @@ const caddy = http.createServer((req, res) => {
   await A.click('#verwaltungKnopf'); await ruhig(A, 1500);
   ck('Verwaltung: öffnet als Overlay mit Server, Konsole (Server-Log) und Reitern', await A.isVisible('#verwaltung') && /Steve joined the game/.test(await A.textContent('#konsole')) && (await A.$$('[data-tab]')).length === 6);
   await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-verwaltung.png') });
+  const kopf = await A.textContent('#leistung');
+  ck('Leistung: TPS (gelb bei 17,5), RAM, Temperatur und CPU in der Kopfleiste', /17,5 TPS/.test(kopf) && /1,5\/2 GB/.test(kopf) && /63 °C/.test(kopf) && !!(await A.$('#leistung .mittel')), kopf);
+  const werte = await A.textContent('#werte');
+  ck('Leistung: ausführlich in der Verwaltung (MSPT, Akku, Platte, Laufzeit)', /12,3 ms/.test(werte) && /Akku \(am Netz\)/.test(werte) && /120,5 GB/.test(werte) && /30,2 h/.test(werte), werte.slice(0, 200));
+  const ramFalsch = await A.evaluate(async () => (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'ram', gb: 999 }) })).status);
+  await A.selectOption('#ramWahl', '3'); await A.click('#ramLos'); await ruhig(A, 2500);
+  const startCmd = fs.readFileSync(path.join(MC, 'start.cmd'), 'utf8');
+  ck('Leistung: RAM einstellen schreibt start.cmd (-Xmx3G), merkt es für Neuinstallation, startet neu', ramFalsch === 400 && /-Xms2G -Xmx3G -XX/.test(startCmd) && fs.readFileSync(path.join(DATEN, 'minecraft-ram.txt'), 'utf8') === '3' && mc.laeuft, startCmd);
+  await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-leistung.png') });
   await A.fill('#befehl', '/time set day'); await A.press('#befehl', 'Enter'); await ruhig(A, 800);
   const stoppBefehl = await A.evaluate(async () => (await (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'befehl', befehl: 'stop' }) })).status));
   ck('Konsole: Befehl wird gesendet (ohne /), „stop“ nur über den Knopf', mc.befehle.includes('time set day') && stoppBefehl === 400 && !mc.befehle.slice(-3).includes('stop'));
