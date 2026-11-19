@@ -55,11 +55,21 @@ const MAX_KONTEN = 50, MAX_BODY = 10 * 1024 * 1024, COOKIE = 'spielekiste_sitzun
 const UPDATE_STARTEN = () => new Promise((ok, nein) => require('child_process').execFile('schtasks', ['/Run', '/TN', '\\Spielekiste\\Update'], { windowsHide: true }, (e) => (e ? nein(e) : ok())));
 // Erweiterungen: nur diese Skripte dürfen gestartet werden (aus der installierten Spielversion, nie aus der Anfrage)
 const ERWEITERUNGEN = { adguard: { skript: 'adguard.ps1', name: 'AdGuard Home' } };
-const ERWEITERUNG_STARTEN = (skript, basis, env) => {
-  const kind = require('child_process').spawn('powershell.exe', ['-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', skript, '-Basis', basis],
-    { detached: true, stdio: 'ignore', windowsHide: true, env: Object.assign({}, process.env, env) });
-  kind.unref();
-};
+// PowerShell im Hintergrund starten – mit verstecktem Konsolenfenster (ganz ohne Konsole startet PowerShell unter
+// Windows oft gar nicht) und vollem Pfad. Scheitert es, landen Exit-Code und Fehlermeldung im angegebenen Protokoll.
+const POWERSHELL = () => path.join(process.env.SystemRoot || 'C:\\Windows', 'System32', 'WindowsPowerShell', 'v1.0', 'powershell.exe');
+function psHintergrund(args, { env, protokoll, name } = {}) {
+  const zeile = (t) => { if (protokoll) try { fs.appendFileSync(protokoll, new Date().toISOString().replace('T', ' ').slice(0, 19) + '  ' + name + ': ' + t + '\n'); } catch (e) { /* egal */ } };
+  let kind;
+  try { kind = require('child_process').spawn(POWERSHELL(), ['-NoProfile', '-ExecutionPolicy', 'Bypass'].concat(args), { windowsHide: true, stdio: ['ignore', 'pipe', 'pipe'], env: Object.assign({}, process.env, env || {}) }); }
+  catch (e) { zeile('konnte nicht gestartet werden (' + e.message + ')'); throw e; }
+  let fehler = '';
+  kind.stderr.on('data', (d) => { fehler = (fehler + d).slice(-600); });
+  kind.stdout.on('data', () => {});
+  kind.on('error', (e) => zeile('konnte nicht gestartet werden (' + e.message + ')'));
+  kind.on('exit', (code) => { if (code) zeile('beendet mit Code ' + code + (fehler.trim() ? ' – ' + fehler.trim().split(/\r?\n/).filter(Boolean).slice(-2).join(' / ') : '')); });
+}
+const ERWEITERUNG_STARTEN = (skript, basis, env) => psHintergrund(['-File', skript, '-Basis', basis], { env, protokoll: path.join(basis, 'erweiterungen.log'), name: 'Start' });
 // Läuft auf diesem Rechner ein DNS-Server (AdGuard)? Fragt 127.0.0.1 nach example.com.
 const DNS_PRUEFEN = () => new Promise((ok) => {
   const r = new (require('dns').promises.Resolver)({ timeout: 1500, tries: 1 });
@@ -103,10 +113,7 @@ const AKTIONEN = {
   'adguard-neustart': { name: 'AdGuard neu starten', ps: "Restart-Service -Name 'AdGuardHome' -Force" },
   'laptop-neustart': { name: 'Laptop neu starten', ps: "shutdown.exe /r /t 30 /c 'Neustart ueber die Spielekiste'" },
 };
-const AKTION_STARTEN = (ps) => {
-  const kind = require('child_process').spawn('powershell.exe', ['-NoProfile', '-EncodedCommand', Buffer.from(ps, 'utf16le').toString('base64')], { detached: true, stdio: 'ignore', windowsHide: true });
-  kind.unref();
-};
+const AKTION_STARTEN = (ps, basis) => psHintergrund(['-EncodedCommand', Buffer.from(ps, 'utf16le').toString('base64')], { protokoll: basis && path.join(basis, 'update.log'), name: 'Steuerung' });
 const PROTOKOLLE = { update: 'update.log', wachhund: 'wachhund.log', konto: 'konto-server.log', caddy: 'caddy.log', duckdns: 'duckdns.log', erweiterungen: 'erweiterungen.log' };
 const GITHUB = (repo) => async (pfad) => {
   const r = await fetch('https://api.github.com/repos/' + repo + pfad, { headers: { 'User-Agent': 'spielekiste-homeserver', Accept: 'application/vnd.github+json' } });
@@ -312,7 +319,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
         if (!a) return senden(res, 400, { fehler: 'Unbekannte Aktion.' });
         if (jetzt() - letzteAktion < 30e3) return senden(res, 429, { fehler: 'Bitte 30 Sekunden zwischen zwei Aktionen warten.' });
         letzteAktion = jetzt();
-        try { aktionStarten(a.ps); } catch (e) { return senden(res, 500, { fehler: 'Konnte nicht gestartet werden.' }); }
+        try { aktionStarten(a.ps, basis || path.dirname(daten)); } catch (e) { return senden(res, 500, { fehler: 'Konnte nicht gestartet werden.' }); }
         fs.appendFileSync(path.join(basis || path.dirname(daten), 'update.log'), new Date(jetzt()).toISOString().replace('T', ' ').slice(0, 19) + '  Steuerung: ' + a.name + '\n');
         return senden(res, 200, { gestartet: true, name: a.name });
       }
