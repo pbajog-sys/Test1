@@ -15,7 +15,8 @@
 //   GET  /api/minecraft/info        (angemeldet) → Status, Adresse, Statistik je Spieler (Tode, Spielzeit, Kills, km), Karte ja/nein
 //   GET  /api/minecraft/karte/…     (angemeldet) → Weltkarte (squaremap-Plugin, nur lokal erreichbar, hier durchgereicht)
 //   GET  /api/admin/minecraft       (nur Admin) → { installiert, laeuft, version, online, whitelist, einstellungen }
-//   POST /api/admin/minecraft       (nur Admin) { aktion: 'freischalten'|'entfernen'|'start'|'stopp'|'neustart'|'einstellungen'|'neue-welt'|'karte', … }
+//   POST /api/admin/minecraft       (nur Admin) { aktion: 'freischalten'|'entfernen'|'start'|'stopp'|'neustart'|'einstellungen'|'neue-welt'|'karte'
+//                                    |'op'|'deop'|'kick'|'ban'|'pardon'|'befehl'|'plugin-suchen'|'plugin-installieren'|'plugin-entfernen', … }
 //   POST /api/admin/erweiterung     (nur Admin) { name: 'adguard', passwort } bzw. { name: 'minecraft', eula: true } → startet ein fest eingebautes Installationsskript
 //                                   (werkzeuge/homeserver/windows/erweiterungen/<name>.ps1 aus der installierten Version)
 //   GET  /api/admin/system          (nur Admin) → Laufzeit, RAM, Festplatte, CPU, Akku, Zustand der Dienste
@@ -276,6 +277,26 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
     f().then(() => mcProtokoll(was + ': fertig'), (e) => mcProtokoll(was + ': FEHLER ' + e.message)).finally(() => { mcBeschaeftigt = ''; });
     return true;
   }
+  const mcVersion = () => { try { return (/^paper-(.+)-\d+\.jar$/.exec(fs.readFileSync(path.join(mcOrdner(), 'paper-version.txt'), 'utf8').trim()) || [])[1] || ''; } catch (e) { return ''; } };
+  const mcJson = (f, alt) => { try { return JSON.parse(fs.readFileSync(path.join(mcOrdner(), f), 'utf8')); } catch (e) { return alt; } };
+  // Plugins: Ordner plugins\*.jar; was über die App kam, steht mit Modrinth-Projekt in plugins.json (für Anzeige und Entfernen)
+  function mcPlugins() {
+    const bekannt = mcJson('plugins.json', {}), nachDatei = {};
+    Object.entries(bekannt).forEach(([slug, x]) => { nachDatei[x.datei] = Object.assign({ slug }, x); });
+    let jars = []; try { jars = fs.readdirSync(path.join(mcOrdner(), 'plugins')).filter((f) => /\.jar$/i.test(f)); } catch (e) { /* keine */ }
+    return jars.sort().map((f) => nachDatei[f] || { datei: f, titel: f.replace(/[-_]?(paper|bukkit|spigot)?[-_]?v?\d[\w.+-]*\.jar$/i, '').replace(/\.jar$/i, '') || f });
+  }
+  async function mcModrinthVersion(slug) {
+    const v = mcVersion(); if (!v) throw Object.assign(new Error('Minecraft-Version unbekannt.'), { code: 400 });
+    let versionen;
+    try { versionen = await modrinth('/project/' + encodeURIComponent(slug) + '/version?loaders=' + encodeURIComponent('["paper"]') + '&game_versions=' + encodeURIComponent(JSON.stringify([v]))); }
+    catch (e) { throw Object.assign(new Error('Modrinth gerade nicht erreichbar.'), { code: 502 }); }
+    const x = (versionen || []).find((y) => y.version_type === 'release') || (versionen || [])[0];
+    const datei = x && ((x.files || []).find((f) => f.primary) || (x.files || [])[0]);
+    if (!datei || !/^[\w.+-]+\.jar$/.test(datei.filename) || !/^https:\/\/cdn\.modrinth\.com\//.test(datei.url))
+      throw Object.assign(new Error('„' + slug + '“ gibt es (noch) nicht für Minecraft ' + v + ' (Paper).'), { code: 404 });
+    return { version: x.version_number, datei };
+  }
   const mcKarteDa = () => { try { return fs.readdirSync(path.join(mcOrdner(), 'plugins')).some((f) => /^squaremap.*\.jar$/i.test(f)); } catch (e) { return false; } };
   const mcKartePort = () => { try { const t = fs.readFileSync(path.join(mcOrdner(), 'plugins', 'squaremap', 'config.yml'), 'utf8'); const m = /internal-webserver:[\s\S]*?port:\s*(\d+)/.exec(t); return m ? Number(m[1]) : 8080; } catch (e) { return 8080; } };
   // Statistik je Spieler aus <welt>/stats/<uuid>.json, Namen aus usercache.json
@@ -325,13 +346,31 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
     try { const l = await mcRcon('list'); const nach = l.split(':').slice(1).join(':').trim(); return { laeuft: true, online: nach ? nach.split(/,\s*/).filter(Boolean) : [] }; }
     catch (e) { return { laeuft: false, online: [] }; }
   }
-  const EINSTELLUNGEN = {
-    difficulty: (v) => ['peaceful', 'easy', 'normal', 'hard'].includes(v), gamemode: (v) => ['survival', 'creative', 'adventure', 'spectator'].includes(v),
-    pvp: (v) => ['true', 'false'].includes(v), hardcore: (v) => ['true', 'false'].includes(v), 'allow-flight': (v) => ['true', 'false'].includes(v),
-    'white-list': (v) => ['true', 'false'].includes(v), 'max-players': (v) => /^\d+$/.test(v) && +v >= 1 && +v <= 50,
-    'view-distance': (v) => /^\d+$/.test(v) && +v >= 4 && +v <= 16, 'simulation-distance': (v) => /^\d+$/.test(v) && +v >= 4 && +v <= 12,
-    'spawn-protection': (v) => /^\d+$/.test(v) && +v <= 64, motd: (v) => v.length <= 59 && !/[\r\n]/.test(v),
+  // Erlaubte server.properties-Schlüssel (wie bei Hostern: alles Sinnvolle, aber nichts Sicherheitsrelevantes wie RCON/online-mode)
+  const B = ['bool'], Z = (a, b) => ['zahl', a, b], W = (...l) => ['wahl', l];
+  const EIGENSCHAFTEN = {
+    motd: ['text', 59], 'max-players': Z(1, 50), difficulty: W('peaceful', 'easy', 'normal', 'hard'), gamemode: W('survival', 'creative', 'adventure', 'spectator'),
+    'force-gamemode': B, hardcore: B, 'white-list': B, 'enforce-whitelist': B, 'allow-flight': B, 'player-idle-timeout': Z(0, 240),
+    'spawn-protection': Z(0, 64), 'op-permission-level': Z(1, 4), 'enable-command-block': B, 'hide-online-players': B,
+    'level-type': W('minecraft:normal', 'minecraft:flat', 'minecraft:large_biomes', 'minecraft:amplified'), 'generate-structures': B, 'max-world-size': Z(1000, 29999984),
+    'view-distance': Z(4, 16), 'simulation-distance': Z(4, 12), 'entity-broadcast-range-percentage': Z(10, 500), 'pause-when-empty-seconds': Z(0, 3600),
   };
+  // Spielregeln (seit 1.21.11 neue Namen; wirken sofort, gelten pro Welt)
+  const SPIELREGELN = {
+    pvp: B, keep_inventory: B, immediate_respawn: B, natural_health_regeneration: B, fall_damage: B, fire_damage: B, drowning_damage: B,
+    show_death_messages: B, show_advancement_messages: B, players_sleeping_percentage: Z(0, 100), spawn_phantoms: B,
+    advance_time: B, advance_weather: B, spawn_mobs: B, spawn_monsters: B, mob_griefing: B, spawn_patrols: B, spawn_wandering_traders: B, raids: B,
+    mob_drops: B, block_drops: B, random_tick_speed: Z(0, 30), respawn_radius: Z(0, 32), allow_entering_nether_using_portals: B, send_command_feedback: B,
+  };
+  const gueltig = (t, v) => (t[0] === 'bool' ? ['true', 'false'].includes(v) : t[0] === 'zahl' ? /^\d+$/.test(v) && +v >= t[1] && +v <= t[2]
+    : t[0] === 'wahl' ? t[1].includes(v) : v.length <= t[1] && !/[\r\n\\]/.test(v));
+  async function mcRegeln() {
+    const r = {};
+    for (const n of Object.keys(SPIELREGELN)) {
+      try { const a = await mcRcon('gamerule ' + n); const x = /(?:set to|ist)\s*:?\s*(\S+)\s*$/i.exec(a.replace(/§./g, '').trim()) || /:\s*(\S+)\s*$/.exec(a.trim()); if (x) r[n] = x[1].replace(/\.$/, ''); } catch (e) { return null; }
+    }
+    return r;
+  }
 
   async function bearbeiten(req, res) {
     const url = new URL(req.url, 'http://x'), weg = url.pathname.replace(/^.*?\/api\//, '/');
@@ -493,8 +532,11 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
           const st = await mcLaeuft(); let whitelist = [];
           if (st.laeuft) { try { const w = await mcRcon('whitelist list'); const wn = w.split(':').slice(1).join(':').trim(); whitelist = wn ? wn.split(/,\s*(?:and\s+)?|\s+and\s+/).filter(Boolean) : []; } catch (e) { /* egal */ } }
           let version = ''; try { version = fs.readFileSync(path.join(mcOrdner(), 'paper-version.txt'), 'utf8').trim(); } catch (e) { /* egal */ }
-          const p = mcProps(), einstellungen = {}; Object.keys(EINSTELLUNGEN).concat(['level-seed']).forEach((x) => { if (x in p) einstellungen[x] = p[x]; });
-          return senden(res, 200, Object.assign({ installiert: true, version, whitelist, einstellungen, gestoppt: fs.existsSync(mcAusFlagge()), beschaeftigt: mcBeschaeftigt, karte: mcKarteDa() }, st));
+          const p = mcProps(), einstellungen = {}; Object.keys(EIGENSCHAFTEN).concat(['level-seed']).forEach((x) => { if (x in p) einstellungen[x] = p[x]; });
+          const regeln = st.laeuft ? await mcRegeln() : null;
+          const ops = mcJson('ops.json', []).map((o) => o.name), gebannt = mcJson('banned-players.json', []).map((o) => ({ name: o.name, grund: o.reason || '' }));
+          return senden(res, 200, Object.assign({ installiert: true, version, whitelist, einstellungen, gestoppt: fs.existsSync(mcAusFlagge()), beschaeftigt: mcBeschaeftigt, karte: mcKarteDa(),
+            plugins: mcPlugins(), ops, gebannt, regeln }, st));
         }
         if (m === 'POST') {
           const b = await koerper(req), aktion = String(b.aktion || ''), spieler = String(b.spieler || '').trim();
@@ -511,12 +553,48 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
           if (aktion === 'einstellungen') {
             const werte = b.werte || {}, sauber = {};
             for (const [x, v] of Object.entries(werte)) {
-              if (!EINSTELLUNGEN[x]) return senden(res, 400, { fehler: 'Unbekannte Einstellung: ' + x });
-              if (!EINSTELLUNGEN[x](String(v))) return senden(res, 400, { fehler: 'Ungültiger Wert für ' + x });
+              if (!EIGENSCHAFTEN[x]) return senden(res, 400, { fehler: 'Unbekannte Einstellung: ' + x });
+              if (!gueltig(EIGENSCHAFTEN[x], String(v))) return senden(res, 400, { fehler: 'Ungültiger Wert für ' + x });
               sauber[x] = String(v);
             }
             mcPropsSchreiben(sauber); mcProtokoll('Einstellungen geändert: ' + Object.keys(sauber).join(', '));
             return senden(res, 200, { ok: true, neustartNoetig: true });
+          }
+          if (['op', 'deop', 'kick', 'ban', 'pardon'].includes(aktion)) {
+            if (!/^[A-Za-z0-9_]{3,16}$/.test(spieler)) return senden(res, 400, { fehler: 'Minecraft-Namen bestehen aus 3–16 Buchstaben, Ziffern oder _.' });
+            const grund = String(b.grund || '').replace(/[\r\n]/g, ' ').slice(0, 80);
+            try {
+              const a = await mcRcon(aktion + ' ' + spieler + ((aktion === 'kick' || aktion === 'ban') && grund ? ' ' + grund : ''));
+              mcProtokoll(aktion + ' ' + spieler); return senden(res, 200, { antwort: a });
+            } catch (e) { return senden(res, 409, { fehler: 'Der Server läuft gerade nicht – erst starten.' }); }
+          }
+          if (aktion === 'regeln') {
+            const werte = b.werte || {}, ok = [];
+            for (const [x, v] of Object.entries(werte)) {
+              if (!SPIELREGELN[x]) return senden(res, 400, { fehler: 'Unbekannte Spielregel: ' + x });
+              if (!gueltig(SPIELREGELN[x], String(v))) return senden(res, 400, { fehler: 'Ungültiger Wert für ' + x });
+            }
+            try { for (const [x, v] of Object.entries(werte)) { await mcRcon('gamerule ' + x + ' ' + v); ok.push(x); } }
+            catch (e) { return senden(res, 409, { fehler: 'Der Server läuft gerade nicht – Spielregeln gehen nur bei laufendem Server.' }); }
+            mcProtokoll('Spielregeln: ' + ok.map((x) => x + '=' + werte[x]).join(', '));
+            return senden(res, 200, { ok: true });
+          }
+          if (aktion === 'befehl') {
+            const befehl = String(b.befehl || '').trim().replace(/^\//, '');
+            if (!befehl || befehl.length > 200 || /[\r\n]/.test(befehl)) return senden(res, 400, { fehler: 'Ungültiger Befehl.' });
+            if (/^(stop|restart)\b/i.test(befehl)) return senden(res, 400, { fehler: 'Bitte die Knöpfe Stopp/Neustart nehmen (sonst startet der Wachhund ihn ungefragt neu).' });
+            try { const a = await mcRcon(befehl); mcProtokoll('Befehl: ' + befehl); return senden(res, 200, { antwort: a.replace(/§./g, '') }); }
+            catch (e) { return senden(res, 409, { fehler: 'Der Server läuft gerade nicht – erst starten.' }); }
+          }
+          if (aktion === 'plugin-suchen') {
+            const suche = String(b.suche || '').trim().slice(0, 60), v = mcVersion();
+            const facets = JSON.stringify([['project_type:plugin'], ['categories:paper'], ['server_side:required', 'server_side:optional']].concat(v ? [['versions:' + v]] : []));
+            let r;
+            try { r = await modrinth('/search?limit=12&index=' + (suche ? 'relevance' : 'downloads') + '&query=' + encodeURIComponent(suche) + '&facets=' + encodeURIComponent(facets)); }
+            catch (e) { return senden(res, 502, { fehler: 'Modrinth gerade nicht erreichbar.' }); }
+            const da = new Set(mcPlugins().map((x) => x.slug).filter(Boolean));
+            return senden(res, 200, { treffer: (r.hits || []).map((h) => ({ slug: h.slug, titel: h.title, text: h.description, downloads: h.downloads,
+              bild: /^https:\/\/cdn\.modrinth\.com\//.test(h.icon_url || '') ? h.icon_url : '', installiert: da.has(h.slug) })) });
           }
           if (mcBeschaeftigt) return senden(res, 409, { fehler: 'Gerade läuft schon: ' + mcBeschaeftigt + ' – bitte kurz warten.' });
           if (aktion === 'stopp') {
@@ -544,22 +622,33 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
             }));
             return senden(res, 200, { gestartet: true });
           }
-          if (aktion === 'karte') {
-            let mcVersion = ''; try { mcVersion = (/^paper-(.+)-\d+\.jar$/.exec(fs.readFileSync(path.join(mcOrdner(), 'paper-version.txt'), 'utf8').trim()) || [])[1] || ''; } catch (e) { /* egal */ }
-            if (!mcVersion) return senden(res, 400, { fehler: 'Minecraft-Version unbekannt.' });
-            let versionen;
-            try { versionen = await modrinth('/project/squaremap/version?loaders=' + encodeURIComponent('["paper"]') + '&game_versions=' + encodeURIComponent(JSON.stringify([mcVersion]))); }
-            catch (e) { return senden(res, 502, { fehler: 'Modrinth gerade nicht erreichbar.' }); }
-            const v = (versionen || []).find((x) => x.version_type === 'release') || (versionen || [])[0];
-            const datei = v && ((v.files || []).find((f) => f.primary) || (v.files || [])[0]);
-            if (!datei) return senden(res, 404, { fehler: 'Für Minecraft ' + mcVersion + ' gibt es die Karte (squaremap) noch nicht.' });
-            await mcImHintergrund('Karte installieren', () => mcNeustarten(async () => {
+          if (aktion === 'karte' || aktion === 'plugin-installieren') {
+            const slug = aktion === 'karte' ? 'squaremap' : String(b.slug || '');
+            if (!/^[a-z0-9_.-]{2,64}$/i.test(slug)) return senden(res, 400, { fehler: 'Ungültiges Plugin.' });
+            let x; try { x = await mcModrinthVersion(slug); } catch (e) { return senden(res, e.code || 500, { fehler: e.message }); }
+            const titel = String(b.titel || slug).slice(0, 60);
+            await mcImHintergrund(titel + ' installieren', () => mcNeustarten(async () => {
               const plugins = path.join(mcOrdner(), 'plugins'); fs.mkdirSync(plugins, { recursive: true });
-              fs.readdirSync(plugins).filter((f) => /^squaremap.*\.jar$/i.test(f)).forEach((f) => fs.rmSync(path.join(plugins, f), { force: true }));
-              await herunterladen(datei.url, path.join(plugins, datei.filename));
-              mcProtokoll('Karte (squaremap ' + v.version_number + ') installiert');
+              const liste = mcJson('plugins.json', {}), alt = liste[slug] && liste[slug].datei;
+              if (alt && alt !== x.datei.filename) fs.rmSync(path.join(plugins, alt), { force: true });
+              if (slug === 'squaremap') fs.readdirSync(plugins).filter((f) => /^squaremap.*\.jar$/i.test(f) && f !== x.datei.filename).forEach((f) => fs.rmSync(path.join(plugins, f), { force: true }));
+              await herunterladen(x.datei.url, path.join(plugins, x.datei.filename));
+              liste[slug] = { titel, version: x.version, datei: x.datei.filename };
+              fs.writeFileSync(path.join(mcOrdner(), 'plugins.json'), JSON.stringify(liste, null, 1));
+              mcProtokoll('Plugin ' + titel + ' ' + x.version + ' installiert');
             }));
-            return senden(res, 200, { gestartet: true, version: v.version_number });
+            return senden(res, 200, { gestartet: true, version: x.version });
+          }
+          if (aktion === 'plugin-entfernen') {
+            const datei = String(b.datei || '');
+            if (!mcPlugins().some((x) => x.datei === datei)) return senden(res, 404, { fehler: 'Plugin nicht gefunden.' });
+            await mcImHintergrund('Plugin entfernen', () => mcNeustarten(async () => {
+              fs.rmSync(path.join(mcOrdner(), 'plugins', datei), { force: true });
+              const liste = mcJson('plugins.json', {}); Object.keys(liste).forEach((k) => { if (liste[k].datei === datei) delete liste[k]; });
+              fs.writeFileSync(path.join(mcOrdner(), 'plugins.json'), JSON.stringify(liste, null, 1));
+              mcProtokoll('Plugin entfernt: ' + datei);
+            }));
+            return senden(res, 200, { gestartet: true });
           }
           return senden(res, 400, { fehler: 'Unbekannte Aktion.' });
         }

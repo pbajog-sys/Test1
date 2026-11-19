@@ -87,17 +87,74 @@
     .balken .wer { max-width: 14em; }
     .verlauf svg { height: 220px; }
     iframe { height: calc(100vh - 140px); min-height: 600px; }
-    .admin-spalten { display: grid; grid-template-columns: 3fr 2fr; gap: 36px; }
-    .admin-spalten > div:last-child > h2:first-child { margin-top: 0 !important; }
-    .admin-spalten > div:last-child { border-left: 1px solid var(--linie); padding-left: 36px; }
   }
+  .kopfzeile { display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+  #verwaltungKnopf { background: var(--accent); color: #140d2b; }
+  dialog#verwaltung { padding: 0; border: 1px solid var(--linie); border-radius: 20px; background: #12121f; color: var(--text); width: min(1080px, 100vw - 24px); height: min(760px, 100dvh - 24px); max-width: none; max-height: none; overflow: hidden; }
+  dialog#verwaltung::backdrop { background: rgba(5,5,12,.7); backdrop-filter: blur(4px); }
+  .vw { display: grid; grid-template-rows: auto auto 1fr; height: 100%; }
+  .vw-kopf { display: flex; align-items: center; gap: 10px; padding: 14px 16px 10px; border-bottom: 1px solid var(--linie); }
+  .vw-kopf h2 { margin: 0; flex: 1; }
+  .vw-nav { display: flex; gap: 6px; overflow-x: auto; padding: 10px 14px; border-bottom: 1px solid var(--linie); scrollbar-width: none; }
+  .vw-nav button { white-space: nowrap; padding: 8px 12px; background: transparent; }
+  .vw-nav button[aria-selected="true"] { background: rgba(167,139,250,.18); color: #ddd6fe; }
+  .vw-inhalt { overflow-y: auto; padding: 16px; }
+  .vw-inhalt h3 { margin: 18px 0 8px; font-size: 1rem; }
+  .vw-inhalt h3:first-child { margin-top: 0; }
+  pre#konsole { background: #07070d; border: 1px solid var(--linie); border-radius: 12px; padding: 10px; height: 260px; overflow: auto; font-size: .78rem; line-height: 1.35; white-space: pre-wrap; overflow-wrap: anywhere; margin: 0; }
+  .schnell { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 8px; }
+  .schnell button { font-size: .85rem; padding: 6px 10px; }
+  .spielertab td, .spielertab th { text-align: left; cursor: default; }
+  .spielertab td:last-child { text-align: right; }
+  .spielertab button { font-size: .8rem; padding: 5px 9px; margin-left: 4px; }
+  .an-aus { padding: 3px 9px !important; border-radius: 999px !important; font-size: .78rem !important; }
+  .an-aus[aria-pressed="true"] { background: rgba(74,222,128,.2); color: #bbf7d0; }
+  .plugin { display: grid; grid-template-columns: 40px minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 10px; border-radius: 12px; background: rgba(255,255,255,.04); margin-bottom: 8px; }
+  .plugin img, .plugin .icon { width: 40px; height: 40px; border-radius: 9px; background: #2a2a44; display: grid; place-items: center; object-fit: cover; }
+  .plugin b { display: block; }
+  .plugin small { color: var(--muted); display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  .hinweis { background: rgba(167,139,250,.08); border-radius: 12px; padding: 10px 12px; font-size: .88rem; color: var(--muted); }
+  #vwMeldung { padding: 0 16px 12px; margin: 0; min-height: 1.2em; }
+  @media (min-width: 860px) {
+    .vw { grid-template-columns: 200px 1fr; grid-template-rows: auto 1fr; }
+    .vw-kopf { grid-column: 1 / -1; }
+    .vw-nav { flex-direction: column; border-bottom: 0; border-right: 1px solid var(--linie); padding: 12px; }
+    .vw-nav button { text-align: left; }
+    .vw-inhalt { padding: 20px 26px; }
+    .vw-zwei { display: grid; grid-template-columns: 1fr 1fr; gap: 28px; }
+    pre#konsole { height: 340px; }
+  }
+  @media (max-width: 600px) { dialog#verwaltung { width: 100vw; height: 100dvh; border-radius: 0; border: 0; } }
+  #toast { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #1d1d33; border: 1px solid var(--linie); padding: 10px 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); max-width: calc(100vw - 32px); z-index: 5; }
+  .gruppe { margin: 0 0 18px; }
+  .gruppe h3 { display: flex; align-items: baseline; gap: 8px; margin: 18px 0 6px; }
+  .gruppe h3 small { color: var(--muted); font-weight: 600; font-size: .78rem; }
+  .opt { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 14px; align-items: center; padding: 10px 12px; border-radius: 12px; background: rgba(255,255,255,.035); margin-bottom: 6px; }
+  .opt.geaendert { box-shadow: inset 3px 0 0 var(--accent); background: rgba(167,139,250,.08); }
+  .opt b { display: block; font-size: .95rem; }
+  .opt small { color: var(--muted); font-size: .82rem; display: block; }
+  .opt code { font-size: .72rem; color: #6f6f94; }
+  .opt select, .opt input[type=number] { width: 150px; }
+  .opt input[type=text] { width: min(320px, 100%); }
+  .opt.breit { grid-template-columns: 1fr; }
+  .schalter { position: relative; width: 46px; height: 26px; flex: none; }
+  .schalter input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+  .schalter span { position: absolute; inset: 0; border-radius: 999px; background: #3a3a55; transition: background .15s; }
+  .schalter span::after { content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  .schalter input:checked + span { background: var(--gut); }
+  .schalter input:checked + span::after { transform: translateX(20px); }
+  .schalter input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  .gruppe.aus .opt { opacity: .45; pointer-events: none; }
+  .speichern-leiste { position: sticky; bottom: -16px; margin: 10px -16px -16px; padding: 12px 16px; display: flex; gap: 8px; align-items: center; background: #1a1a2e; border-top: 1px solid var(--linie); }
+  .speichern-leiste span { flex: 1; font-size: .9rem; color: var(--muted); }
+  @media (min-width: 860px) { .speichern-leiste { bottom: -20px; margin: 10px -26px -20px; padding: 12px 26px; } .konfig-spalten { columns: 2; column-gap: 22px; } .gruppe { break-inside: avoid; } }
   details summary { cursor: pointer; color: var(--muted); font-weight: 700; margin-top: 10px; }
 </style>
 </head>
 <body>
 <main>
   <a href="./">← Zurück zur Spielekiste</a>
-  <h1>⛏️ Minecraft</h1>
+  <div class="kopfzeile"><h1>⛏️ Minecraft</h1><button type="button" id="verwaltungKnopf" hidden>⚙️ Verwaltung</button></div>
   <p class="muted" id="unter">Wird geladen …</p>
 
   <section class="karte" id="status" hidden>
@@ -133,39 +190,64 @@
     <div id="karteInhalt"></div>
   </section>
 
-  <section class="karte" id="admin" hidden>
-    <div class="admin-spalten"><div>
-    <h2>⚙️ Server-Einstellungen <small class="muted">· nur für dich</small></h2>
-    <form id="formular" class="raster">
-      <label>Schwierigkeit<select name="difficulty"><option value="peaceful">Friedlich</option><option value="easy">Leicht</option><option value="normal">Normal</option><option value="hard">Schwer</option></select></label>
-      <label>Spielmodus<select name="gamemode"><option value="survival">Überleben</option><option value="creative">Kreativ</option><option value="adventure">Abenteuer</option><option value="spectator">Zuschauer</option></select></label>
-      <label>Max. Spieler<input name="max-players" type="number" min="1" max="50"></label>
-      <label>Sichtweite (Chunks, 4–16)<input name="view-distance" type="number" min="4" max="16"></label>
-      <label>Simulationsweite (4–12)<input name="simulation-distance" type="number" min="4" max="12"></label>
-      <label>Spawn-Schutz (Blöcke)<input name="spawn-protection" type="number" min="0" max="64"></label>
-      <label style="grid-column:1/-1">Nachricht in der Serverliste<input name="motd" maxlength="59"></label>
-      <label class="haken"><input type="checkbox" name="pvp"> PvP erlaubt</label>
-      <label class="haken"><input type="checkbox" name="allow-flight"> Fliegen erlaubt (gegen Fehl-Kicks)</label>
-      <label class="haken"><input type="checkbox" name="white-list"> Nur freigeschaltete Spieler</label>
-      <label class="haken"><input type="checkbox" name="hardcore"> Hardcore (nur neue Welt)</label>
-    </form>
-    <div class="zeile"><button type="button" class="haupt" id="speichern">💾 Speichern &amp; neu starten</button></div>
-    </div><div>
-
-    <h2 style="margin-top:20px">👥 Freigeschaltet</h2>
-    <div id="whitelist" class="klein"></div>
-    <div class="zeile"><input id="mcName" placeholder="Minecraft-Name" autocapitalize="none" spellcheck="false" maxlength="16" style="flex:1"><button type="button" id="freischalten">Freischalten</button></div>
-
-    <h2 style="margin-top:20px">🌍 Neue Welt</h2>
-    <p class="klein muted">Die aktuelle Welt wird nicht gelöscht, sondern archiviert (die letzten 3 bleiben im Ordner <code>minecraft\welten-archiv</code>). Aktueller Seed: <code id="seedAlt">–</code></p>
-    <div class="zeile"><input id="seed" placeholder="Seed (leer = zufällig)" maxlength="64" style="flex:1"><button type="button" class="gefahr" id="neueWelt">🌍 Neue Welt erzeugen</button></div>
-
-    <h2 style="margin-top:20px">🎛️ Server</h2>
-    <div class="zeile" id="steuer"></div>
-    <p id="meldung" class="klein"></p>
-    </div></div>
-  </section>
+  <div id="toast" role="status" hidden></div>
 </main>
+<dialog id="verwaltung" aria-label="Server-Verwaltung">
+  <div class="vw">
+    <div class="vw-kopf"><span class="punkt" id="vwPunkt"></span><h2>Verwaltung <small class="muted klein" id="vwStatus"></small></h2><button type="button" id="vwZu" aria-label="Schließen">✕</button></div>
+    <nav class="vw-nav" role="tablist">
+      <button type="button" role="tab" data-tab="server" aria-selected="true">🎛️ Server &amp; Konsole</button>
+      <button type="button" role="tab" data-tab="spieler" aria-selected="false">👥 Spieler &amp; Admins</button>
+      <button type="button" role="tab" data-tab="plugins" aria-selected="false">🧩 Plugins</button>
+      <button type="button" role="tab" data-tab="einstellungen" aria-selected="false">⚙️ Einstellungen</button>
+      <button type="button" role="tab" data-tab="welt" aria-selected="false">🌍 Welt</button>
+    </nav>
+    <div class="vw-inhalt">
+      <section data-panel="server">
+        <div class="zeile" id="steuer" style="margin-top:0"></div>
+        <h3>🖥️ Konsole</h3>
+        <pre id="konsole">…</pre>
+        <div class="zeile"><input id="befehl" placeholder="Befehl, z. B. time set day" autocapitalize="none" spellcheck="false" maxlength="200" style="flex:1"><button type="button" class="haupt" id="befehlLos">Senden</button></div>
+        <div class="schnell" id="schnell">
+          <button type="button" data-cmd="time set day">☀️ Tag</button><button type="button" data-cmd="time set night">🌙 Nacht</button>
+          <button type="button" data-cmd="weather clear">🌤️ Klares Wetter</button><button type="button" data-cmd="save-all">💾 Welt speichern</button>
+          <button type="button" data-cmd="say ">📣 Nachricht an alle …</button>
+        </div>
+      </section>
+      <section data-panel="spieler" hidden>
+        <div class="tabelle"><table class="spielertab"><thead><tr><th>Spieler</th><th>Darf rein</th><th>Admin (OP)</th><th></th></tr></thead><tbody id="spielerZeilen"></tbody></table></div>
+        <div class="zeile"><input id="mcName" placeholder="Minecraft-Name" autocapitalize="none" spellcheck="false" maxlength="16" style="flex:1"><button type="button" id="freischalten">Freischalten</button></div>
+        <p class="hinweis" style="margin-top:12px">Admins (OP) dürfen im Spiel alle Befehle nutzen – z. B. Spielmodus wechseln, teleportieren, Zeit setzen. Nur Leuten geben, denen du vertraust.</p>
+        <div id="gebanntBox"></div>
+      </section>
+      <section data-panel="plugins" hidden>
+        <p class="hinweis" style="margin-top:0">Plugins laufen nur auf dem Server – deine Mitspieler müssen nichts installieren und spielen weiter mit normalem Minecraft. (Echte Mods wie Fabric/Forge müsste jeder selbst installieren – deshalb hier Plugins.) Nach dem Installieren startet der Server kurz neu.</p>
+        <h3>Installiert</h3>
+        <div id="pluginListe"></div>
+        <h3>Neue Plugins (Modrinth)</h3>
+        <div class="zeile" style="margin-top:0"><input id="pluginSuche" placeholder="Suchen, z. B. graves, chunky, essentials" style="flex:1"><button type="button" id="pluginSuchen">🔍 Suchen</button></div>
+        <div id="pluginTreffer" style="margin-top:10px"></div>
+      </section>
+      <section data-panel="einstellungen" hidden>
+        <div class="zeile" style="margin-top:0"><input id="konfigSuche" type="search" placeholder="🔍 Einstellung suchen …" style="flex:1"></div>
+        <form id="formular" onsubmit="return false"></form>
+        <div class="speichern-leiste" id="speichernLeiste" hidden><span id="aenderungen"></span><button type="button" id="verwerfen">Verwerfen</button><button type="button" class="haupt" id="speichern">💾 Speichern</button></div>
+      </section>
+      <section data-panel="welt" hidden>
+        <div class="vw-zwei"><div>
+          <h3>🌍 Neue Welt</h3>
+          <p class="klein muted">Die aktuelle Welt wird nicht gelöscht, sondern archiviert (die letzten 3 bleiben in <code>minecraft\welten-archiv</code>). Statistik und Inventare fangen neu an. Aktueller Seed: <code id="seedAlt">–</code></p>
+          <div class="zeile"><input id="seed" placeholder="Seed (leer = zufällig)" maxlength="64" style="flex:1"><button type="button" class="gefahr" id="neueWelt">🌍 Neue Welt erzeugen</button></div>
+        </div><div>
+          <h3>🗺️ Weltkarte</h3>
+          <p class="klein muted" id="vwKarte"></p>
+        </div></div>
+      </section>
+    </div>
+    <p id="vwMeldung" class="klein"></p>
+  </div>
+</dialog>
+
 <script>
 const API = new URL('api/', location.href);
 async function api(weg, methode = 'GET', koerper) {
@@ -177,7 +259,10 @@ const $ = (id) => document.getElementById(id);
 const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 const zeit = (min) => (min >= 60 ? Math.floor(min / 60) + ' h ' + (min % 60) + ' min' : min + ' min');
 let info = null, sortierung = { s: 'tode', ab: true }, adminDaten = null, beschaeftigtVorher = '';
-const melden = (t) => { $('meldung').textContent = t; };
+const melden = (t) => {
+  $('vwMeldung').textContent = t;
+  if (!$('verwaltung').open) { const m = $('toast'); m.textContent = t; m.hidden = false; clearTimeout(m.t); m.t = setTimeout(() => { m.hidden = true; }, 6000); }
+};
 
 const WERTE = [
   { s: 'tode', t: '💀 Tode', f: (v) => v },
@@ -282,28 +367,206 @@ async function laden() {
   beschaeftigtVorher = info.beschaeftigt || '';
 }
 
+let tab = 'server';
+// Konfiguration wie bei Hostern: gruppiert, mit Erklärung. p = server.properties (Neustart), r = Spielregel (sofort)
+const JA = 'bool', ZAHL = (min, max) => ({ typ: 'zahl', min, max }), WAHL = (...l) => ({ typ: 'wahl', wahl: l });
+const KONFIG = [
+  { titel: '🏠 Allgemein', quelle: 'p', felder: [
+    ['motd', 'Server-Beschreibung', 'Text unter dem Servernamen in der Mehrspieler-Liste.', { typ: 'text', max: 59 }],
+    ['max-players', 'Max. Spieler', 'Wie viele gleichzeitig online sein dürfen.', ZAHL(1, 50)],
+    ['difficulty', 'Schwierigkeit', 'Friedlich = keine Monster, kein Hunger-Schaden.', WAHL(['peaceful', 'Friedlich'], ['easy', 'Leicht'], ['normal', 'Normal'], ['hard', 'Schwer'])],
+    ['gamemode', 'Standard-Spielmodus', 'Für neue Spieler.', WAHL(['survival', 'Überleben'], ['creative', 'Kreativ'], ['adventure', 'Abenteuer'], ['spectator', 'Zuschauer'])],
+    ['force-gamemode', 'Spielmodus erzwingen', 'Jeder bekommt beim Betreten wieder den Standard-Spielmodus.', JA],
+    ['hardcore', 'Hardcore', 'Nur ein Leben, danach Zuschauer. Wirkt erst bei einer neuen Welt.', JA],
+    ['player-idle-timeout', 'AFK-Kick nach (Minuten)', '0 = nie rauswerfen.', ZAHL(0, 240)],
+    ['pause-when-empty-seconds', 'Pause wenn leer (Sekunden)', 'Server rechnet nicht weiter, wenn niemand online ist – spart Strom. 0 = aus.', ZAHL(0, 3600)],
+  ] },
+  { titel: '🔒 Zugang & Rechte', quelle: 'p', felder: [
+    ['white-list', 'Whitelist', 'Nur freigeschaltete Spieler dürfen rein (empfohlen).', JA],
+    ['enforce-whitelist', 'Whitelist sofort durchsetzen', 'Wer von der Whitelist entfernt wird, fliegt sofort raus.', JA],
+    ['spawn-protection', 'Spawn-Schutz (Blöcke)', 'Radius um den Spawn, in dem nur Admins bauen dürfen. 0 = aus.', ZAHL(0, 64)],
+    ['op-permission-level', 'Admin-Rechte-Stufe', '4 = alles, 3 = ohne Server-Befehle, 2 = Cheats, 1 = nur Spawn-Schutz umgehen.', ZAHL(1, 4)],
+    ['allow-flight', 'Fliegen erlauben', 'Verhindert Fehl-Kicks wegen „Fliegen“ (z. B. mit Plugins oder bei Lag).', JA],
+    ['enable-command-block', 'Befehlsblöcke', 'Befehlsblöcke funktionieren in der Welt.', JA],
+    ['hide-online-players', 'Spielerliste verstecken', 'Andere sehen in der Serverliste nicht, wer online ist.', JA],
+  ] },
+  { titel: '⚔️ Kampf & Tod', quelle: 'r', felder: [
+    ['pvp', 'PvP', 'Spieler können sich gegenseitig Schaden zufügen.', JA],
+    ['keep_inventory', 'Inventar behalten', 'Nach dem Tod bleiben Sachen und Erfahrung erhalten.', JA],
+    ['immediate_respawn', 'Sofort wiederbeleben', 'Ohne Todesbildschirm.', JA],
+    ['natural_health_regeneration', 'Natürliche Heilung', 'Mit vollem Hunger regeneriert sich Leben.', JA],
+    ['fall_damage', 'Fallschaden', '', JA], ['fire_damage', 'Feuerschaden', '', JA], ['drowning_damage', 'Ertrinken', '', JA],
+    ['show_death_messages', 'Todesnachrichten im Chat', '', JA],
+  ] },
+  { titel: '🌙 Tag, Wetter & Schlaf', quelle: 'r', felder: [
+    ['advance_time', 'Tag-Nacht-Wechsel', 'Aus = Zeit bleibt stehen.', JA],
+    ['advance_weather', 'Wetterwechsel', 'Aus = Wetter bleibt, wie es ist.', JA],
+    ['players_sleeping_percentage', 'Schlafen: nötiger Anteil (%)', 'Wie viele schlafen müssen, um die Nacht zu überspringen. 1 = einer reicht.', ZAHL(0, 100)],
+    ['spawn_phantoms', 'Phantome', 'Erscheinen bei Spielern, die lange nicht geschlafen haben.', JA],
+  ] },
+  { titel: '🧟 Mobs', quelle: 'r', felder: [
+    ['spawn_mobs', 'Mobs spawnen', 'Tiere und Monster erscheinen von selbst.', JA],
+    ['spawn_monsters', 'Monster spawnen', '', JA],
+    ['mob_griefing', 'Mobs verändern Blöcke', 'Creeper-Explosionen zerstören Blöcke, Endermen nehmen Blöcke mit.', JA],
+    ['spawn_patrols', 'Plünderer-Patrouillen', '', JA], ['raids', 'Überfälle (Raids)', '', JA],
+    ['spawn_wandering_traders', 'Fahrende Händler', '', JA], ['mob_drops', 'Mobs lassen Beute fallen', '', JA],
+  ] },
+  { titel: '🌍 Welt', quelle: 'r', felder: [
+    ['block_drops', 'Blöcke droppen', 'Abgebaute Blöcke lassen Gegenstände fallen.', JA],
+    ['random_tick_speed', 'Wachstums-Tempo', 'Wie schnell Pflanzen wachsen (Standard 3). Höher = mehr Rechenlast.', ZAHL(0, 30)],
+    ['respawn_radius', 'Spawn-Radius', 'Wie weit verstreut neue Spieler am Spawn erscheinen.', ZAHL(0, 32)],
+    ['allow_entering_nether_using_portals', 'Nether erlaubt', 'Netherportale funktionieren.', JA],
+    ['show_advancement_messages', 'Erfolge im Chat', '', JA], ['send_command_feedback', 'Befehls-Rückmeldungen', '', JA],
+  ] },
+  { titel: '🗺️ Weltgenerierung', hinweis: 'gilt erst für eine neue Welt', quelle: 'p', felder: [
+    ['level-type', 'Welttyp', '', WAHL(['minecraft:normal', 'Normal'], ['minecraft:flat', 'Flach'], ['minecraft:large_biomes', 'Große Biome'], ['minecraft:amplified', 'Zerklüftet (braucht viel Leistung)'])],
+    ['generate-structures', 'Strukturen', 'Dörfer, Tempel, Festungen …', JA],
+    ['max-world-size', 'Weltgrenze (Radius in Blöcken)', 'Kleiner = weniger Speicherplatz auf dem Laptop.', ZAHL(1000, 29999984)],
+  ] },
+  { titel: '⚡ Leistung', quelle: 'p', felder: [
+    ['view-distance', 'Sichtweite (Chunks)', 'Weniger = flüssiger auf dem Laptop. Empfohlen 8–10.', ZAHL(4, 16)],
+    ['simulation-distance', 'Simulationsweite (Chunks)', 'Wie weit Mobs, Pflanzen und Redstone aktiv sind. Empfohlen 6–8.', ZAHL(4, 12)],
+    ['entity-broadcast-range-percentage', 'Sichtweite für Mobs (%)', 'Ab wann man Mobs und Spieler sieht.', ZAHL(10, 500)],
+  ] },
+];
+let konfigAlt = { p: {}, r: {} };
+function konfigWert(el) { return el.type === 'checkbox' ? String(el.checked) : el.value.trim(); }
+function konfigZeichnen() {
+  const d = adminDaten, e = d.einstellungen || {}, r = d.regeln || null;
+  konfigAlt = { p: Object.assign({}, e), r: Object.assign({}, r || {}) };
+  const steuer = (k, f) => {
+    const typ = f.typ || f;
+    if (typ === 'bool') return '<label class="schalter"><input type="checkbox" name="' + k + '" aria-label="' + k + '"><span></span></label>';
+    if (typ === 'zahl') return '<input type="number" name="' + k + '" min="' + f.min + '" max="' + f.max + '" inputmode="numeric">';
+    if (typ === 'wahl') return '<select name="' + k + '">' + f.wahl.map(([v, t]) => '<option value="' + v + '">' + esc(t) + '</option>').join('') + '</select>';
+    return '<input type="text" name="' + k + '" maxlength="' + f.max + '">';
+  };
+  $('formular').innerHTML = '<div class="konfig-spalten">' + KONFIG.map((g) => {
+    const aus = g.quelle === 'r' && !r;
+    return '<div class="gruppe' + (aus ? ' aus' : '') + '"><h3>' + g.titel + ' <small>' + (g.quelle === 'r' ? (aus ? 'Spielregeln – nur bei laufendem Server' : 'Spielregel · wirkt sofort') : (g.hinweis || 'Neustart nötig')) + '</small></h3>'
+      + g.felder.map(([k, t, beschr, f]) => '<div class="opt' + ((f.typ || f) === 'text' ? ' breit' : '') + '" data-quelle="' + g.quelle + '" data-such="' + esc((t + ' ' + beschr + ' ' + k).toLowerCase()) + '"><div><b>' + esc(t) + '</b>'
+        + (beschr ? '<small>' + esc(beschr) + '</small>' : '') + '<code>' + k + '</code></div>' + steuer(k, f) + '</div>').join('') + '</div>';
+  }).join('') + '</div>';
+  [...$('formular').elements].forEach((el) => {
+    const q = el.closest('.opt').dataset.quelle, v = (q === 'p' ? e : r || {})[el.name];
+    if (v !== undefined) { if (el.type === 'checkbox') el.checked = v === 'true'; else el.value = v; }
+    konfigAlt[q][el.name] = konfigWert(el);   // fehlt der Wert in der Datei, gilt der angezeigte Standard als „unverändert“
+  });
+  konfigGeaendert();
+}
+function konfigAenderungen() {
+  const a = { p: {}, r: {} };
+  [...$('formular').elements].forEach((el) => {
+    if (!el.name) return; const q = el.closest('.opt').dataset.quelle, v = konfigWert(el), alt = konfigAlt[q][el.name];
+    const neu = alt === undefined ? (el.type === 'checkbox' ? el.checked : v !== '') : v !== alt;
+    el.closest('.opt').classList.toggle('geaendert', neu);
+    if (neu && v !== '') a[q][el.name] = v;
+  });
+  return a;
+}
+function konfigGeaendert() {
+  const a = konfigAenderungen(), np = Object.keys(a.p).length, nr = Object.keys(a.r).length;
+  $('speichernLeiste').hidden = !(np + nr);
+  $('aenderungen').textContent = (np + nr) + ' Änderung' + (np + nr === 1 ? '' : 'en') + (np ? ' · Server startet danach neu' : ' · wirkt sofort');
+  $('formular').dataset.geaendert = np + nr ? '1' : '';
+}
+$('formular').addEventListener('input', konfigGeaendert);
+$('formular').addEventListener('change', konfigGeaendert);
+$('verwerfen').addEventListener('click', () => { $('formular').dataset.geaendert = ''; konfigZeichnen(); });
+$('konfigSuche').addEventListener('input', () => {
+  const q = $('konfigSuche').value.trim().toLowerCase();
+  document.querySelectorAll('#formular .opt').forEach((o) => { o.hidden = !!q && !o.dataset.such.includes(q); });
+  document.querySelectorAll('#formular .gruppe').forEach((g) => { g.hidden = !!q && ![...g.querySelectorAll('.opt')].some((o) => !o.hidden); });
+});
 async function adminLaden() {
   const r = await api('admin/minecraft').catch(() => ({ status: 0 }));
   if (r.status !== 200) return;
-  adminDaten = r.json; $('admin').hidden = false;
-  const e = adminDaten.einstellungen || {}, f = $('formular');
-  if (!f.dataset.geaendert) {
-    [...f.elements].forEach((el) => { if (!(el.name in e)) return; if (el.type === 'checkbox') el.checked = e[el.name] === 'true'; else el.value = e[el.name]; });
-  }
-  $('seedAlt').textContent = e['level-seed'] || 'zufällig';
-  $('whitelist').innerHTML = (adminDaten.whitelist || []).map((n) => '<span class="chip">' + ((adminDaten.online || []).includes(n) ? '🟢 ' : '') + esc(n)
-    + ' <button type="button" data-weg="' + esc(n) + '" aria-label="' + esc(n) + ' entfernen">✕</button></span>').join('') || (adminDaten.laeuft ? '<span class="muted">noch niemand</span>' : '<span class="muted">sichtbar, sobald der Server läuft</span>');
-  $('whitelist').querySelectorAll('[data-weg]').forEach((b) => b.addEventListener('click', () => {
-    if (confirm(b.dataset.weg + ' entfernen?')) tun({ aktion: 'entfernen', spieler: b.dataset.weg }, b.dataset.weg + ' entfernt');
-  }));
-  $('steuer').innerHTML = adminDaten.laeuft
+  adminDaten = r.json; $('verwaltungKnopf').hidden = false;
+  if ($('verwaltung').open) verwaltungZeigen();
+}
+function verwaltungZeigen() {
+  const d = adminDaten; if (!d) return;
+  $('vwPunkt').classList.toggle('an', !!d.laeuft);
+  $('vwStatus').textContent = '· ' + (d.beschaeftigt ? '⏳ ' + d.beschaeftigt + ' …' : d.laeuft ? 'online · ' + (d.online || []).length + ' Spieler' : d.gestoppt ? 'gestoppt' : 'startet / offline');
+  // Server
+  $('steuer').innerHTML = d.laeuft
     ? '<button type="button" data-a="neustart">🔁 Neustart</button><button type="button" data-a="stopp">⏹ Stopp</button>'
     : '<button type="button" class="haupt" data-a="start">▶️ Start</button>';
   $('steuer').querySelectorAll('[data-a]').forEach((b) => b.addEventListener('click', () => {
     const a = b.dataset.a; if (a === 'stopp' && !confirm('Server stoppen? Die Welt wird vorher gespeichert.')) return;
     tun({ aktion: a }, { start: 'Server startet (ca. 1 Minute)', stopp: 'Server gestoppt', neustart: 'Neustart läuft (ca. 1 Minute)' }[a], b);
   }));
+  // Spieler: alle, die irgendwo vorkommen
+  const ops = new Set(d.ops || []), wl = new Set(d.whitelist || []), on = new Set(d.online || []), ban = new Set((d.gebannt || []).map((x) => x.name));
+  const namen = [...new Set([...(d.online || []), ...(d.whitelist || []), ...(d.ops || []), ...((info && info.spieler) || []).map((p) => p.name)])].filter((n) => !ban.has(n)).sort((a, b) => (on.has(b) - on.has(a)) || a.localeCompare(b));
+  const knopf = (aktiv, a, n, text) => '<button type="button" class="an-aus" aria-pressed="' + aktiv + '" data-sp="' + a + '" data-n="' + esc(n) + '">' + text + '</button>';
+  $('spielerZeilen').innerHTML = namen.map((n) => '<tr><td>' + (on.has(n) ? '🟢 ' : '') + '<b>' + esc(n) + '</b></td>'
+    + '<td>' + knopf(wl.has(n), wl.has(n) ? 'entfernen' : 'freischalten', n, wl.has(n) ? '✓ ja' : 'nein') + '</td>'
+    + '<td>' + knopf(ops.has(n), ops.has(n) ? 'deop' : 'op', n, ops.has(n) ? '👑 Admin' : 'nein') + '</td>'
+    + '<td>' + (on.has(n) ? '<button type="button" data-sp="kick" data-n="' + esc(n) + '">Rauswerfen</button>' : '') + '<button type="button" class="gefahr" data-sp="ban" data-n="' + esc(n) + '">Bannen</button></td></tr>').join('')
+    || '<tr><td colspan="4" class="muted">' + (d.laeuft ? 'Noch niemand – unten freischalten.' : 'Server starten, um Spieler zu verwalten.') + '</td></tr>';
+  $('gebanntBox').innerHTML = (d.gebannt || []).length ? '<h3>🚫 Gebannt</h3>' + d.gebannt.map((x) => '<span class="chip">' + esc(x.name) + (x.grund ? ' <small class="muted">(' + esc(x.grund) + ')</small>' : '')
+    + ' <button type="button" data-sp="pardon" data-n="' + esc(x.name) + '" aria-label="' + esc(x.name) + ' entbannen">↩︎ entbannen</button></span>').join('') : '';
+  // Plugins
+  $('pluginListe').innerHTML = (d.plugins || []).map((p) => '<div class="plugin"><span class="icon">🧩</span><div><b>' + esc(p.titel) + '</b><small>' + esc(p.version ? 'Version ' + p.version : p.datei) + '</small></div>'
+    + '<button type="button" data-weg-plugin="' + esc(p.datei) + '">Entfernen</button></div>').join('') || '<p class="klein muted">Noch keine Plugins.</p>';
+  // Einstellungen
+  const e = d.einstellungen || {};
+  if (!$('formular').dataset.geaendert) konfigZeichnen();
+  $('seedAlt').textContent = e['level-seed'] || 'zufällig';
+  $('vwKarte').textContent = d.karte ? '✓ Installiert (squaremap) – zu sehen auf dieser Seite unter „Weltkarte“. Entfernen kannst du sie unter Plugins.' : 'Noch nicht installiert – Knopf „Karte installieren“ auf der Seite oder unter Plugins nach „squaremap“ suchen.';
 }
+// Klicks in der Verwaltung (Delegation, weil die Inhalte neu gezeichnet werden)
+$('verwaltung').addEventListener('click', (ev) => {
+  const b = ev.target.closest('button'); if (!b) return;
+  if (b.dataset.sp) {
+    const a = b.dataset.sp, n = b.dataset.n;
+    const frage = { ban: n + ' bannen? Er/sie kommt dann nicht mehr auf den Server.', op: n + ' zum Admin (OP) machen? Admins dürfen im Spiel alles.', entfernen: n + ' darf dann nicht mehr rein. Sicher?' }[a];
+    if (frage && !confirm(frage)) return;
+    tun({ aktion: a, spieler: n }, { freischalten: n + ' freigeschaltet', entfernen: n + ' entfernt', op: n + ' ist jetzt Admin', deop: n + ' ist kein Admin mehr', kick: n + ' rausgeworfen', ban: n + ' gebannt', pardon: n + ' entbannt' }[a], b);
+  } else if (b.dataset.wegPlugin) {
+    if (confirm(b.dataset.wegPlugin + ' entfernen? Der Server startet dafür kurz neu.')) tun({ aktion: 'plugin-entfernen', datei: b.dataset.wegPlugin }, 'Plugin wird entfernt, Server startet neu', b);
+  } else if (b.dataset.slug) {
+    tun({ aktion: 'plugin-installieren', slug: b.dataset.slug, titel: b.dataset.titel }, b.dataset.titel + ' wird installiert, Server startet neu (ca. 1–2 Minuten)', b).then((ok) => { if (ok) { b.textContent = '✓ wird installiert'; b.disabled = true; } });
+  } else if (b.dataset.cmd !== undefined) {
+    if (b.dataset.cmd === 'say ') { const t = prompt('Nachricht an alle im Spiel:'); if (t) befehl('say ' + t); } else befehl(b.dataset.cmd);
+  } else if (b.dataset.tab) tabZeigen(b.dataset.tab);
+});
+function tabZeigen(t) {
+  tab = t;
+  document.querySelectorAll('[data-tab]').forEach((x) => x.setAttribute('aria-selected', String(x.dataset.tab === t)));
+  document.querySelectorAll('[data-panel]').forEach((x) => { x.hidden = x.dataset.panel !== t; });
+  if (t === 'server') konsole();
+  if (t === 'plugins' && !$('pluginTreffer').dataset.geladen) pluginsSuchen();
+}
+async function konsole() {
+  const r = await api('admin/protokoll?datei=minecraft').catch(() => ({ status: 0 }));
+  const k = $('konsole'), unten = k.scrollTop + k.clientHeight >= k.scrollHeight - 20;
+  k.textContent = r.status === 200 ? (r.json.zeilen || []).join('\n') || '(noch leer)' : 'Konsole nicht erreichbar.';
+  if (unten) k.scrollTop = k.scrollHeight;
+}
+async function befehl(c) {
+  const x = await api('admin/minecraft', 'POST', { aktion: 'befehl', befehl: c }).catch(() => ({ status: 0 }));
+  melden(x.status === 200 ? '✓ /' + c + (x.json.antwort ? ' → ' + x.json.antwort : '') : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
+  setTimeout(konsole, 700);
+}
+async function pluginsSuchen() {
+  const box = $('pluginTreffer'); box.dataset.geladen = '1'; box.innerHTML = '<p class="klein muted">Suche …</p>';
+  const x = await api('admin/minecraft', 'POST', { aktion: 'plugin-suchen', suche: $('pluginSuche').value }).catch(() => ({ status: 0 }));
+  if (x.status !== 200) { box.innerHTML = '<p class="klein">⚠️ ' + esc((x.json && x.json.fehler) || 'Suche geht gerade nicht.') + '</p>'; delete box.dataset.geladen; return; }
+  const zahl = (n) => (n >= 1e6 ? (n / 1e6).toFixed(1).replace('.', ',') + ' Mio.' : n >= 1e3 ? Math.round(n / 1e3) + ' Tsd.' : n);
+  box.innerHTML = (x.json.treffer || []).map((t) => '<div class="plugin">' + (t.bild ? '<img src="' + esc(t.bild) + '" alt="" loading="lazy" referrerpolicy="no-referrer">' : '<span class="icon">🧩</span>')
+    + '<div><b>' + esc(t.titel) + ' <small style="display:inline;color:var(--muted);font-weight:600">· ' + zahl(t.downloads) + ' Downloads</small></b><small>' + esc(t.text) + '</small></div>'
+    + (t.installiert ? '<span class="klein muted">✓ installiert</span>' : '<button type="button" data-slug="' + esc(t.slug) + '" data-titel="' + esc(t.titel) + '">Installieren</button>') + '</div>').join('')
+    || '<p class="klein muted">Nichts gefunden, das zu dieser Minecraft-Version passt.</p>';
+}
+$('pluginSuchen').addEventListener('click', pluginsSuchen);
+$('pluginSuche').addEventListener('keydown', (e) => { if (e.key === 'Enter') pluginsSuchen(); });
+$('befehlLos').addEventListener('click', () => { const c = $('befehl').value.trim(); if (c) { befehl(c); $('befehl').value = ''; } });
+$('befehl').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('befehlLos').click(); });
+$('verwaltungKnopf').addEventListener('click', () => { $('verwaltung').showModal(); verwaltungZeigen(); tabZeigen(tab); });
+$('vwZu').addEventListener('click', () => $('verwaltung').close());
+setInterval(() => { if ($('verwaltung').open && tab === 'server' && !document.hidden) konsole(); }, 4000);
 
 async function tun(body, text, knopf) {
   if (knopf) knopf.disabled = true;
@@ -319,15 +582,14 @@ $('kopieren').addEventListener('click', async () => {
   try { await navigator.clipboard.writeText(info.adresse); $('kopieren').textContent = '✓ Kopiert'; } catch (e) { prompt('Adresse:', info.adresse); }
   setTimeout(() => { $('kopieren').textContent = '📋 Kopieren'; }, 2000);
 });
-$('formular').addEventListener('input', () => { $('formular').dataset.geaendert = '1'; });
 $('speichern').addEventListener('click', async () => {
-  const werte = {};
-  [...$('formular').elements].forEach((el) => { if (el.name && (el.type === 'checkbox' || el.value.trim() !== '')) werte[el.name] = el.type === 'checkbox' ? String(el.checked) : el.value.trim(); });
-  const x = await api('admin/minecraft', 'POST', { aktion: 'einstellungen', werte }).catch(() => ({ status: 0 }));
-  if (x.status !== 200) { melden('⚠️ ' + ((x.json && x.json.fehler) || 'Speichern hat nicht geklappt.')); return; }
-  delete $('formular').dataset.geaendert;
-  if (adminDaten && adminDaten.laeuft) await tun({ aktion: 'neustart' }, 'Gespeichert – Server startet neu (ca. 1 Minute)', $('speichern'));
-  else melden('✓ Gespeichert – gilt beim nächsten Start');
+  const a = konfigAenderungen(), knopf = $('speichern'); knopf.disabled = true;
+  const fehler = (x) => { knopf.disabled = false; melden('⚠️ ' + ((x.json && x.json.fehler) || 'Speichern hat nicht geklappt.')); };
+  if (Object.keys(a.r).length) { const x = await api('admin/minecraft', 'POST', { aktion: 'regeln', werte: a.r }).catch(() => ({ status: 0 })); if (x.status !== 200) return fehler(x); }
+  if (Object.keys(a.p).length) { const x = await api('admin/minecraft', 'POST', { aktion: 'einstellungen', werte: a.p }).catch(() => ({ status: 0 })); if (x.status !== 200) return fehler(x); }
+  knopf.disabled = false; $('formular').dataset.geaendert = '';
+  if (Object.keys(a.p).length && adminDaten && adminDaten.laeuft) await tun({ aktion: 'neustart' }, 'Gespeichert – Server startet neu (ca. 1 Minute)', knopf);
+  else { melden(Object.keys(a.p).length ? '✓ Gespeichert – gilt beim nächsten Start' : '✓ Spielregeln geändert – wirken sofort'); adminLaden(); }
 });
 $('freischalten').addEventListener('click', async () => {
   const n = $('mcName').value.trim(); if (!n) return;

@@ -35,6 +35,8 @@ const mcBefehl = async (c) => {
   let x = /^whitelist add (\w+)$/.exec(c); if (x) { mc.whitelist.push(x[1]); return 'Added ' + x[1] + ' to the whitelist'; }
   x = /^whitelist remove (\w+)$/.exec(c); if (x) { mc.whitelist = mc.whitelist.filter((n) => n !== x[1]); return 'Removed ' + x[1]; }
   if (c === 'stop') { mc.laeuft = false; return ''; }
+  x = /^gamerule (\w+)(?: (\S+))?$/.exec(c);
+  if (x) { mc.regeln = mc.regeln || {}; if (x[2]) { mc.regeln[x[1]] = x[2]; return 'Gamerule ' + x[1] + ' is now set to: ' + x[2]; } return 'Gamerule ' + x[1] + ' is currently set to: ' + (mc.regeln[x[1]] || (x[1] === 'players_sleeping_percentage' ? '100' : 'true')); }
   return '';
 };
 fs.writeFileSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen', 'minecraft.ps1'), '# Platzhalter');
@@ -53,7 +55,10 @@ const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Ann
   diensteAbfragen: async () => ({ dienste: { Caddy: 'Running', DuckDNS: 'Running', Update: 'Ready', AdGuard: 'fehlt' }, akku: 78, netz: true }),
   aktionStarten: (ps) => { aktionen.push(ps); },
   mcBefehl, aufgabeAusfuehren: async (art) => { mc.aufgaben.push(art); mc.laeuft = true; },
-  mcWarten: 60, modrinth: async (pfad) => { mc.modrinth = pfad; return [{ version_type: 'release', version_number: '1.4.4', files: [{ primary: true, url: 'https://cdn.example/squaremap-paper-mc26.3-1.4.4.jar', filename: 'squaremap-paper-mc26.3-1.4.4.jar' }] }]; },
+  mcWarten: 60, modrinth: async (pfad) => {
+    if (pfad.startsWith('/search')) { mc.suche = pfad; return { hits: [{ slug: 'graves', title: 'Graves', description: 'Grabstein mit deinen Sachen', downloads: 1234567, icon_url: 'https://cdn.modrinth.com/i.png' }, { slug: 'squaremap', title: 'squaremap', description: 'Karte', downloads: 900000, icon_url: 'http://boese.example/x.png' }] }; }
+    mc.modrinth = pfad; const slug = /project\/([^/]+)/.exec(pfad)[1], f = slug === 'squaremap' ? 'squaremap-paper-mc26.3-1.4.4.jar' : slug + '-2.0.jar';
+    return [{ version_type: 'release', version_number: slug === 'squaremap' ? '1.4.4' : '2.0', files: [{ primary: true, url: 'https://cdn.modrinth.com/data/x/' + f, filename: f }] }]; },
   herunterladen: async (q, ziel) => { mc.download = q; fs.writeFileSync(ziel, 'jar'); },
   aufgabeAbfragen: async () => ({ zustand: 'Ready', letzterLauf: '2026-11-19T12:19:00', ergebnis: 2147942402, aktion: 'powershell.exe -File C:\\homeserver\\wachen.ps1' }), updateStarten: async () => {
   updatesGestartet++;
@@ -352,21 +357,50 @@ const caddy = http.createServer((req, res) => {
   ck('Minecraft-Seite: ohne Anmeldung nichts', (await fetch('http://localhost:8766/api/minecraft/info')).status === 401);
   await A.goto(URL_ + 'minecraft.html'); await ruhig(A, 1500);
   const seite = await A.textContent('main');
-  ck('Minecraft-Seite: Status, Adresse, Tabelle (meiste Tode oben), Admin-Bereich', /Online/.test(seite) && /localhost/.test(seite) && /🟢 Steve/.test(seite) && (await A.textContent('#balken .wer')).includes('Steve') && (await A.$$('#verlauf path')).length === 3 && /Steve/.test(await A.textContent('#koepfe')) && await A.isVisible('#admin') && /easy/.test(await A.inputValue('[name=difficulty]')));
+  ck('Minecraft-Seite: Status, Adresse, Tabelle (meiste Tode oben), Admin-Bereich', /Online/.test(seite) && /localhost/.test(seite) && !!(await A.$('[data-name=Steve] .online-punkt')) && (await A.textContent('#balken .wer')).includes('Steve') && (await A.$$('#verlauf path')).length === 3 && /Steve/.test(await A.textContent('#koepfe')) && await A.isVisible('#verwaltungKnopf'));
   await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-seite.png'), fullPage: true });
   await C.goto(URL_ + 'minecraft.html'); await ruhig(C, 1500);
-  ck('Minecraft-Seite: Ben sieht Statistik, aber keine Einstellungen', /Alex/.test(await C.textContent('#zeilen')) && !(await C.isVisible('#admin')));
+  ck('Minecraft-Seite: Ben sieht Statistik, aber keine Einstellungen', /Alex/.test(await C.textContent('#zeilen')) && !(await C.isVisible('#verwaltungKnopf')) && !(await C.$('#verwaltung[open]')));
   const benAdmin = await C.evaluate(async () => (await (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'neue-welt' }) })).status));
   ck('Minecraft-Seite: Ben darf keine neue Welt erzeugen', benAdmin === 403);
+  // Verwaltung (Overlay)
+  await A.click('#verwaltungKnopf'); await ruhig(A, 1500);
+  ck('Verwaltung: öffnet als Overlay mit Server, Konsole (Server-Log) und Reitern', await A.isVisible('#verwaltung') && /Steve joined the game/.test(await A.textContent('#konsole')) && (await A.$$('[data-tab]')).length === 5);
+  await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-verwaltung.png') });
+  await A.fill('#befehl', '/time set day'); await A.press('#befehl', 'Enter'); await ruhig(A, 800);
+  const stoppBefehl = await A.evaluate(async () => (await (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'befehl', befehl: 'stop' }) })).status));
+  ck('Konsole: Befehl wird gesendet (ohne /), „stop“ nur über den Knopf', mc.befehle.includes('time set day') && stoppBefehl === 400 && !mc.befehle.slice(-3).includes('stop'));
+  await A.click('[data-tab=spieler]'); await ruhig(A, 400);
+  ck('Spieler: alle Spieler mit „darf rein“ und „Admin“', /Steve/.test(await A.textContent('#spielerZeilen')) && /Alex/.test(await A.textContent('#spielerZeilen')));
+  await A.click('[data-sp=op][data-n=Alex]'); await ruhig(A, 1500);
+  await A.click('[data-sp=ban][data-n=Alex]'); await ruhig(A, 1500);
+  const opBoese = await A.evaluate(async () => (await (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'op', spieler: 'x @a' }) })).status));
+  ck('Spieler: zum Admin machen und bannen (nach Rückfrage), falsche Namen abgelehnt', mc.befehle.includes('op Alex') && mc.befehle.includes('ban Alex') && opBoese === 400);
+  await A.click('[data-tab=plugins]'); await ruhig(A, 1200);
+  const treffer = await A.textContent('#pluginTreffer');
+  ck('Plugins: Vorschläge von Modrinth passend zur Version (nur Modrinth-Bilder)', /Graves/.test(treffer) && /1,2 Mio\. Downloads/.test(treffer) && /versions%3A26\.3/.test(mc.suche) && !(await A.$('#pluginTreffer img[src*="boese"]')));
+  await A.click('[data-slug=graves]'); await ruhig(A, 2500);
+  const pliste = JSON.parse(fs.readFileSync(path.join(MC, 'plugins.json'), 'utf8'));
+  ck('Plugins: installieren lädt die passende Datei, Server startet neu', fs.existsSync(path.join(MC, 'plugins', 'graves-2.0.jar')) && pliste.graves && pliste.graves.version === '2.0' && mc.laeuft);
+  await A.evaluate(() => adminLaden()); await ruhig(A, 800);
+  ck('Plugins: in der Liste „Installiert“', /Graves/.test(await A.textContent('#pluginListe')));
+  await A.click('[data-weg-plugin="graves-2.0.jar"]'); await ruhig(A, 2500);
+  const pfadBoese = await A.evaluate(async () => (await (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'plugin-entfernen', datei: '../paper.jar' }) })).status));
+  ck('Plugins: entfernen klappt, fremde Pfade nicht', !fs.existsSync(path.join(MC, 'plugins', 'graves-2.0.jar')) && !JSON.parse(fs.readFileSync(path.join(MC, 'plugins.json'), 'utf8')).graves && pfadBoese === 404 && fs.existsSync(path.join(MC, 'paper.jar')));
   // Einstellungen speichern
-  await A.selectOption('[name=difficulty]', 'hard'); await A.uncheck('[name=pvp]'); await A.fill('[name=motd]', 'Spielekiste!');
+  await A.click('[data-tab=einstellungen]'); await ruhig(A, 400);
+  ck('Einstellungen: aktuelle Werte im Formular', /easy/.test(await A.inputValue('[name=difficulty]')));
+  await A.selectOption('[name=difficulty]', 'hard'); await A.uncheck('[name=pvp]'); await A.fill('[name=players_sleeping_percentage]', '1'); await A.fill('[name=motd]', 'Spielekiste!');
+  ck('Einstellungen: Änderungen markiert, Leiste zeigt Anzahl', /4 Änderungen/.test(await A.textContent('#aenderungen')) && (await A.$$('.opt.geaendert')).length === 4);
+  await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-konfig.png') });
   const vorher = mc.befehle.length; await A.click('#speichern'); await ruhig(A, 2500);
   const props = fs.readFileSync(path.join(MC, 'server.properties'), 'utf8');
-  ck('Einstellungen: geschrieben (Rest bleibt), Server neu gestartet', /difficulty=hard\r\n/.test(props) && /pvp=false/.test(props) && /motd=Spielekiste!/.test(props) && /rcon\.port=25575/.test(props) && /^#Minecraft/.test(props) && mc.befehle.slice(vorher).includes('stop') && mc.laeuft, props);
+  ck('Einstellungen: geschrieben (Rest bleibt), Server neu gestartet', /difficulty=hard\r\n/.test(props) && mc.befehle.includes('gamerule pvp false') && mc.befehle.includes('gamerule players_sleeping_percentage 1') && !/players_sleeping/.test(props) && /motd=Spielekiste!/.test(props) && /rcon\.port=25575/.test(props) && /^#Minecraft/.test(props) && mc.befehle.slice(vorher).includes('stop') && mc.laeuft, props);
   const boese = await A.evaluate(async () => [(await (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'einstellungen', werte: { 'rcon.password': 'x' } }) })).status),
     (await (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'einstellungen', werte: { motd: 'a\nenable-rcon=false' } }) })).status)]);
   ck('Einstellungen: fremde Schlüssel und Zeilenumbrüche abgelehnt', boese.every((x) => x === 400) && !/enable-rcon=false/.test(fs.readFileSync(path.join(MC, 'server.properties'), 'utf8')));
   // Neue Welt
+  await A.click('[data-tab=welt]'); await ruhig(A, 300);
   await A.fill('#seed', 'ggwp'); await A.click('#neueWelt'); await ruhig(A, 3000);
   const archiv = fs.readdirSync(path.join(MC, 'welten-archiv'));
   ck('Neue Welt: alte Welt archiviert, Seed gesetzt, Server läuft wieder', archiv.length === 1 && fs.existsSync(path.join(MC, 'welten-archiv', archiv[0], 'world', 'stats', 'aaaa-1.json')) && !fs.existsSync(path.join(MC, 'world'))
@@ -390,6 +424,10 @@ const caddy = http.createServer((req, res) => {
     await P.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-desktop.png'), fullPage: true });
     const lay = await P.evaluate(() => { const r = (id) => document.getElementById(id).getBoundingClientRect(); return { rang: r('rangliste').top, verlauf: r('tage').top, karteH: r('karte').height, breit: document.documentElement.scrollWidth <= innerWidth }; });
     ck('Minecraft-Seite am PC: Rangliste und Verlauf nebeneinander, große Karte, nichts ragt heraus', Math.abs(lay.rang - lay.verlauf) < 2 && lay.karteH > 550 && lay.breit, JSON.stringify(lay));
+    await P.click('#verwaltungKnopf'); await ruhig(P, 1200); await P.click('[data-tab=spieler]'); await ruhig(P, 300);
+    await P.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-verwaltung-pc.png') });
+    await P.click('[data-tab=einstellungen]'); await ruhig(P, 500); await P.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-konfig-pc.png') });
+    await P.click('[data-tab=plugins]'); await ruhig(P, 1200); await P.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-plugins-pc.png') });
     await ctx.close(); }
   sqm.close(); await C.goto(URL_); await ruhig(C, 1500);
   await A.goto(URL_); await ruhig(A, 1500);

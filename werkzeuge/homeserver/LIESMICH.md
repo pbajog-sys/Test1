@@ -90,3 +90,13 @@ Nur Admin: Einstellungen (`server.properties`, nur erlaubte Schlüssel, danach N
 optionalem Seed (alte Welt → `minecraft\welten-archiv\<Datum>`, die letzten 3 bleiben), **Karte installieren**
 (squaremap-Plugin von Modrinth passend zur Version; läuft nur lokal auf Port 8080, der Konto-Server reicht sie unter
 `/api/minecraft/karte/` an Angemeldete durch – Port 8080 also NICHT freigeben).
+
+**Verwaltung** (Knopf „⚙️ Verwaltung“ auf der Minecraft-Seite, nur Admin, Overlay mit Reitern):
+- Server & Konsole: Start/Stopp/Neustart, `latest.log` live, Befehle per RCON (ohne `stop`), Schnellknöpfe (Tag, Wetter, speichern, Nachricht).
+- Spieler & Admins: Whitelist, OP geben/nehmen, rauswerfen, bannen/entbannen (`ops.json`, `banned-players.json`).
+- Plugins: Suche auf Modrinth (nur Paper-Plugins für die laufende Version), installieren/entfernen mit kurzem Neustart;
+  was über die App kam, steht in `minecraft\plugins.json`. Plugins statt Mods: Mitspieler brauchen nichts zu installieren.
+- Einstellungen wie bei Hostern: Kategorien mit Erklärung, Suche. `server.properties` (Neustart) und Spielregeln
+  (`/gamerule`, wirken sofort, gelten pro Welt; seit 1.21.11 snake_case, PvP ist seit 1.21.9 eine Spielregel).
+  RCON, online-mode, Ports usw. sind absichtlich nicht änderbar.
+- Welt: neue Welt mit Seed, Kartenstatus.
