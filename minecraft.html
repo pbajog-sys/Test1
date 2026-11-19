@@ -111,6 +111,31 @@
   .ich .kopfbild { --g: 44px; }
   .ich div { flex: 1; min-width: 0; }
   @media (max-width: 1099px) { #mitspielen { order: 0; } }
+  .kopf-knoepfe { margin-left: auto; display: flex; align-items: center; gap: 12px; }
+  .kopf-knoepfe a { margin: 0 !important; }
+  .klein-knopf { font-size: .82rem; padding: 6px 12px; font-family: "Nunito", system-ui, sans-serif; }
+  .ort-filter { display: flex; gap: 4px; flex-wrap: wrap; margin: 8px 0; }
+  .ort-filter button { font-size: .8rem; padding: 4px 9px; border-radius: 999px; background: var(--slot); }
+  .ort-filter button[aria-pressed="true"] { background: var(--accent); color: var(--auf-accent); }
+  .ort { display: grid; grid-template-columns: 34px minmax(0,1fr) auto; gap: 10px; align-items: center; padding: 8px; border-radius: 8px; background: var(--slot); margin-bottom: 6px;
+    box-shadow: inset 2px 2px 0 rgba(0,0,0,.35), inset -2px -2px 0 rgba(255,255,255,.04); }
+  .ort .sym { font-size: 1.4rem; text-align: center; }
+  .ort b { display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ort small { color: var(--muted); font-size: .78rem; display: block; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .ort code { font-size: .78rem; color: var(--accent-hell); }
+  .ort .aktionen { display: flex; gap: 4px; }
+  .ort .aktionen button { padding: 5px 8px; font-size: .85rem; }
+  dialog#ortDialog { border: 1px solid var(--linie); border-radius: 14px; background: var(--flaeche); color: var(--text); width: min(460px, 100vw - 24px); padding: 18px; }
+  dialog#ortDialog::backdrop { background: rgba(3,5,8,.72); backdrop-filter: blur(4px); }
+  .ort-form label { display: flex; flex-direction: column; gap: 4px; font-size: .88rem; color: var(--muted); }
+  .ort-kats { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 6px; margin-top: 10px; }
+  .ort-kats button { display: flex; flex-direction: column; align-items: center; gap: 2px; padding: 8px 2px; font-size: .68rem; background: var(--slot); font-weight: 700; }
+  .ort-kats button span { font-size: 1.35rem; }
+  .ort-kats button[aria-checked="true"] { outline: 2px solid var(--accent); background: #17220f; }
+  .ort-xyz { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+  .ort-xyz input, .ort-form input { width: 100%; }
+  dialog#ortDialog { overflow-x: hidden; }
+  @media (max-width: 1099px) { #orte { order: 3; } }
   /* ---------- Spieler ---------- */
   .kopfbild { --g: 40px; width: var(--g); height: var(--g); border-radius: 4px; flex: none; position: relative; overflow: hidden; background: #3d6b2c; color: #fff; font-family: var(--pixel); font-weight: 700;
     display: grid; place-items: center; font-size: calc(var(--g) * .5); image-rendering: pixelated; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
@@ -258,6 +283,13 @@
       <p class="klein muted" id="keiner" hidden>Noch hat niemand gespielt – Werte erscheinen nach dem ersten Besuch in der Welt (der Server speichert sie alle paar Minuten).</p>
       <div id="einzeln" hidden></div>
     </section>
+    <section class="karte" id="orte" hidden>
+      <h2>📍 Orte <small class="muted" id="orteZahl"></small></h2>
+      <div class="zeile" style="margin-top:0"><input id="orteSuche" type="search" placeholder="Suchen …" style="flex:1"></div>
+      <div class="ort-filter" id="orteFilter"></div>
+      <div id="orteListe"></div>
+      <p class="klein muted" style="margin:10px 0 0">Tipp: im Spiel einfach in den Chat <code>!ort Höhle mit Diamanten</code> oder <code>!haus</code> schreiben – der Ort landet an deiner Position auf der Karte.</p>
+    </section>
     <div id="statistik" hidden>
       <section class="karte" id="rangliste">
         <h2>🏅 Rangliste</h2>
@@ -279,11 +311,24 @@
     </div>
   </aside>
   <section class="karte karte-gross" id="karte" hidden>
-    <h2>🗺️ Weltkarte <a id="karteVoll" href="api/minecraft/karte/" target="_blank" rel="noopener" hidden>Vollbild ↗</a></h2>
+    <h2>🗺️ Weltkarte <span class="kopf-knoepfe"><button type="button" id="ortNeu" class="klein-knopf">📍 Ort markieren</button><a id="karteVoll" href="api/minecraft/karte/" target="_blank" rel="noopener" hidden>Vollbild ↗</a></span></h2>
     <div id="karteInhalt"></div>
   </section>
   <div id="toast" role="status" hidden></div>
 </main>
+<dialog id="ortDialog" aria-label="Ort markieren">
+  <form method="dialog" class="ort-form" id="ortForm">
+    <div class="vw-kopf" style="padding:0 0 10px"><h2 style="flex:1;margin:0">📍 Ort markieren</h2><button type="button" id="ortZu" aria-label="Schließen">✕</button></div>
+    <label>Name<input id="ortName" maxlength="40" placeholder="z. B. Philips Haus, Spinnen-Spawner …" required></label>
+    <div class="ort-kats" id="ortKats" role="radiogroup" aria-label="Kategorie"></div>
+    <div class="reiter" id="ortWelt" role="group" aria-label="Welt" style="margin:10px 0"><button type="button" data-w="overworld" aria-pressed="true">🌍 Oberwelt</button><button type="button" data-w="nether" aria-pressed="false">🔥 Nether</button><button type="button" data-w="end" aria-pressed="false">🌌 End</button></div>
+    <div class="ort-xyz"><label>X<input id="ortX" inputmode="numeric" placeholder="120"></label><label>Y<input id="ortY" inputmode="numeric" placeholder="64"></label><label>Z<input id="ortZ" inputmode="numeric" placeholder="-340"></label></div>
+    <button type="button" id="ortHier" style="width:100%;margin-top:8px">🎯 Meine Position im Spiel übernehmen</button>
+    <p class="klein muted" style="margin:6px 0 0">Koordinaten siehst du im Spiel mit <b>F3</b> („XYZ“).</p>
+    <label style="margin-top:10px">Notiz (optional)<input id="ortNotiz" maxlength="200" placeholder="z. B. Eingang hinter dem Wasserfall"></label>
+    <div class="zeile"><button type="button" class="haupt" id="ortSpeichern" style="flex:1">📍 Speichern</button></div>
+  </form>
+</dialog>
 <dialog id="verwaltung" aria-label="Server-Verwaltung">
   <div class="vw">
     <div class="vw-kopf"><span class="punkt" id="vwPunkt"></span><h2>Verwaltung <small class="muted klein" id="vwStatus"></small></h2><button type="button" id="vwZu" aria-label="Schließen">✕</button></div>
@@ -293,7 +338,6 @@
       <button type="button" role="tab" data-tab="plugins" aria-selected="false">🧩 Plugins</button>
       <button type="button" role="tab" data-tab="einstellungen" aria-selected="false">⚙️ Einstellungen</button>
       <button type="button" role="tab" data-tab="welt" aria-selected="false">🌍 Welt</button>
-      <button type="button" role="tab" data-tab="discord" aria-selected="false">💬 Discord</button>
     </nav>
     <div class="vw-inhalt">
       <section data-panel="server">
@@ -333,20 +377,6 @@
         <div class="zeile" style="margin-top:0"><input id="konfigSuche" type="search" placeholder="🔍 Einstellung suchen …" style="flex:1"></div>
         <form id="formular" onsubmit="return false"></form>
         <div class="speichern-leiste" id="speichernLeiste" hidden><span id="aenderungen"></span><button type="button" id="verwerfen">Verwerfen</button><button type="button" class="haupt" id="speichern">💾 Speichern</button></div>
-      </section>
-      <section data-panel="discord" hidden>
-        <h3>💬 Discord <small class="muted" id="discordStatus"></small></h3>
-        <p class="klein muted" style="margin-top:0">Der Server postet automatisch in einen Discord-Kanal, was im Spiel passiert – ganz ohne Bot.</p>
-        <div id="discordLink">
-          <ol class="klein muted" style="padding-left:20px;margin:6px 0 10px">
-            <li>In Discord: Kanal → <b>⚙️ Kanal bearbeiten → Integrationen → Webhooks → Neuer Webhook</b></li>
-            <li>Name z. B. „Minecraft“, dann <b>Webhook-URL kopieren</b></li>
-            <li>Hier einfügen und verbinden – es kommt eine Test-Nachricht.</li>
-          </ol>
-          <div class="zeile" style="margin-top:0"><input id="discordUrl" type="password" placeholder="https://discord.com/api/webhooks/…" autocomplete="off" spellcheck="false" style="flex:1"><button type="button" class="haupt" id="discordVerbinden">Verbinden &amp; testen</button></div>
-        </div>
-        <div id="discordAn" style="margin-top:12px"></div>
-        <div class="zeile"><button type="button" id="discordTest" hidden>📨 Test-Nachricht</button><button type="button" id="discordTrennen" hidden>Trennen</button></div>
       </section>
       <section data-panel="welt" hidden>
         <div class="vw-zwei"><div>
@@ -490,6 +520,69 @@ $('ramLos').addEventListener('click', async () => {
   if (x.status !== 200) { melden('⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.')); return; }
   if (adminDaten && adminDaten.laeuft) tun({ aktion: 'neustart' }, gb + ' GB eingestellt – Server startet neu', $('ramLos')); else melden('✓ ' + gb + ' GB – gilt beim nächsten Start');
 });
+// ---------- Orte ----------
+const KAT_NAMEN = { haus: 'Haus', hoehle: 'Höhle', spawner: 'Spawner', mine: 'Mine', dorf: 'Dorf', struktur: 'Struktur', portal: 'Portal', farm: 'Farm', fund: 'Fundort', sonstiges: 'Sonstiges' };
+const WELT_NAMEN = { overworld: 'Oberwelt', nether: 'Nether', end: 'End' };
+let orteDaten = null, orteFilter = '', ortKat = 'haus', ortWelt = 'overworld', karteWelten = null;
+async function orteLaden() {
+  const r = await api('minecraft/orte').catch(() => ({ status: 0 }));
+  if (r.status !== 200) return;
+  orteDaten = r.json; $('orte').hidden = false; orteZeigen();
+}
+function orteZeigen() {
+  const K = orteDaten.kategorien, q = $('orteSuche').value.trim().toLowerCase();
+  const da = [...new Set(orteDaten.orte.map((o) => o.kat))];
+  $('orteFilter').innerHTML = da.length > 1 ? '<button type="button" data-f="" aria-pressed="' + !orteFilter + '">Alle</button>' + da.map((k) => '<button type="button" data-f="' + k + '" aria-pressed="' + (orteFilter === k) + '">' + K[k] + ' ' + KAT_NAMEN[k] + '</button>').join('') : '';
+  const l = orteDaten.orte.filter((o) => (!orteFilter || o.kat === orteFilter) && (!q || (o.name + ' ' + o.notiz + ' ' + o.von).toLowerCase().includes(q))).sort((a, b) => b.zeit - a.zeit);
+  $('orteZahl').textContent = orteDaten.orte.length ? '· ' + orteDaten.orte.length : '';
+  $('orteListe').innerHTML = l.map((o) => '<div class="ort"><span class="sym">' + (K[o.kat] || '⭐') + '</span><div><b title="' + esc(o.name) + '">' + esc(o.name) + '</b>'
+    + '<small><code>' + o.x + ' / ' + o.y + ' / ' + o.z + '</code>' + (o.welt !== 'overworld' ? ' · ' + WELT_NAMEN[o.welt] : '') + ' · ' + esc(o.von) + '</small>' + (o.notiz ? '<small>' + esc(o.notiz) + '</small>' : '') + '</div>'
+    + '<div class="aktionen">' + (info && info.karte ? '<button type="button" data-zeig="' + o.id + '" title="Auf der Karte zeigen">🗺️</button>' : '') + '<button type="button" data-kopier="' + o.id + '" title="Koordinaten kopieren">📋</button>'
+    + (o.eigen ? '<button type="button" data-weg="' + o.id + '" title="Löschen">🗑️</button>' : '') + '</div></div>').join('')
+    || '<p class="klein muted">' + (orteDaten.orte.length ? 'Nichts gefunden.' : 'Noch keine Orte – markier dein Haus, eine Höhle oder einen Spawner!') + '</p>';
+}
+$('orteSuche').addEventListener('input', () => orteDaten && orteZeigen());
+$('orte').addEventListener('click', async (e) => {
+  const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.f !== undefined) { orteFilter = b.dataset.f; orteZeigen(); return; }
+  const o = orteDaten.orte.find((x) => x.id === (b.dataset.zeig || b.dataset.kopier || b.dataset.weg)); if (!o) return;
+  if (b.dataset.kopier) { const t = o.x + ' ' + o.y + ' ' + o.z; try { await navigator.clipboard.writeText(t); melden('✓ Koordinaten kopiert: ' + t); } catch (x) { prompt('Koordinaten:', t); } }
+  if (b.dataset.weg && confirm('„' + o.name + '“ löschen?')) { const x = await api('minecraft/orte/loeschen', 'POST', { id: o.id }); melden(x.status === 200 ? '✓ Gelöscht' : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.')); orteLaden(); }
+  if (b.dataset.zeig) karteZeigen(o);
+});
+async function karteZeigen(o) {
+  if (!karteWelten) { try { const j = await (await fetch('api/minecraft/karte/tiles/settings.json')).json(); karteWelten = (j.worlds || []).map((w) => w.name); } catch (e) { karteWelten = []; } }
+  const welt = karteWelten.find((n) => (o.welt === 'nether' ? /nether/ : o.welt === 'end' ? /end/ : /overworld|^world$/).test(n));
+  const f = $('karteFrame'); if (!f) return;
+  f.src = 'api/minecraft/karte/?' + (welt ? 'world=' + encodeURIComponent(welt) + '&' : '') + 'x=' + o.x + '&z=' + o.z + '&zoom=4';
+  if (innerWidth < 1100) $('karte').scrollIntoView({ behavior: 'smooth' });
+}
+// Dialog „Ort markieren“
+function ortDialog() {
+  const K = (orteDaten && orteDaten.kategorien) || {};
+  $('ortKats').innerHTML = Object.keys(KAT_NAMEN).map((k) => '<button type="button" role="radio" data-k="' + k + '" aria-checked="' + (k === ortKat) + '"><span>' + (K[k] || '') + '</span>' + KAT_NAMEN[k] + '</button>').join('');
+  $('ortHier').hidden = !(orteDaten && orteDaten.meinMc);
+  $('ortDialog').showModal(); $('ortName').focus();
+}
+$('ortNeu').addEventListener('click', ortDialog);
+$('ortZu').addEventListener('click', () => $('ortDialog').close());
+$('ortKats').addEventListener('click', (e) => { const b = e.target.closest('[data-k]'); if (!b) return; ortKat = b.dataset.k; $('ortKats').querySelectorAll('[data-k]').forEach((x) => x.setAttribute('aria-checked', String(x === b))); });
+$('ortWelt').addEventListener('click', (e) => { const b = e.target.closest('[data-w]'); if (!b) return; ortWelt = b.dataset.w; $('ortWelt').querySelectorAll('[data-w]').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); });
+async function ortSenden(hier) {
+  const name = $('ortName').value.trim(); if (!name) { $('ortName').focus(); melden('⚠️ Bitte einen Namen eingeben.'); return; }
+  const body = { name, kat: ortKat, notiz: $('ortNotiz').value.trim(), welt: ortWelt };
+  if (hier) body.hier = true; else Object.assign(body, { x: $('ortX').value.trim(), y: $('ortY').value.trim(), z: $('ortZ').value.trim() });
+  const x = await api('minecraft/orte', 'POST', body).catch(() => ({ status: 0 }));
+  if (x.status !== 200) { melden('⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.')); return; }
+  const o = x.json.ort; $('ortDialog').close(); ['ortName', 'ortX', 'ortY', 'ortZ', 'ortNotiz'].forEach((i) => { $(i).value = ''; });
+  melden('✓ „' + o.name + '“ markiert (' + o.x + ' / ' + o.y + ' / ' + o.z + ')'); await orteLaden(); karteZeigen(o);
+}
+$('ortSpeichern').addEventListener('click', () => ortSenden(false));
+$('ortHier').addEventListener('click', () => ortSenden(true));
+['ortX', 'ortY', 'ortZ'].forEach((i) => $(i).addEventListener('paste', (e) => {   // „120 64 -340“ auf einmal einfügen
+  const t = (e.clipboardData || window.clipboardData).getData('text'), z = t.match(/-?\d+/g);
+  if (z && z.length >= 3) { e.preventDefault(); $('ortX').value = z[0]; $('ortY').value = z[1]; $('ortZ').value = z[2]; }
+}));
 function mitspielen() {
   const z = info.zugang || { modus: 'aus' }, box = $('mitspielen');
   if (z.mein) {
@@ -539,7 +632,7 @@ async function laden() {
   $('spielerZahl').textContent = (info.spieler || []).length ? '· ' + info.spieler.length : '';
   $('version').textContent = info.version ? '' + info.version.replace(/^paper-|\.jar$/g, '').replace(/-(\d+)$/, ' (Paper-Build $1)') : '';
   $('adresse').textContent = info.adresse;
-  zeichnen(); mitspielen(); leistungZeigen();
+  zeichnen(); mitspielen(); leistungZeigen(); if (!orteDaten || !document.hidden) orteLaden();
   $('karteVoll').hidden = !info.karte;
   if (info.karte) {
     if (!$('karteFrame')) $('karteInhalt').innerHTML = '<iframe id="karteFrame" src="api/minecraft/karte/" title="Weltkarte" loading="lazy"></iframe><p class="karte-tipp">Die Karte zeichnet sich nach und nach – überall dort, wo schon jemand war.</p>';
@@ -693,12 +786,6 @@ function verwaltungZeigen() {
     || '<tr><td colspan="4" class="muted">' + (d.laeuft ? 'Noch niemand – unten freischalten.' : 'Server starten, um Spieler zu verwalten.') + '</td></tr>';
   $('gebanntBox').innerHTML = (d.gebannt || []).length ? '<h3>🚫 Gebannt</h3>' + d.gebannt.map((x) => '<span class="chip">' + esc(x.name) + (x.grund ? ' <small class="muted">(' + esc(x.grund) + ')</small>' : '')
     + ' <button type="button" data-sp="pardon" data-n="' + esc(x.name) + '" aria-label="' + esc(x.name) + ' entbannen">↩︎ entbannen</button></span>').join('') : '';
-  // Discord
-  const dc = d.discord || { verbunden: false, an: {} };
-  $('discordStatus').textContent = dc.verbunden ? '· verbunden ✓' : '· nicht verbunden';
-  $('discordLink').hidden = dc.verbunden; $('discordTest').hidden = $('discordTrennen').hidden = !dc.verbunden;
-  const DC = [['beitritt', '🟢 Beitreten & Verlassen'], ['tod', '💀 Tode (auf Deutsch)'], ['erfolg', '🏆 Erfolge'], ['server', '✅ Server online/offline'], ['chat', '💬 Chat aus dem Spiel']];
-  $('discordAn').innerHTML = DC.map(([x, t]) => '<div class="opt"><div><b>' + t + '</b></div><label class="schalter"><input type="checkbox" data-dc="' + x + '"' + (dc.an[x] ? ' checked' : '') + ' aria-label="' + t + '"><span></span></label></div>').join('');
   // Selbst eintragen
   const z = d.zugang || { modus: 'aus', code: '', konten: [] };
   if (document.activeElement !== $('zugangModus')) $('zugangModus').value = z.modus;
@@ -758,15 +845,6 @@ async function pluginsSuchen() {
     || '<p class="klein muted">Nichts gefunden, das zu dieser Minecraft-Version passt.</p>';
 }
 $('pluginSuchen').addEventListener('click', pluginsSuchen);
-async function discordAendern(body, text) {
-  const x = await api('admin/minecraft', 'POST', Object.assign({ aktion: 'discord' }, body)).catch(() => ({ status: 0 }));
-  melden(x.status === 200 ? '✓ ' + text : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
-  await adminLaden(); return x.status === 200;
-}
-$('discordVerbinden').addEventListener('click', async () => { const u = $('discordUrl').value.trim(); if (!u) return; if (await discordAendern({ url: u, test: true }, 'Verbunden – schau in deinen Discord-Kanal')) $('discordUrl').value = ''; });
-$('discordTest').addEventListener('click', () => discordAendern({ test: true }, 'Test-Nachricht gesendet'));
-$('discordTrennen').addEventListener('click', () => { if (confirm('Discord trennen?')) discordAendern({ url: '' }, 'Discord getrennt'); });
-$('discordAn').addEventListener('change', (e) => { const i = e.target.closest('[data-dc]'); if (i) discordAendern({ an: { [i.dataset.dc]: i.checked } }, 'Gespeichert'); });
 $('zugangModus').addEventListener('change', () => tun({ aktion: 'zugang', modus: $('zugangModus').value }, { code: 'Selbst eintragen mit Code an', offen: 'Selbst eintragen für alle Konten an', aus: 'Selbst eintragen aus' }[$('zugangModus').value]).then(adminLaden));
 $('zugangNeu').addEventListener('click', () => { if (confirm('Neuen Code erzeugen? Der alte gilt dann nicht mehr (wer schon drin ist, bleibt drin).')) tun({ aktion: 'zugang', neuerCode: true }, 'Neuer Code erzeugt').then(adminLaden); });
 $('zugangKopieren').addEventListener('click', async () => { const c = $('zugangCode').textContent; try { await navigator.clipboard.writeText(c); melden('✓ Code kopiert'); } catch (e) { prompt('Code:', c); } });

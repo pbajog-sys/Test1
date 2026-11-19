@@ -26,7 +26,6 @@ fs.writeFileSync(path.join(DATEN, 'caddy.log'), 'zeile 1\nCaddy-Testzeile\n');
 fs.mkdirSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen'), { recursive: true });
 fs.writeFileSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen', 'adguard.ps1'), '# Platzhalter');
 // Minecraft-Platzhalter: „RCON“ als Liste im Speicher, „Aufgabe starten“ wird nur notiert
-const dcPosts = [];
 const mc = { laeuft: true, whitelist: [], online: [], befehle: [], aufgaben: [], aufruf: null };
 const mcBefehl = async (c) => {
   mc.befehle.push(c);
@@ -36,6 +35,9 @@ const mcBefehl = async (c) => {
   let x = /^whitelist add (\w+)$/.exec(c); if (x) { mc.whitelist.push(x[1]); return 'Added ' + x[1] + ' to the whitelist'; }
   x = /^whitelist remove (\w+)$/.exec(c); if (x) { mc.whitelist = mc.whitelist.filter((n) => n !== x[1]); return 'Removed ' + x[1]; }
   if (c === 'stop') { mc.laeuft = false; return ''; }
+  x = /^data get entity (\w+) (Pos|Dimension)$/.exec(c);
+  if (x) { if (!mc.online.includes(x[1])) return 'No entity was found'; return x[2] === 'Pos' ? x[1] + ' has the following entity data: [120.7d, 64.0d, -340.2d]' : x[1] + ' has the following entity data: "' + (mc.dim || 'minecraft:overworld') + '"'; }
+  if (/^tellraw /.test(c)) { mc.gesagt = (mc.gesagt || []).concat(c); return ''; }
   if (c === 'tps') return '§6TPS from last 1m, 5m, 15m: §e17.5, §a*20.0, §a19.9';
   if (c === 'mspt') return '§6Server tick times §e(§7avg§e/§7min§e/§7max§e)§6 from last 5s§7,§6 10s§7,§6 1m§e:\n§6◴ §a12.3§7/§a4.0§7/§a30.1§e, §a11.0§7/§a4.0§7/§a30.1';
   x = /^gamerule (\w+)(?: (\S+))?$/.exec(c);
@@ -59,8 +61,7 @@ const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Ann
   diensteAbfragen: async () => ({ dienste: { Caddy: 'Running', DuckDNS: 'Running', Update: 'Ready', AdGuard: 'fehlt' }, akku: 78, netz: true }),
   aktionStarten: (ps) => { aktionen.push(ps); },
   mcBefehl, aufgabeAusfuehren: async (art) => { mc.aufgaben.push(art); mc.laeuft = true; },
-  logTakt: 0, systemWerte: async () => ({ javaMB: 1536, tempC: 63, akku: 100, netz: true, diskFreiGB: 120.5, laufzeitStd: 30.2, takt: 95 }), discordSenden: async (url, n) => { if (/kaputt/.test(url)) throw new Error('Discord 404'); dcPosts.push(n); },
-  mojangProfil: async (n) => ({ notch: { id: '069a79f444e94726a5befca90e38aaf5', name: 'Notch' }, jeb_: { id: '853c80ef3c3749fdaa49938b674adae6', name: 'jeb_' } })[n.toLowerCase()] || null,
+  logTakt: 0, systemWerte: async () => ({ javaMB: 1536, tempC: 63, akku: 100, netz: true, diskFreiGB: 120.5, laufzeitStd: 30.2, takt: 95 }), mojangProfil: async (n) => ({ notch: { id: '069a79f444e94726a5befca90e38aaf5', name: 'Notch' }, jeb_: { id: '853c80ef3c3749fdaa49938b674adae6', name: 'jeb_' } })[n.toLowerCase()] || null,
   mcWarten: 60, modrinth: async (pfad) => {
     if (pfad.startsWith('/search')) { mc.suche = pfad; return { hits: [{ slug: 'graves', title: 'Graves', description: 'Grabstein mit deinen Sachen', downloads: 1234567, icon_url: 'https://cdn.modrinth.com/i.png' }, { slug: 'squaremap', title: 'squaremap', description: 'Karte', downloads: 900000, icon_url: 'http://boese.example/x.png' }] }; }
     mc.modrinth = pfad; const slug = /project\/([^/]+)/.exec(pfad)[1], f = slug === 'squaremap' ? 'squaremap-paper-mc26.3-1.4.4.jar' : slug + '-2.0.jar';
@@ -371,7 +372,7 @@ const caddy = http.createServer((req, res) => {
   ck('Minecraft-Seite: Ben darf keine neue Welt erzeugen', benAdmin === 403);
   // Verwaltung (Overlay)
   await A.click('#verwaltungKnopf'); await ruhig(A, 1500);
-  ck('Verwaltung: öffnet als Overlay mit Server, Konsole (Server-Log) und Reitern', await A.isVisible('#verwaltung') && /Steve joined the game/.test(await A.textContent('#konsole')) && (await A.$$('[data-tab]')).length === 6);
+  ck('Verwaltung: öffnet als Overlay mit Server, Konsole (Server-Log) und Reitern', await A.isVisible('#verwaltung') && /Steve joined the game/.test(await A.textContent('#konsole')) && (await A.$$('[data-tab]')).length === 5);
   await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-verwaltung.png') });
   const kopf = await A.textContent('#leistung');
   ck('Leistung: TPS (gelb bei 17,5), RAM, Temperatur und CPU in der Kopfleiste', /17,5 TPS/.test(kopf) && /1,5\/2 GB/.test(kopf) && /63 °C/.test(kopf) && !!(await A.$('#leistung .mittel')), kopf);
@@ -433,19 +434,6 @@ const caddy = http.createServer((req, res) => {
   ck('Selbst eintragen: nach 5 falschen Codes gesperrt', gesperrt === 429);
   await A.evaluate(() => adminLaden()); await ruhig(A, 600);
   ck('Verwaltung: Code und Selbst-Eingetragene sichtbar', (await A.textContent('#zugangCode')) === z1[1].code && /jeb_/.test(await A.textContent('#zugangListe')) && /Ben/.test(await A.textContent('#zugangListe')));
-  // ---------- Discord ----------
-  const dcFalsch = await post(A, 'admin/minecraft', { aktion: 'discord', url: 'https://boese.example/api/webhooks/1/x' });
-  await A.click('[data-tab=discord]'); await ruhig(A, 300);
-  await A.fill('#discordUrl', 'https://discord.com/api/webhooks/123456/abcDEF-ghi'); await A.click('#discordVerbinden'); await ruhig(A, 1200);
-  const adminJson = await A.evaluate(async () => JSON.stringify((await (await fetch('api/admin/minecraft')).json()).discord));
-  ck('Discord: nur echte Webhook-Links, Test-Nachricht, Link geht nie zurück an den Browser', dcFalsch[0] === 400 && dcPosts.length === 1 && /verbunden/.test(await A.textContent('#discordStatus')) && !/abcDEF/.test(adminJson), adminJson);
-  await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-discord.png') });
-  api.mcLogPruefen();
-  fs.appendFileSync(path.join(MC, 'logs', 'latest.log'), ['[20:00:01 INFO]: Steve joined the game', '[20:01:00 INFO]: <Steve> hallo', '[20:02:00 INFO]: Steve was blown up by Creeper',
-    '[20:03:00 INFO]: Steve has made the advancement [Stone Age]', '[20:04:00 INFO]: Steve left the game', ''].join('\n'));
-  api.mcLogPruefen(); await ruhig(A, 600);
-  const texte = dcPosts.slice(1).map((n) => n.content || n.embeds[0].description);
-  ck('Discord: Beitritt, Tod (deutsch), Erfolg, Verlassen – Chat nur wenn eingeschaltet', texte.length === 4 && /Steve\*\* ist dem Server beigetreten/.test(texte[0]) && /gesprengt/.test(texte[1]) && /einem Creeper/.test(texte[1]) && /Stone Age/.test(texte[2]) && /verlassen/.test(texte[3]), JSON.stringify(texte));
 
   // Einstellungen speichern
   await A.click('[data-tab=einstellungen]'); await ruhig(A, 400);
@@ -469,7 +457,10 @@ const caddy = http.createServer((req, res) => {
   await A.evaluate(async () => fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'neue-welt', seed: '' }) })); await ruhig(A, 2500);
   ck('Neue Welt: nur die letzten 3 Archive bleiben', fs.readdirSync(path.join(MC, 'welten-archiv')).length === 3 && !fs.existsSync(path.join(MC, 'welten-archiv', '2020-01-01')));
   // Karte installieren + anzeigen
-  const sqm = http.createServer((q, r) => { r.writeHead(200, { 'Content-Type': 'text/html' }); r.end('<title>squaremap</title>Karte ' + q.url); });
+  const sqm = http.createServer((q, r) => {
+    if (/markers\.json$/.test(q.url)) { r.writeHead(200, { 'Content-Type': 'application/json' }); return r.end(JSON.stringify([{ id: 'squaremap-spawn', name: 'Spawn', markers: [{ type: 'icon', point: { x: 0, z: 0 } }] }])); }
+    if (/settings\.json$/.test(q.url)) { r.writeHead(200, { 'Content-Type': 'application/json' }); return r.end(JSON.stringify({ worlds: [{ name: 'minecraft_overworld' }, { name: 'minecraft_the_nether' }, { name: 'minecraft_the_end' }] })); }
+    r.writeHead(200, { 'Content-Type': 'text/html' }); r.end('<title>squaremap</title>Karte ' + q.url); });
   await new Promise((ok) => sqm.listen(8771, '127.0.0.1', ok));
   fs.mkdirSync(path.join(MC, 'plugins', 'squaremap'), { recursive: true });
   fs.writeFileSync(path.join(MC, 'plugins', 'squaremap', 'config.yml'), 'settings:\n  internal-webserver:\n    enabled: true\n    bind: 0.0.0.0\n    port: 8771\n');
@@ -479,6 +470,36 @@ const caddy = http.createServer((req, res) => {
   await C.reload(); await ruhig(C, 2000);
   const kartenText = await C.evaluate(async () => (await fetch('api/minecraft/karte/tiles/x.png?v=1')).text());
   ck('Karte: für Angemeldete durchgereicht (squaremap nur lokal), in der Seite eingebettet', /Karte \/tiles\/x\.png\?v=1/.test(kartenText) && !!(await C.$('#karteFrame')), kartenText);
+  // ---------- Orte ----------
+  const ortPost = (P, body) => P.evaluate(async (bd) => { const r = await fetch('api/minecraft/orte', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(bd) }); return [r.status, await r.json()]; }, body);
+  const o1 = await ortPost(C, { name: 'Spinnen-Spawner', kat: 'spawner', welt: 'overworld', x: 10, y: 30, z: -20, notiz: 'unter dem Dorf' });
+  const oFalsch = await ortPost(C, { name: 'X', kat: 'spawner', x: 'abc', z: 1 });
+  const oHierAus = await ortPost(C, { name: 'Basis', kat: 'haus', hier: true });
+  mc.online.push('jeb_'); mc.dim = 'minecraft:the_nether';
+  const oHier = await ortPost(C, { name: 'Nether-Basis', kat: 'haus', hier: true });
+  mc.dim = '';
+  ck('Orte: mit Koordinaten oder eigener Position im Spiel (Welt erkannt), falsche Eingaben abgelehnt',
+    o1[0] === 200 && oFalsch[0] === 400 && oHierAus[0] === 409 && oHier[0] === 200 && oHier[1].ort.x === 120 && oHier[1].ort.z === -341 && oHier[1].ort.welt === 'nether', JSON.stringify([o1, oHierAus, oHier]));
+  await api.mcLogPruefen();
+  fs.appendFileSync(path.join(MC, 'logs', 'latest.log'), '[20:00:00 INFO]: <Steve> !ort Höhle mit Diamanten\n[20:00:05 INFO]: <Steve> hallo\n');
+  await api.mcLogPruefen();
+  const alleOrte = (await C.evaluate(async () => (await (await fetch('api/minecraft/orte')).json()).orte));
+  const chatOrt = alleOrte.find((o) => o.name === 'Höhle mit Diamanten');
+  ck('Orte: im Spiel per Chat „!ort …“ (Kategorie erkannt, Bestätigung im Spiel)', chatOrt && chatOrt.kat === 'hoehle' && chatOrt.von === 'Steve' && !chatOrt.eigen && (mc.gesagt || []).some((c) => /tellraw Steve .*Karte/.test(c)), JSON.stringify(chatOrt));
+  const marker = await C.evaluate(async () => [await (await fetch('api/minecraft/karte/tiles/minecraft_overworld/markers.json')).json(), await (await fetch('api/minecraft/karte/tiles/minecraft_the_nether/markers.json')).json(),
+    (await fetch('api/minecraft/karte/images/icon/registered/sk_hoehle.png')).headers.get('content-type')]);
+  const ebene = marker[0].find((l) => l.id === 'spielekiste_orte'), ebeneN = marker[1].find((l) => l.id === 'spielekiste_orte');
+  ck('Orte: als eigene Ebene in squaremaps Markern (pro Welt), Spawn-Ebene bleibt, eigene Symbole',
+    marker[0].some((l) => l.id === 'squaremap-spawn') && ebene.markers.length === 2 && ebeneN.markers.length === 1 && ebene.markers[0].icon === 'sk_spawner' && /image\/svg/.test(marker[2]), JSON.stringify(ebene).slice(0, 300));
+  const ortFremd = await C.evaluate(async (id) => (await fetch('api/minecraft/orte/loeschen', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id }) })).status, chatOrt.id);
+  ck('Orte: fremde Orte darf Ben nicht löschen', ortFremd === 403);
+  await C.goto(URL_ + 'minecraft.html'); await ruhig(C, 2000);
+  ck('Orte: Liste auf der Seite mit Kategorien-Filter', /Spinnen-Spawner/.test(await C.textContent('#orteListe')) && (await C.$$('#orteFilter button')).length === 4);
+  await C.click('#ortNeu'); await ruhig(C, 300);
+  await C.fill('#ortName', 'Weizenfarm'); await C.click('[data-k=farm]'); await C.fill('#ortX', '-50'); await C.fill('#ortZ', '75'); await C.click('#ortSpeichern'); await ruhig(C, 1500);
+  ck('Orte: über den Dialog markieren, danach zeigt die Karte den Ort', /Weizenfarm/.test(await C.textContent('#orteListe')) && /x=-50&z=75/.test(await C.getAttribute('#karteFrame', 'src')), await C.getAttribute('#karteFrame', 'src'));
+  await C.click('#ortNeu'); await ruhig(C, 300); await C.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-ort-dialog.png') }); await C.click('#ortZu');
+  await C.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-orte.png'), fullPage: true });
   { const ctx = await b.newContext({ viewport: { width: 1440, height: 900 }, serviceWorkers: 'block' }); await ctx.addCookies(await A.context().cookies());
     const P = await ctx.newPage(); P.on('pageerror', (e) => fehler.push('Desktop: ' + e.message)); await P.goto(URL_ + 'minecraft.html'); await ruhig(P, 2500);
     await P.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-desktop.png'), fullPage: true });
