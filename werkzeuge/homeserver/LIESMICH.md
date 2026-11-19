@@ -100,3 +100,8 @@ optionalem Seed (alte Welt → `minecraft\welten-archiv\<Datum>`, die letzten 3 
   (`/gamerule`, wirken sofort, gelten pro Welt; seit 1.21.11 snake_case, PvP ist seit 1.21.9 eine Spielregel).
   RCON, online-mode, Ports usw. sind absichtlich nicht änderbar.
 - Welt: neue Welt mit Seed, Kartenstatus.
+- Spieler → **Selbst eintragen**: Modus „mit Beitrittscode“ (Code an Freunde geben), „offen für alle Spielekiste-Konten“ oder „aus“.
+  Freunde tragen auf der Minecraft-Seite Namen (+ Code) ein → Name wird bei Mojang geprüft → Whitelist. Ein Name pro Konto;
+  Konto löschen/austreten nimmt ihn wieder raus. Bei gestopptem Server direkt in `whitelist.json`. Daten: `daten\minecraft-zugang.json`.
+- **Discord**: Webhook-Link einfügen (Kanal → Integrationen → Webhooks). Der Konto-Server liest `latest.log` mit und postet Beitritte,
+  Tode (deutsch), Erfolge, Server an/aus, optional Chat. Link liegt nur in `daten\minecraft-discord.json`, geht nie an den Browser.

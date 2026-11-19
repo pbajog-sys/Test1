@@ -26,6 +26,7 @@ fs.writeFileSync(path.join(DATEN, 'caddy.log'), 'zeile 1\nCaddy-Testzeile\n');
 fs.mkdirSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen'), { recursive: true });
 fs.writeFileSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen', 'adguard.ps1'), '# Platzhalter');
 // Minecraft-Platzhalter: „RCON“ als Liste im Speicher, „Aufgabe starten“ wird nur notiert
+const dcPosts = [];
 const mc = { laeuft: true, whitelist: [], online: [], befehle: [], aufgaben: [], aufruf: null };
 const mcBefehl = async (c) => {
   mc.befehle.push(c);
@@ -55,6 +56,8 @@ const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Ann
   diensteAbfragen: async () => ({ dienste: { Caddy: 'Running', DuckDNS: 'Running', Update: 'Ready', AdGuard: 'fehlt' }, akku: 78, netz: true }),
   aktionStarten: (ps) => { aktionen.push(ps); },
   mcBefehl, aufgabeAusfuehren: async (art) => { mc.aufgaben.push(art); mc.laeuft = true; },
+  logTakt: 0, discordSenden: async (url, n) => { if (/kaputt/.test(url)) throw new Error('Discord 404'); dcPosts.push(n); },
+  mojangProfil: async (n) => ({ notch: { id: '069a79f444e94726a5befca90e38aaf5', name: 'Notch' }, jeb_: { id: '853c80ef3c3749fdaa49938b674adae6', name: 'jeb_' } })[n.toLowerCase()] || null,
   mcWarten: 60, modrinth: async (pfad) => {
     if (pfad.startsWith('/search')) { mc.suche = pfad; return { hits: [{ slug: 'graves', title: 'Graves', description: 'Grabstein mit deinen Sachen', downloads: 1234567, icon_url: 'https://cdn.modrinth.com/i.png' }, { slug: 'squaremap', title: 'squaremap', description: 'Karte', downloads: 900000, icon_url: 'http://boese.example/x.png' }] }; }
     mc.modrinth = pfad; const slug = /project\/([^/]+)/.exec(pfad)[1], f = slug === 'squaremap' ? 'squaremap-paper-mc26.3-1.4.4.jar' : slug + '-2.0.jar';
@@ -365,7 +368,7 @@ const caddy = http.createServer((req, res) => {
   ck('Minecraft-Seite: Ben darf keine neue Welt erzeugen', benAdmin === 403);
   // Verwaltung (Overlay)
   await A.click('#verwaltungKnopf'); await ruhig(A, 1500);
-  ck('Verwaltung: öffnet als Overlay mit Server, Konsole (Server-Log) und Reitern', await A.isVisible('#verwaltung') && /Steve joined the game/.test(await A.textContent('#konsole')) && (await A.$$('[data-tab]')).length === 5);
+  ck('Verwaltung: öffnet als Overlay mit Server, Konsole (Server-Log) und Reitern', await A.isVisible('#verwaltung') && /Steve joined the game/.test(await A.textContent('#konsole')) && (await A.$$('[data-tab]')).length === 6);
   await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-verwaltung.png') });
   await A.fill('#befehl', '/time set day'); await A.press('#befehl', 'Enter'); await ruhig(A, 800);
   const stoppBefehl = await A.evaluate(async () => (await (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'befehl', befehl: 'stop' }) })).status));
@@ -387,6 +390,51 @@ const caddy = http.createServer((req, res) => {
   await A.click('[data-weg-plugin="graves-2.0.jar"]'); await ruhig(A, 2500);
   const pfadBoese = await A.evaluate(async () => (await (await fetch('api/admin/minecraft', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ aktion: 'plugin-entfernen', datei: '../paper.jar' }) })).status));
   ck('Plugins: entfernen klappt, fremde Pfade nicht', !fs.existsSync(path.join(MC, 'plugins', 'graves-2.0.jar')) && !JSON.parse(fs.readFileSync(path.join(MC, 'plugins.json'), 'utf8')).graves && pfadBoese === 404 && fs.existsSync(path.join(MC, 'paper.jar')));
+  // ---------- Selbst eintragen ----------
+  const post = (P, weg, body) => P.evaluate(async ([w, b]) => { const r = await fetch('api/' + w, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(b) }); return [r.status, await r.json().catch(() => null)]; }, [weg, body]);
+  const ausAn = await post(C, 'minecraft/beitreten', { name: 'Notch', code: '' });
+  ck('Selbst eintragen: anfangs aus', ausAn[0] === 403);
+  const z1 = await post(A, 'admin/minecraft', { aktion: 'zugang', modus: 'code' });
+  ck('Selbst eintragen: Admin schaltet „mit Code“ an, Code wird erzeugt', z1[0] === 200 && /^[a-z]+-[a-z]+-\d+$/.test(z1[1].code), JSON.stringify(z1));
+  await C.goto(URL_ + 'minecraft.html'); await ruhig(C, 1500);
+  ck('Selbst eintragen: Ben sieht „Mitspielen“ mit Code-Feld', await C.isVisible('#mcBeiName') && await C.isVisible('#mcBeiCode'));
+  await C.fill('#mcBeiName', 'notch'); await C.fill('#mcBeiCode', 'falsch'); await C.click('#mcBeiLos'); await ruhig(C, 800);
+  const falschCode = await C.textContent('#toast');
+  await C.fill('#mcBeiCode', z1[1].code.toUpperCase()); await C.click('#mcBeiLos'); await ruhig(C, 1800);
+  ck('Selbst eintragen: falscher Code abgelehnt, richtiger Code → Name bei Mojang geprüft (richtige Schreibweise) und auf der Whitelist',
+    /stimmt nicht/.test(falschCode) && mc.befehle.includes('whitelist add Notch') && /Du spielst als Notch/.test(await C.textContent('#mitspielen')), falschCode);
+  await C.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-mitspielen.png') });
+  const gibtsNicht = await post(C, 'minecraft/beitreten', { name: 'GibtEsNichtXY', code: z1[1].code });
+  const vergeben = await post(A, 'minecraft/beitreten', { name: 'Notch', code: z1[1].code });
+  ck('Selbst eintragen: unbekannter Name und schon vergebener Name abgelehnt', gibtsNicht[0] === 404 && vergeben[0] === 409);
+  const wechsel = await post(C, 'minecraft/beitreten', { name: 'jeb_', code: z1[1].code });
+  ck('Selbst eintragen: Namen wechseln nimmt den alten von der Whitelist', wechsel[0] === 200 && mc.befehle.includes('whitelist remove Notch') && mc.befehle.includes('whitelist add jeb_'));
+  mc.laeuft = false;
+  await post(C, 'minecraft/austreten', {});
+  const wl = JSON.parse(fs.readFileSync(path.join(MC, 'whitelist.json'), 'utf8') || '[]');
+  ck('Selbst eintragen: austreten geht auch bei gestopptem Server (whitelist.json)', Array.isArray(wl) && !wl.some((x) => x.name === 'jeb_'));
+  await post(C, 'minecraft/beitreten', { name: 'jeb_', code: z1[1].code });
+  const wl2 = JSON.parse(fs.readFileSync(path.join(MC, 'whitelist.json'), 'utf8'));
+  ck('Selbst eintragen: bei gestopptem Server direkt in whitelist.json (mit UUID)', wl2.some((x) => x.name === 'jeb_' && x.uuid === '853c80ef-3c37-49fd-aa49-938b674adae6'), JSON.stringify(wl2));
+  mc.laeuft = true;
+  let gesperrt = 0; for (let i = 0; i < 6; i++) gesperrt = (await post(C, 'minecraft/beitreten', { name: 'Notch', code: 'raten' + i }))[0];
+  ck('Selbst eintragen: nach 5 falschen Codes gesperrt', gesperrt === 429);
+  await A.evaluate(() => adminLaden()); await ruhig(A, 600);
+  ck('Verwaltung: Code und Selbst-Eingetragene sichtbar', (await A.textContent('#zugangCode')) === z1[1].code && /jeb_/.test(await A.textContent('#zugangListe')) && /Ben/.test(await A.textContent('#zugangListe')));
+  // ---------- Discord ----------
+  const dcFalsch = await post(A, 'admin/minecraft', { aktion: 'discord', url: 'https://boese.example/api/webhooks/1/x' });
+  await A.click('[data-tab=discord]'); await ruhig(A, 300);
+  await A.fill('#discordUrl', 'https://discord.com/api/webhooks/123456/abcDEF-ghi'); await A.click('#discordVerbinden'); await ruhig(A, 1200);
+  const adminJson = await A.evaluate(async () => JSON.stringify((await (await fetch('api/admin/minecraft')).json()).discord));
+  ck('Discord: nur echte Webhook-Links, Test-Nachricht, Link geht nie zurück an den Browser', dcFalsch[0] === 400 && dcPosts.length === 1 && /verbunden/.test(await A.textContent('#discordStatus')) && !/abcDEF/.test(adminJson), adminJson);
+  await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft-discord.png') });
+  api.mcLogPruefen();
+  fs.appendFileSync(path.join(MC, 'logs', 'latest.log'), ['[20:00:01 INFO]: Steve joined the game', '[20:01:00 INFO]: <Steve> hallo', '[20:02:00 INFO]: Steve was blown up by Creeper',
+    '[20:03:00 INFO]: Steve has made the advancement [Stone Age]', '[20:04:00 INFO]: Steve left the game', ''].join('\n'));
+  api.mcLogPruefen(); await ruhig(A, 600);
+  const texte = dcPosts.slice(1).map((n) => n.content || n.embeds[0].description);
+  ck('Discord: Beitritt, Tod (deutsch), Erfolg, Verlassen – Chat nur wenn eingeschaltet', texte.length === 4 && /Steve\*\* ist dem Server beigetreten/.test(texte[0]) && /gesprengt/.test(texte[1]) && /einem Creeper/.test(texte[1]) && /Stone Age/.test(texte[2]) && /verlassen/.test(texte[3]), JSON.stringify(texte));
+
   // Einstellungen speichern
   await A.click('[data-tab=einstellungen]'); await ruhig(A, 400);
   ck('Einstellungen: aktuelle Werte im Formular', /easy/.test(await A.inputValue('[name=difficulty]')));

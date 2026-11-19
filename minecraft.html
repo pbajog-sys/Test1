@@ -97,6 +97,14 @@
     .pille, .adresse { order: 2; font-size: .82rem; }
     .adresse code { font-size: .85rem; }
   }
+  #mitspielen { background: linear-gradient(135deg, #17240f, var(--flaeche) 60%); border-color: rgba(124,209,82,.25); }
+  #mitspielen ol { margin: 6px 0 0; padding-left: 20px; color: var(--muted); font-size: .88rem; }
+  #mitspielen ol li { margin: 3px 0; }
+  #mitspielen ol b { color: var(--text); }
+  .ich { display: flex; align-items: center; gap: 12px; }
+  .ich .kopfbild { --g: 44px; }
+  .ich div { flex: 1; min-width: 0; }
+  @media (max-width: 1099px) { #mitspielen { order: 0; } }
   /* ---------- Spieler ---------- */
   .kopfbild { --g: 40px; width: var(--g); height: var(--g); border-radius: 4px; flex: none; position: relative; overflow: hidden; background: #3d6b2c; color: #fff; font-family: var(--pixel); font-weight: 700;
     display: grid; place-items: center; font-size: calc(var(--g) * .5); image-rendering: pixelated; box-shadow: inset 0 -3px 0 rgba(0,0,0,.25); }
@@ -236,6 +244,7 @@
 </header>
 <main class="layout">
   <aside class="seite">
+    <section class="karte" id="mitspielen" hidden></section>
     <section class="karte" id="status" hidden>
       <h2>🧑‍🤝‍🧑 Spieler <small class="muted" id="spielerZahl"></small></h2>
       <div class="koepfe" id="koepfe" aria-label="Spieler"></div>
@@ -277,6 +286,7 @@
       <button type="button" role="tab" data-tab="plugins" aria-selected="false">🧩 Plugins</button>
       <button type="button" role="tab" data-tab="einstellungen" aria-selected="false">⚙️ Einstellungen</button>
       <button type="button" role="tab" data-tab="welt" aria-selected="false">🌍 Welt</button>
+      <button type="button" role="tab" data-tab="discord" aria-selected="false">💬 Discord</button>
     </nav>
     <div class="vw-inhalt">
       <section data-panel="server">
@@ -295,6 +305,11 @@
         <div class="zeile"><input id="mcName" placeholder="Minecraft-Name" autocapitalize="none" spellcheck="false" maxlength="16" style="flex:1"><button type="button" id="freischalten">Freischalten</button></div>
         <p class="hinweis" style="margin-top:12px">Admins (OP) dürfen im Spiel alle Befehle nutzen – z. B. Spielmodus wechseln, teleportieren, Zeit setzen. Nur Leuten geben, denen du vertraust.</p>
         <div id="gebanntBox"></div>
+        <h3>🔑 Selbst eintragen</h3>
+        <p class="klein muted" style="margin-top:0">Freunde tragen sich auf dieser Seite selbst ein (Spielekiste-Konto + Minecraft-Name). Der Name wird bei Mojang geprüft.</p>
+        <div class="zeile" style="margin-top:0"><select id="zugangModus"><option value="code">Mit Beitrittscode (empfohlen)</option><option value="offen">Offen für alle Spielekiste-Konten</option><option value="aus">Aus – nur du schaltest frei</option></select></div>
+        <div class="zeile" id="zugangCodeZeile"><span class="adresse" style="padding-left:14px"><code id="zugangCode">–</code><button type="button" id="zugangKopieren">📋</button></span><button type="button" id="zugangNeu">🎲 Neuer Code</button></div>
+        <div id="zugangListe" class="klein" style="margin-top:10px"></div>
       </section>
       <section data-panel="plugins" hidden>
         <p class="hinweis" style="margin-top:0">Plugins laufen nur auf dem Server – deine Mitspieler müssen nichts installieren und spielen weiter mit normalem Minecraft. (Echte Mods wie Fabric/Forge müsste jeder selbst installieren – deshalb hier Plugins.) Nach dem Installieren startet der Server kurz neu.</p>
@@ -308,6 +323,20 @@
         <div class="zeile" style="margin-top:0"><input id="konfigSuche" type="search" placeholder="🔍 Einstellung suchen …" style="flex:1"></div>
         <form id="formular" onsubmit="return false"></form>
         <div class="speichern-leiste" id="speichernLeiste" hidden><span id="aenderungen"></span><button type="button" id="verwerfen">Verwerfen</button><button type="button" class="haupt" id="speichern">💾 Speichern</button></div>
+      </section>
+      <section data-panel="discord" hidden>
+        <h3>💬 Discord <small class="muted" id="discordStatus"></small></h3>
+        <p class="klein muted" style="margin-top:0">Der Server postet automatisch in einen Discord-Kanal, was im Spiel passiert – ganz ohne Bot.</p>
+        <div id="discordLink">
+          <ol class="klein muted" style="padding-left:20px;margin:6px 0 10px">
+            <li>In Discord: Kanal → <b>⚙️ Kanal bearbeiten → Integrationen → Webhooks → Neuer Webhook</b></li>
+            <li>Name z. B. „Minecraft“, dann <b>Webhook-URL kopieren</b></li>
+            <li>Hier einfügen und verbinden – es kommt eine Test-Nachricht.</li>
+          </ol>
+          <div class="zeile" style="margin-top:0"><input id="discordUrl" type="password" placeholder="https://discord.com/api/webhooks/…" autocomplete="off" spellcheck="false" style="flex:1"><button type="button" class="haupt" id="discordVerbinden">Verbinden &amp; testen</button></div>
+        </div>
+        <div id="discordAn" style="margin-top:12px"></div>
+        <div class="zeile"><button type="button" id="discordTest" hidden>📨 Test-Nachricht</button><button type="button" id="discordTrennen" hidden>Trennen</button></div>
       </section>
       <section data-panel="welt" hidden>
         <div class="vw-zwei"><div>
@@ -419,6 +448,42 @@ document.querySelectorAll('th').forEach((th) => th.addEventListener('click', () 
   sortierung = { s: th.dataset.s, ab: sortierung.s === th.dataset.s ? !sortierung.ab : th.dataset.s !== 'name' }; tabelle();
 }));
 
+function mitspielen() {
+  const z = info.zugang || { modus: 'aus' }, box = $('mitspielen');
+  if (z.mein) {
+    const p = (info.spieler || []).find((x) => x.name.toLowerCase() === z.mein.toLowerCase()) || { name: z.mein, uuid: '' };
+    box.hidden = false;
+    box.innerHTML = '<div class="ich">' + kopf(p) + '<div><b>Du spielst als ' + esc(z.mein) + '</b><div class="klein muted">Freigeschaltet ✓ · Mehrspieler → Server hinzufügen → <code>' + esc(info.adresse) + '</code></div></div>'
+      + '<button type="button" id="mcAendern" title="Anderen Namen eintragen">✏️</button></div>';
+    $('mcAendern').addEventListener('click', () => { box.dataset.form = '1'; mitspielenFormular(z); });
+    if (box.dataset.form) mitspielenFormular(z);
+    return;
+  }
+  if (z.modus === 'aus') { box.hidden = true; return; }
+  box.hidden = false; mitspielenFormular(z);
+}
+function mitspielenFormular(z) {
+  const box = $('mitspielen'); if (box.querySelector('#mcBeiName')) return;
+  box.innerHTML = '<h2>🎮 Mitspielen</h2>'
+    + '<div class="zeile" style="margin-top:0"><input id="mcBeiName" placeholder="Dein Minecraft-Name" autocapitalize="none" autocomplete="off" spellcheck="false" maxlength="16" style="flex:1 1 140px" value="' + esc(z.mein || '') + '">'
+    + (z.modus === 'code' ? '<input id="mcBeiCode" placeholder="Beitrittscode" autocapitalize="none" autocomplete="off" spellcheck="false" maxlength="32" style="flex:1 1 120px">' : '')
+    + '<button type="button" class="haupt" id="mcBeiLos">Freischalten</button></div>'
+    + '<ol><li>Minecraft <b>Java Edition</b> starten</li>' + (z.modus === 'code' ? '<li>Den <b>Beitrittscode</b> bekommst du vom Admin</li>' : '')
+    + '<li><b>Mehrspieler → Server hinzufügen</b>, Adresse: <code>' + esc(info.adresse) + '</code></li></ol>'
+    + (z.mein ? '<p class="klein" style="margin:8px 0 0"><button type="button" id="mcRaus" style="font-size:.8rem;padding:5px 10px">Nicht mehr mitspielen</button></p>' : '');
+  const los = async () => {
+    const b = $('mcBeiLos'), name = $('mcBeiName').value.trim(); if (!name) return;
+    b.disabled = true; b.textContent = '⏳ Prüfe …';
+    const x = await api('minecraft/beitreten', 'POST', { name, code: $('mcBeiCode') ? $('mcBeiCode').value.trim() : '' }).catch(() => ({ status: 0 }));
+    b.disabled = false; b.textContent = 'Freischalten';
+    if (x.status !== 200) { melden('⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.')); return; }
+    melden('✓ ' + x.json.name + ' ist freigeschaltet – viel Spaß!'); delete box.dataset.form; box.innerHTML = ''; laden();
+  };
+  $('mcBeiLos').addEventListener('click', los);
+  box.querySelectorAll('input').forEach((i) => i.addEventListener('keydown', (e) => { if (e.key === 'Enter') los(); }));
+  const raus = $('mcRaus');
+  if (raus) raus.addEventListener('click', async () => { if (!confirm('Deinen Minecraft-Namen von der Whitelist nehmen?')) return; await api('minecraft/austreten', 'POST', {}); delete box.dataset.form; box.innerHTML = ''; melden('✓ Ausgetragen'); laden(); });
+}
 async function laden() {
   let r; try { r = await api('minecraft/info'); } catch (e) { r = { status: 0 }; }
   if (r.status === 401) { $('unter').innerHTML = 'Bitte zuerst in der <a href="./">Spielekiste</a> über ☁️ anmelden.'; return; }
@@ -432,7 +497,7 @@ async function laden() {
   $('spielerZahl').textContent = (info.spieler || []).length ? '· ' + info.spieler.length : '';
   $('version').textContent = info.version ? '' + info.version.replace(/^paper-|\.jar$/g, '').replace(/-(\d+)$/, ' (Paper-Build $1)') : '';
   $('adresse').textContent = info.adresse;
-  zeichnen();
+  zeichnen(); mitspielen();
   $('karteVoll').hidden = !info.karte;
   if (info.karte) {
     if (!$('karteFrame')) $('karteInhalt').innerHTML = '<iframe id="karteFrame" src="api/minecraft/karte/" title="Weltkarte" loading="lazy"></iframe><p class="karte-tipp">Die Karte zeichnet sich nach und nach – überall dort, wo schon jemand war.</p>';
@@ -586,6 +651,17 @@ function verwaltungZeigen() {
     || '<tr><td colspan="4" class="muted">' + (d.laeuft ? 'Noch niemand – unten freischalten.' : 'Server starten, um Spieler zu verwalten.') + '</td></tr>';
   $('gebanntBox').innerHTML = (d.gebannt || []).length ? '<h3>🚫 Gebannt</h3>' + d.gebannt.map((x) => '<span class="chip">' + esc(x.name) + (x.grund ? ' <small class="muted">(' + esc(x.grund) + ')</small>' : '')
     + ' <button type="button" data-sp="pardon" data-n="' + esc(x.name) + '" aria-label="' + esc(x.name) + ' entbannen">↩︎ entbannen</button></span>').join('') : '';
+  // Discord
+  const dc = d.discord || { verbunden: false, an: {} };
+  $('discordStatus').textContent = dc.verbunden ? '· verbunden ✓' : '· nicht verbunden';
+  $('discordLink').hidden = dc.verbunden; $('discordTest').hidden = $('discordTrennen').hidden = !dc.verbunden;
+  const DC = [['beitritt', '🟢 Beitreten & Verlassen'], ['tod', '💀 Tode (auf Deutsch)'], ['erfolg', '🏆 Erfolge'], ['server', '✅ Server online/offline'], ['chat', '💬 Chat aus dem Spiel']];
+  $('discordAn').innerHTML = DC.map(([x, t]) => '<div class="opt"><div><b>' + t + '</b></div><label class="schalter"><input type="checkbox" data-dc="' + x + '"' + (dc.an[x] ? ' checked' : '') + ' aria-label="' + t + '"><span></span></label></div>').join('');
+  // Selbst eintragen
+  const z = d.zugang || { modus: 'aus', code: '', konten: [] };
+  if (document.activeElement !== $('zugangModus')) $('zugangModus').value = z.modus;
+  $('zugangCodeZeile').hidden = z.modus !== 'code'; $('zugangCode').textContent = z.code || '–';
+  $('zugangListe').innerHTML = (z.konten || []).length ? 'Selbst eingetragen: ' + z.konten.map((x) => '<span class="chip">' + esc(x.mc) + ' <small class="muted">(' + esc(x.konto) + ')</small></span>').join('') : '<span class="muted">Noch hat sich niemand selbst eingetragen.</span>';
   // Plugins
   $('pluginListe').innerHTML = (d.plugins || []).map((p) => '<div class="plugin"><span class="icon">🧩</span><div><b>' + esc(p.titel) + '</b><small>' + esc(p.version ? 'Version ' + p.version : p.datei) + '</small></div>'
     + '<button type="button" data-weg-plugin="' + esc(p.datei) + '">Entfernen</button></div>').join('') || '<p class="klein muted">Noch keine Plugins.</p>';
@@ -640,6 +716,18 @@ async function pluginsSuchen() {
     || '<p class="klein muted">Nichts gefunden, das zu dieser Minecraft-Version passt.</p>';
 }
 $('pluginSuchen').addEventListener('click', pluginsSuchen);
+async function discordAendern(body, text) {
+  const x = await api('admin/minecraft', 'POST', Object.assign({ aktion: 'discord' }, body)).catch(() => ({ status: 0 }));
+  melden(x.status === 200 ? '✓ ' + text : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
+  await adminLaden(); return x.status === 200;
+}
+$('discordVerbinden').addEventListener('click', async () => { const u = $('discordUrl').value.trim(); if (!u) return; if (await discordAendern({ url: u, test: true }, 'Verbunden – schau in deinen Discord-Kanal')) $('discordUrl').value = ''; });
+$('discordTest').addEventListener('click', () => discordAendern({ test: true }, 'Test-Nachricht gesendet'));
+$('discordTrennen').addEventListener('click', () => { if (confirm('Discord trennen?')) discordAendern({ url: '' }, 'Discord getrennt'); });
+$('discordAn').addEventListener('change', (e) => { const i = e.target.closest('[data-dc]'); if (i) discordAendern({ an: { [i.dataset.dc]: i.checked } }, 'Gespeichert'); });
+$('zugangModus').addEventListener('change', () => tun({ aktion: 'zugang', modus: $('zugangModus').value }, { code: 'Selbst eintragen mit Code an', offen: 'Selbst eintragen für alle Konten an', aus: 'Selbst eintragen aus' }[$('zugangModus').value]).then(adminLaden));
+$('zugangNeu').addEventListener('click', () => { if (confirm('Neuen Code erzeugen? Der alte gilt dann nicht mehr (wer schon drin ist, bleibt drin).')) tun({ aktion: 'zugang', neuerCode: true }, 'Neuer Code erzeugt').then(adminLaden); });
+$('zugangKopieren').addEventListener('click', async () => { const c = $('zugangCode').textContent; try { await navigator.clipboard.writeText(c); melden('✓ Code kopiert'); } catch (e) { prompt('Code:', c); } });
 $('pluginSuche').addEventListener('keydown', (e) => { if (e.key === 'Enter') pluginsSuchen(); });
 $('befehlLos').addEventListener('click', () => { const c = $('befehl').value.trim(); if (c) { befehl(c); $('befehl').value = ''; } });
 $('befehl').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('befehlLos').click(); });

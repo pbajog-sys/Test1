@@ -13,6 +13,9 @@
 //   POST /api/admin/aktualisieren   (nur Admin) → startet die Windows-Aufgabe „Spielekiste\Update“ (neueste Version von GitHub)
 //   GET  /api/admin/status          (nur Admin) → { version, log: [letzte Zeilen von update.log], konten, duelle }
 //   GET  /api/minecraft/info        (angemeldet) → Status, Adresse, Statistik je Spieler (Tode, Spielzeit, Kills, km), Karte ja/nein
+//   POST /api/minecraft/beitreten   (angemeldet) { name, code? } → eigenen Minecraft-Namen auf die Whitelist (Beitrittscode vom Admin)
+//   POST /api/minecraft/austreten   (angemeldet) → eigenen Namen wieder von der Whitelist
+//   Discord: Webhook (nur Admin, aktion 'discord') – Beitritte, Tode, Erfolge, Server an/aus, optional Chat aus latest.log
 //   GET  /api/minecraft/karte/…     (angemeldet) → Weltkarte (squaremap-Plugin, nur lokal erreichbar, hier durchgereicht)
 //   GET  /api/admin/minecraft       (nur Admin) → { installiert, laeuft, version, online, whitelist, einstellungen }
 //   POST /api/admin/minecraft       (nur Admin) { aktion: 'freischalten'|'entfernen'|'start'|'stopp'|'neustart'|'einstellungen'|'neue-welt'|'karte'
@@ -153,7 +156,18 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
   erweiterungStarten = ERWEITERUNG_STARTEN, dnsPruefen = DNS_PRUEFEN, mcBefehl = null, aufgabeAusfuehren = null, mcWarten = 4000,
   modrinth = (pfad) => fetch('https://api.modrinth.com/v2' + pfad, { headers: { 'User-Agent': 'spielekiste-homeserver' } }).then((r) => { if (!r.ok) throw new Error('Modrinth ' + r.status); return r.json(); }),
   herunterladen = async (quelle, ziel) => { const r = await fetch(quelle); if (!r.ok) throw new Error('Download ' + r.status); fs.writeFileSync(ziel, Buffer.from(await r.arrayBuffer())); },
-  karteHost = '127.0.0.1',
+  karteHost = '127.0.0.1', logTakt = 5000,
+  discordSenden = async (url, nachricht) => {
+    const r = await fetch(url + (url.includes('?') ? '&' : '?') + 'wait=true', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(nachricht) });
+    if (r.status === 429) { const j = await r.json().catch(() => ({})); throw Object.assign(new Error('Discord bremst'), { warten: (j.retry_after || 2) * 1000 }); }
+    if (!r.ok) throw new Error('Discord ' + r.status);
+  },
+  mojangProfil = async (name) => {   // → { id, name } (richtige Schreibweise) oder null, wenn es den Namen nicht gibt
+    const r = await fetch('https://api.mojang.com/users/profiles/minecraft/' + encodeURIComponent(name));
+    if (r.status === 404 || r.status === 204) return null;
+    if (!r.ok) throw new Error('Mojang ' + r.status);
+    return r.json();
+  },
   skinHolen = async (uuid) => {
     const r = await fetch('https://sessionserver.mojang.com/session/minecraft/profile/' + uuid.replace(/-/g, ''));
     if (!r.ok) throw new Error('Mojang ' + r.status);
@@ -372,6 +386,83 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
     return r;
   }
 
+  // ---------- Selbst eintragen: Beitrittscode ----------
+  // minecraft-zugang.json: { modus: 'code'|'offen'|'aus', code, konten: { schlüssel: { mc, uuid, zeit } } }
+  let zugang = lesen('minecraft-zugang.json', { modus: 'aus', code: '', konten: {} });
+  const zugangSpeichern = () => schreiben('minecraft-zugang.json', zugang);
+  const mitStrichen = (id) => String(id).replace(/-/g, '').replace(/^(.{8})(.{4})(.{4})(.{4})(.{12})$/, '$1-$2-$3-$4-$5');
+  // Whitelist ändern: bei laufendem Server per RCON, sonst direkt in whitelist.json (liest der Server beim Start)
+  async function whitelistSetzen(name, uuid, rein) {
+    try { await mcRcon('whitelist ' + (rein ? 'add ' : 'remove ') + name); if (!rein) { try { await mcRcon('kick ' + name + ' Nicht mehr freigeschaltet'); } catch (e) { /* egal */ } } return; }
+    catch (e) { /* Server aus */ }
+    const datei = path.join(mcOrdner(), 'whitelist.json');
+    let l = []; try { l = JSON.parse(fs.readFileSync(datei, 'utf8')); } catch (e) { /* neu */ }
+    l = l.filter((x) => String(x.name).toLowerCase() !== name.toLowerCase());
+    if (rein) l.push({ uuid: mitStrichen(uuid), name });
+    fs.writeFileSync(datei, JSON.stringify(l, null, 2));
+  }
+  const codeOk = (c) => { const x = Buffer.from(c.toLowerCase()), y = Buffer.from(String(zugang.code || '').toLowerCase()); return y.length > 0 && x.length === y.length && crypto.timingSafeEqual(x, y); };
+  const neuerCode = () => { const w = ['creeper', 'diamant', 'enderman', 'redstone', 'smaragd', 'netherit', 'lava', 'obsidian', 'axolotl', 'golem', 'kaktus', 'kiste', 'fackel', 'portal'];
+    return w[crypto.randomInt(w.length)] + '-' + w[crypto.randomInt(w.length)] + '-' + crypto.randomInt(10, 100); };
+
+  // ---------- Discord-Webhook ----------
+  // minecraft-discord.json: { url, an: { beitritt, tod, erfolg, server, chat } } – die URL ist geheim, geht nie zurück an den Browser
+  let discord = lesen('minecraft-discord.json', { url: '', an: { beitritt: true, tod: true, erfolg: true, server: true, chat: false } });
+  const DISCORD_URL = /^https:\/\/(?:ptb\.|canary\.)?discord(?:app)?\.com\/api\/webhooks\/\d+\/[\w-]+$/;
+  const discordSchlange = []; let discordLaeuft = false;
+  async function discordAbarbeiten() {
+    if (discordLaeuft) return; discordLaeuft = true;
+    while (discordSchlange.length && discord.url) {
+      const n = discordSchlange[0];
+      try { await discordSenden(discord.url, n); discordSchlange.shift(); }
+      catch (e) { if (e.warten) { await schlafen(e.warten); continue; } discordSchlange.shift(); mcProtokoll('Discord: ' + e.message); }
+      await schlafen(Math.min(1000, logTakt / 5));
+    }
+    discordLaeuft = false;
+  }
+  const FARBE = { beitritt: 0x7cd152, gehen: 0x8d9aa7, tod: 0xe5534b, erfolg: 0xf2c94c, server: 0x63e0d8 };
+  function discordPosten(art, text, spieler) {
+    if (!discord.url || discordSchlange.length > 50) return;
+    const uuid = spieler && (mcStatistik().find((x) => x.name === spieler) || {}).uuid;
+    discordSchlange.push(art === 'chat' ? { username: spieler, content: text.slice(0, 1900), allowed_mentions: { parse: [] }, avatar_url: uuid ? 'https://mc-heads.net/avatar/' + uuid + '/64' : undefined }
+      : { username: 'Minecraft-Server', allowed_mentions: { parse: [] }, embeds: [{ description: text.slice(0, 1900), color: FARBE[art] || 0x7cd152, author: spieler && uuid ? { name: spieler, icon_url: 'https://mc-heads.net/avatar/' + uuid + '/32' } : undefined }] });
+    discordAbarbeiten();
+  }
+  // Server-Log mitlesen: neue Zeilen von latest.log alle paar Sekunden
+  const TOD = /^([A-Za-z0-9_]{3,16}) (was |were |drowned|died|blew up|hit the ground|fell |burned|went up in flames|walked into|tried to swim|starved|suffocated|froze|withered|experienced kinetic|discovered the floor|didn't want to live|left the confines|went off with a bang|walked on danger)/;
+  const TOD_DE = [[/^was slain by (.+?)( using .+)?$/, 'wurde von $1 getötet'], [/^was shot by (.+?)( using .+)?$/, 'wurde von $1 erschossen'], [/^was blown up by (.+?)( using .+)?$/, 'wurde von $1 gesprengt'],
+    [/^blew up$/, 'ist explodiert'], [/^drowned/, 'ist ertrunken'], [/^hit the ground too hard/, 'ist zu tief gefallen'], [/^fell from a high place/, 'ist zu tief gefallen'], [/^fell /, 'ist abgestürzt'],
+    [/^tried to swim in lava/, 'wollte in Lava schwimmen'], [/^burned to death/, 'ist verbrannt'], [/^went up in flames/, 'ist in Flammen aufgegangen'], [/^starved to death/, 'ist verhungert'],
+    [/^suffocated in a wall/, 'ist in einer Wand erstickt'], [/^froze to death/, 'ist erfroren'], [/^was killed by (.+?)( using .+)?$/, 'wurde von $1 getötet'], [/^died$/, 'ist gestorben']];
+  const MOB = { Zombie: 'einem Zombie', Skeleton: 'einem Skelett', Creeper: 'einem Creeper', Spider: 'einer Spinne', Enderman: 'einem Enderman', Witch: 'einer Hexe', Drowned: 'einem Ertrunkenen',
+    Phantom: 'einem Phantom', Pillager: 'einem Plünderer', Warden: 'dem Wärter', 'Ender Dragon': 'dem Enderdrachen', Blaze: 'einer Lohe', Piglin: 'einem Piglin', Slime: 'einem Schleim', Husk: 'einem Wüstenzombie', Stray: 'einem Eiswanderer' };
+  const todDeutsch = (wer, rest) => { for (const [re, t] of TOD_DE) { const x = re.exec(rest); if (x) return '💀 **' + wer + '** ' + t.replace('$1', MOB[x[1]] || x[1]); } return '💀 **' + wer + '** ' + rest; };
+  let logStand = null;
+  function mcLogPruefen() {
+    const datei = path.join(mcOrdner(), 'logs', 'latest.log');
+    let groesse; try { groesse = fs.statSync(datei).size; } catch (e) { return; }
+    if (logStand === null || groesse < logStand) { logStand = logStand === null ? groesse : 0; if (groesse === logStand) return; }
+    if (groesse === logStand) return;
+    const fd = fs.openSync(datei, 'r'), buf = Buffer.alloc(Math.min(groesse - logStand, 256 * 1024));
+    fs.readSync(fd, buf, 0, buf.length, logStand); fs.closeSync(fd);
+    const text = buf.toString('utf8'), ende = text.lastIndexOf('\n'); if (ende < 0) return;
+    logStand += Buffer.byteLength(text.slice(0, ende + 1));
+    if (!discord.url) return;
+    for (const zeile of text.slice(0, ende).split(/\r?\n/)) {
+      const m = /^\[[\d:]+ INFO\]: (?:\[[^\]]*\] )?(.*)$/.exec(zeile); if (!m) continue;
+      const t = m[1].replace(/§./g, ''); let x;
+      if ((x = /^([A-Za-z0-9_]{3,16}) joined the game$/.exec(t))) { if (discord.an.beitritt) discordPosten('beitritt', '🟢 **' + x[1] + '** ist dem Server beigetreten', x[1]); }
+      else if ((x = /^([A-Za-z0-9_]{3,16}) left the game$/.exec(t))) { if (discord.an.beitritt) discordPosten('gehen', '👋 **' + x[1] + '** hat den Server verlassen', x[1]); }
+      else if ((x = /^([A-Za-z0-9_]{3,16}) has (?:made the advancement|completed the challenge|reached the goal) \[(.+)\]$/.exec(t))) { if (discord.an.erfolg) discordPosten('erfolg', '🏆 **' + x[1] + '** hat **' + x[2] + '** geschafft', x[1]); }
+      else if ((x = /^<([A-Za-z0-9_]{3,16})> (.+)$/.exec(t))) { if (discord.an.chat) discordPosten('chat', x[2], x[1]); }
+      else if (/^Done \([\d.,]+s\)!/.test(t)) { if (discord.an.server) discordPosten('server', '✅ Server ist online'); }
+      else if (/^Stopping server$/.test(t)) { if (discord.an.server) discordPosten('server', '⏹️ Server wird gestoppt'); }
+      else if ((x = TOD.exec(t))) { if (discord.an.tod) discordPosten('tod', todDeutsch(x[1], t.slice(x[1].length + 1)), x[1]); }
+    }
+  }
+  const logUhr = logTakt > 0 ? setInterval(() => { try { mcLogPruefen(); } catch (e) { /* nächstes Mal */ } }, logTakt) : null;
+  if (logUhr && logUhr.unref) logUhr.unref();
+
   async function bearbeiten(req, res) {
     const url = new URL(req.url, 'http://x'), weg = url.pathname.replace(/^.*?\/api\//, '/');
     // hinter Caddy: der echte Anschluss steht im letzten X-Forwarded-For-Eintrag
@@ -433,7 +524,32 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
       const st = await mcLaeuft();
       let version = ''; try { version = fs.readFileSync(path.join(mcOrdner(), 'paper-version.txt'), 'utf8').trim(); } catch (e) { /* egal */ }
       return senden(res, 200, Object.assign({ installiert: true, admin: admins.has(k), adresse: String(req.headers.host || '').replace(/:\d+$/, ''), version, karte: mcKarteDa(),
-        beschaeftigt: mcBeschaeftigt, spieler: mcStatistik(), aktivitaet: mcAktivitaet(), maxSpieler: Number(mcProps()['max-players']) || 20, seed: admins.has(k) ? mcProps()['level-seed'] || '' : undefined }, st));
+        beschaeftigt: mcBeschaeftigt, spieler: mcStatistik(), aktivitaet: mcAktivitaet(),
+        zugang: { modus: zugang.modus, mein: zugang.konten[k] ? zugang.konten[k].mc : '' }, maxSpieler: Number(mcProps()['max-players']) || 20, seed: admins.has(k) ? mcProps()['level-seed'] || '' : undefined }, st));
+    }
+    if (weg === '/minecraft/beitreten' && m === 'POST') {
+      if (!mcInstalliert() || zugang.modus === 'aus') return senden(res, 403, { fehler: 'Selbst eintragen ist gerade ausgeschaltet – frag den Admin.' });
+      const b = await koerper(req), name = String(b.name || '').trim(), code = String(b.code || '').trim();
+      if (!/^[A-Za-z0-9_]{3,16}$/.test(name)) return senden(res, 400, { fehler: 'Minecraft-Namen bestehen aus 3–16 Buchstaben, Ziffern oder _.' });
+      if (zugang.modus === 'code') {
+        if (zuViel('mccode', k, 5)) return senden(res, 429, { fehler: 'Zu viele falsche Codes – bitte in einer Stunde nochmal.' });
+        if (!codeOk(code)) { zaehlen('mccode', k); return senden(res, 403, { fehler: 'Der Beitrittscode stimmt nicht.' }); }
+      }
+      let profil; try { profil = await mojangProfil(name); } catch (e) { return senden(res, 502, { fehler: 'Mojang ist gerade nicht erreichbar – bitte gleich nochmal.' }); }
+      if (!profil || !profil.id) return senden(res, 404, { fehler: 'Den Minecraft-Namen „' + name + '“ gibt es nicht (Java Edition). Tippfehler?' });
+      const anderer = Object.entries(zugang.konten).find(([x, v]) => x !== k && v.mc.toLowerCase() === profil.name.toLowerCase());
+      if (anderer) return senden(res, 409, { fehler: profil.name + ' ist schon mit einem anderen Konto verknüpft.' });
+      const alt = zugang.konten[k];
+      if (alt && alt.mc.toLowerCase() !== profil.name.toLowerCase()) await whitelistSetzen(alt.mc, alt.uuid, false);
+      await whitelistSetzen(profil.name, profil.id, true);
+      zugang.konten[k] = { mc: profil.name, uuid: mitStrichen(profil.id), zeit: jetzt() }; zugangSpeichern();
+      mcProtokoll(konten[k].name + ' hat sich als ' + profil.name + ' freigeschaltet');
+      return senden(res, 200, { name: profil.name });
+    }
+    if (weg === '/minecraft/austreten' && m === 'POST') {
+      const alt = zugang.konten[k];
+      if (alt) { await whitelistSetzen(alt.mc, alt.uuid, false); delete zugang.konten[k]; zugangSpeichern(); mcProtokoll(konten[k].name + ' hat ' + alt.mc + ' entfernt'); }
+      return senden(res, 200, {});
     }
     if (weg.startsWith('/minecraft/kopf/') && m === 'GET') {
       const uuid = weg.slice('/minecraft/kopf/'.length);
@@ -536,7 +652,9 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
           const regeln = st.laeuft ? await mcRegeln() : null;
           const ops = mcJson('ops.json', []).map((o) => o.name), gebannt = mcJson('banned-players.json', []).map((o) => ({ name: o.name, grund: o.reason || '' }));
           return senden(res, 200, Object.assign({ installiert: true, version, whitelist, einstellungen, gestoppt: fs.existsSync(mcAusFlagge()), beschaeftigt: mcBeschaeftigt, karte: mcKarteDa(),
-            plugins: mcPlugins(), ops, gebannt, regeln }, st));
+            plugins: mcPlugins(), ops, gebannt, regeln,
+            discord: { verbunden: !!discord.url, an: discord.an },
+            zugang: { modus: zugang.modus, code: zugang.code, konten: Object.entries(zugang.konten).map(([x, v]) => ({ konto: konten[x] ? konten[x].name : x, mc: v.mc, zeit: v.zeit })) } }, st));
         }
         if (m === 'POST') {
           const b = await koerper(req), aktion = String(b.aktion || ''), spieler = String(b.spieler || '').trim();
@@ -559,6 +677,29 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
             }
             mcPropsSchreiben(sauber); mcProtokoll('Einstellungen geändert: ' + Object.keys(sauber).join(', '));
             return senden(res, 200, { ok: true, neustartNoetig: true });
+          }
+          if (aktion === 'discord') {
+            if (b.url !== undefined) {
+              const u = String(b.url).trim();
+              if (u && !DISCORD_URL.test(u)) return senden(res, 400, { fehler: 'Das ist kein Discord-Webhook-Link (https://discord.com/api/webhooks/…).' });
+              discord.url = u;
+            }
+            if (b.an) for (const x of Object.keys(discord.an)) if (x in b.an) discord.an[x] = !!b.an[x];
+            schreiben('minecraft-discord.json', discord);
+            if (b.test && discord.url) {
+              try { await discordSenden(discord.url, { username: 'Minecraft-Server', embeds: [{ description: '👋 Hallo! Ab jetzt melde ich hier, was auf dem Minecraft-Server passiert.', color: 0x7cd152 }] }); }
+              catch (e) { return senden(res, 502, { fehler: 'Discord hat die Nachricht nicht angenommen – stimmt der Link?' }); }
+            }
+            return senden(res, 200, { verbunden: !!discord.url, an: discord.an });
+          }
+          if (aktion === 'zugang') {
+            const modus = String(b.modus || zugang.modus);
+            if (!['code', 'offen', 'aus'].includes(modus)) return senden(res, 400, { fehler: 'Unbekannter Modus.' });
+            let code = b.neuerCode ? neuerCode() : b.code !== undefined ? String(b.code).trim() : zugang.code;
+            if (modus === 'code' && !code) code = neuerCode();
+            if (code && !/^[A-Za-z0-9äöüÄÖÜß_-]{4,32}$/.test(code)) return senden(res, 400, { fehler: 'Code: 4–32 Zeichen, Buchstaben, Ziffern, - oder _.' });
+            zugang.modus = modus; zugang.code = code; zugangSpeichern(); mcProtokoll('Selbst eintragen: ' + modus);
+            return senden(res, 200, { modus, code });
           }
           if (['op', 'deop', 'kick', 'ban', 'pardon'].includes(aktion)) {
             if (!/^[A-Za-z0-9_]{3,16}$/.test(spieler)) return senden(res, 400, { fehler: 'Minecraft-Namen bestehen aus 3–16 Buchstaben, Ziffern oder _.' });
@@ -703,6 +844,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
       for (const f of fs.readdirSync(path.join(daten, 'archiv'))) if (f.startsWith(vor)) fs.rmSync(path.join(daten, 'archiv', f), { force: true });
       Object.keys(sitzungen).forEach((h) => { if (sitzungen[h].schluessel === k) delete sitzungen[h]; });
       Object.values(duelle).forEach((d) => { if (d.von === k || d.gegen === k) delete duelle[d.id]; });
+      if (zugang.konten[k]) { const z = zugang.konten[k]; delete zugang.konten[k]; zugangSpeichern(); try { await whitelistSetzen(z.mc, z.uuid, false); } catch (e) { /* egal */ } }
       delete bestenliste[k]; delete konten[k];
       schreiben('konten.json', konten); schreiben('sitzungen.json', sitzungen); schreiben('bestenliste.json', bestenliste); schreiben('duelle.json', duelle);
       res.setHeader('Set-Cookie', COOKIE + '=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
@@ -754,9 +896,12 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
     return senden(res, 404, { fehler: 'Unbekannt' });
   }
 
-  return http.createServer((req, res) => {
+  const server = http.createServer((req, res) => {
     bearbeiten(req, res).catch((e) => { if (!res.headersSent) senden(res, e.status || 500, { fehler: e.status ? e.message : 'Serverfehler' }); if (!e.status) console.error(e); });
   });
+  server.on('close', () => { if (logUhr) clearInterval(logUhr); });
+  server.mcLogPruefen = mcLogPruefen;
+  return server;
 }
 
 module.exports = { erstelleServer };
