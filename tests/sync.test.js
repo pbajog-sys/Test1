@@ -22,6 +22,15 @@ const github = async (pfad) => {
 };
 // Erweiterungen-Platzhalter: statt PowerShell „installiert“ er nach kurzer Zeit AdGuard
 let erweiterungAufruf = null, adguardLaeuft = false; const aktionen = [];
+// AdGuard-Schnittstelle als Platzhalter: Passwort „Sicher-1234“, anfangs nur die Standardliste
+const ag = { filter: [{ name: 'AdGuard DNS filter', url: 'https://adguardteam.github.io/HostlistsRegistry/assets/filter_1.txt', enabled: true, rules_count: 60000 }], aufrufe: [] };
+const adguardApi = async (pfad, pw, koerper) => {
+  ag.aufrufe.push(pfad);
+  if (pw !== 'Sicher-1234') return { status: 401, json: null, text: 'Unauthorized' };
+  if (pfad === 'filtering/status') return { status: 200, json: { enabled: true, interval: 24, filters: ag.filter }, text: '' };
+  if (pfad === 'filtering/add_url') { ag.filter.push({ name: koerper.name, url: koerper.url, enabled: true, rules_count: /pro/.test(koerper.url) ? 250000 : 400000 }); return { status: 200, json: null, text: 'OK' }; }
+  return { status: 200, json: null, text: 'OK' };
+};
 fs.writeFileSync(path.join(DATEN, 'caddy.log'), 'zeile 1\nCaddy-Testzeile\n');
 fs.mkdirSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen'), { recursive: true });
 fs.writeFileSync(path.join(DATEN, 'spiel', 'werkzeuge', 'homeserver', 'windows', 'erweiterungen', 'adguard.ps1'), '# Platzhalter');
@@ -57,7 +66,7 @@ const erweiterungStarten = (skript, basis, env) => {
   setTimeout(() => { fs.mkdirSync(path.join(DATEN, 'AdGuardHome'), { recursive: true }); fs.writeFileSync(path.join(DATEN, 'AdGuardHome', 'AdGuardHome.exe'), ''); adguardLaeuft = true;
     fs.appendFileSync(path.join(DATEN, 'erweiterungen.log'), '2026-11-19 12:00:00  AdGuard: Fertig: AdGuard Home läuft.\n'); }, 2000);
 };
-const api = erstelleServer({ daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, erweiterungStarten, dnsPruefen: async () => adguardLaeuft, lanIp: () => '192.168.2.42',
+const api = erstelleServer({ adguardApi, daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, erweiterungStarten, dnsPruefen: async () => adguardLaeuft, lanIp: () => '192.168.2.42',
   diensteAbfragen: async () => ({ dienste: { Caddy: 'Running', DuckDNS: 'Running', Update: 'Ready', AdGuard: 'fehlt' }, akku: 78, netz: true }),
   aktionStarten: (ps) => { aktionen.push(ps); },
   mcBefehl, aufgabeAusfuehren: async (art) => { mc.aufgaben.push(art); mc.laeuft = true; },
@@ -292,6 +301,14 @@ const caddy = http.createServer((req, res) => {
   ck('Erweiterung: nur das feste Skript, Passwort nur über die Umgebung (nicht in der Befehlszeile)', erweiterungAufruf && /erweiterungen[\\/]adguard\.ps1$/.test(erweiterungAufruf.skript) && erweiterungAufruf.env.SPIELEKISTE_PASSWORT === 'Sicher-1234' && !erweiterungAufruf.skript.includes('Sicher'));
   const agText = await A.textContent('#syErweiterungen');
   ck('Erweiterung: danach „läuft ✓“ mit Anleitung (DNS-IP, Verwaltung im Heimnetz)', /läuft ✓/.test(agText) && /192\.168\.2\.42/.test(agText) && /:3000/.test(agText), agText.replace(/\s+/g, ' ').slice(0, 90));
+  const benAg = await C.evaluate(async () => (await syApi('admin/adguard-listen', 'POST', { passwort: 'Sicher-1234' })).status);
+  await A.fill('#syAgListenPw', 'falsch'); await A.click('#syAgListen'); await ruhig(A, 800);
+  const agFalsch = await A.textContent('#syAgListenInfo');
+  await A.fill('#syAgListenPw', 'Sicher-1234'); await A.click('#syAgListen'); await ruhig(A, 1200);
+  const agInfo = await A.textContent('#syAgListenInfo');
+  const agNochmal = await A.evaluate(async () => (await syApi('admin/adguard-listen', 'POST', { passwort: 'Sicher-1234' })).json.neu.length);
+  ck('AdGuard: empfohlene Sperrlisten per Knopf (nur Admin, Passwort geprüft, nichts doppelt)', benAg === 403 && /stimmt nicht/.test(agFalsch) && /HaGeZi's Multi PRO/.test(agInfo) && /Threat Intelligence/.test(agInfo)
+    && ag.filter.length === 3 && ag.aufrufe.filter((x) => x === 'filtering/add_url').length === 2 && agNochmal === 0 && !(await A.inputValue('#syAgListenPw')), agInfo);
   await A.locator('#syErweiterungen').scrollIntoViewIfNeeded(); await A.screenshot({ path: path.join(os.tmpdir(), 'sync-adguard.png') });
 
   // ---------- Steuerung ----------

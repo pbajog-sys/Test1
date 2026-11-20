@@ -22,6 +22,7 @@
 //   GET  /api/admin/minecraft       (nur Admin) → { installiert, laeuft, version, online, whitelist, einstellungen }
 //   POST /api/admin/minecraft       (nur Admin) { aktion: 'freischalten'|'entfernen'|'start'|'stopp'|'neustart'|'einstellungen'|'neue-welt'|'karte'
 //                                    |'op'|'deop'|'kick'|'ban'|'pardon'|'befehl'|'plugin-suchen'|'plugin-installieren'|'plugin-entfernen', … }
+//   POST /api/admin/adguard-listen  (nur Admin) { passwort } → empfohlene Sperrlisten (HaGeZi Pro + Threat Intelligence) in AdGuard eintragen
 //   POST /api/admin/erweiterung     (nur Admin) { name: 'adguard', passwort } bzw. { name: 'minecraft', eula: true } → startet ein fest eingebautes Installationsskript
 //                                   (werkzeuge/homeserver/windows/erweiterungen/<name>.ps1 aus der installierten Version)
 //   GET  /api/admin/system          (nur Admin) → Laufzeit, RAM, Festplatte, CPU, Akku, Zustand der Dienste
@@ -170,6 +171,13 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
   modrinth = (pfad) => fetch('https://api.modrinth.com/v2' + pfad, { headers: { 'User-Agent': 'spielekiste-homeserver' } }).then((r) => { if (!r.ok) throw new Error('Modrinth ' + r.status); return r.json(); }),
   herunterladen = async (quelle, ziel) => { const r = await fetch(quelle); if (!r.ok) throw new Error('Download ' + r.status); fs.writeFileSync(ziel, Buffer.from(await r.arrayBuffer())); },
   karteHost = '127.0.0.1', logTakt = 5000,
+  // AdGuard-Home-Schnittstelle (nur lokal), Anmeldung per Basic-Auth mit dem Passwort, das der Admin eintippt (wird nicht gespeichert)
+  adguardApi = async (pfad, passwort, koerper) => {
+    const r = await fetch('http://127.0.0.1:3000/control/' + pfad, { method: koerper ? 'POST' : 'GET', signal: AbortSignal.timeout(90000),
+      headers: Object.assign({ Authorization: 'Basic ' + Buffer.from('admin:' + passwort).toString('base64') }, koerper ? { 'Content-Type': 'application/json' } : {}), body: koerper ? JSON.stringify(koerper) : undefined });
+    const text = await r.text(); let json = null; try { json = JSON.parse(text); } catch (e) { /* manche Antworten sind leer oder Text */ }
+    return { status: r.status, json, text };
+  },
   systemWerte = () => PS(SYSTEM_WERTE, 15000),
   mojangProfil = async (name) => {   // → { id, name } (richtige Schreibweise) oder null, wenn es den Namen nicht gibt
     const r = await fetch('https://api.mojang.com/users/profiles/minecraft/' + encodeURIComponent(name));
@@ -867,6 +875,33 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
           }
           return senden(res, 400, { fehler: 'Unbekannte Aktion.' });
         }
+      }
+      if (weg === '/admin/adguard-listen' && m === 'POST') {
+        const b = await koerper(req), pw = String(b.passwort || '');
+        if (zuViel('adguardpw', k, 5)) return senden(res, 429, { fehler: 'Zu viele Versuche – bitte in einer Stunde nochmal.' });
+        if (!pw) return senden(res, 400, { fehler: 'Bitte das AdGuard-Passwort eingeben.' });
+        const LISTEN = [
+          { name: "HaGeZi's Multi PRO", url: 'https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/pro.txt' },
+          { name: "HaGeZi's Threat Intelligence Feeds (medium)", url: 'https://raw.githubusercontent.com/hagezi/dns-blocklists/main/adblock/tif.medium.txt' },
+        ];
+        let st;
+        try { st = await adguardApi('filtering/status', pw); } catch (e) { return senden(res, 502, { fehler: 'AdGuard antwortet gerade nicht – läuft er?' }); }
+        if (st.status === 401 || st.status === 403) { zaehlen('adguardpw', k); return senden(res, 401, { fehler: 'Das AdGuard-Passwort stimmt nicht.' }); }
+        if (st.status !== 200 || !st.json) return senden(res, 502, { fehler: 'AdGuard hat unerwartet geantwortet (' + st.status + ').' });
+        const neu = [];
+        for (const l of LISTEN) {
+          const da = (st.json.filters || []).find((f) => f.url === l.url);
+          let r;
+          if (!da) r = await adguardApi('filtering/add_url', pw, { name: l.name, url: l.url, whitelist: false });
+          else if (!da.enabled) r = await adguardApi('filtering/set_url', pw, { url: l.url, whitelist: false, data: { name: da.name || l.name, url: l.url, enabled: true } });
+          else continue;
+          if (r.status !== 200) return senden(res, 502, { fehler: 'AdGuard konnte „' + l.name + '“ nicht laden: ' + String(r.text || r.status).slice(0, 120) });
+          neu.push(l.name);
+        }
+        if (st.json.enabled === false) await adguardApi('filtering/config', pw, { enabled: true, interval: st.json.interval || 24 });
+        const nach = await adguardApi('filtering/status', pw);
+        try { fs.appendFileSync(path.join(basis || path.dirname(daten), 'erweiterungen.log'), new Date(jetzt()).toISOString().replace('T', ' ').slice(0, 19) + '  AdGuard: Sperrlisten ' + (neu.length ? 'hinzugefügt: ' + neu.join(', ') : 'waren schon aktiv') + '\n'); } catch (e) { /* egal */ }
+        return senden(res, 200, { neu, listen: ((nach.json && nach.json.filters) || []).map((f) => ({ name: f.name, an: !!f.enabled, regeln: f.rules_count || 0 })) });
       }
       if (weg === '/admin/erweiterung' && m === 'POST') {
         const b = await koerper(req), e = ERWEITERUNGEN[String(b.name || '')];

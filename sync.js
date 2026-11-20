@@ -649,7 +649,21 @@ function syErweiterungenZeigen(d, st) {
   const letzte = (st.erweiterungenLog || []).slice(-1)[0] || '';
   if (ag.laeuft) {
     box.innerHTML = '<b>🛡️ AdGuard Home läuft ✓</b><br>Zu Hause am Handy: Einstellungen → WLAN → (i) beim Heim-WLAN → <b>DNS konfigurieren → Manuell</b> → alle Server löschen, <b>' + syEsc(ip) + '</b> hinzufügen.'
-      + '<br>Verwaltung (nur im Heimnetz): <b>http://' + syEsc(ip) + ':3000</b> · Benutzer <b>admin</b>';
+      + '<br>Verwaltung (nur im Heimnetz): <b>http://' + syEsc(ip) + ':3000</b> · Benutzer <b>admin</b>'
+      + '<div style="margin-top:8px"><input type="password" id="syAgListenPw" autocomplete="current-password" placeholder="AdGuard-Passwort" style="width:100%;padding:10px;margin:0 0 6px;font-size:16px;border-radius:10px;border:1px solid #888;box-sizing:border-box">'
+      + '<button type="button" class="btn secondary" id="syAgListen" style="margin:0;width:100%">🧹 Empfohlene Sperrlisten eintragen (HaGeZi Pro + Malware-Schutz)</button>'
+      + '<div id="syAgListenInfo" style="margin-top:6px"></div></div>';
+    box.querySelector('#syAgListen').addEventListener('click', async () => {
+      const knopf = box.querySelector('#syAgListen'), info = box.querySelector('#syAgListenInfo'), pw = box.querySelector('#syAgListenPw').value;
+      if (!pw) { box.querySelector('#syAgListenPw').focus(); return; }
+      knopf.disabled = true; knopf.textContent = '⏳ AdGuard lädt die Listen … (bis zu 1 Minute)';
+      const r = await syApi('admin/adguard-listen', 'POST', { passwort: pw }).catch(() => ({ status: 0 }));
+      knopf.disabled = false; knopf.textContent = '🧹 Empfohlene Sperrlisten eintragen (HaGeZi Pro + Malware-Schutz)';
+      if (r.status !== 200) { info.textContent = '⚠️ ' + ((r.json && r.json.fehler) || 'Hat nicht geklappt.'); return; }
+      box.querySelector('#syAgListenPw').value = '';
+      info.innerHTML = '✓ ' + (r.json.neu.length ? 'Hinzugefügt: ' + r.json.neu.map(syEsc).join(', ') : 'Die Listen waren schon aktiv.')
+        + '<br>Aktive Listen: ' + r.json.listen.filter((l) => l.an).map((l) => syEsc(l.name) + ' <span style="opacity:.7">(' + l.regeln.toLocaleString('de-DE') + ')</span>').join(' · ');
+    });
     return;
   }
   box.innerHTML = '<b>🛡️ AdGuard Home</b> – blockt Werbung und Tracker für alle Geräte im Heim-WLAN.'

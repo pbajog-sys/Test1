@@ -108,3 +108,5 @@ optionalem Seed (alte Welt → `minecraft\welten-archiv\<Datum>`, die letzten 3 
 - **Orte auf der Karte**: Jeder Angemeldete markiert Häuser, Höhlen, Spawner … (Seite: „📍 Ort markieren“, mit Koordinaten oder
   eigener Position im Spiel; im Spiel per Chat `!ort Name` / `!haus` – der Konto-Server liest `latest.log` mit und fragt die Position per RCON ab).
   Die Orte erscheinen als eigene Ebene „📍 Orte“ in squaremap (der Konto-Server ergänzt `markers.json` beim Durchreichen). Daten: `daten\minecraft-orte.json`.
+- **AdGuard-Sperrlisten per Knopf** (☁️ → Erweiterungen, AdGuard-Passwort eintippen, wird nicht gespeichert): trägt HaGeZi Multi PRO und
+  HaGeZi Threat Intelligence (medium) über die AdGuard-Schnittstelle (127.0.0.1:3000, Basic-Auth) ein – ohne Neustart, nichts doppelt.
