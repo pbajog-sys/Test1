@@ -15,8 +15,9 @@ let apiAn = true, apiFehler = 0;   // apiFehler: so antwortet „Caddy“, wenn 
 let updatesGestartet = 0;
 fs.writeFileSync(path.join(DATEN, 'version.txt'), 'aaaaaaa1111\n');
 // GitHub-Platzhalter: neueste Version „bbbbbbb…“ mit zwei Änderungen seit „aaaaaaa…“
+let githubKopf = 'bbbbbbb2222';
 const github = async (pfad) => {
-  if (pfad.startsWith('/commits/')) return { sha: 'bbbbbbb2222', commit: { message: 'Duelle\n\nDetails' } };
+  if (pfad.startsWith('/commits/')) return { sha: githubKopf, commit: { message: 'Duelle\n\nDetails' } };
   if (pfad.startsWith('/compare/')) return { ahead_by: 2, commits: [{ commit: { message: 'Bestenliste' } }, { commit: { message: 'Duelle' } }] };
   throw new Error('unbekannt');
 };
@@ -66,7 +67,14 @@ const erweiterungStarten = (skript, basis, env) => {
   setTimeout(() => { fs.mkdirSync(path.join(DATEN, 'AdGuardHome'), { recursive: true }); fs.writeFileSync(path.join(DATEN, 'AdGuardHome', 'AdGuardHome.exe'), ''); adguardLaeuft = true;
     fs.appendFileSync(path.join(DATEN, 'erweiterungen.log'), '2026-11-19 12:00:00  AdGuard: Fertig: AdGuard Home läuft.\n'); }, 2000);
 };
-const api = erstelleServer({ adguardApi, daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, erweiterungStarten, dnsPruefen: async () => adguardLaeuft, lanIp: () => '192.168.2.42',
+{ const p = [], jetzt = Date.now();
+  for (let i = 0; i < 288; i++) {
+    if (i >= 200 && i < 206) continue;   // Laptop aus
+    const caddy = i >= 100 && i < 103 ? '0' : '1';
+    p.push([jetzt - (288 - i) * 300000, caddy + '111-1', Math.round(18 + 14 * Math.sin(i / 20) + (i % 7)), 52 + (i % 11), 51 + Math.round(9 * Math.sin(i / 30)), i > 220 && i < 260 ? 1 + (i % 3) : 0]);
+  }
+  fs.writeFileSync(path.join(DATEN, 'verlauf.json'), JSON.stringify({ p })); }
+const api = erstelleServer({ autoTakt: 0, adguardApi, daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, erweiterungStarten, dnsPruefen: async () => adguardLaeuft, lanIp: () => '192.168.2.42',
   diensteAbfragen: async () => ({ dienste: { Caddy: 'Running', DuckDNS: 'Running', Update: 'Ready', AdGuard: 'fehlt' }, akku: 78, netz: true }),
   aktionStarten: (ps) => { aktionen.push(ps); },
   mcBefehl, aufgabeAusfuehren: async (art) => { mc.aufgaben.push(art); mc.laeuft = true; },
@@ -275,87 +283,104 @@ const caddy = http.createServer((req, res) => {
   const fremdDuell = await C.evaluate(async () => (await fetch('api/duell', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gegen: 'Niemand' }) })).status);
   ck('Duell gegen unbekannten Namen abgelehnt', fremdDuell === 400);
 
-  // ---------- Server-Menü (nur Admin) ----------
+  // ---------- Server-Zentrale (nur Admin) ----------
   ck('Admin: Anna ist Admin, Ben nicht', (await A.evaluate(async () => (await syApi('ich')).json.admin)) === true && (await C.evaluate(async () => (await syApi('ich')).json.admin)) === undefined);
-  const benDarf = await C.evaluate(async () => [(await syApi('admin/aktualisieren', 'POST', {})).status, (await syApi('admin/status')).status]);
-  ck('Admin: Ben darf weder aktualisieren noch den Status sehen', benDarf[0] === 403 && benDarf[1] === 403 && updatesGestartet === 0);
-  ck('Admin: Ben sieht im ☁️-Fenster keinen Server-Bereich', !(await C.evaluate(() => { syKontoDialog(); return !!document.getElementById('syPruefen'); })));
+  const benDarf = await C.evaluate(async () => [(await syApi('admin/aktualisieren', 'POST', {})).status, (await syApi('admin/status')).status, (await syApi('admin/verlauf')).status, (await syApi('admin/einstellungen', 'POST', { autoUpdate: false })).status]);
+  ck('Admin: Ben darf weder aktualisieren, Status, Verlauf noch Einstellungen', benDarf.every((x) => x === 403) && updatesGestartet === 0, benDarf.join(','));
+  ck('Admin: Ben sieht im ☁️-Fenster keinen Knopf zur Server-Zentrale', !(await C.evaluate(() => { syKontoDialog(); return !!document.getElementById('syZentrale'); })));
   await C.evaluate(() => document.getElementById('skDlg').close());
   ck('Admin: Ben darf nicht nach Updates fragen', (await C.evaluate(async () => (await syApi('admin/pruefen')).status)) === 403);
-  await A.evaluate(() => { syAdmin = true; syKontoDialog(); }); await ruhig(A, 1000);
-  ck('Server-Bereich zeigt Zustand der Update-Aufgabe (hier: Skript nicht gefunden)', /Update-Aufgabe: bereit · zuletzt 2026-11-19 12:19 · Ergebnis: Datei nicht gefunden · führt aus: .*wachen\.ps1/.test(await A.textContent('#syServerAufgabe')), await A.textContent('#syServerAufgabe'));
-  ck('☁️ (Admin): Server-Bereich mit Version und Konten, „Aktualisieren“ noch versteckt', (await A.textContent('#syServerVersion')) === 'aaaaaaa' && /\d+ · \d+ Duelle/.test(await A.textContent('#syServerKonten')) && !(await A.isVisible('#syServerUpdate')));
-  await A.click('#syPruefen'); await ruhig(A, 800);
-  ck('Updates prüfen: neue Version mit Liste der Änderungen, „Aktualisieren“ erscheint', /Neue Version bbbbbbb – 2 Änderungen/.test(await A.textContent('#syServerNeu')) && /Duelle/.test(await A.textContent('#syServerNeu')) && (await A.isVisible('#syServerUpdate')), (await A.textContent('#syServerNeu')).replace(/\s+/g, ' '));
-  await A.locator('#syPruefen').scrollIntoViewIfNeeded(); await A.screenshot({ path: path.join(os.tmpdir(), 'sync-servermenue.png') });
-  await A.click('#syServerUpdate'); await ruhig(A, 7000);
-  ck('Aktualisieren: Fortschritt, danach „Fertig – App neu laden“ und neue Version', updatesGestartet === 1 && /Fertig – App neu laden/.test(await A.textContent('#syServerUpdate')) && (await A.textContent('#syServerVersion')) === 'bbbbbbb', await A.textContent('#syServerUpdate'));
-  await A.click('#syPruefen'); await ruhig(A, 800);
-  ck('Danach prüfen: „Alles aktuell“, kein Aktualisieren-Knopf', /Alles aktuell/.test(await A.textContent('#syServerNeu')) && !(await A.isVisible('#syServerUpdate')));
+  await A.evaluate(() => { syAdmin = true; syKontoDialog(); }); await ruhig(A, 600);
+  ck('☁️ (Admin): statt Server-Menü nur noch der Knopf „Server-Zentrale“', await A.isVisible('#syZentrale') && !(await A.$('#syServerUpdate')) && !(await A.$('#sySteuerung')));
+  await A.evaluate(() => document.getElementById('skDlg').close());
+  await C.goto(URL_ + 'server.html'); await ruhig(C, 1200);
+  ck('Server-Zentrale: Ben sieht nur „nur für den Admin“', /nur für den Admin/.test(await C.textContent('#hinweis')) && !(await C.isVisible('#inhalt')));
+  await C.goto(URL_); await ruhig(C, 1200);
+  await api.zentraleMessen(); await api.zentraleMessen();
+  await A.goto(URL_ + 'server.html'); await ruhig(A, 2500);
+  const dText = await A.textContent('#dienstListe');
+  ck('Server-Zentrale: „Alles läuft“, Dienste mit Verfügbarkeit (Caddy-Ausfall und Laptop-aus erkannt) und Zeitstrahl',
+    /Alles läuft/.test(await A.textContent('#gesamtText')) && /Webserver/.test(dText) && /98,\d %/.test(dText) && /Erreichbar/.test(dText) && (await A.$$('#dienstListe .strahl i.s, #dienstListe .strahl i.w')).length >= 2
+    && /AdGuard/.test(dText) && /nicht eingerichtet/.test(dText), dText.replace(/\s+/g, ' ').slice(0, 200));
+  const kText = await A.textContent('#kacheln');
+  ck('Server-Zentrale: System (CPU, RAM, °C, Akku am Netz, Konten) und Update-Aufgabe', /CPU/.test(kText) && /63 °C/.test(kText) && /78 %/.test(kText) && /am Netz/.test(kText) && /Konten/.test(kText)
+    && /Datei nicht gefunden/.test(await A.textContent('#aufgabe')) && (await A.textContent('#version')) === 'aaaaaaa', kText.replace(/\s+/g, ' '));
+  ck('Server-Zentrale: Verlauf als Kurve', (await A.$$('#kurve path.linie')).length === 1);
+  await A.screenshot({ path: path.join(os.tmpdir(), 'sync-zentrale.png'), fullPage: true });
+  // Updates
+  await A.click('#pruefen'); await ruhig(A, 800);
+  ck('Updates prüfen: neue Version mit Liste der Änderungen, „Jetzt aktualisieren“ erscheint', /Neue Version bbbbbbb – 2 Änderungen/.test(await A.textContent('#updateNeu')) && /Duelle/.test(await A.textContent('#updateNeu')) && await A.isVisible('#aktualisieren'));
+  await A.click('#aktualisieren'); await ruhig(A, 9000);
+  ck('Aktualisieren: Update startet, danach lädt die Seite mit der neuen Version', updatesGestartet === 1 && (await A.textContent('#version')) === 'bbbbbbb', await A.textContent('#version'));
+  await A.click('#pruefen'); await ruhig(A, 800);
+  ck('Danach prüfen: „Alles aktuell“, kein Aktualisieren-Knopf', /Alles aktuell/.test(await A.textContent('#updateNeu')) && !(await A.isVisible('#aktualisieren')));
+  ck('Server aktualisieren: höchstens einmal pro Minute', (await A.evaluate(async () => (await api('admin/aktualisieren', 'POST', {})).status)) === 429 && updatesGestartet === 1);
+  // Auto-Update
+  ck('Auto-Update: standardmäßig an', await A.isChecked('#autoUpdate') && /Auto-Update/.test(await A.textContent('#versionPille')));
+  githubKopf = 'ccccccc3333';
+  ck('Auto-Update: innerhalb von 10 Min. nach einem Update wird nicht schon wieder aktualisiert', (await api.autoUpdate()) === false && updatesGestartet === 1);
+  await A.click('#autoUpdate'); await ruhig(A, 600);
+  const zj = JSON.parse(fs.readFileSync(path.join(DATEN, 'zentrale.json'), 'utf8'));
+  ck('Auto-Update: ausschalten wird gespeichert', zj.autoUpdate === false && !(await A.isChecked('#autoUpdate')));
+  await A.click('#autoUpdate'); await ruhig(A, 600);
+  // Benachrichtigung
+  await A.fill('#hcUrl', 'https://boese.example/ping'); await A.click('#hcLos'); await ruhig(A, 600);
+  const hcFalsch = await A.textContent('#meldung');
+  await A.fill('#hcUrl', 'https://hc-ping.com/1234abcd-5678-90ef'); await A.click('#hcLos'); await ruhig(A, 1200);
+  ck('Ausfall-Benachrichtigung: nur healthchecks.io-Links, wird für den Wachhund gespeichert', /hc-ping\.com/.test(hcFalsch) && fs.readFileSync(path.join(DATEN, 'healthchecks-url.txt'), 'utf8') === 'https://hc-ping.com/1234abcd-5678-90ef' && /Eingerichtet/.test(await A.textContent('#hcInhalt')), hcFalsch);
   // ---------- Erweiterung AdGuard ----------
   const benErw = await C.evaluate(async () => (await syApi('admin/erweiterung', 'POST', { name: 'adguard', passwort: 'sicher12345' })).status);
-  const falsch = await A.evaluate(async () => [(await syApi('admin/erweiterung', 'POST', { name: 'adguard', passwort: 'kurz' })).status, (await syApi('admin/erweiterung', 'POST', { name: 'cmd.exe', passwort: 'sicher12345' })).status]);
+  const falsch = await A.evaluate(async () => [(await api('admin/erweiterung', 'POST', { name: 'adguard', passwort: 'kurz' })).status, (await api('admin/erweiterung', 'POST', { name: 'cmd.exe', passwort: 'sicher12345' })).status]);
   ck('Erweiterung: Ben darf nicht, kurzes Passwort und unbekannte Erweiterung abgelehnt', benErw === 403 && falsch[0] === 400 && falsch[1] === 400 && !erweiterungAufruf);
-  ck('Erweiterung: AdGuard zunächst „nicht installiert“ mit Passwortfeld', /AdGuard Home/.test(await A.textContent('#syErweiterungen')) && !!(await A.$('#syAgPw')));
-  await A.fill('#syAgPw', 'Sicher-1234'); await A.click('#syAgLos'); await ruhig(A, 9000);
+  ck('Erweiterung: AdGuard zunächst „nicht installiert“ mit Passwortfeld', /AdGuard Home/.test(await A.textContent('#erwAdguard')) && await A.isVisible('#agPw'));
+  await A.fill('#agPw', 'Sicher-1234'); await A.click('#agLos'); await ruhig(A, 9000);
   ck('Erweiterung: nur das feste Skript, Passwort nur über die Umgebung (nicht in der Befehlszeile)', erweiterungAufruf && /erweiterungen[\\/]adguard\.ps1$/.test(erweiterungAufruf.skript) && erweiterungAufruf.env.SPIELEKISTE_PASSWORT === 'Sicher-1234' && !erweiterungAufruf.skript.includes('Sicher'));
-  const agText = await A.textContent('#syErweiterungen');
-  ck('Erweiterung: danach „läuft ✓“ mit Anleitung (DNS-IP, Verwaltung im Heimnetz)', /läuft ✓/.test(agText) && /192\.168\.2\.42/.test(agText) && /:3000/.test(agText), agText.replace(/\s+/g, ' ').slice(0, 90));
+  const agText = await A.textContent('#erwAdguard');
+  ck('Erweiterung: danach läuft AdGuard mit Anleitung (DNS-IP, Verwaltung im Heimnetz)', /192\.168\.2\.42/.test(agText) && /:3000/.test(agText) && await A.isVisible('#agListen'), agText.replace(/\s+/g, ' ').slice(0, 120));
   const benAg = await C.evaluate(async () => (await syApi('admin/adguard-listen', 'POST', { passwort: 'Sicher-1234' })).status);
-  await A.fill('#syAgListenPw', 'falsch'); await A.click('#syAgListen'); await ruhig(A, 800);
-  const agFalsch = await A.textContent('#syAgListenInfo');
-  await A.fill('#syAgListenPw', 'Sicher-1234'); await A.click('#syAgListen'); await ruhig(A, 1200);
-  const agInfo = await A.textContent('#syAgListenInfo');
-  const agNochmal = await A.evaluate(async () => (await syApi('admin/adguard-listen', 'POST', { passwort: 'Sicher-1234' })).json.neu.length);
+  await A.fill('#agListenPw', 'falsch'); await A.click('#agListen'); await ruhig(A, 800);
+  const agFalsch = await A.textContent('#agListenInfo');
+  await A.fill('#agListenPw', 'Sicher-1234'); await A.click('#agListen'); await ruhig(A, 1200);
+  const agInfo = await A.textContent('#agListenInfo');
+  const agNochmal = await A.evaluate(async () => (await api('admin/adguard-listen', 'POST', { passwort: 'Sicher-1234' })).json.neu.length);
   ck('AdGuard: empfohlene Sperrlisten per Knopf (nur Admin, Passwort geprüft, nichts doppelt)', benAg === 403 && /stimmt nicht/.test(agFalsch) && /HaGeZi's Multi PRO/.test(agInfo) && /Threat Intelligence/.test(agInfo)
-    && ag.filter.length === 3 && ag.aufrufe.filter((x) => x === 'filtering/add_url').length === 2 && agNochmal === 0 && !(await A.inputValue('#syAgListenPw')), agInfo);
-  await A.locator('#syErweiterungen').scrollIntoViewIfNeeded(); await A.screenshot({ path: path.join(os.tmpdir(), 'sync-adguard.png') });
+    && ag.filter.length === 3 && ag.aufrufe.filter((x) => x === 'filtering/add_url').length === 2 && agNochmal === 0 && !(await A.inputValue('#agListenPw')), agInfo);
 
   // ---------- Steuerung ----------
   const benSt = await C.evaluate(async () => [(await syApi('admin/system')).status, (await syApi('admin/aktion', 'POST', { aktion: 'laptop-neustart' })).status, (await syApi('admin/protokoll?datei=caddy')).status]);
   ck('Steuerung: Ben darf weder Status, Aktionen noch Protokolle', benSt.every((x) => x === 403) && aktionen.length === 0, benSt.join(','));
-  const falschSt = await A.evaluate(async () => [(await syApi('admin/aktion', 'POST', { aktion: 'format c:' })).status, (await syApi('admin/protokoll?datei=../../konten.json')).status]);
+  const falschSt = await A.evaluate(async () => [(await api('admin/aktion', 'POST', { aktion: 'format c:' })).status, (await api('admin/protokoll?datei=../../konten.json')).status]);
   ck('Steuerung: unbekannte Aktion und fremde Datei abgelehnt', falschSt[0] === 400 && falschSt[1] === 400 && aktionen.length === 0);
-  await A.evaluate(() => { const x = document.getElementById('sySteuerung'); x.open = true; }); await ruhig(A, 2000);
-  const stText = await A.textContent('#sySteuerInhalt');
-  ck('Steuerung: Zustand (CPU, RAM, Akku am Netz) und Dienste', /CPU \d+ %/.test(stText) && /RAM .* frei/.test(stText) && /Akku 78 % \(am Netz\)/.test(stText) && /Caddy \(läuft\)/.test(stText) && /AdGuard \(nicht eingerichtet\)/.test(stText), stText.replace(/\s+/g, ' ').slice(0, 140));
-  ck('Steuerung: Protokoll wird angezeigt', /Caddy-Testzeile/.test(await A.evaluate(async () => { document.getElementById('syProtokollWahl').value = 'caddy'; document.getElementById('syProtokollWahl').dispatchEvent(new Event('change')); await new Promise((r) => setTimeout(r, 800)); return document.getElementById('syProtokoll').textContent; })));
-  await A.locator('#sySteuerung').scrollIntoViewIfNeeded(); await A.screenshot({ path: path.join(os.tmpdir(), 'sync-steuerung.png') });
-  const dlg = await A.evaluate(() => {
-    const d = document.getElementById('skDlg'), zu = d.querySelector('.sk-dlg-zu');
-    d.scrollTop = d.scrollHeight; const r = d.getBoundingClientRect(), z = zu.getBoundingClientRect();
-    return { scrollbar: d.scrollHeight > d.clientHeight, passt: r.height <= innerHeight, xSichtbar: z.top >= r.top - 1 && z.bottom <= r.top + 70, unten: !!d.querySelector('#sySchliessen') };
-  });
-  ck('Langes ☁️-Fenster passt auf den Bildschirm, scrollt, ✕ bleibt oben sichtbar, „Schließen“ unten', dlg.scrollbar && dlg.passt && dlg.xSichtbar && dlg.unten, JSON.stringify(dlg));
-  await A.screenshot({ path: path.join(os.tmpdir(), 'sync-dialog-unten.png') });
-  await A.click('[data-aktion="caddy-neustart"]'); await ruhig(A, 600);
-  const nochmalAktion = await A.evaluate(async () => (await syApi('admin/aktion', 'POST', { aktion: 'adguard-neustart' })).status);
-  ck('Steuerung: Caddy neu starten ausgelöst (festes Kommando), dann 30 s Sperre', aktionen.length === 1 && /TaskName 'Caddy'/.test(aktionen[0]) && /gestartet/.test(await A.textContent('#syAktionMeldung')) && nochmalAktion === 429);
+  await A.selectOption('#protokollWahl', 'caddy'); await ruhig(A, 800);
+  ck('Steuerung: Protokoll wird angezeigt', /Caddy-Testzeile/.test(await A.textContent('#protokoll')));
+  await A.click('#dienstListe [data-aktion="caddy-neustart"]'); await ruhig(A, 600);
+  const nochmalAktion = await A.evaluate(async () => (await api('admin/aktion', 'POST', { aktion: 'adguard-neustart' })).status);
+  ck('Steuerung: Caddy neu starten (festes Kommando), dann 30 s Sperre', aktionen.length === 1 && /TaskName 'Caddy'/.test(aktionen[0]) && /gestartet/.test(await A.textContent('#meldung')) && nochmalAktion === 429);
 
   // ---------- Minecraft ----------
-  await A.evaluate(() => { document.getElementById('skDlg').close(); syKontoDialog(); }); await ruhig(A, 1500);
-  ck('Minecraft: zunächst „installieren“ mit EULA-Häkchen', !!(await A.$('#syMcLos')) && !!(await A.$('#syMcEula')));
-  const ohneEula = await A.evaluate(async () => (await syApi('admin/erweiterung', 'POST', { name: 'minecraft' })).status);
+  ck('Minecraft: zunächst „installieren“ mit EULA-Häkchen', await A.isVisible('#mcLos') && !!(await A.$('#mcEula')));
+  const ohneEula = await A.evaluate(async () => (await api('admin/erweiterung', 'POST', { name: 'minecraft' })).status);
   const benMc = await C.evaluate(async () => [(await syApi('admin/minecraft')).status, (await syApi('admin/minecraft', 'POST', { aktion: 'freischalten', spieler: 'Ben' })).status]);
   ck('Minecraft: ohne EULA abgelehnt, Ben darf nichts', ohneEula === 400 && benMc.every((x) => x === 403) && !mc.aufruf);
-  await A.check('#syMcEula'); await A.click('#syMcLos'); await ruhig(A, 9000);
-  const mcText = await A.textContent('#syMinecraft');
-  ck('Minecraft: installiert (EULA übergeben), läuft, Adresse für Freunde', mc.aufruf && mc.aufruf.env.SPIELEKISTE_EULA === 'ja' && /läuft ✓/.test(mcText) && /Adresse für Freunde: localhost/.test(mcText) && /paper-26\.3-256/.test(mcText), mcText.replace(/\s+/g, ' ').slice(0, 120));
-  await A.fill('#syMcName', 'Steve'); await A.click('#syMcPlus'); await ruhig(A, 2500);
-  ck('Minecraft: Spieler freischalten (whitelist add) und anzeigen', mc.befehle.includes('whitelist add Steve') && /Steve/.test(await A.textContent('#syMinecraft')));
-  const falschName = await A.evaluate(async () => (await syApi('admin/minecraft', 'POST', { aktion: 'freischalten', spieler: 'x; op Ben' })).status);
-  ck('Minecraft: ungültiger Name (Befehls-Einschleusung) abgelehnt', falschName === 400 && !mc.befehle.some((c) => /op Ben/.test(c)));
-  await A.locator('#syMinecraft').scrollIntoViewIfNeeded(); await A.screenshot({ path: path.join(os.tmpdir(), 'sync-minecraft.png') });
-  const breit = await A.evaluate(() => { const d = document.getElementById('skDlg'), R = d.getBoundingClientRect().right;
-    return { ok: d.scrollWidth <= d.clientWidth + 1, zu: [...d.querySelectorAll('*')].filter((e) => e.getBoundingClientRect().right > R + 1).slice(0, 6).map((e) => e.tagName + '#' + e.id + ' ' + (e.textContent || '').slice(0, 30) + ' +' + Math.round(e.getBoundingClientRect().right - R)) }; });
-  ck('☁️-Fenster: nichts ragt rechts heraus', breit.ok, breit.zu.join(' | '));
-  const stopp = await A.evaluate(async () => (await syApi('admin/minecraft', 'POST', { aktion: 'stopp' })).status);
-  ck('Minecraft: Stopp sendet „stop“ (Welt wird gespeichert) und merkt „absichtlich aus“', stopp === 200 && mc.befehle.includes('stop') && fs.existsSync(path.join(DATEN, 'minecraft-aus.txt')));
-  const start = await A.evaluate(async () => (await syApi('admin/minecraft', 'POST', { aktion: 'start' })).status);
+  await A.check('#mcEula'); await A.click('#mcLos'); await ruhig(A, 9000);
+  const mcText = await A.textContent('#erwMinecraft');
+  ck('Minecraft: installiert (EULA übergeben), läuft, Link zur Minecraft-Seite', mc.aufruf && mc.aufruf.env.SPIELEKISTE_EULA === 'ja' && /Läuft/.test(mcText) && /26\.3/.test(mcText) && !!(await A.$('#erwMinecraft a[href="minecraft.html"]')), mcText.replace(/\s+/g, ' ').slice(0, 120));
+  await A.evaluate(async () => api('admin/minecraft', 'POST', { aktion: 'freischalten', spieler: 'Steve' })); await ruhig(A, 300);
+  const falschName = await A.evaluate(async () => (await api('admin/minecraft', 'POST', { aktion: 'freischalten', spieler: 'x; op Ben' })).status);
+  ck('Minecraft: Spieler freischalten, Befehls-Einschleusung abgelehnt', mc.befehle.includes('whitelist add Steve') && falschName === 400 && !mc.befehle.some((c) => /op Ben/.test(c)));
+  A.once('dialog', () => {});
+  await A.click('#erwMinecraft [data-mc="stopp"]'); await ruhig(A, 800);
+  ck('Minecraft: Stopp sendet „stop“ (Welt wird gespeichert) und merkt „absichtlich aus“', mc.befehle.includes('stop') && fs.existsSync(path.join(DATEN, 'minecraft-aus.txt')));
+  const start = await A.evaluate(async () => (await api('admin/minecraft', 'POST', { aktion: 'start' })).status);
   ck('Minecraft: Start führt die Aufgabe aus und hebt „absichtlich aus“ auf', start === 200 && mc.aufgaben.includes('/Run') && !fs.existsSync(path.join(DATEN, 'minecraft-aus.txt')));
+  { const ctx = await b.newContext({ viewport: { width: 1600, height: 1000 }, serviceWorkers: 'block' }); await ctx.addCookies(await A.context().cookies());
+    const P = await ctx.newPage(); P.on('pageerror', (e) => fehler.push('Zentrale PC: ' + e.message)); await P.goto(URL_ + 'server.html'); await ruhig(P, 2500);
+    await P.screenshot({ path: path.join(os.tmpdir(), 'sync-zentrale-pc.png'), fullPage: true });
+    const lay = await P.evaluate(() => { const r = (id) => document.getElementById(id).getBoundingClientRect(); return { d: r('dienste'), u: r('updates'), breit: document.documentElement.scrollWidth <= innerWidth }; });
+    ck('Server-Zentrale am PC: Dienste breit, Updates daneben, nichts ragt heraus', lay.u.left > lay.d.right && Math.abs(lay.u.top - lay.d.top) < 2 && lay.breit, JSON.stringify(lay));
+    await ctx.close(); }
+  await A.goto(URL_); await ruhig(A, 1500);
 
-  const gleichNochmal = await A.evaluate(async () => (await syApi('admin/aktualisieren', 'POST', {})).status);
-  ck('Server aktualisieren: höchstens einmal pro Minute', gleichNochmal === 429 && updatesGestartet === 1);
   // ---------- Minecraft-Seite ----------
   const MC = path.join(DATEN, 'minecraft');
   fs.writeFileSync(path.join(MC, 'server.properties'), '#Minecraft server properties\r\nlevel-name=world\r\ndifficulty=easy\r\npvp=true\r\nmax-players=10\r\nmotd=Hallo\r\nlevel-seed=\r\nrcon.port=25575\r\n');

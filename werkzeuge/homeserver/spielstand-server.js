@@ -22,6 +22,8 @@
 //   GET  /api/admin/minecraft       (nur Admin) → { installiert, laeuft, version, online, whitelist, einstellungen }
 //   POST /api/admin/minecraft       (nur Admin) { aktion: 'freischalten'|'entfernen'|'start'|'stopp'|'neustart'|'einstellungen'|'neue-welt'|'karte'
 //                                    |'op'|'deop'|'kick'|'ban'|'pardon'|'befehl'|'plugin-suchen'|'plugin-installieren'|'plugin-entfernen', … }
+//   GET  /api/admin/verlauf?tage=1|7|30 (nur Admin) → Messpunkte alle 5 Min. (Dienste, CPU, RAM, °C, Spieler) + Verfügbarkeit in %
+//   GET/POST /api/admin/einstellungen (nur Admin) { autoUpdate?: bool, healthchecks?: 'https://hc-ping.com/…'|'' }
 //   POST /api/admin/adguard-listen  (nur Admin) { passwort } → empfohlene Sperrlisten (HaGeZi Pro + Threat Intelligence) in AdGuard eintragen
 //   POST /api/admin/erweiterung     (nur Admin) { name: 'adguard', passwort } bzw. { name: 'minecraft', eula: true } → startet ein fest eingebautes Installationsskript
 //                                   (werkzeuge/homeserver/windows/erweiterungen/<name>.ps1 aus der installierten Version)
@@ -170,7 +172,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
   erweiterungStarten = ERWEITERUNG_STARTEN, dnsPruefen = DNS_PRUEFEN, mcBefehl = null, aufgabeAusfuehren = null, mcWarten = 4000,
   modrinth = (pfad) => fetch('https://api.modrinth.com/v2' + pfad, { headers: { 'User-Agent': 'spielekiste-homeserver' } }).then((r) => { if (!r.ok) throw new Error('Modrinth ' + r.status); return r.json(); }),
   herunterladen = async (quelle, ziel) => { const r = await fetch(quelle); if (!r.ok) throw new Error('Download ' + r.status); fs.writeFileSync(ziel, Buffer.from(await r.arrayBuffer())); },
-  karteHost = '127.0.0.1', logTakt = 5000,
+  karteHost = '127.0.0.1', logTakt = 5000, messTakt = 300000, autoTakt = 600000,
   // AdGuard-Home-Schnittstelle (nur lokal), Anmeldung per Basic-Auth mit dem Passwort, das der Admin eintippt (wird nicht gespeichert)
   adguardApi = async (pfad, passwort, koerper) => {
     const r = await fetch('http://127.0.0.1:3000/control/' + pfad, { method: koerper ? 'POST' : 'GET', signal: AbortSignal.timeout(90000),
@@ -508,6 +510,82 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
   const logUhr = logTakt > 0 ? setInterval(() => { mcLogPruefen().catch(() => {}); }, logTakt) : null;
   if (logUhr && logUhr.unref) logUhr.unref();
 
+  // ---------- Server-Zentrale: Einstellungen, Auto-Update, Verlauf ----------
+  const ordnerBasis = () => basis || path.dirname(daten);
+  const liesB = (f) => { try { return fs.readFileSync(path.join(ordnerBasis(), f), 'utf8'); } catch (e) { return ''; } };
+  let zentrale = Object.assign({ autoUpdate: true }, lesen('zentrale.json', {}));
+  const zentraleSpeichern = () => schreiben('zentrale.json', zentrale);
+  const protokollUpdate = (t) => { try { fs.appendFileSync(path.join(ordnerBasis(), 'update.log'), new Date(jetzt()).toISOString().replace('T', ' ').slice(0, 19) + '  ' + t + '\n'); } catch (e) { /* egal */ } };
+  // Gibt es auf GitHub etwas Neues? (zwischengespeichert, damit Klicks GitHub nicht fluten)
+  async function updatePruefen(frisch) {
+    if (!frisch && pruefCache && jetzt() - pruefCache.zeit < 20e3) return pruefCache.antwort;
+    const zweig = liesB('update-zweig.txt').trim() || 'spielstand-sync', aktuell = liesB('version.txt').trim();
+    const kopf = await github('/commits/' + encodeURIComponent(zweig));
+    const neu = String(kopf.sha || ''), antwort = { aktuell: aktuell.slice(0, 7), neu: neu.slice(0, 7), neuer: !!neu && neu !== aktuell, anzahl: 0, aenderungen: [] };
+    if (antwort.neuer) {
+      if (aktuell) {
+        try {
+          const v = await github('/compare/' + aktuell + '...' + neu);
+          antwort.anzahl = v.ahead_by || 0;
+          antwort.aenderungen = (v.commits || []).map((c) => String((c.commit && c.commit.message) || '').split('\n')[0].slice(0, 120)).reverse().slice(0, 8);
+        } catch (e) { /* Vergleich ist nur Zugabe */ }
+      } else antwort.aenderungen = [String((kopf.commit && kopf.commit.message) || '').split('\n')[0].slice(0, 120)];
+    }
+    antwort.sha = neu;
+    pruefCache = { zeit: jetzt(), antwort };
+    return antwort;
+  }
+  // Auto-Update: alle 10 Min. nachsehen; gibt es eine neue Version, das Update starten (dieselbe Version höchstens zweimal versuchen)
+  const autoVersuche = {};
+  async function autoUpdate() {
+    if (!zentrale.autoUpdate || jetzt() - letztesUpdate < 10 * 60e3) return false;
+    let a; try { a = await updatePruefen(true); } catch (e) { return false; }
+    if (!a.neuer || (autoVersuche[a.sha] || 0) >= 2) return false;
+    autoVersuche[a.sha] = (autoVersuche[a.sha] || 0) + 1;
+    letztesUpdate = jetzt(); pruefCache = null;
+    protokollUpdate('Auto-Update: neue Version ' + a.neu + ' gefunden – starte Update');
+    try { await updateStarten(); return true; } catch (e) { protokollUpdate('Auto-Update: FEHLER beim Starten (' + e.message + ')'); return false; }
+  }
+  const autoUhr = autoTakt > 0 ? setInterval(() => { autoUpdate().catch(() => {}); }, autoTakt) : null;
+  if (autoUhr && autoUhr.unref) autoUhr.unref();
+
+  // Verlauf: alle 5 Min. ein Messpunkt [zeit, dienste, cpu %, RAM belegt %, °C, Minecraft-Spieler]
+  // dienste: ein Zeichen je Dienst in DIENSTE: 1 = läuft, 0 = gestört, - = nicht eingerichtet/absichtlich aus
+  const DIENSTE = ['Caddy', 'Konto-Server', 'DuckDNS', 'Wachhund', 'AdGuard', 'Minecraft'];
+  let verlauf = lesen('verlauf.json', { p: [] });
+  const cpuStand = { wert: null };
+  function cpuMessen() {
+    const c = require('os').cpus().map((x) => x.times), ges = c.reduce((a, t) => a + t.user + t.nice + t.sys + t.irq + t.idle, 0), leer = c.reduce((a, t) => a + t.idle, 0);
+    const alt = cpuStand.wert; cpuStand.wert = { ges, leer };
+    return alt && ges > alt.ges ? Math.round(100 * (1 - (leer - alt.leer) / (ges - alt.ges))) : null;
+  }
+  function dienstZeichen(name, zustand) {
+    if (name === 'Minecraft' && fs.existsSync(path.join(ordnerBasis(), 'minecraft-aus.txt'))) return '-';
+    if (!zustand || zustand === 'fehlt') return '-';
+    return /^(Running|läuft)$/i.test(zustand) ? '1' : '0';
+  }
+  async function zentraleMessen() {
+    const os = require('os'), cpu = cpuMessen();
+    const w = (await diensteAbfragen().catch(() => null)) || {}, d = Object.assign({ 'Konto-Server': 'Running' }, w.dienste || {});
+    let temp = null; try { const sw = await systemWerte(); if (sw && sw.tempC != null) temp = sw.tempC; } catch (e) { /* egal */ }
+    let spieler = null; if (mcInstalliert()) { const st = await mcLaeuft(); if (st.laeuft) spieler = st.online.length; }
+    verlauf.p.push([jetzt(), DIENSTE.map((n) => dienstZeichen(n, d[n])).join(''), cpu, Math.round(100 * (1 - os.freemem() / os.totalmem())), temp, spieler]);
+    const grenze = jetzt() - 31 * 864e5; while (verlauf.p.length && verlauf.p[0][0] < grenze) verlauf.p.shift();
+    schreiben('verlauf.json', verlauf);
+  }
+  const messUhr = messTakt > 0 ? setInterval(() => { zentraleMessen().catch(() => {}); }, messTakt) : null;
+  if (messUhr && messUhr.unref) messUhr.unref();
+  if (messTakt > 0) { cpuMessen(); setTimeout(() => zentraleMessen().catch(() => {}), 20000).unref(); }
+  // Verfügbarkeit: Anteil der Messpunkte, an denen der Dienst lief. „Server erreichbar“ zählt auch fehlende Messpunkte (Laptop aus) als Ausfall.
+  function verfuegbarkeit(tage) {
+    const von = jetzt() - tage * 864e5, p = verlauf.p.filter((x) => x[0] >= von), r = {};
+    if (!p.length) return null;
+    const erwartet = Math.max(1, Math.round((jetzt() - Math.max(von, verlauf.p[0][0])) / messTakt));
+    r.gesamt = Math.min(100, Math.round(1000 * p.length / erwartet) / 10);
+    DIENSTE.forEach((n, i) => { const z = p.map((x) => x[1][i]).filter((c) => c === '1' || c === '0'); r[n] = z.length ? Math.round(1000 * z.filter((c) => c === '1').length / z.length) / 10 : null; });
+    return r;
+  }
+
   async function bearbeiten(req, res) {
     const url = new URL(req.url, 'http://x'), weg = url.pathname.replace(/^.*?\/api\//, '/');
     // hinter Caddy: der echte Anschluss steht im letzten X-Forwarded-For-Eintrag
@@ -700,7 +778,9 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
         return senden(res, 200, { version: lies('version.txt').trim().slice(0, 7), log: lies('update.log').trim().split(/\r?\n/).filter(Boolean).slice(-6),
           konten: Object.keys(konten).length, duelle: Object.keys(duelle).length,
           erweiterungen: { adguard: { installiert: fs.existsSync(path.join(basis || path.dirname(daten), 'AdGuardHome', 'AdGuardHome.exe')), laeuft: await dnsPruefen() } },
-          erweiterungenLog: lies('erweiterungen.log').trim().split(/\r?\n/).filter(Boolean).slice(-4), lanIp: lanIp(), aufgabe: await aufgabeAbfragen() });
+          erweiterungenLog: lies('erweiterungen.log').trim().split(/\r?\n/).filter(Boolean).slice(-4), lanIp: lanIp(), aufgabe: await aufgabeAbfragen(),
+          autoUpdate: zentrale.autoUpdate, aktualisiertAm: (() => { try { return fs.statSync(path.join(ordnerBasis(), 'version.txt')).mtimeMs; } catch (e) { return null; } })(),
+          healthchecks: !!liesB('healthchecks-url.txt').trim(), minecraft: mcInstalliert(), minecraftGestoppt: fs.existsSync(path.join(ordnerBasis(), 'minecraft-aus.txt')) });
       }
       if (weg === '/admin/system' && m === 'GET') {
         const os = require('os'), ordner = basis || path.dirname(daten);
@@ -711,7 +791,8 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
         let platte = null; try { const st = fs.statfsSync(ordner); platte = { frei: st.bavail * st.bsize, gesamt: st.blocks * st.bsize }; } catch (e) { /* ältere Node-Version */ }
         const w = (await diensteAbfragen()) || {};
         return senden(res, 200, { laeuftSeit: Math.round(os.uptime()), ram: { frei: os.freemem(), gesamt: os.totalmem() }, cpu, platte, akku: w.akku ?? null, netz: w.netz ?? null,
-          dienste: Object.assign({ 'Konto-Server': 'Running' }, w.dienste || {}), name: os.hostname() });
+          dienste: Object.assign({ 'Konto-Server': 'Running' }, w.dienste || {}), name: os.hostname(),
+          werte: await systemWerte().catch(() => null) });
       }
       if (weg === '/admin/aktion' && m === 'POST') {
         const b = await koerper(req), a = AKTIONEN[String(b.aktion || '')];
@@ -876,6 +957,33 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
           return senden(res, 400, { fehler: 'Unbekannte Aktion.' });
         }
       }
+      if (weg === '/admin/verlauf' && m === 'GET') {
+        const tage = [1, 7, 30].includes(Number(url.searchParams.get('tage'))) ? Number(url.searchParams.get('tage')) : 1;
+        let p = verlauf.p.filter((x) => x[0] >= jetzt() - tage * 864e5);
+        if (tage > 1) {   // zusammenfassen: 7 Tage → 30 Min., 30 Tage → 2 Std. (Dienste: Anteil „läuft“ als Ziffer 0–9, sonst -)
+          const fenster = (tage === 7 ? 30 : 120) * 60000, g = new Map();
+          p.forEach((x) => { const k = Math.floor(x[0] / fenster) * fenster; if (!g.has(k)) g.set(k, []); g.get(k).push(x); });
+          const mittel = (l, i) => { const v = l.map((x) => x[i]).filter((y) => y != null); return v.length ? Math.round(v.reduce((a, c) => a + c, 0) / v.length) : null; };
+          p = [...g.entries()].map(([k, l]) => [k + fenster / 2,
+            DIENSTE.map((n, i) => { const z = l.map((x) => x[1][i]).filter((c) => c === '1' || c === '0'); return z.length ? String(Math.round(9 * z.filter((c) => c === '1').length / z.length)) : '-'; }).join(''),
+            mittel(l, 2), mittel(l, 3), mittel(l, 4), (() => { const v = l.map((x) => x[5]).filter((y) => y != null); return v.length ? Math.max(...v) : null; })()]);
+        }
+        return senden(res, 200, { dienste: DIENSTE, takt: tage === 1 ? messTakt : (tage === 7 ? 30 : 120) * 60000, punkte: p,
+          verfuegbarkeit: { 1: verfuegbarkeit(1), 7: verfuegbarkeit(7), 30: verfuegbarkeit(30) } });
+      }
+      if (weg === '/admin/einstellungen') {
+        if (m === 'POST') {
+          const b = await koerper(req);
+          if (b.autoUpdate !== undefined) { zentrale.autoUpdate = !!b.autoUpdate; zentraleSpeichern(); protokollUpdate('Auto-Update ' + (zentrale.autoUpdate ? 'eingeschaltet' : 'ausgeschaltet')); }
+          if (b.healthchecks !== undefined) {
+            const u = String(b.healthchecks).trim(), datei = path.join(ordnerBasis(), 'healthchecks-url.txt');
+            if (u && !/^https:\/\/hc-ping\.com\/[A-Za-z0-9_-]{8,}(\/[A-Za-z0-9_-]+)?$/.test(u)) return senden(res, 400, { fehler: 'Bitte den Ping-Link von healthchecks.io einfügen (beginnt mit https://hc-ping.com/…).' });
+            if (u) fs.writeFileSync(datei, u); else fs.rmSync(datei, { force: true });
+            protokollUpdate('Ausfall-Benachrichtigung ' + (u ? 'eingerichtet' : 'entfernt'));
+          }
+        }
+        return senden(res, 200, { autoUpdate: zentrale.autoUpdate, healthchecks: !!liesB('healthchecks-url.txt').trim() });
+      }
       if (weg === '/admin/adguard-listen' && m === 'POST') {
         const b = await koerper(req), pw = String(b.passwort || '');
         if (zuViel('adguardpw', k, 5)) return senden(res, 429, { fehler: 'Zu viele Versuche – bitte in einer Stunde nochmal.' });
@@ -920,22 +1028,8 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
         return senden(res, 200, { gestartet: true, name: e.name });
       }
       if (weg === '/admin/pruefen' && m === 'GET') {
-        if (pruefCache && jetzt() - pruefCache.zeit < 20e3) return senden(res, 200, pruefCache.antwort);   // GitHub nicht mit Klicks fluten
-        const zweig = lies('update-zweig.txt').trim() || 'spielstand-sync', aktuell = lies('version.txt').trim();
-        let kopf;
-        try { kopf = await github('/commits/' + encodeURIComponent(zweig)); } catch (e) { return senden(res, 502, { fehler: 'GitHub gerade nicht erreichbar (' + e.message + ').' }); }
-        const neu = String(kopf.sha || ''), antwort = { aktuell: aktuell.slice(0, 7), neu: neu.slice(0, 7), neuer: !!neu && neu !== aktuell, anzahl: 0, aenderungen: [] };
-        if (antwort.neuer) {
-          if (aktuell) {
-            try {
-              const v = await github('/compare/' + aktuell + '...' + neu);
-              antwort.anzahl = v.ahead_by || 0;
-              antwort.aenderungen = (v.commits || []).map((c) => String((c.commit && c.commit.message) || '').split('\n')[0].slice(0, 120)).reverse().slice(0, 8);
-            } catch (e) { /* Vergleich ist nur Zugabe */ }
-          } else antwort.aenderungen = [String((kopf.commit && kopf.commit.message) || '').split('\n')[0].slice(0, 120)];
-        }
-        pruefCache = { zeit: jetzt(), antwort };
-        return senden(res, 200, antwort);
+        try { const a = await updatePruefen(); return senden(res, 200, Object.assign({}, a, { sha: undefined })); }
+        catch (e) { return senden(res, 502, { fehler: 'GitHub gerade nicht erreichbar (' + e.message + ').' }); }
       }
       if (weg === '/admin/aktualisieren' && m === 'POST') {
         pruefCache = null;
@@ -1008,7 +1102,8 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
   const server = http.createServer((req, res) => {
     bearbeiten(req, res).catch((e) => { if (!res.headersSent) senden(res, e.status || 500, { fehler: e.status ? e.message : 'Serverfehler' }); if (!e.status) console.error(e); });
   });
-  server.on('close', () => { if (logUhr) clearInterval(logUhr); });
+  server.on('close', () => { [logUhr, autoUhr, messUhr].forEach((u) => u && clearInterval(u)); });
+  server.zentraleMessen = zentraleMessen; server.autoUpdate = autoUpdate;
   server.mcLogPruefen = mcLogPruefen;
   return server;
 }

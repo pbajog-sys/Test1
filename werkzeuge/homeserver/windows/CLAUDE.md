@@ -12,7 +12,7 @@ Portweiterleitung TCP 80/443 auf diesen Laptop, feste lokale IP).
 | Caddy-Zertifikate (Let’s Encrypt) | `caddy-daten\` (über XDG_DATA_HOME) |
 | Spiel (statische Dateien) | `spiel\` – wird bei jedem Update komplett ersetzt, vorige Version in `spiel-vorher\` |
 | Konto-Server (Node.js, ohne Pakete) | `spielstand-server.js`, lauscht nur auf 127.0.0.1:8090, Caddy leitet `/api/*` dorthin |
-| **Daten – niemals löschen** | `daten\` (konten.json, sitzungen.json, staende\, archiv\, bestenliste.json, duelle.json) |
+| **Daten – niemals löschen** | `daten\` (konten.json, verlauf.json, zentrale.json, sitzungen.json, staende\, archiv\, bestenliste.json, duelle.json) |
 | Protokolle | `caddy.log`, `konto-server.log`, `update.log` |
 | Version | `version.txt` (Commit auf GitHub) |
 
@@ -37,7 +37,9 @@ Portweiterleitung TCP 80/443 auf diesen Laptop, feste lokale IP).
   DNS Port 53. Protokoll `erweiterungen.log`.
 
 ## Steuerung aus der App
-☁️ → Server → 🎛️ Steuerung (nur Admin): Zustand, Dienste neu starten, Laptop neu starten, Protokolle ansehen.
+Server-Zentrale `https://<domain>/server.html` (nur Admin, auch über ☁️ → „🖥️ Server-Zentrale“): Dienste mit Verfügbarkeit,
+System, Updates (Auto-Update alle 10 Min., `daten\zentrale.json`), Erweiterungen, Ausfall-Benachrichtigung (`healthchecks-url.txt`), Protokolle.
+Messwerte: `daten\verlauf.json`.
 Fernzugriff auf den Bildschirm: Chrome Remote Desktop (falls eingerichtet).
 
 ## Typische Aufgaben

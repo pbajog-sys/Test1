@@ -1,0 +1,541 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#0d1014">
+<title>🖥️ Server-Zentrale</title>
+<link rel="stylesheet" href="fonts/fonts.css?v=153">
+<style>
+  :root {
+    --bg: #0d1014; --flaeche: #151a20; --flaeche2: #1c232b; --slot: #10151a; --linie: rgba(255,255,255,.07);
+    --text: #e9eef3; --muted: #8d9aa7; --accent: #5fd0e0; --accent-hell: #9ae6f0; --auf-accent: #062026;
+    --gut: #6fd36b; --warn: #f2c94c; --schlecht: #ef5b52; --leer: #2a333c; --r: 12px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font-family: "Nunito", system-ui, sans-serif; line-height: 1.45; }
+  a { color: var(--accent); }
+  h1, h2, h3 { margin: 0; }
+  h2 { font-size: 1.05rem; display: flex; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+  h2 small, .muted { color: var(--muted); font-weight: 600; }
+  .klein { font-size: .86rem; }
+  [hidden] { display: none !important; }
+  button, .knopf { font: inherit; font-weight: 700; border: 0; border-radius: 9px; padding: 8px 13px; background: var(--flaeche2); color: var(--text); cursor: pointer; text-decoration: none; display: inline-flex; align-items: center; gap: 6px; transition: background .15s; }
+  button:hover, .knopf:hover { background: #26303a; }
+  button.haupt { background: var(--accent); color: var(--auf-accent); }
+  button.haupt:hover { background: var(--accent-hell); }
+  button.gefahr { color: #ffb3ad; }
+  button:disabled { opacity: .5; cursor: default; }
+  input, select { font: inherit; font-size: 16px; padding: 8px 10px; border-radius: 9px; border: 1px solid #2c3640; background: var(--slot); color: var(--text); min-width: 0; }
+  input:focus, select:focus { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .zeile { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+
+  /* Kopf */
+  .kopf { background: var(--flaeche); border-bottom: 1px solid var(--linie); padding: max(14px, env(safe-area-inset-top)) clamp(14px, 2.4vw, 32px) 14px; }
+  .kopf-innen { display: flex; align-items: center; gap: 12px 18px; flex-wrap: wrap; }
+  .marke { display: flex; align-items: center; gap: 12px; margin-right: auto; min-width: 0; }
+  .marke svg { width: 38px; height: 38px; flex: none; }
+  .marke h1 { font-size: 1.45rem; letter-spacing: -.01em; }
+  .marke p { margin: 1px 0 0; font-size: .85rem; color: var(--muted); }
+  .marke p a { color: var(--muted); }
+  .pille { display: inline-flex; align-items: center; gap: 8px; padding: 7px 13px; border-radius: 999px; background: var(--slot); font-weight: 800; font-size: .9rem; white-space: nowrap; }
+  .pille.gut { color: var(--gut); } .pille.warn { color: var(--warn); } .pille.schlecht { color: #fff; background: #7a2622; }
+  .punkt { width: 10px; height: 10px; border-radius: 50%; background: var(--leer); flex: none; }
+  .punkt.gut { background: var(--gut); box-shadow: 0 0 0 3px rgba(111,211,107,.18); }
+  .punkt.warn { background: var(--warn); box-shadow: 0 0 0 3px rgba(242,201,76,.18); }
+  .punkt.schlecht { background: var(--schlecht); box-shadow: 0 0 0 3px rgba(239,91,82,.2); }
+
+  /* Raster */
+  main { padding: 16px clamp(14px, 2.4vw, 32px) 48px; display: flex; flex-direction: column; gap: 16px; }
+  .spalte { display: contents; }
+  .karte { background: var(--flaeche); border: 1px solid var(--linie); border-radius: var(--r); padding: 16px; min-width: 0; }
+  #dienste { order: 1; } #updates { order: 2; } #system { order: 3; } #verlaufKarte { order: 4; } #erweiterungen { order: 5; } #benachrichtigung { order: 6; } #protokolle { order: 7; }
+  @media (min-width: 1000px) {
+    main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr); align-items: start; }
+    .spalte { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+  }
+  @media (min-width: 1700px) { main { max-width: 2100px; margin: 0 auto; } }
+
+  /* Dienste */
+  .reiter { display: inline-flex; gap: 3px; background: var(--slot); padding: 3px; border-radius: 9px; margin-left: auto; }
+  .reiter button { padding: 5px 10px; font-size: .8rem; background: transparent; border-radius: 7px; white-space: nowrap; }
+  .reiter button[aria-pressed="true"] { background: var(--flaeche2); color: var(--accent-hell); box-shadow: inset 0 -2px 0 var(--accent); }
+  .dienst { display: grid; grid-template-columns: auto minmax(0, 9em) auto minmax(0, 1fr) auto; gap: 6px 12px; align-items: center; padding: 10px 0; border-top: 1px solid var(--linie); }
+  .dienst:first-of-type { border-top: 0; }
+  .dienst .name b { display: block; font-size: .95rem; }
+  .dienst .name small { color: var(--muted); font-size: .78rem; }
+  .dienst .prozent { font-weight: 800; font-variant-numeric: tabular-nums; font-size: .9rem; min-width: 4.2em; text-align: right; }
+  .dienst .aktion { min-width: 2.4em; display: flex; justify-content: flex-end; }
+  .dienst .aktion button, .dienst .aktion a { padding: 6px 9px; font-size: .85rem; }
+  .strahl { display: flex; gap: 2px; height: 24px; align-items: stretch; }
+  .strahl i { flex: 1; border-radius: 2px; background: var(--leer); min-width: 2px; }
+  .strahl i.g { background: var(--gut); } .strahl i.w { background: var(--warn); } .strahl i.s { background: var(--schlecht); }
+  .strahl-achse { display: flex; justify-content: space-between; color: var(--muted); font-size: .72rem; margin-top: 2px; }
+  @media (max-width: 640px) {
+    .dienst { grid-template-columns: auto minmax(0, 1fr) auto auto; }
+    .dienst .strahl-box { grid-column: 1 / -1; }
+  }
+  .legende { display: flex; gap: 12px; flex-wrap: wrap; color: var(--muted); font-size: .76rem; margin-top: 10px; }
+  .legende span::before { content: ""; display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; background: var(--leer); }
+  .legende .g::before { background: var(--gut); } .legende .w::before { background: var(--warn); } .legende .s::before { background: var(--schlecht); }
+
+  /* Kacheln */
+  .kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+  .kachel { background: var(--slot); border-radius: 9px; padding: 10px 12px; min-width: 0; }
+  .kachel b { display: block; font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .kachel span { color: var(--muted); font-size: .78rem; }
+  .kachel small { display: block; color: var(--muted); font-size: .72rem; }
+  .kachel.gut b { color: var(--gut); } .kachel.warn b { color: var(--warn); } .kachel.schlecht b { color: #ff8a80; }
+  .balken { height: 5px; border-radius: 3px; background: var(--leer); margin-top: 6px; overflow: hidden; }
+  .balken i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
+
+  /* Updates */
+  .version { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  .version code { font-size: 1.3rem; font-weight: 800; color: var(--accent-hell); }
+  .schalter-zeile { display: flex; align-items: center; gap: 12px; padding: 10px 12px; background: var(--slot); border-radius: 9px; margin-top: 12px; }
+  .schalter-zeile div { flex: 1; } .schalter-zeile b { display: block; } .schalter-zeile small { color: var(--muted); }
+  .schalter { position: relative; width: 46px; height: 26px; flex: none; }
+  .schalter input { position: absolute; inset: 0; opacity: 0; margin: 0; cursor: pointer; z-index: 1; }
+  .schalter span { position: absolute; inset: 0; border-radius: 999px; background: #2c3640; transition: background .15s; }
+  .schalter span::after { content: ""; position: absolute; left: 3px; top: 3px; width: 20px; height: 20px; border-radius: 50%; background: #fff; transition: transform .15s; }
+  .schalter input:checked + span { background: var(--gut); }
+  .schalter input:checked + span::after { transform: translateX(20px); }
+  .schalter input:focus-visible + span { outline: 2px solid var(--accent); outline-offset: 2px; }
+  #updateNeu ul { margin: 6px 0 0; padding-left: 1.2em; }
+  #updateLog { margin: 10px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: .8rem; }
+  #updateLog li { padding: 2px 0; overflow-wrap: anywhere; }
+
+  /* Erweiterungen */
+  .erw { padding: 12px; background: var(--slot); border-radius: 9px; margin-bottom: 10px; }
+  .erw h3 { font-size: .98rem; display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .erw p { margin: 4px 0; font-size: .86rem; color: var(--muted); }
+  .erw p b { color: var(--text); }
+  .erw input { width: 100%; margin-top: 6px; }
+
+  /* Verlauf */
+  .verlauf { position: relative; margin-top: 4px; }
+  .verlauf svg { width: 100%; display: block; overflow: visible; }
+  .achse { fill: var(--muted); font-size: 11px; }
+  .gitterlinie { stroke: rgba(255,255,255,.06); }
+  path.linie { fill: none; stroke: var(--accent); stroke-width: 2; stroke-linejoin: round; }
+  path.flaeche { fill: url(#vVerlauf); }
+  line.kreuz { stroke: rgba(255,255,255,.35); stroke-dasharray: 3 3; }
+  circle.punktk { fill: var(--accent); stroke: var(--flaeche); stroke-width: 2; }
+  .tipp { position: absolute; pointer-events: none; background: #0b0f14; border: 1px solid var(--linie); border-radius: 8px; padding: 6px 10px; font-size: .84rem; white-space: nowrap; transform: translate(-50%, -100%); box-shadow: 0 6px 20px rgba(0,0,0,.5); z-index: 2; }
+
+  /* Protokolle */
+  pre#protokoll { background: #07090c; border: 1px solid var(--linie); border-radius: 9px; padding: 10px 12px; height: 300px; overflow: auto; font-size: .76rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; margin: 10px 0 0; }
+  #meldung { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #0b0f14; border: 1px solid var(--linie); padding: 10px 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); max-width: calc(100vw - 32px); z-index: 5; }
+  .leer-hinweis { max-width: 520px; margin: 12vh auto; text-align: center; padding: 0 20px; }
+</style>
+</head>
+<body>
+<header class="kopf">
+  <div class="kopf-innen">
+    <div class="marke">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="4" y="5" width="32" height="12" rx="3" fill="#1f2a33" stroke="#5fd0e0" stroke-width="2"/><rect x="4" y="22" width="32" height="12" rx="3" fill="#1f2a33" stroke="#5fd0e0" stroke-width="2"/><circle cx="11" cy="11" r="2" fill="#6fd36b"/><circle cx="11" cy="28" r="2" fill="#6fd36b"/><rect x="17" y="10" width="14" height="2" rx="1" fill="#5fd0e0" opacity=".6"/><rect x="17" y="27" width="14" height="2" rx="1" fill="#5fd0e0" opacity=".6"/></svg>
+      <div><h1>Server-Zentrale</h1><p><a href="./">← Spielekiste</a> · <span id="host"></span></p></div>
+    </div>
+    <span class="pille" id="gesamt" hidden><span class="punkt" id="gesamtPunkt"></span><span id="gesamtText"></span></span>
+    <span class="pille" id="versionPille" hidden></span>
+  </div>
+</header>
+
+<div class="leer-hinweis" id="hinweis"><p class="muted">Wird geladen …</p></div>
+
+<main id="inhalt" hidden>
+  <div class="spalte">
+  <section class="karte breit" id="dienste">
+    <h2>📡 Dienste <small id="verfGesamt"></small>
+      <span class="reiter" id="zeitraum" role="group" aria-label="Zeitraum"><button type="button" data-t="1" aria-pressed="true">24 h</button><button type="button" data-t="7" aria-pressed="false">7 Tage</button><button type="button" data-t="30" aria-pressed="false">30 Tage</button></span>
+    </h2>
+    <div id="dienstListe"></div>
+    <div class="legende"><span class="g">läuft</span><span class="w">zeitweise gestört</span><span class="s">ausgefallen</span><span>keine Daten / aus</span></div>
+  </section>
+  <section class="karte breit" id="verlaufKarte">
+    <h2>📈 Verlauf
+      <span class="reiter" id="metrik" role="group" aria-label="Wert"><button type="button" data-m="2" aria-pressed="true">CPU</button><button type="button" data-m="3" aria-pressed="false">RAM</button><button type="button" data-m="4" aria-pressed="false">°C</button><button type="button" data-m="5" aria-pressed="false">Spieler</button></span>
+    </h2>
+    <div class="verlauf" id="kurve"></div>
+  </section>
+  <section class="karte breit" id="protokolle">
+    <h2>📜 Protokolle
+      <select id="protokollWahl" style="margin-left:auto;font-size:15px;padding:5px 8px">
+        <option value="update">Updates &amp; Steuerung</option><option value="wachhund">Wachhund</option><option value="konto">Konto-Server</option><option value="caddy">Caddy</option>
+        <option value="duckdns">DuckDNS</option><option value="erweiterungen">Erweiterungen</option><option value="minecraft">Minecraft</option>
+      </select>
+    </h2>
+    <pre id="protokoll">…</pre>
+  </section>
+  </div>
+  <div class="spalte">
+  <section class="karte" id="updates">
+    <h2>⬆️ Updates</h2>
+    <div class="version"><code id="version">…</code><span class="muted klein" id="versionAlter"></span></div>
+    <label class="schalter-zeile">
+      <div><b>Automatisch aktualisieren</b><small>Prüft alle 10 Minuten auf GitHub und spielt neue Versionen selbst ein.</small></div>
+      <span class="schalter"><input type="checkbox" id="autoUpdate" aria-label="Automatisch aktualisieren"><span></span></span>
+    </label>
+    <div class="zeile"><button type="button" id="pruefen">🔍 Jetzt prüfen</button><button type="button" class="haupt" id="aktualisieren" hidden>⬆️ Jetzt aktualisieren</button></div>
+    <div id="updateNeu" class="klein" style="margin-top:8px"></div>
+    <p class="klein muted" id="aufgabe" style="margin:8px 0 0"></p>
+    <ul id="updateLog"></ul>
+  </section>
+  <section class="karte" id="system">
+    <h2>🖥️ System <small id="rechnerName"></small></h2>
+    <div class="kacheln" id="kacheln"></div>
+    <div class="zeile"><button type="button" class="gefahr" data-aktion="laptop-neustart">⏻ Laptop neu starten</button></div>
+  </section>
+  <section class="karte" id="erweiterungen">
+    <h2>🧩 Erweiterungen</h2>
+    <div class="erw" id="erwAdguard"></div>
+    <div class="erw" id="erwMinecraft"></div>
+  </section>
+  <section class="karte" id="benachrichtigung">
+    <h2>🔔 Bei Ausfall benachrichtigen</h2>
+    <div id="hcInhalt"></div>
+  </section>
+  </div>
+</main>
+<div id="meldung" role="status" hidden></div>
+
+<script>
+const API = new URL('api/', location.href);
+async function api(weg, methode = 'GET', koerper) {
+  const r = await fetch(API + weg, { method: methode, cache: 'no-store', credentials: 'same-origin', headers: koerper ? { 'Content-Type': 'application/json' } : {}, body: koerper ? JSON.stringify(koerper) : undefined });
+  let json = null; try { json = await r.json(); } catch (e) { /* keine JSON-Antwort */ }
+  return { status: r.status, json };
+}
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+const gb = (b) => (b / 1073741824).toLocaleString('de-DE', { maximumFractionDigits: 1 }) + ' GB';
+const dauer = (s) => (s < 3600 ? Math.round(s / 60) + ' Min.' : s < 172800 ? Math.round(s / 3600) + ' Std.' : Math.round(s / 86400) + ' Tage');
+const vor = (ms) => { const s = (Date.now() - ms) / 1000; return s < 90 ? 'gerade eben' : 'vor ' + dauer(s); };
+const komma = (v, n = 1) => (v == null ? '–' : (Math.round(v * 10 ** n) / 10 ** n).toLocaleString('de-DE'));
+function melden(t) { const m = $('meldung'); m.textContent = t; m.hidden = false; clearTimeout(m.t); m.t = setTimeout(() => { m.hidden = true; }, 5000); }
+$('host').textContent = location.host;
+
+let status = null, system = null, verlauf = null, mcInfo = null, zeitraum = 1, metrik = 2;
+const DIENST_INFO = {
+  Caddy: ['Webserver', 'HTTPS & Webseite', 'caddy-neustart'],
+  'Konto-Server': ['Konto-Server', 'Konten, Spielstände, diese Seite'],
+  DuckDNS: ['DuckDNS', 'hält die Adresse aktuell', 'duckdns-neustart'],
+  Wachhund: ['Wachhund', 'prüft alle 2 Min., startet neu'],
+  AdGuard: ['AdGuard', 'Werbeblocker im WLAN', 'adguard-neustart'],
+  Minecraft: ['Minecraft', 'Java-Server'],
+};
+const ZUSTAND = { Running: 'läuft', Ready: 'gestoppt', Disabled: 'deaktiviert', Stopped: 'gestoppt', Queued: 'wartet', fehlt: 'nicht eingerichtet' };
+
+// ---------- Laden ----------
+async function laden() {
+  const ich = await api('ich').catch(() => ({ status: 0 }));
+  if (ich.status === 401) return hinweis('Bitte zuerst in der <a href="./">Spielekiste</a> über ☁️ anmelden.');
+  if (ich.status !== 200) return hinweis('Der Server ist gerade nicht erreichbar – startet er vielleicht neu? Die Seite versucht es gleich wieder.', true);
+  if (!ich.json.admin) return hinweis('Die Server-Zentrale ist nur für den Admin. <a href="./">Zurück zur Spielekiste</a>');
+  $('hinweis').hidden = true; $('inhalt').hidden = false;
+  await Promise.all([statusLaden(), systemLaden(), verlaufLaden(), protokoll()]);
+}
+function hinweis(html, nochmal) {
+  $('inhalt').hidden = true; $('hinweis').hidden = false; $('hinweis').innerHTML = '<p>' + html + '</p>';
+  if (nochmal) setTimeout(laden, 8000);
+}
+async function statusLaden() {
+  const r = await api('admin/status').catch(() => ({ status: 0 }));
+  if (r.status !== 200) return;
+  status = r.json;
+  if (status.minecraft) { const m = await api('minecraft/info').catch(() => ({ status: 0 })); mcInfo = m.status === 200 ? m.json : null; } else mcInfo = null;
+  updatesZeigen(); erweiterungenZeigen(); benachrichtigungZeigen(); gesamtZeigen(); dienstZeigen();
+}
+async function systemLaden() {
+  const r = await api('admin/system').catch(() => ({ status: 0 }));
+  if (r.status !== 200) return;
+  system = r.json; systemZeigen(); gesamtZeigen(); dienstZeigen();
+}
+async function verlaufLaden() {
+  const r = await api('admin/verlauf?tage=' + zeitraum).catch(() => ({ status: 0 }));
+  if (r.status !== 200) return;
+  verlauf = r.json; dienstZeigen(); kurveZeigen();
+}
+
+// ---------- Gesamtstatus ----------
+function dienstStufe(n) {
+  const z = system && system.dienste ? system.dienste[n] : null;
+  if (!z || z === 'fehlt') return { stufe: '', text: 'nicht eingerichtet', aus: true };
+  if (n === 'Minecraft' && mcInfo && mcInfo.beschaeftigt) return { stufe: 'warn', text: mcInfo.beschaeftigt + ' …' };
+  if (n === 'Minecraft' && z !== 'Running' && status && status.minecraftGestoppt) return { stufe: '', text: 'absichtlich aus', aus: true };
+  if (z === 'Running') return { stufe: 'gut', text: n === 'Minecraft' && mcInfo ? 'läuft · ' + (mcInfo.online || []).length + ' online' : 'läuft' };
+  return { stufe: 'schlecht', text: ZUSTAND[z] || z };
+}
+function gesamtZeigen() {
+  if (!system) return;
+  const probleme = Object.keys(DIENST_INFO).filter((n) => dienstStufe(n).stufe === 'schlecht');
+  const akkuAus = system.netz === false;
+  const p = $('gesamt'); p.hidden = false;
+  p.className = 'pille ' + (probleme.length ? 'schlecht' : akkuAus ? 'warn' : 'gut');
+  $('gesamtPunkt').className = 'punkt ' + (probleme.length ? 'schlecht' : akkuAus ? 'warn' : 'gut');
+  $('gesamtText').textContent = probleme.length ? '⚠️ ' + probleme.map((n) => DIENST_INFO[n][0]).join(', ') + (probleme.length === 1 ? ' ist gestört' : ' sind gestört')
+    : akkuAus ? 'Läuft auf Akku!' : 'Alles läuft';
+  document.title = (probleme.length ? '⚠️ ' : '✓ ') + 'Server-Zentrale';
+}
+
+// ---------- Dienste mit Zeitstrahl ----------
+function strahlFuer(i) {   // i = Index in verlauf.dienste, -1 = „Server erreichbar“ (Messpunkte vorhanden?)
+  if (!verlauf) return '';
+  const N = innerWidth < 640 ? 36 : 60, ende = Date.now(), start = ende - zeitraum * 864e5, breite = (ende - start) / N, takt = verlauf.takt;
+  const fach = Array.from({ length: N }, () => []);
+  verlauf.punkte.forEach((p) => { const k = Math.floor((p[0] - start) / breite); if (k >= 0 && k < N) fach[k].push(p); });
+  const erster = verlauf.punkte.length ? verlauf.punkte[0][0] : ende;
+  return fach.map((l, k) => {
+    const t0 = start + k * breite, titel = new Date(t0).toLocaleString('de-DE', zeitraum === 1 ? { hour: '2-digit', minute: '2-digit' } : { day: 'numeric', month: 'numeric', hour: '2-digit' });
+    if (i < 0) {
+      if (t0 + breite < erster - takt) return '<i title="' + titel + ': keine Daten"></i>';
+      const erwartet = Math.max(1, Math.floor(Math.min(breite, ende - Math.max(t0, erster)) / takt)), anteil = Math.min(1, l.length / erwartet);
+      return '<i class="' + (anteil >= 1 ? 'g' : l.length ? 'w' : 's') + '" title="' + titel + ': ' + (anteil >= 1 ? 'erreichbar' : l.length ? 'zeitweise nicht erreichbar' : 'nicht erreichbar') + '"></i>';
+    }
+    const z = l.map((p) => p[1][i]).filter((c) => c && c !== '-');
+    if (!z.length) return '<i title="' + titel + ': keine Daten / aus"></i>';
+    const anteil = z.reduce((a, c) => a + (zeitraum === 1 ? (c === '1' ? 1 : 0) : Number(c) / 9), 0) / z.length;   // 24 h: 1/0, länger: Anteil 0–9
+    return '<i class="' + (anteil >= .99 ? 'g' : anteil > 0.05 ? 'w' : 's') + '" title="' + titel + ': ' + Math.round(anteil * 100) + ' % läuft"></i>';
+  }).join('');
+}
+function dienstZeigen() {
+  if (!system) return;
+  const verf = verlauf && verlauf.verfuegbarkeit && verlauf.verfuegbarkeit[zeitraum];
+  const achse = '<div class="strahl-achse"><span>vor ' + (zeitraum === 1 ? '24 Std.' : zeitraum + ' Tagen') + '</span><span>jetzt</span></div>';
+  const zeile = (punkt, name, unter, prozent, strahl, aktion) => '<div class="dienst"><span class="punkt ' + punkt + '"></span><div class="name"><b>' + name + '</b><small>' + unter + '</small></div>'
+    + '<span class="prozent">' + prozent + '</span><div class="strahl-box"><div class="strahl">' + strahl + '</div>' + achse + '</div><div class="aktion">' + (aktion || '') + '</div></div>';
+  const fmt = (v) => (v == null ? '–' : komma(v) + ' %');
+  let html = zeile('gut', '🌐 Erreichbar', 'Laptop an und Server antwortet', fmt(verf && verf.gesamt), strahlFuer(-1));
+  Object.keys(DIENST_INFO).forEach((n) => {
+    const [titel, unter, aktion] = DIENST_INFO[n], st = dienstStufe(n), i = verlauf ? verlauf.dienste.indexOf(n) : -1;
+    if (st.aus && n !== 'Minecraft' && n !== 'AdGuard' && !(verf && verf[n] != null)) return;
+    const knopf = n === 'Minecraft' ? (status && status.minecraft ? '<a class="knopf" href="minecraft.html" title="Minecraft-Seite">⛏️</a>' : '')
+      : aktion && !st.aus ? '<button type="button" data-aktion="' + aktion + '" title="' + titel + ' neu starten">🔁</button>' : '';
+    html += zeile(st.stufe, titel, st.text + ' · ' + unter, st.aus ? '–' : fmt(verf && verf[n]), i >= 0 ? strahlFuer(i) : '', knopf);
+  });
+  $('dienstListe').innerHTML = html;
+  $('verfGesamt').textContent = verf ? '· ' + komma(verf.gesamt) + ' % erreichbar' : '· Messung startet (alle 5 Min.)';
+}
+$('zeitraum').addEventListener('click', (e) => { const b = e.target.closest('[data-t]'); if (!b) return; zeitraum = +b.dataset.t; $('zeitraum').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); verlaufLaden(); });
+
+// ---------- System ----------
+function systemZeigen() {
+  const s = system, w = s.werte || {}, stufe = (v, g, m) => (v == null ? '' : v <= g ? 'gut' : v <= m ? 'warn' : 'schlecht');
+  const ramBelegt = 1 - s.ram.frei / s.ram.gesamt, platteBelegt = s.platte ? 1 - s.platte.frei / s.platte.gesamt : null;
+  const k = (wert, titel, unter, kl, anteil) => '<div class="kachel ' + (kl || '') + '"><b>' + wert + '</b><span>' + titel + '</span>' + (unter ? '<small>' + unter + '</small>' : '')
+    + (anteil != null ? '<div class="balken"><i style="width:' + Math.round(anteil * 100) + '%"></i></div>' : '') + '</div>';
+  $('kacheln').innerHTML = k(s.cpu + ' %', 'CPU', w.takt != null ? 'Takt ' + w.takt + ' %' + (w.takt < 60 ? ' – drosselt' : '') : '', stufe(s.cpu, 60, 85), s.cpu / 100)
+    + k(gb(s.ram.gesamt - s.ram.frei), 'RAM belegt', 'von ' + gb(s.ram.gesamt), stufe(ramBelegt * 100, 80, 92), ramBelegt)
+    + (w.tempC != null ? k(w.tempC + ' °C', 'Temperatur', w.tempC >= 85 ? 'heiß – Lüftung frei?' : '', stufe(w.tempC, 70, 85)) : '')
+    + (s.platte ? k(gb(s.platte.frei), 'frei auf der Platte', 'von ' + gb(s.platte.gesamt), stufe(platteBelegt * 100, 85, 95), platteBelegt) : '')
+    + (s.akku != null ? k(s.akku + ' %', s.netz ? '🔌 Akku, am Netz' : '🔋 Akku – NICHT am Netz', '', s.netz ? '' : 'schlecht') : '')
+    + k(dauer(s.laeuftSeit), 'läuft seit', '')
+    + (status ? k(status.konten, 'Konten', status.duelle + ' Duelle') : '');
+  $('rechnerName').textContent = s.name ? '· ' + s.name : '';
+}
+
+// ---------- Updates ----------
+function aufgabeText(a) {
+  if (!a) return '';
+  if (a.fehlt) return '⚠️ Update-Aufgabe fehlt – auf dem Laptop einmal einrichten.bat ausführen.';
+  if (a.fehler) return 'Update-Aufgabe nicht abfragbar.';
+  const code = Number(a.ergebnis) >>> 0, b = { 0: 'ok', 1: 'Fehler im Skript', 267009: 'läuft gerade', 267011: 'noch nie gelaufen', 2147942402: 'Datei nicht gefunden', 2147942405: 'Zugriff verweigert', 2147946720: 'abgebrochen' }[code] || 'Code 0x' + code.toString(16).toUpperCase();
+  return 'Update-Aufgabe: ' + ({ Ready: 'bereit', Running: 'läuft', Disabled: 'deaktiviert', Queued: 'wartet' }[a.zustand] || a.zustand) + (a.letzterLauf ? ' · zuletzt ' + a.letzterLauf.replace('T', ' ').slice(0, 16) : '') + ' · Ergebnis: ' + b;
+}
+function updatesZeigen() {
+  $('version').textContent = status.version || '?';
+  $('versionAlter').textContent = status.aktualisiertAm ? 'eingespielt ' + vor(status.aktualisiertAm) : '';
+  const vp = $('versionPille'); vp.hidden = false; vp.textContent = (status.autoUpdate ? '🔄 Auto-Update · ' : '') + 'Version ' + (status.version || '?');
+  if (document.activeElement !== $('autoUpdate')) $('autoUpdate').checked = !!status.autoUpdate;
+  $('aufgabe').textContent = aufgabeText(status.aufgabe);
+  $('updateLog').innerHTML = (status.log || []).slice(-4).reverse().map((z) => '<li>' + esc(z.replace(/^(\S+) (\S+)\s+/, '$1 $2 · ')) + '</li>').join('');
+}
+$('autoUpdate').addEventListener('change', async (e) => {
+  const x = await api('admin/einstellungen', 'POST', { autoUpdate: e.target.checked }).catch(() => ({ status: 0 }));
+  melden(x.status === 200 ? (x.json.autoUpdate ? '✓ Auto-Update an – neue Versionen kommen von selbst' : '✓ Auto-Update aus') : '⚠️ Hat nicht geklappt.');
+  statusLaden();
+});
+$('pruefen').addEventListener('click', async () => {
+  const k = $('pruefen'), feld = $('updateNeu'); k.disabled = true; k.textContent = '🔍 Prüfe …'; feld.textContent = '';
+  const r = await api('admin/pruefen').catch(() => ({ status: 0 }));
+  k.disabled = false; k.textContent = '🔍 Jetzt prüfen';
+  if (r.status !== 200) { feld.textContent = '⚠️ ' + ((r.json && r.json.fehler) || 'GitHub gerade nicht erreichbar.'); return; }
+  const j = r.json;
+  if (!j.neuer) { feld.innerHTML = '✓ <b>Alles aktuell</b> (' + esc(j.neu) + ')'; $('aktualisieren').hidden = true; return; }
+  feld.innerHTML = '🆕 <b>Neue Version ' + esc(j.neu) + '</b>' + (j.anzahl ? ' – ' + j.anzahl + (j.anzahl === 1 ? ' Änderung' : ' Änderungen') : '') + ':'
+    + (j.aenderungen && j.aenderungen.length ? '<ul>' + j.aenderungen.map((t) => '<li>' + esc(t) + '</li>').join('') + '</ul>' : '');
+  $('aktualisieren').hidden = false;
+});
+$('aktualisieren').addEventListener('click', async () => {
+  const k = $('aktualisieren'), vorher = (status.log || []).join('\n'), alteVersion = status.version;
+  k.disabled = true; k.textContent = '⏳ Update läuft …';
+  const r = await api('admin/aktualisieren', 'POST', {}).catch(() => ({ status: 0 }));
+  if (r.status !== 200) { k.disabled = false; k.textContent = '⬆️ Jetzt aktualisieren'; melden('⚠️ ' + ((r.json && r.json.fehler) || 'Update konnte nicht gestartet werden.')); return; }
+  const bis = Date.now() + 4 * 60e3;   // auf das Update-Protokoll warten (der Konto-Server startet dabei kurz neu)
+  while (Date.now() < bis) {
+    await new Promise((ok) => setTimeout(ok, 3000));
+    await statusLaden(); if (!status) continue;
+    const log = (status.log || []).join('\n'), letzte = (status.log || []).slice(-1)[0] || '';
+    if (log === vorher) continue;
+    if (/Fertig|Schon aktuell/.test(letzte)) {
+      $('updateNeu').innerHTML = '✓ <b>Aktualisiert auf ' + esc(status.version) + '</b> – Seite lädt neu …'; k.hidden = true; k.disabled = false; k.textContent = '⬆️ Jetzt aktualisieren';
+      if (status.version !== alteVersion) setTimeout(() => location.reload(), 1500);
+      return;
+    }
+    if (/FEHLER|zurückgenommen/.test(letzte)) { k.disabled = false; k.textContent = '⬆️ Nochmal versuchen'; $('updateNeu').textContent = '⚠️ ' + letzte.replace(/^\S+ \S+\s+/, ''); return; }
+  }
+  k.disabled = false; k.textContent = '⬆️ Jetzt aktualisieren'; melden('Keine Rückmeldung – siehe Protokoll „Updates“.');
+});
+
+// ---------- Erweiterungen ----------
+function erweiterungenZeigen() {
+  const ag = (status.erweiterungen && status.erweiterungen.adguard) || {}, ip = status.lanIp || 'IP des Laptops', box = $('erwAdguard');
+  if (!box.dataset.laeuft) {
+    if (ag.laeuft) {
+      if (!box.querySelector('#agListen')) {
+        box.innerHTML = '<h3><span class="punkt gut"></span>🛡️ AdGuard Home</h3><p>Verwaltung im Heimnetz: <b>http://' + esc(ip) + ':3000</b> · Benutzer <b>admin</b></p>'
+          + '<p>Am Handy: WLAN → (i) → DNS manuell → <b>' + esc(ip) + '</b></p>'
+          + '<input type="password" id="agListenPw" autocomplete="current-password" placeholder="AdGuard-Passwort">'
+          + '<div class="zeile" style="margin-top:6px"><button type="button" id="agListen">🧹 Empfohlene Sperrlisten eintragen</button></div><p id="agListenInfo"></p>';
+        box.querySelector('#agListen').addEventListener('click', agListen);
+      }
+    } else {
+      box.innerHTML = '<h3><span class="punkt' + (ag.installiert ? ' schlecht' : '') + '"></span>🛡️ AdGuard Home</h3><p>Blockt Werbung und Tracker für alle Geräte im Heim-WLAN.' + (ag.installiert ? ' <b>Installiert, antwortet aber nicht.</b>' : '') + '</p>'
+        + '<input type="password" id="agPw" autocomplete="new-password" placeholder="Neues Passwort für die AdGuard-Verwaltung (mind. 8 Zeichen)">'
+        + '<div class="zeile" style="margin-top:6px"><button type="button" class="haupt" id="agLos">🛡️ AdGuard installieren</button></div>';
+      box.querySelector('#agLos').addEventListener('click', () => installieren('adguard', { passwort: box.querySelector('#agPw').value }, box.querySelector('#agLos'), /AdGuard:/));
+    }
+  }
+  const mb = $('erwMinecraft');
+  if (mb.dataset.laeuft) return;
+  if (status.minecraft) {
+    const i = mcInfo || {};
+    mb.innerHTML = '<h3><span class="punkt ' + (i.laeuft ? 'gut' : i.beschaeftigt ? 'warn' : '') + '"></span>⛏️ Minecraft (Java)</h3>'
+      + '<p>' + (i.beschaeftigt ? '⏳ ' + esc(i.beschaeftigt) + ' …' : i.laeuft ? 'Läuft · <b>' + (i.online || []).length + '</b> online' + ((i.online || []).length ? ': ' + i.online.map(esc).join(', ') : '') : 'Gestoppt')
+      + (i.version ? ' · ' + esc(i.version.replace(/^paper-|\.jar$/g, '')) : '') + '</p>'
+      + '<div class="zeile" style="margin-top:6px"><a class="knopf" href="minecraft.html">⛏️ Zur Minecraft-Seite</a>'
+      + (i.laeuft ? '<button type="button" data-mc="stopp">⏹ Stopp</button>' : '<button type="button" data-mc="start">▶️ Start</button>') + '</div>';
+  } else {
+    mb.innerHTML = '<h3><span class="punkt"></span>⛏️ Minecraft (Java)</h3><p>Eigener Server für dich und deine Freunde – mit Statistik, Karte und Verwaltung.</p>'
+      + '<label class="zeile" style="gap:8px;margin-top:6px"><input type="checkbox" id="mcEula" style="width:auto;margin:0"> <span class="klein">Ich akzeptiere die <a href="https://aka.ms/MinecraftEULA" target="_blank" rel="noopener">Minecraft-EULA</a>.</span></label>'
+      + '<div class="zeile" style="margin-top:6px"><button type="button" class="haupt" id="mcLos">⛏️ Minecraft installieren</button></div>';
+    mb.querySelector('#mcLos').addEventListener('click', () => {
+      if (!mb.querySelector('#mcEula').checked) { melden('Bitte zuerst die Minecraft-EULA akzeptieren.'); return; }
+      installieren('minecraft', { eula: true }, mb.querySelector('#mcLos'), /Minecraft:/);
+    });
+  }
+  mb.querySelectorAll('[data-mc]').forEach((b) => b.addEventListener('click', async () => {
+    const a = b.dataset.mc; if (a === 'stopp' && !confirm('Minecraft-Server stoppen? Die Welt wird vorher gespeichert.')) return;
+    b.disabled = true; const x = await api('admin/minecraft', 'POST', { aktion: a }).catch(() => ({ status: 0 }));
+    melden(x.status === 200 ? (a === 'start' ? '✓ Minecraft startet (ca. 1 Minute)' : '✓ Minecraft gestoppt') : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
+    setTimeout(() => { statusLaden(); systemLaden(); }, a === 'start' ? 15000 : 1500);
+  }));
+}
+async function installieren(name, extra, knopf, muster) {
+  const box = knopf.closest('.erw'), text = knopf.textContent;
+  knopf.disabled = true; knopf.textContent = '⏳ Wird gestartet …';
+  const r = await api('admin/erweiterung', 'POST', Object.assign({ name }, extra)).catch(() => ({ status: 0 }));
+  if (r.status !== 200) { knopf.disabled = false; knopf.textContent = text; melden('⚠️ ' + ((r.json && r.json.fehler) || 'Konnte nicht starten.')); return; }
+  box.dataset.laeuft = '1'; knopf.textContent = '⏳ Installiert … (' + (name === 'minecraft' ? '3–6 Minuten' : 'bis zu 2 Minuten') + ')';
+  const bis = Date.now() + 8 * 60e3;
+  while (Date.now() < bis) {
+    await new Promise((ok) => setTimeout(ok, 4000));
+    const y = await api('admin/status').catch(() => ({ status: 0 })); if (y.status !== 200) continue;
+    const l = (y.json.erweiterungenLog || []).filter((z) => muster.test(z)).slice(-1)[0] || '';
+    if (l) knopf.textContent = '⏳ ' + l.replace(/^\S+ \S+\s+\S+:\s*/, '');
+    const fertig = name === 'adguard' ? y.json.erweiterungen.adguard.laeuft : y.json.minecraft && /Fertig/.test(l);
+    if (fertig || /FEHLER/.test(l)) { delete box.dataset.laeuft; if (/FEHLER/.test(l)) melden('⚠️ ' + l.replace(/^\S+ \S+\s+/, '')); else melden('✓ Fertig installiert'); await statusLaden(); systemLaden(); return; }
+  }
+  delete box.dataset.laeuft; statusLaden();
+}
+async function agListen() {
+  const k = $('agListen'), info = $('agListenInfo'), pw = $('agListenPw').value;
+  if (!pw) { $('agListenPw').focus(); return; }
+  k.disabled = true; k.textContent = '⏳ AdGuard lädt die Listen …';
+  const r = await api('admin/adguard-listen', 'POST', { passwort: pw }).catch(() => ({ status: 0 }));
+  k.disabled = false; k.textContent = '🧹 Empfohlene Sperrlisten eintragen';
+  if (r.status !== 200) { info.textContent = '⚠️ ' + ((r.json && r.json.fehler) || 'Hat nicht geklappt.'); return; }
+  $('agListenPw').value = '';
+  info.innerHTML = '✓ ' + (r.json.neu.length ? 'Hinzugefügt: ' + r.json.neu.map(esc).join(', ') : 'Die Listen waren schon aktiv.')
+    + '<br>Aktiv: ' + r.json.listen.filter((l) => l.an).map((l) => esc(l.name) + ' (' + l.regeln.toLocaleString('de-DE') + ')').join(' · ');
+}
+
+// ---------- Benachrichtigung (healthchecks.io) ----------
+function benachrichtigungZeigen() {
+  const box = $('hcInhalt');
+  if (box.dataset.zustand === String(status.healthchecks)) return;
+  box.dataset.zustand = String(status.healthchecks);
+  box.innerHTML = status.healthchecks
+    ? '<p class="klein"><span class="punkt gut" style="display:inline-block;margin-right:6px"></span><b>Eingerichtet.</b> Der Wachhund meldet sich alle 2 Minuten bei healthchecks.io. Bleibt das aus (Laptop aus, kein Internet) oder klemmt etwas, bekommst du eine Nachricht.</p>'
+      + '<div class="zeile"><a class="knopf" href="https://healthchecks.io/" target="_blank" rel="noopener">healthchecks.io öffnen ↗</a><button type="button" id="hcWeg">Entfernen</button></div>'
+    : '<p class="klein muted">Damit du es merkst, wenn der Laptop ausfällt – auch wenn du nicht zu Hause bist. Kostenlos:</p>'
+      + '<ol class="klein muted" style="padding-left:20px;margin:6px 0"><li>Auf <a href="https://healthchecks.io/" target="_blank" rel="noopener">healthchecks.io</a> registrieren</li><li>„Add Check“: Period <b>5 Minuten</b>, Grace <b>10 Minuten</b></li><li>Unter „Integrations“ Mail, Telegram oder App einrichten</li><li>Den <b>Ping-Link</b> (https://hc-ping.com/…) kopieren und hier einfügen</li></ol>'
+      + '<div class="zeile"><input id="hcUrl" placeholder="https://hc-ping.com/…" autocomplete="off" spellcheck="false" style="flex:1"><button type="button" class="haupt" id="hcLos">Speichern</button></div>';
+  const los = $('hcLos');
+  if (los) los.addEventListener('click', async () => {
+    const x = await api('admin/einstellungen', 'POST', { healthchecks: $('hcUrl').value.trim() }).catch(() => ({ status: 0 }));
+    melden(x.status === 200 ? '✓ Gespeichert – der Wachhund meldet sich ab jetzt bei healthchecks.io' : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
+    if (x.status === 200) statusLaden();
+  });
+  const weg = $('hcWeg');
+  if (weg) weg.addEventListener('click', async () => { if (!confirm('Benachrichtigung bei Ausfall entfernen?')) return; await api('admin/einstellungen', 'POST', { healthchecks: '' }); statusLaden(); });
+}
+
+// ---------- Verlauf ----------
+const M_INFO = { 2: ['CPU', ' %', 100], 3: ['RAM belegt', ' %', 100], 4: ['Temperatur', ' °C', null], 5: ['Minecraft-Spieler', '', null] };
+function kurveZeigen() {
+  const box = $('kurve'), [name, einheit, festMax] = M_INFO[metrik], p = (verlauf.punkte || []).filter((x) => x[metrik] != null);
+  if (p.length < 2) { box.innerHTML = '<p class="klein muted">' + (metrik === 4 ? 'Dieser Laptop liefert Windows keine Temperatur – oder' : 'Noch') + ' zu wenig Daten. Der Server misst alle 5 Minuten.</p>'; return; }
+  const B = Math.max(260, box.clientWidth || 600), H = innerWidth >= 1000 ? 190 : 150, L = 34, x0 = Date.now() - zeitraum * 864e5, x1 = Date.now();
+  const max = festMax || Math.max(2, ...p.map((x) => x[metrik])) * 1.15, x = (t) => L + (t - x0) / (x1 - x0) * (B - L), y = (v) => H - v / max * (H - 8);
+  const luecke = 2.5 * verlauf.takt;
+  let linie = '', flaeche = '', seg = [];
+  const fertig = () => { if (seg.length) { const pkt = seg.map((q) => x(q[0]).toFixed(1) + ',' + y(q[metrik]).toFixed(1)).join('L'); linie += 'M' + pkt; flaeche += 'M' + x(seg[0][0]).toFixed(1) + ',' + H + 'L' + pkt + 'L' + x(seg[seg.length - 1][0]).toFixed(1) + ',' + H + 'Z'; } seg = []; };
+  p.forEach((q, i) => { if (i && q[0] - p[i - 1][0] > luecke) fertig(); seg.push(q); }); fertig();
+  let svg = '<svg viewBox="0 0 ' + B + ' ' + (H + 20) + '" style="height:' + (H + 20) + 'px" role="img" aria-label="' + name + ' Verlauf"><defs><linearGradient id="vVerlauf" x1="0" x2="0" y1="0" y2="1"><stop offset="0" stop-color="#5fd0e0" stop-opacity=".35"/><stop offset="1" stop-color="#5fd0e0" stop-opacity="0"/></linearGradient></defs>';
+  for (let i = 0; i <= 4; i++) { const v = max * i / 4; svg += '<line class="gitterlinie" x1="' + L + '" x2="' + B + '" y1="' + y(v) + '" y2="' + y(v) + '"/><text class="achse" x="' + (L - 6) + '" y="' + (y(v) + 4) + '" text-anchor="end">' + komma(v, 0) + '</text>'; }
+  const f = (t) => new Date(t).toLocaleString('de-DE', zeitraum === 1 ? { hour: '2-digit', minute: '2-digit' } : { day: 'numeric', month: 'numeric' });
+  [0, .5, 1].forEach((a, i) => { const t = x0 + a * (x1 - x0); svg += '<text class="achse" x="' + x(t) + '" y="' + (H + 16) + '" text-anchor="' + ['start', 'middle', 'end'][i] + '">' + f(t) + '</text>'; });
+  svg += '<path class="flaeche" d="' + flaeche + '"/><path class="linie" d="' + linie + '"/><line class="kreuz" y1="0" y2="' + H + '" visibility="hidden"/><circle class="punktk" r="4" visibility="hidden"/><rect x="' + L + '" y="0" width="' + (B - L) + '" height="' + H + '" fill="transparent" class="fang"/></svg><div class="tipp" hidden></div>';
+  box.innerHTML = svg;
+  const fang = box.querySelector('.fang'), kreuz = box.querySelector('.kreuz'), kreis = box.querySelector('.punktk'), tipp = box.querySelector('.tipp');
+  const zeig = (ev) => {
+    const r = box.querySelector('svg').getBoundingClientRect(), t = x0 + ((ev.clientX - r.left) / r.width * B - L) / (B - L) * (x1 - x0);
+    let best = p[0]; for (const q of p) if (Math.abs(q[0] - t) < Math.abs(best[0] - t)) best = q;
+    const px = x(best[0]), py = y(best[metrik]);
+    kreuz.setAttribute('visibility', 'visible'); kreis.setAttribute('visibility', 'visible'); kreuz.setAttribute('x1', px); kreuz.setAttribute('x2', px); kreis.setAttribute('cx', px); kreis.setAttribute('cy', py);
+    tipp.hidden = false; tipp.style.left = Math.min(Math.max(px / B * r.width, 70), r.width - 70) + 'px'; tipp.style.top = (py / (H + 20) * r.height - 8) + 'px';
+    tipp.innerHTML = '<b>' + komma(best[metrik], 0) + einheit + '</b> ' + name + '<br><span class="muted">' + new Date(best[0]).toLocaleString('de-DE', { weekday: 'short', day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) + (zeitraum > 1 ? ' (Schnitt)' : '') + '</span>';
+  };
+  fang.addEventListener('pointermove', zeig); fang.addEventListener('pointerdown', zeig);
+  fang.addEventListener('pointerleave', () => { tipp.hidden = true; kreuz.setAttribute('visibility', 'hidden'); kreis.setAttribute('visibility', 'hidden'); });
+}
+$('metrik').addEventListener('click', (e) => { const b = e.target.closest('[data-m]'); if (!b) return; metrik = +b.dataset.m; $('metrik').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); if (verlauf) kurveZeigen(); });
+
+// ---------- Steuerung & Protokolle ----------
+document.addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-aktion]'); if (!b) return;
+  const a = b.dataset.aktion, frage = a === 'laptop-neustart' ? 'Laptop wirklich neu starten? Alles ist dann ca. 2 Minuten offline.' : null;
+  if (frage && !confirm(frage)) return;
+  b.disabled = true;
+  const x = await api('admin/aktion', 'POST', { aktion: a }).catch(() => ({ status: 0 }));
+  b.disabled = false;
+  melden(x.status === 200 ? '✓ ' + x.json.name + ' – gestartet' : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
+  setTimeout(() => { systemLaden(); protokoll(); }, 6000);
+});
+async function protokoll() {
+  const pre = $('protokoll'), unten = pre.scrollTop + pre.clientHeight >= pre.scrollHeight - 20;
+  const x = await api('admin/protokoll?datei=' + $('protokollWahl').value).catch(() => ({ status: 0 }));
+  pre.textContent = x.status === 200 ? (x.json.zeilen.join('\n') || '(leer)') : 'nicht verfügbar';
+  if (unten) pre.scrollTop = pre.scrollHeight;
+}
+$('protokollWahl').addEventListener('change', () => { $('protokoll').scrollTop = 1e9; protokoll(); });
+
+laden();
+setInterval(() => { if (!document.hidden && !$('inhalt').hidden) { statusLaden(); systemLaden(); protokoll(); } }, 15000);
+setInterval(() => { if (!document.hidden && !$('inhalt').hidden) verlaufLaden(); }, 60000);
+addEventListener('resize', () => { if (verlauf) { dienstZeigen(); kurveZeigen(); } });
+</script>
+</body>
+</html>

@@ -110,3 +110,15 @@ optionalem Seed (alte Welt → `minecraft\welten-archiv\<Datum>`, die letzten 3 
   Die Orte erscheinen als eigene Ebene „📍 Orte“ in squaremap (der Konto-Server ergänzt `markers.json` beim Durchreichen). Daten: `daten\minecraft-orte.json`.
 - **AdGuard-Sperrlisten per Knopf** (☁️ → Erweiterungen, AdGuard-Passwort eintippen, wird nicht gespeichert): trägt HaGeZi Multi PRO und
   HaGeZi Threat Intelligence (medium) über die AdGuard-Schnittstelle (127.0.0.1:3000, Basic-Auth) ein – ohne Neustart, nichts doppelt.
+
+## Server-Zentrale (`server.html`, nur Admin)
+Erreichbar über ☁️ → „🖥️ Server-Zentrale“ (oder direkt `/server.html`). Ersetzt das frühere Server-Menü im ☁️-Fenster.
+- **Dienste** mit Ampel, Verfügbarkeit in % und Zeitstrahl (24 h / 7 / 30 Tage). Der Konto-Server misst alle 5 Min.
+  (`daten\verlauf.json`, 31 Tage); fehlende Messpunkte = Laptop/Server war nicht erreichbar.
+- **System** (CPU, RAM, °C, Platte, Akku, Laufzeit, Konten) mit Verlaufskurve; Laptop neu starten; Dienste einzeln neu starten.
+- **Updates**: Version, „Jetzt prüfen/aktualisieren“ und **Auto-Update** (Standard: an, `daten\zentrale.json`): alle 10 Min. GitHub
+  prüfen, neue Version per Aufgabe „Update“ einspielen (frühestens 10 Min. nach dem letzten Update, dieselbe Version höchstens 2×).
+  `aktualisieren.ps1` nimmt eine Version zurück, wenn der neue Konto-Server nicht startet.
+- **Erweiterungen**: AdGuard (installieren, Sperrlisten), Minecraft (installieren, Start/Stopp, Link zur Minecraft-Seite).
+- **Bei Ausfall benachrichtigen**: healthchecks.io-Ping-Link eintragen → `healthchecks-url.txt` (liest der Wachhund).
+- **Protokolle** (Updates, Wachhund, Konto-Server, Caddy, DuckDNS, Erweiterungen, Minecraft).
