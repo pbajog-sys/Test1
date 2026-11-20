@@ -78,6 +78,16 @@ Aufgabe **Minecraft** (startet mit Windows, Neustart nach Absturz; `-Xmx2G` + em
 weder Windows noch der Wachhund den Server)/Neustart. Protokoll „Minecraft“ = `minecraft\logs\latest.log`.
 Erneutes Installieren aktualisiert Paper/Java, Welt und Einstellungen bleiben.
 
+**LoL-Zentrale** (`lol.html`, verlinkt im ☁️-Fenster, für alle Angemeldeten): Jeder trägt seine Riot-Accounts selbst
+ein (mehrere = Smurfs, werden zu einer Person zusammengeführt). Auswertung: Winrate/KDA/Rang je Person, Champions,
+Rollen-Matrix (wer spielt wo am besten), Duos (Winrate zusammen + beste Rollen-Kombi), Gegeneinander, „Beste
+Aufstellung“ (verteilt 2–5 Leute auf Rollen) und Spiele-Verlauf; Filter Solo/Flex/Normal/ARAM. Code: `lol.js`
+(wird vom Konto-Server aus `spiel\werkzeuge\homeserver\` geladen, kommt also mit jedem Update mit).
+Riot-API-Key: Admin trägt ihn in der Server-Zentrale → Erweiterungen ein (gespeichert in `daten\riot-key.txt`, geht
+nie an den Browser). Ohne Key zeigt die Seite Beispieldaten. Dev-Key (developer.riotgames.com) läuft nach 24 h ab →
+besser einen „Personal API Key“ beantragen (läuft nicht ab). Der Server holt alle 10 Min. neue Spiele (beim ersten
+Mal die letzten 100 je Account), gedrosselt auf Riots Limits; Daten in `daten\lol\` (Bilder-Cache `daten\lol\bilder\`).
+
 **Minecraft-Seite** (`minecraft.html`, verlinkt im ☁️-Fenster, für alle Angemeldeten): Spielerköpfe (Skins holt der
 Server einmal täglich von Mojang, Cache `minecraft\koepfe\`), Rangliste (Tode, Spielzeit, Erfolge, Mobs, PvP, km – aus
 `<welt>\stats\` und `<welt>\advancements\`), „Online pro Tag“ (aus `minecraft\logs\*.log.gz`), Weltkarte.

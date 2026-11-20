@@ -205,6 +205,7 @@
     <h2>🧩 Erweiterungen</h2>
     <div class="erw" id="erwAdguard"></div>
     <div class="erw" id="erwMinecraft"></div>
+    <div class="erw" id="erwLol"></div>
   </section>
   <section class="karte" id="konten">
     <h2>👥 Konten <small id="kontenZahl"></small></h2>
@@ -252,7 +253,7 @@ async function laden() {
   if (ich.status !== 200) return hinweis('Der Server ist gerade nicht erreichbar – startet er vielleicht neu? Die Seite versucht es gleich wieder.', true);
   if (!ich.json.admin) return hinweis('Die Server-Zentrale ist nur für den Admin. <a href="./">Zurück zur Spielekiste</a>');
   $('hinweis').hidden = true; $('inhalt').hidden = false;
-  await Promise.all([statusLaden(), systemLaden(), verlaufLaden(), protokoll(), kontenLaden()]);
+  await Promise.all([statusLaden(), systemLaden(), verlaufLaden(), protokoll(), kontenLaden(), lolLaden()]);
 }
 function hinweis(html, nochmal) {
   $('inhalt').hidden = true; $('hinweis').hidden = false; $('hinweis').innerHTML = '<p>' + html + '</p>';
@@ -477,6 +478,27 @@ async function agListen() {
   $('agListenPw').value = '';
   info.innerHTML = '✓ ' + (r.json.neu.length ? 'Hinzugefügt: ' + r.json.neu.map(esc).join(', ') : 'Die Listen waren schon aktiv.')
     + '<br>Aktiv: ' + r.json.listen.filter((l) => l.an).map((l) => esc(l.name) + ' (' + l.regeln.toLocaleString('de-DE') + ')').join(' · ');
+}
+
+// ---------- LoL-Zentrale (Riot-API-Key) ----------
+async function lolLaden() {
+  const r = await api('admin/lol').catch(() => ({ status: 0 })), box = $('erwLol');
+  if (r.status !== 200) { box.hidden = true; return; }
+  const i = r.json, ok = i.key === 'ok' || i.key === 'unbekannt';
+  box.innerHTML = '<h3><span class="punkt ' + (ok ? 'gut' : i.key === 'ungueltig' ? 'schlecht' : '') + '"></span>🎮 LoL-Zentrale</h3>'
+    + '<p>' + (i.key === 'fehlt' ? 'Ohne Riot-Key zeigt die Seite Beispieldaten.' : i.key === 'ungueltig' ? '⚠️ Riot lehnt den Key ab – abgelaufen? Neuen eintragen.' : 'Riot-Key aktiv')
+    + ' · ' + i.accounts + ' Accounts · ' + i.spiele + ' Spiele' + (i.letzterLauf ? ' · zuletzt geholt ' + vor(i.letzterLauf) : '') + (i.laeuft ? ' · ⏳ holt gerade' : '') + '</p>'
+    + '<div class="zeile" style="margin-top:6px"><input id="lolKey" type="password" placeholder="RGAPI-…" autocomplete="off" spellcheck="false" style="flex:1"><button type="button" class="haupt" id="lolKeyLos">Key speichern</button></div>'
+    + '<div class="zeile" style="margin-top:6px"><a class="knopf" href="lol.html">🎮 Zur LoL-Seite</a><a class="knopf" href="https://developer.riotgames.com/" target="_blank" rel="noopener">Key holen ↗</a>' + (i.key !== 'fehlt' ? '<button type="button" id="lolKeyWeg">Key entfernen</button>' : '') + '</div>';
+  box.querySelector('#lolKeyLos').addEventListener('click', async (e) => {
+    const k = box.querySelector('#lolKey').value.trim(); if (!k) return;
+    e.target.disabled = true;
+    const x = await api('admin/lol', 'POST', { key: k }).catch(() => ({ status: 0 }));
+    melden(x.status === 200 ? '✓ Riot-Key gespeichert – die Spiele werden jetzt geholt' : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
+    lolLaden();
+  });
+  const weg = box.querySelector('#lolKeyWeg');
+  if (weg) weg.addEventListener('click', async () => { if (!confirm('Riot-Key entfernen? Die LoL-Seite zeigt dann wieder Beispieldaten.')) return; await api('admin/lol', 'POST', { key: '' }); lolLaden(); });
 }
 
 // ---------- Konten ----------

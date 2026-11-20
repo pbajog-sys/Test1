@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex">
+<meta name="theme-color" content="#070d18">
+<title>LoL-Zentrale</title>
+<link rel="stylesheet" href="fonts/fonts.css?v=153">
+<style>
+  :root {
+    --bg: #070d18; --flaeche: #0e1726; --flaeche2: #15213a; --slot: #0a1220; --linie: rgba(200,170,110,.14); --linie2: rgba(255,255,255,.06);
+    --text: #e8edf5; --muted: #8a97ad; --gold: #c8aa6e; --gold-hell: #f0e6d2; --teal: #0ac8b9;
+    --sieg: #3b82f6; --sieg-bg: rgba(59,130,246,.12); --niederlage: #e84057; --niederlage-bg: rgba(232,64,87,.12); --r: 12px;
+  }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: radial-gradient(1200px 600px at 80% -10%, rgba(10,200,185,.08), transparent 60%), radial-gradient(900px 500px at -10% 0%, rgba(200,170,110,.09), transparent 60%), var(--bg); color: var(--text); font-family: "Nunito", system-ui, sans-serif; line-height: 1.45; min-height: 100vh; }
+  a { color: var(--teal); }
+  h1, h2, h3 { margin: 0; letter-spacing: -.01em; }
+  h2 { font-size: 1.02rem; display: flex; align-items: center; gap: 8px; margin-bottom: 12px; flex-wrap: wrap; }
+  h2 small, .muted { color: var(--muted); font-weight: 600; }
+  .klein { font-size: .85rem; }
+  [hidden] { display: none !important; }
+  button, .knopf { font: inherit; font-weight: 700; border: 1px solid transparent; border-radius: 9px; padding: 8px 13px; background: var(--flaeche2); color: var(--text); cursor: pointer; }
+  button:hover { border-color: var(--linie); }
+  button.haupt { background: linear-gradient(180deg, #d9bd84, #a8884d); color: #1a1408; }
+  button:disabled { opacity: .5; cursor: default; }
+  input, select { font: inherit; font-size: 16px; padding: 8px 10px; border-radius: 9px; border: 1px solid #263552; background: var(--slot); color: var(--text); min-width: 0; }
+  input:focus, select:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+
+  /* Kopf */
+  .kopf { padding: max(14px, env(safe-area-inset-top)) clamp(14px, 2.4vw, 40px) 0; }
+  .kopf-innen { display: flex; align-items: center; gap: 12px 18px; flex-wrap: wrap; }
+  .marke { display: flex; align-items: center; gap: 12px; margin-right: auto; }
+  .marke svg { width: 40px; height: 40px; flex: none; }
+  .marke h1 { font-size: 1.5rem; background: linear-gradient(90deg, var(--gold-hell), var(--gold)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .marke p { margin: 0; font-size: .85rem; color: var(--muted); }
+  .marke p a { color: var(--muted); }
+  .chips { display: flex; gap: 4px; background: var(--slot); padding: 4px; border-radius: 11px; border: 1px solid var(--linie2); overflow-x: auto; scrollbar-width: none; max-width: 100%; }
+  .chips button { background: transparent; padding: 6px 11px; font-size: .84rem; white-space: nowrap; border: 0; border-radius: 8px; }
+  .chips button[aria-pressed="true"] { background: var(--flaeche2); color: var(--gold-hell); box-shadow: inset 0 -2px 0 var(--gold); }
+  .banner { margin: 12px clamp(14px, 2.4vw, 40px) 0; padding: 10px 14px; border-radius: 10px; background: rgba(200,170,110,.08); border: 1px solid var(--linie); font-size: .88rem; color: var(--gold-hell); }
+
+  /* Raster */
+  main { padding: 14px clamp(14px, 2.4vw, 40px) 50px; display: flex; flex-direction: column; gap: 14px; }
+  .karte { background: linear-gradient(180deg, rgba(21,33,58,.65), rgba(14,23,38,.85)); border: 1px solid var(--linie2); border-radius: var(--r); padding: 16px; min-width: 0; }
+  .seite { display: contents; } .inhalt { display: contents; }
+  @media (min-width: 1100px) {
+    main { display: grid; grid-template-columns: 330px minmax(0, 1fr); align-items: start; gap: 18px; }
+    .seite { display: flex; flex-direction: column; gap: 14px; position: sticky; top: 12px; max-height: calc(100vh - 24px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: #263552 transparent; }
+    .inhalt { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  }
+  .reiter { display: flex; gap: 2px; border-bottom: 1px solid var(--linie2); overflow-x: auto; scrollbar-width: none; }
+  .reiter button { background: transparent; border: 0; border-radius: 0; padding: 10px 14px; color: var(--muted); white-space: nowrap; box-shadow: none; }
+  .reiter button[aria-selected="true"] { color: var(--gold-hell); box-shadow: inset 0 -2px 0 var(--gold); }
+
+  /* Bausteine */
+  .bild { width: 36px; height: 36px; border-radius: 8px; background: #1c2a45; flex: none; object-fit: cover; display: inline-grid; place-items: center; font-weight: 800; color: var(--gold); font-size: .9rem; overflow: hidden; }
+  .bild.rund { border-radius: 50%; }
+  .bild.gross { width: 64px; height: 64px; border-radius: 14px; border: 2px solid var(--gold); }
+  .bild.mini { width: 22px; height: 22px; border-radius: 4px; }
+  .rang { display: inline-flex; align-items: center; gap: 6px; font-weight: 800; font-size: .82rem; white-space: nowrap; }
+  .rang i { width: 10px; height: 10px; border-radius: 3px; transform: rotate(45deg); background: var(--tc, #888); box-shadow: 0 0 8px var(--tc, transparent); }
+  .wr { font-weight: 800; font-variant-numeric: tabular-nums; }
+  .wr.top { color: #ff9f43; } .wr.gut { color: #4fd1c5; } .wr.mies { color: var(--niederlage); }
+  .kda { font-weight: 800; } .kda.top { color: #ff9f43; } .kda.gut { color: #4fd1c5; }
+  .balken { height: 6px; border-radius: 4px; background: var(--niederlage); overflow: hidden; }
+  .balken i { display: block; height: 100%; background: var(--sieg); }
+  .form { display: inline-flex; gap: 3px; }
+  .form i { width: 8px; height: 8px; border-radius: 2px; background: var(--niederlage); }
+  .form i.w { background: var(--sieg); }
+  .rolle { display: inline-grid; place-items: center; min-width: 34px; padding: 2px 5px; border-radius: 6px; font-size: .68rem; font-weight: 800; letter-spacing: .04em; background: rgba(200,170,110,.12); color: var(--gold-hell); }
+  table { width: 100%; border-collapse: collapse; font-size: .88rem; }
+  th, td { padding: 7px 6px; text-align: right; border-bottom: 1px solid var(--linie2); white-space: nowrap; font-variant-numeric: tabular-nums; }
+  th:first-child, td:first-child { text-align: left; }
+  th { color: var(--muted); font-weight: 700; font-size: .78rem; }
+  .tabelle { overflow-x: auto; }
+  .zelle-name { display: flex; align-items: center; gap: 8px; }
+
+  /* Personen */
+  .personen { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 12px; }
+  .person { text-align: left; display: grid; gap: 8px; padding: 14px; border-radius: 12px; background: var(--slot); border: 1px solid var(--linie2); cursor: pointer; width: 100%; color: inherit; font: inherit; }
+  .person:hover { border-color: var(--gold); }
+  .person .kopfz { display: flex; align-items: center; gap: 10px; }
+  .person .kopfz b { font-size: 1.05rem; display: block; }
+  .person .werte { display: flex; justify-content: space-between; gap: 8px; font-size: .84rem; color: var(--muted); }
+  .person .werte b { color: var(--text); }
+  .ich-marke { font-size: .7rem; background: var(--gold); color: #1a1408; padding: 1px 6px; border-radius: 6px; font-weight: 800; margin-left: 6px; }
+
+  /* Matrix */
+  .matrix td.feld { text-align: center; border-radius: 6px; font-weight: 800; }
+  .matrix td.feld small { display: block; font-weight: 600; font-size: .7rem; opacity: .75; }
+  .matrix td.feld.leer { color: var(--muted); font-weight: 600; }
+
+  /* Duos */
+  .duo { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--linie2); }
+  .duo:last-child { border-bottom: 0; }
+  .duo b { font-size: .95rem; }
+  .duo small { color: var(--muted); font-size: .8rem; display: block; }
+
+  /* Spiele */
+  .spiel { display: grid; grid-template-columns: 6px 92px auto minmax(0, 1fr); gap: 0 12px; align-items: center; border-radius: 10px; overflow: hidden; background: var(--niederlage-bg); margin-bottom: 6px; }
+  .spiel.w { background: var(--sieg-bg); }
+  .spiel > i { align-self: stretch; background: var(--niederlage); } .spiel.w > i { background: var(--sieg); }
+  .spiel .art { font-size: .78rem; color: var(--muted); padding: 8px 0; }
+  .spiel .art b { display: block; font-size: .86rem; color: var(--niederlage); } .spiel.w .art b { color: var(--sieg); }
+  .spiel .wir { grid-column: 3 / -1; display: flex; flex-direction: column; gap: 6px; padding: 8px 10px 8px 0; min-width: 0; }
+  .spieler-zeile { display: flex; align-items: center; gap: 10px; flex-wrap: wrap; font-size: .86rem; }
+  .spieler-zeile .champ { position: relative; }
+  .spieler-zeile .champ .rolle { position: absolute; bottom: -4px; right: -8px; min-width: 0; padding: 0 3px; font-size: .55rem; background: #0a1220; }
+  .spieler-zeile .wer { min-width: 7em; } .spieler-zeile .wer b { display: block; } .spieler-zeile .wer small { color: var(--muted); font-size: .74rem; }
+  .spieler-zeile .zahlen { min-width: 7.5em; } .spieler-zeile .zahlen small { display: block; color: var(--muted); font-size: .74rem; }
+  .items { display: flex; gap: 2px; }
+  .items .bild.mini { background: #13203a; }
+  .zusammen { grid-column: 2 / -1; font-size: .74rem; color: var(--gold); padding: 0 10px 8px 0; }
+  @media (max-width: 640px) {
+    .spiel { grid-template-columns: 5px minmax(0, 1fr); }
+    .spiel .art { grid-column: 2; display: flex; gap: 8px; align-items: baseline; padding: 8px 10px 0; }
+    .spiel .art b { display: inline; }
+    .spiel .wir { grid-column: 2; padding: 6px 10px 10px; }
+    .zusammen { grid-column: 2; padding: 0 10px 8px; }
+    .items { display: none; }
+    .spieler-zeile { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto auto; gap: 8px; }
+    .spieler-zeile .wer, .spieler-zeile .zahlen { min-width: 0; }
+  }
+  @media (max-width: 1099px) {
+    #personenSeite { display: none; }
+    #meine { order: 9; }
+    .seite, .inhalt { display: contents; }
+  }
+
+  /* Profil */
+  .profil { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; }
+  .profil h2 { font-size: 1.5rem; margin: 0; }
+  .accs { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+  .acc { display: flex; align-items: center; gap: 8px; padding: 6px 10px; border-radius: 10px; background: var(--slot); border: 1px solid var(--linie2); font-size: .82rem; }
+  .acc small { color: var(--muted); display: block; }
+  .kacheln { display: grid; grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 8px; margin-top: 14px; }
+  .kachel { background: var(--slot); border-radius: 10px; padding: 10px 12px; border: 1px solid var(--linie2); }
+  .kachel b { display: block; font-size: 1.3rem; font-weight: 800; font-variant-numeric: tabular-nums; }
+  .kachel span { color: var(--muted); font-size: .78rem; }
+  .zwei { display: grid; gap: 14px; grid-template-columns: minmax(0, 1fr); }
+  @media (min-width: 1300px) { .zwei { grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr); } }
+  .rollbar { display: grid; grid-template-columns: 44px minmax(0, 1fr) auto; gap: 6px 10px; align-items: center; font-size: .84rem; }
+
+  /* Meine Accounts */
+  .meine .acc { justify-content: space-between; width: 100%; }
+  .meine .acc button { padding: 3px 8px; font-size: .78rem; }
+  .neu { display: grid; grid-template-columns: minmax(0, 1fr) 88px; gap: 6px; margin-top: 10px; }
+  .neu button { grid-column: 1 / -1; }
+
+  /* Aufstellung */
+  .auswahl { display: flex; gap: 6px; flex-wrap: wrap; }
+  .auswahl button[aria-pressed="true"] { background: var(--gold); color: #1a1408; }
+  .aufstellung { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; margin-top: 14px; }
+  .platz { background: var(--slot); border: 1px solid var(--linie); border-radius: 12px; padding: 12px; text-align: center; }
+  .platz .rolle { font-size: .8rem; padding: 4px 8px; }
+  .platz b { display: block; font-size: 1.1rem; margin: 8px 0 2px; }
+  .platz small { color: var(--muted); }
+  .tipp-zeile { margin-top: 12px; font-size: .9rem; }
+  #meldung { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #0a1220; border: 1px solid var(--linie); padding: 10px 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); max-width: calc(100vw - 32px); z-index: 5; }
+  .fuss { padding: 0 clamp(14px, 2.4vw, 40px) 30px; font-size: .72rem; color: var(--muted); }
+</style>
+</head>
+<body>
+<header class="kopf">
+  <div class="kopf-innen">
+    <div class="marke">
+      <svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#f0e6d2"/><stop offset="1" stop-color="#c8aa6e"/></linearGradient></defs><path d="M20 3 35 11v18L20 37 5 29V11z" fill="#0e1726" stroke="url(#g)" stroke-width="2"/><path d="M20 10 28 14.5v9L20 28l-8-4.5v-9z" fill="none" stroke="#0ac8b9" stroke-width="1.6"/><circle cx="20" cy="19" r="3" fill="#0ac8b9"/></svg>
+      <div><h1>LoL-Zentrale</h1><p><a href="./">← Spielekiste</a> · wer spielt wo am besten – und mit wem</p></div>
+    </div>
+    <div class="chips" id="filter" role="group" aria-label="Spielmodus"><button type="button" data-f="alle" aria-pressed="true">Alle (Kluft)</button><button type="button" data-f="solo" aria-pressed="false">Ranked Solo</button><button type="button" data-f="flex" aria-pressed="false">Ranked Flex</button><button type="button" data-f="normal" aria-pressed="false">Normal</button><button type="button" data-f="aram" aria-pressed="false">ARAM</button></div>
+  </div>
+</header>
+<div class="banner" id="banner" hidden></div>
+
+<main id="inhalt" hidden>
+  <aside class="seite">
+    <section class="karte meine" id="meine">
+      <h2>🎮 Meine Accounts</h2>
+      <div id="meineListe" class="klein muted"></div>
+      <div class="neu"><input id="riotId" placeholder="Name#Tag (z. B. flip yo#meep)" autocomplete="off" spellcheck="false"><select id="region"></select><button type="button" class="haupt" id="hinzu">Account hinzufügen</button></div>
+      <p class="klein muted" style="margin:8px 0 0">Mehrere Accounts (z. B. Smurfs) werden zu dir zusammengeführt. Alle Angemeldeten sehen die Auswertung.</p>
+      <div style="margin-top:8px"><button type="button" id="aktualisieren" class="klein">🔄 Meine Spiele jetzt holen</button></div>
+    </section>
+    <section class="karte" id="personenSeite">
+      <h2>👥 Spieler <small id="personenZahl"></small></h2>
+      <div id="personenKurz"></div>
+    </section>
+  </aside>
+
+  <div class="inhalt">
+    <nav class="reiter" role="tablist" id="reiter">
+      <button type="button" role="tab" data-tab="gruppe" aria-selected="true">🏠 Gruppe</button>
+      <button type="button" role="tab" data-tab="person" aria-selected="false" id="personTab" hidden>👤 Spieler</button>
+      <button type="button" role="tab" data-tab="duos" aria-selected="false">🤝 Duos</button>
+      <button type="button" role="tab" data-tab="rollen" aria-selected="false">📍 Rollen</button>
+      <button type="button" role="tab" data-tab="aufstellung" aria-selected="false">🧩 Aufstellung</button>
+      <button type="button" role="tab" data-tab="spiele" aria-selected="false">📜 Spiele</button>
+    </nav>
+
+    <div data-panel="gruppe">
+      <section class="karte"><h2>👥 Alle Spieler <small id="spieleZahl"></small></h2><div class="personen" id="personen"></div></section>
+      <div class="zwei" style="margin-top:14px">
+        <section class="karte"><h2>🤝 Beste Duos</h2><div id="topDuos"></div></section>
+        <section class="karte"><h2>📍 Wer spielt wo am besten</h2><div class="tabelle" id="matrixKurz"></div></section>
+      </div>
+    </div>
+    <div data-panel="person" hidden></div>
+    <div data-panel="duos" hidden>
+      <div class="zwei">
+        <section class="karte"><h2>🤝 Zusammen im Team</h2><p class="klein muted" style="margin:-6px 0 8px">Winrate, wenn beide im selben Team waren – und mit welchen Rollen es am besten klappt.</p><div id="duoListe"></div></section>
+        <section class="karte"><h2>⚔️ Gegeneinander</h2><div id="gegnerListe"></div></section>
+      </div>
+    </div>
+    <div data-panel="rollen" hidden><section class="karte"><h2>📍 Rollen-Matrix <small>Winrate · Spiele · KDA</small></h2><div class="tabelle" id="matrix"></div><p class="klein muted">Farbe nach Winrate; Felder mit weniger als 3 Spielen sind blass.</p></section></div>
+    <div data-panel="aufstellung" hidden>
+      <section class="karte">
+        <h2>🧩 Beste Aufstellung für heute</h2>
+        <p class="klein muted" style="margin:-6px 0 10px">Wer spielt mit? Die Seite verteilt die Rollen so, dass eure Winraten (und eure Duo-Werte) am höchsten sind.</p>
+        <div class="auswahl" id="auswahl"></div>
+        <div class="aufstellung" id="aufstellung"></div>
+        <p class="tipp-zeile" id="aufTipp"></p>
+      </section>
+    </div>
+    <div data-panel="spiele" hidden><section class="karte"><h2>📜 Letzte Spiele der Gruppe</h2><div id="feed"></div></section></div>
+  </div>
+</main>
+<div class="leer-hinweis" id="hinweis" style="text-align:center;margin:14vh auto;max-width:520px;padding:0 20px"><p class="muted">Wird geladen …</p></div>
+<p class="fuss">LoL-Zentrale isn't endorsed by Riot Games and doesn't reflect the views or opinions of Riot Games or anyone officially involved in producing or managing Riot Games properties. Riot Games, and all associated properties are trademarks or registered trademarks of Riot Games, Inc.</p>
+<div id="meldung" role="status" hidden></div>
+
+<script>
+const API = new URL('api/', location.href);
+async function api(weg, methode = 'GET', koerper) {
+  const r = await fetch(API + weg, { method: methode, cache: 'no-store', credentials: 'same-origin', headers: koerper ? { 'Content-Type': 'application/json' } : {}, body: koerper ? JSON.stringify(koerper) : undefined });
+  let json = null; try { json = await r.json(); } catch (e) { /* keine JSON-Antwort */ }
+  return { status: r.status, json };
+}
+const $ = (id) => document.getElementById(id);
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+function melden(t) { const m = $('meldung'); m.textContent = t; m.hidden = false; clearTimeout(m.t); m.t = setTimeout(() => { m.hidden = true; }, 5000); }
+
+const ROLLEN = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'];
+const ROLLE_KURZ = { TOP: 'TOP', JUNGLE: 'JGL', MIDDLE: 'MID', BOTTOM: 'ADC', UTILITY: 'SUP', ARAM: 'ARAM', '?': '?' };
+const ROLLE_NAME = { TOP: 'Top', JUNGLE: 'Jungle', MIDDLE: 'Mid', BOTTOM: 'ADC', UTILITY: 'Support' };
+const TIER = { IRON: ['Eisen', '#6b5b52'], BRONZE: ['Bronze', '#a86b4c'], SILVER: ['Silber', '#9aa5b1'], GOLD: ['Gold', '#d4a84a'], PLATINUM: ['Platin', '#3fb6a8'], EMERALD: ['Smaragd', '#2fbf71'], DIAMOND: ['Diamant', '#5b8def'], MASTER: ['Meister', '#b05be8'], GRANDMASTER: ['Großmeister', '#e05a5a'], CHALLENGER: ['Challenger', '#f2c94c'] };
+const TIER_WERT = Object.keys(TIER);
+const CHAMP_NAME = { MonkeyKing: 'Wukong', Kaisa: "Kai'Sa", KhaZix: "Kha'Zix", ChoGath: "Cho'Gath", VelKoz: "Vel'Koz", KogMaw: "Kog'Maw", RekSai: "Rek'Sai", BelVeth: "Bel'Veth", Nunu: 'Nunu & Willump', Renata: 'Renata Glasc', FiddleSticks: 'Fiddlesticks', AurelionSol: 'Aurelion Sol' };
+const champName = (c) => CHAMP_NAME[c] || String(c).replace(/([a-z])([A-Z])/g, '$1 $2');
+const pct = (w, g) => (g ? Math.round((w / g) * 100) : 0);
+const glatt = (w, g) => (w + 4) / (g + 8);
+const wrKlasse = (w, g) => { const p = pct(w, g); return g < 3 ? '' : p >= 60 ? 'top' : p >= 52 ? 'gut' : p < 45 ? 'mies' : ''; };
+const kdaWert = (k, d, a) => (d ? (k + a) / d : k + a);
+const kdaText = (k, d, a) => { const v = kdaWert(k, d, a); return '<span class="kda' + (v >= 4 ? ' top' : v >= 3 ? ' gut' : '') + '">' + (d ? v.toFixed(2).replace('.', ',') : 'Perfekt') + '</span>'; };
+const vor = (t) => { const s = (Date.now() - t) / 1000; return s < 3600 ? 'vor ' + Math.max(1, Math.round(s / 60)) + ' Min.' : s < 86400 ? 'vor ' + Math.round(s / 3600) + ' Std.' : 'vor ' + Math.round(s / 86400) + ' Tagen'; };
+const dauer = (s) => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+const bild = (art, id, kl, alt) => '<img class="bild ' + (kl || '') + '" src="api/lol/bild/' + art + '/' + encodeURIComponent(id) + '.png" alt="' + esc(alt || '') + '" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;bild ' + (kl || '') + '&quot;>' + esc(String(alt || id).slice(0, 1)) + '</span>\'">';
+const rangText = (r) => (r && TIER[r.tier] ? '<span class="rang" style="--tc:' + TIER[r.tier][1] + '"><i></i>' + TIER[r.tier][0] + (['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(r.tier) ? '' : ' ' + r.div) + ' · ' + r.lp + ' LP</span>' : '<span class="muted klein">ohne Rang</span>');
+const besterRang = (accs) => { let b = null; (accs || []).forEach((a) => { const r = a.rang && (a.rang.solo || a.rang.flex); if (r && (!b || TIER_WERT.indexOf(r.tier) > TIER_WERT.indexOf(b.tier))) b = r; }); return b; };
+
+let daten = null, filter = 'alle', tab = 'gruppe', gewaehlt = null, auswahl = new Set();
+const personVon = (id) => daten.personen.find((p) => p.id === id) || { name: '?' };
+
+async function laden() {
+  const r = await api('lol/daten?filter=' + filter).catch(() => ({ status: 0 }));
+  if (r.status === 401) { $('hinweis').innerHTML = '<p>Bitte zuerst in der <a href="./">Spielekiste</a> über ☁️ anmelden.</p>'; return; }
+  if (r.status !== 200) { $('hinweis').innerHTML = '<p class="muted">Der Server ist gerade nicht erreichbar.</p>'; return; }
+  daten = r.json; $('hinweis').hidden = true; $('inhalt').hidden = false;
+  const b = $('banner');
+  b.hidden = daten.quelle === 'riot';
+  b.innerHTML = daten.key === 'ungueltig' ? '⚠️ Der Riot-API-Key ist abgelaufen oder ungültig – der Admin kann ihn in der Server-Zentrale erneuern. Bis dahin: Beispieldaten.'
+    : daten.key === 'fehlt' ? '✨ <b>Beispieldaten</b> – so sieht es aus, sobald ein Riot-API-Key eingetragen ist. Deine Accounts kannst du schon jetzt unter „Meine Accounts“ eintragen.'
+    : '⏳ <b>Beispieldaten</b> – der Server holt gerade eure ersten Spiele bei Riot. Das kann ein paar Minuten dauern.';
+  if (!$('region').options.length) $('region').innerHTML = Object.entries(daten.regionen).map(([k, v]) => '<option value="' + k + '"' + (k === 'euw1' ? ' selected' : '') + '>' + v + '</option>').join('');
+  if (!auswahl.size) daten.personen.slice(0, 5).forEach((p) => auswahl.add(p.id));
+  alles();
+}
+function alles() { meineZeigen(); personenKurzZeigen(); gruppeZeigen(); duosZeigen(); matrixZeigen($('matrix'), true); aufstellungZeigen(); feedZeigen($('feed'), daten.feed); if (gewaehlt) personZeigen(gewaehlt); }
+
+// ---------- Meine Accounts ----------
+function meineZeigen() {
+  $('meineListe').innerHTML = daten.meine.length ? daten.meine.map((a) => '<div class="acc"><span class="zelle-name">' + (a.icon ? bild('profil', a.icon, 'rund', a.riotId) : '<span class="bild rund">' + esc(a.riotId[0]) + '</span>')
+    + '<span><b style="color:var(--text)">' + esc(a.riotId) + '</b><small>' + esc(a.regionName) + ' · ' + (a.fehler ? '⚠️ ' + esc(a.fehler) : a.wartet ? (daten.key === 'fehlt' ? 'wartet auf Riot-Key' : 'wird geprüft …') : a.rang && (a.rang.solo || a.rang.flex) ? rangText(a.rang.solo || a.rang.flex) : a.level ? 'Level ' + a.level : 'wird geholt …') + '</small></span></span>'
+    + '<button type="button" data-weg="' + esc(a.riotId) + '" aria-label="' + esc(a.riotId) + ' entfernen">✕</button></div>').join('') : 'Noch keine eigenen Accounts.';
+}
+$('hinzu').addEventListener('click', async () => {
+  const id = $('riotId').value.trim(); if (!id) { $('riotId').focus(); return; }
+  const k = $('hinzu'); k.disabled = true;
+  const x = await api('lol/account', 'POST', { riotId: id, region: $('region').value }).catch(() => ({ status: 0 }));
+  k.disabled = false;
+  if (x.status !== 200) { melden('⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.')); return; }
+  $('riotId').value = ''; melden('✓ ' + x.json.account + ' eingetragen' + (x.json.wartet ? ' – Spiele kommen, sobald der Riot-Key da ist' : ' – Spiele werden geholt')); laden();
+});
+$('riotId').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('hinzu').click(); });
+$('meineListe').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-weg]'); if (!b || !confirm(b.dataset.weg + ' entfernen?')) return;
+  await api('lol/account/entfernen', 'POST', { riotId: b.dataset.weg }); laden();
+});
+$('aktualisieren').addEventListener('click', async () => {
+  const x = await api('lol/aktualisieren', 'POST', {}).catch(() => ({ status: 0 }));
+  melden(x.status === 200 ? '🔄 Holt deine neuesten Spiele – in ein, zwei Minuten neu laden' : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
+});
+
+// ---------- Spieler (Seitenleiste + Karten) ----------
+function hauptrolle(p) { const r = Object.entries(p.rollen || {}).sort((a, b) => b[1].g - a[1].g)[0]; return r ? r[0] : null; }
+function personenKurzZeigen() {
+  $('personenZahl').textContent = '· ' + daten.personen.length;
+  $('personenKurz').innerHTML = daten.personen.map((p) => '<div class="duo" style="cursor:pointer" data-person="' + esc(p.id) + '"><div class="zelle-name">'
+    + (p.champs[0] ? bild('champion', p.champs[0].c, '', champName(p.champs[0].c)) : '<span class="bild">' + esc(p.name[0]) + '</span>')
+    + '<div><b>' + esc(p.name) + (p.ich ? '<span class="ich-marke">DU</span>' : '') + '</b><small>' + rangText(besterRang(p.accounts)) + '</small></div></div>'
+    + '<div style="text-align:right"><span class="wr ' + wrKlasse(p.w, p.g) + '">' + pct(p.w, p.g) + ' %</span><small>' + p.g + ' Spiele</small></div></div>').join('') || '<p class="klein muted">Noch niemand.</p>';
+}
+function gruppeZeigen() {
+  $('spieleZahl').textContent = '· ' + daten.spiele + ' Spiele';
+  $('personen').innerHTML = daten.personen.map((p) => {
+    const r = hauptrolle(p);
+    return '<button type="button" class="person" data-person="' + esc(p.id) + '"><div class="kopfz">' + (p.champs[0] ? bild('champion', p.champs[0].c, 'gross', champName(p.champs[0].c)) : '<span class="bild gross">' + esc(p.name[0]) + '</span>')
+      + '<div><b>' + esc(p.name) + (p.ich ? '<span class="ich-marke">DU</span>' : '') + '</b>' + rangText(besterRang(p.accounts)) + '<div class="muted klein">' + p.accounts.length + (p.accounts.length === 1 ? ' Account' : ' Accounts') + (r ? ' · meist ' + ROLLE_NAME[r] : '') + '</div></div></div>'
+      + '<div class="balken"><i style="width:' + pct(p.w, p.g) + '%"></i></div>'
+      + '<div class="werte"><span><b class="wr ' + wrKlasse(p.w, p.g) + '">' + pct(p.w, p.g) + ' %</b> · ' + p.w + 'S ' + (p.g - p.w) + 'N</span><span>KDA ' + kdaText(p.k, p.de, p.a) + '</span></div>'
+      + '<div class="werte"><span class="form">' + p.form.map((x) => '<i class="' + (x ? 'w' : '') + '"></i>').join('') + '</span><span>' + (p.trend == null ? '' : p.trend > 0 ? '📈 +' + p.trend + ' %' : p.trend < 0 ? '📉 ' + p.trend + ' %' : '➡️') + '</span></div>'
+      + '<div class="zelle-name">' + p.champs.slice(0, 5).map((c) => bild('champion', c.c, 'mini', champName(c.c))).join('') + '</div></button>';
+  }).join('');
+  $('topDuos').innerHTML = duoZeilen(daten.duos.filter((d) => d.g >= 3).sort((a, b) => glatt(b.w, b.g) - glatt(a.w, a.g)).slice(0, 5)) || '<p class="klein muted">Noch keine gemeinsamen Spiele.</p>';
+  matrixZeigen($('matrixKurz'), false);
+}
+document.addEventListener('click', (e) => { const b = e.target.closest('[data-person]'); if (b) { gewaehlt = b.dataset.person; personZeigen(gewaehlt); tabZeigen('person'); scrollTo({ top: 0, behavior: 'smooth' }); } });
+
+// ---------- Duos ----------
+function besteRollen(d) { return Object.entries(d.rollen || {}).filter(([, v]) => v.g >= 4).sort((a, b) => glatt(b[1].w, b[1].g) - glatt(a[1].w, a[1].g))[0]; }
+function duoZeilen(liste) {
+  return liste.map((d) => {
+    const br = besteRollen(d), [ra, rb] = br ? br[0].split('+') : [];
+    return '<div class="duo"><div><b>' + esc(personVon(d.a).name) + ' + ' + esc(personVon(d.b).name) + '</b><small>' + d.g + ' Spiele zusammen'
+      + (br ? ' · am besten: ' + esc(personVon(d.a).name) + ' ' + ROLLE_NAME[ra] + ' + ' + esc(personVon(d.b).name) + ' ' + ROLLE_NAME[rb] + ' (' + pct(br[1].w, br[1].g) + ' % in ' + br[1].g + ')' : '') + '</small></div>'
+      + '<div style="text-align:right"><span class="wr ' + wrKlasse(d.w, d.g) + '">' + pct(d.w, d.g) + ' %</span><small>' + d.w + 'S ' + (d.g - d.w) + 'N</small></div></div>';
+  }).join('');
+}
+function duosZeigen() {
+  $('duoListe').innerHTML = duoZeilen(daten.duos) || '<p class="klein muted">Noch keine gemeinsamen Spiele.</p>';
+  $('gegnerListe').innerHTML = daten.gegner.map((g) => { const a = personVon(g.a).name, b = personVon(g.b).name, vorne = g.aSiege >= g.g - g.aSiege;
+    return '<div class="duo"><div><b>' + esc(a) + ' vs. ' + esc(b) + '</b><small>' + g.g + ' Spiele gegeneinander</small></div><div style="text-align:right"><b>' + g.aSiege + ' : ' + (g.g - g.aSiege) + '</b><small>' + esc(vorne ? a : b) + ' vorne</small></div></div>'; }).join('')
+    || '<p class="klein muted">Ihr habt noch nicht gegeneinander gespielt.</p>';
+}
+
+// ---------- Rollen-Matrix ----------
+function matrixZeigen(ziel, voll) {
+  const rollen = filter === 'aram' ? ['ARAM'] : ROLLEN;
+  const farbe = (w, g) => { if (!g) return ''; const p = w / g, a = g < 3 ? 0.1 : 0.18 + Math.min(0.5, Math.abs(p - 0.5) * 2.2); return 'background:' + (p >= 0.5 ? 'rgba(59,130,246,' + a + ')' : 'rgba(232,64,87,' + a + ')'); };
+  ziel.innerHTML = '<table class="matrix"><thead><tr><th>Spieler</th>' + rollen.map((r) => '<th style="text-align:center">' + (ROLLE_NAME[r] || r) + '</th>').join('') + '</tr></thead><tbody>'
+    + daten.personen.map((p) => '<tr><td><b>' + esc(p.name) + '</b></td>' + rollen.map((r) => { const v = p.rollen[r];
+      return v ? '<td class="feld" style="' + farbe(v.w, v.g) + '">' + pct(v.w, v.g) + ' %<small>' + v.g + (voll ? ' · KDA ' + kdaWert(v.k, v.de, v.a).toFixed(1).replace('.', ',') : '') + '</small></td>' : '<td class="feld leer">–</td>'; }).join('') + '</tr>').join('')
+    + '</tbody></table>';
+}
+
+// ---------- Aufstellung ----------
+function aufstellungZeigen() {
+  $('auswahl').innerHTML = daten.personen.map((p) => '<button type="button" data-wahl="' + esc(p.id) + '" aria-pressed="' + auswahl.has(p.id) + '">' + esc(p.name) + '</button>').join('');
+  const leute = daten.personen.filter((p) => auswahl.has(p.id)).slice(0, 5);
+  if (filter === 'aram') { $('aufstellung').innerHTML = ''; $('aufTipp').textContent = 'Bei ARAM gibt es keine festen Rollen – wähl oben einen anderen Modus.'; return; }
+  if (!leute.length) { $('aufstellung').innerHTML = ''; $('aufTipp').textContent = 'Wähle oben aus, wer mitspielt (bis zu 5).'; return; }
+  const duo = {}; daten.duos.forEach((d) => { duo[d.a + '|' + d.b] = d; duo[d.b + '|' + d.a] = d; });
+  let best = null;
+  const probier = (i, frei, belegung) => {
+    if (i === leute.length) {
+      let s = 0; belegung.forEach((r, j) => { const v = leute[j].rollen[r]; s += v ? glatt(v.w, v.g) - 0.5 : -0.06; });
+      for (let a = 0; a < leute.length; a++) for (let b = a + 1; b < leute.length; b++) { const d = duo[leute[a].id + '|' + leute[b].id]; if (d) s += (glatt(d.w, d.g) - 0.5) * 0.5; }
+      if (!best || s > best.s) best = { s, belegung: belegung.slice() };
+      return;
+    }
+    frei.forEach((r) => probier(i + 1, frei.filter((x) => x !== r), belegung.concat(r)));
+  };
+  probier(0, ROLLEN, []);
+  $('aufstellung').innerHTML = best.belegung.map((r, j) => { const p = leute[j], v = p.rollen[r], champ = p.champs.find((c) => c.haupt === r) || null;
+    return '<div class="platz"><span class="rolle">' + ROLLE_NAME[r] + '</span><b>' + esc(p.name) + '</b>' + (champ ? '<div class="zelle-name" style="justify-content:center;margin:6px 0">' + bild('champion', champ.c, 'mini', champName(champ.c)) + '<small>' + esc(champName(champ.c)) + '</small></div>' : '')
+      + '<small>' + (v ? pct(v.w, v.g) + ' % in ' + v.g + ' Spielen' : 'noch nie gespielt') + '</small></div>'; }).join('');
+  const schaetzung = Math.round(Math.max(30, Math.min(75, 50 + (best.s / leute.length) * 100)));
+  $('aufTipp').innerHTML = '🎯 Geschätzte Siegchance mit dieser Aufstellung: <b>' + schaetzung + ' %</b> <span class="muted klein">(aus euren bisherigen Rollen- und Duo-Winraten; wenige Spiele zählen weniger)</span>';
+}
+$('auswahl').addEventListener('click', (e) => { const b = e.target.closest('[data-wahl]'); if (!b) return; const id = b.dataset.wahl;
+  if (auswahl.has(id)) auswahl.delete(id); else if (auswahl.size < 5) auswahl.add(id); else melden('Höchstens 5 Spieler.'); aufstellungZeigen(); });
+
+// ---------- Spiele ----------
+function feedZeigen(ziel, liste, nurPerson) {
+  ziel.innerHTML = liste.map((s) => {
+    const wir = nurPerson ? s.wir.filter((x) => x.person === nurPerson) : s.wir, w = wir[0].w;
+    const andere = nurPerson ? s.wir.filter((x) => x.person !== nurPerson) : [];
+    return '<div class="spiel' + (w ? ' w' : '') + '"><i></i><div class="art"><b>' + (w ? 'Sieg' : 'Niederlage') + '</b>' + esc(s.q) + '<br>' + dauer(s.d) + ' · ' + vor(s.t) + '</div>'
+      + '<div class="wir">' + wir.map((x) => '<div class="spieler-zeile"><span class="champ">' + bild('champion', x.c, '', champName(x.c)) + (x.r ? '<span class="rolle">' + ROLLE_KURZ[x.r] + '</span>' : '') + '</span>'
+        + '<span class="wer"><b>' + esc(personVon(x.person).name) + '</b><small>' + esc(champName(x.c)) + '</small></span>'
+        + '<span class="zahlen"><b>' + x.k + ' / <span style="color:var(--niederlage)">' + x.de + '</span> / ' + x.a + '</b><small>' + kdaText(x.k, x.de, x.a) + ' KDA · ' + x.kp + ' % KP</small></span>'
+        + '<span class="zahlen"><b>' + x.cs + ' CS</b><small>' + (x.cs / (s.d / 60)).toFixed(1).replace('.', ',') + '/Min.</small></span>'
+        + '<span class="items">' + (x.it || []).map((i) => (i ? bild('item', i, 'mini', ' ') : '<span class="bild mini"></span>')).join('') + '</span></div>').join('') + '</div>'
+      + (andere.length ? '<div class="zusammen">🤝 mit ' + andere.map((x) => esc(personVon(x.person).name)).join(', ') + '</div>' : s.wir.length > 1 && !nurPerson ? '<div class="zusammen">🤝 zusammen gespielt</div>' : '')
+      + '</div>';
+  }).join('') || '<p class="klein muted">Keine Spiele in diesem Modus.</p>';
+}
+
+// ---------- Spieler-Profil ----------
+function personZeigen(id) {
+  const p = daten.personen.find((x) => x.id === id), box = document.querySelector('[data-panel="person"]');
+  if (!p) { box.innerHTML = ''; return; }
+  $('personTab').hidden = false; $('personTab').textContent = '👤 ' + p.name;
+  const partner = daten.duos.filter((d) => d.a === id || d.b === id).map((d) => ({ name: personVon(d.a === id ? d.b : d.a).name, g: d.g, w: d.w })).sort((a, b) => b.g - a.g);
+  const rollen = Object.entries(p.rollen).sort((a, b) => b[1].g - a[1].g);
+  box.innerHTML = '<section class="karte"><div class="profil">' + (p.champs[0] ? bild('champion', p.champs[0].c, 'gross', '') : '<span class="bild gross">' + esc(p.name[0]) + '</span>')
+    + '<div><h2>' + esc(p.name) + (p.ich ? '<span class="ich-marke">DU</span>' : '') + '</h2><div class="accs">' + p.accounts.map((a) => '<div class="acc">' + (a.icon ? bild('profil', a.icon, 'rund', '') : '') + '<div><b>' + esc(a.riotId) + '</b><small>' + esc(a.regionName) + (a.level ? ' · Lvl ' + a.level : '') + '</small></div>'
+      + '<div>' + (a.rang && a.rang.solo ? '<small>Solo</small>' + rangText(a.rang.solo) : '') + (a.rang && a.rang.flex ? '<small>Flex</small>' + rangText(a.rang.flex) : '') + (!a.rang || (!a.rang.solo && !a.rang.flex) ? '<small>ohne Rang</small>' : '') + '</div></div>').join('') + '</div></div></div>'
+    + '<div class="kacheln"><div class="kachel"><b class="wr ' + wrKlasse(p.w, p.g) + '">' + pct(p.w, p.g) + ' %</b><span>Winrate · ' + p.g + ' Spiele</span></div><div class="kachel"><b>' + kdaText(p.k, p.de, p.a) + '</b><span>KDA · ' + (p.g ? (p.k / p.g).toFixed(1) + ' / ' + (p.de / p.g).toFixed(1) + ' / ' + (p.a / p.g).toFixed(1) : '–') + '</span></div>'
+    + '<div class="kachel"><b>' + String(p.csMin).replace('.', ',') + '</b><span>CS / Min.</span></div><div class="kachel"><b>' + p.schadenMin + '</b><span>Schaden / Min.</span></div><div class="kachel"><b>' + String(p.sichtMin).replace('.', ',') + '</b><span>Sicht / Min.</span></div>'
+    + '<div class="kachel"><b>' + (p.trend == null ? '–' : (p.trend > 0 ? '+' : '') + p.trend + ' %') + '</b><span>Trend (letzte 10)</span></div></div></section>'
+    + '<div class="zwei" style="margin-top:14px"><section class="karte"><h2>🏆 Champions</h2><div class="tabelle"><table><thead><tr><th>Champion</th><th>Spiele</th><th>Winrate</th><th>KDA</th><th>Rolle</th></tr></thead><tbody>'
+    + p.champs.map((c) => '<tr><td><span class="zelle-name">' + bild('champion', c.c, '', champName(c.c)) + '<b>' + esc(champName(c.c)) + '</b></span></td><td>' + c.g + '</td><td class="wr ' + wrKlasse(c.w, c.g) + '">' + pct(c.w, c.g) + ' %</td><td>' + kdaText(c.k, c.de, c.a) + '</td><td><span class="rolle">' + (ROLLE_KURZ[c.haupt] || c.haupt) + '</span></td></tr>').join('')
+    + '</tbody></table></div></section><div style="display:flex;flex-direction:column;gap:14px"><section class="karte"><h2>📍 Rollen</h2><div class="rollbar">'
+    + rollen.map(([r, v]) => '<span class="rolle">' + (ROLLE_KURZ[r] || r) + '</span><div class="balken"><i style="width:' + pct(v.w, v.g) + '%"></i></div><span><b class="wr ' + wrKlasse(v.w, v.g) + '">' + pct(v.w, v.g) + ' %</b> <span class="muted">· ' + v.g + '</span></span>').join('') + '</div></section>'
+    + '<section class="karte"><h2>🤝 Spielt oft mit</h2>' + (partner.map((x) => '<div class="duo"><div><b>' + esc(x.name) + '</b><small>' + x.g + ' Spiele zusammen</small></div><span class="wr ' + wrKlasse(x.w, x.g) + '">' + pct(x.w, x.g) + ' %</span></div>').join('') || '<p class="klein muted">Noch mit niemandem aus der Gruppe.</p>') + '</section></div></div>'
+    + '<section class="karte" style="margin-top:14px"><h2>📜 Letzte Spiele</h2><div id="personFeed"></div></section>';
+  feedZeigen($('personFeed'), daten.feed.filter((s) => s.wir.some((x) => x.person === id)).slice(0, 20), id);
+}
+
+// ---------- Reiter & Filter ----------
+function tabZeigen(t) {
+  tab = t;
+  document.querySelectorAll('#reiter [data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
+  document.querySelectorAll('[data-panel]').forEach((x) => { x.hidden = x.dataset.panel !== t; });
+}
+$('reiter').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) tabZeigen(b.dataset.tab); });
+$('filter').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (!b) return; filter = b.dataset.f; $('filter').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); laden(); });
+
+laden();
+setInterval(() => { if (!document.hidden) laden(); }, 120000);
+</script>
+</body>
+</html>

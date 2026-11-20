@@ -31,6 +31,8 @@ Portweiterleitung TCP 80/443 auf diesen Laptop, feste lokale IP).
   `minecraft\server.properties`). Steuerung in der App; absichtlich gestoppt = `minecraft-aus.txt`.
   Seite `minecraft.html` (Statistik, Karte, Einstellungen, neue Welt). Archivierte Welten: `minecraft\welten-archiv\`.
   Karte: Plugin squaremap, intern Port 8080 (nicht freigeben).
+- LoL-Zentrale: Seite `lol.html`, Logik `spiel\werkzeuge\homeserver\lol.js` (lädt der Konto-Server). Riot-Key in
+  `daten\riot-key.txt` (nur Server, nie an den Browser), Daten in `daten\lol\`. Ohne Key: Beispieldaten.
 - Einrichten/neu anlegen: `einrichten.bat` (als Administrator).
 - `AdGuardHome` (Windows-Dienst, optional): Werbeblocker fürs Heimnetz, installiert über ☁️ → Server → Erweiterungen
   (`spiel\werkzeuge\homeserver\windows\erweiterungen\adguard.ps1`). Verwaltung http://<Laptop-IP>:3000 (nur Heimnetz),

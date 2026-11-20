@@ -344,6 +344,7 @@ function syKontoDialog() {
     + '<p class="ft-klein">Auf einem anderen Gerät einfach die Seite öffnen und mit demselben Namen und derselben PIN anmelden.</p>'
     + (syAdmin ? '<a class="btn" id="syZentrale" href="server.html" style="display:block;text-align:center;text-decoration:none;margin-bottom:10px">🖥️ Server-Zentrale</a>' : '')
     + '<a class="btn secondary" id="syMcSeite" href="minecraft.html" style="display:none;text-align:center;text-decoration:none">⛏️ Minecraft-Server · Statistik &amp; Karte</a>'
+    + '<a class="btn secondary" id="syLolSeite" href="lol.html" style="display:block;text-align:center;text-decoration:none">🎮 LoL-Zentrale · wer spielt wo am besten</a>'
     + '<button type="button" class="btn secondary" id="syJetzt">🔄 Jetzt abgleichen</button>'
     + '<button type="button" class="btn secondary" id="syAbmelden">Abmelden</button>'
     + '<button type="button" class="btn secondary" id="syLoeschen" style="opacity:.75">🗑️ Konto löschen</button>'

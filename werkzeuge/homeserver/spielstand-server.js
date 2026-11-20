@@ -23,6 +23,7 @@
 //   POST /api/admin/minecraft       (nur Admin) { aktion: 'freischalten'|'entfernen'|'start'|'stopp'|'neustart'|'einstellungen'|'neue-welt'|'karte'
 //                                    |'op'|'deop'|'kick'|'ban'|'pardon'|'befehl'|'plugin-suchen'|'plugin-installieren'|'plugin-entfernen', … }
 //   GET  /api/admin/verlauf?tage=1|7|30 (nur Admin) → Messpunkte alle 5 Min. (Dienste, CPU, RAM, °C, Spieler) + Verfügbarkeit in %
+//   LoL-Zentrale: /api/lol/… und /api/admin/lol – siehe lol.js (wird aus spiel\werkzeuge\homeserver geladen)
 //   GET  /api/admin/konten          (nur Admin) → alle Konten (Name, seit, zuletzt aktiv, Level, Minecraft-Name)
 //   POST /api/admin/konto/loeschen  (nur Admin) { name } → Konto samt Spielstand, Bestenliste, Sitzungen, Minecraft-Verknüpfung löschen (nie ein Admin)
 //   GET  /api/admin/prozesse        (nur Admin) → Programme, die gerade am meisten CPU/RAM brauchen
@@ -196,7 +197,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
     const u = t.textures && t.textures.SKIN && t.textures.SKIN.url; if (!u || !/^https?:\/\/textures\.minecraft\.net\//.test(u)) throw new Error('kein Skin');
     const b = await fetch(u); if (!b.ok) throw new Error('Skin ' + b.status); return Buffer.from(await b.arrayBuffer());
   }, lanIp = LAN_IP, aufgabeAbfragen = AUFGABE_ABFRAGEN,
-  diensteAbfragen = DIENSTE_ABFRAGEN, aktionStarten = AKTION_STARTEN, prozesseAbfragen = () => PS(PROZESSE, 20000) } = {}) {
+  diensteAbfragen = DIENSTE_ABFRAGEN, aktionStarten = AKTION_STARTEN, prozesseAbfragen = () => PS(PROZESSE, 20000), lolOptionen = null } = {}) {
   // PowerShell zu starten kostet auf schwachen Laptops jedes Mal spürbar CPU → Abfragen 30 s merken (auch bei mehreren offenen Seiten)
   const merken = (fn, ms = 30000) => { let zeit = 0, wert = null, laeuft = null;
     return () => { if (laeuft) return laeuft; if (wert && jetzt() - zeit < ms) return Promise.resolve(wert);
@@ -593,8 +594,18 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
     return r;
   }
 
-  // Konto vollständig entfernen: Spielstand, Tageskopien, Sitzungen, Bestenliste, Minecraft-Verknüpfung (Whitelist), Orte bleiben ohne Besitzer
+  // LoL-Zentrale (eigene Datei; fehlt sie oder hat sie einen Fehler, läuft der Server ohne sie weiter)
+  let lol = null;
+  try {
+    const kandidaten = [basis && path.join(basis, 'spiel', 'werkzeuge', 'homeserver', 'lol.js'), path.join(__dirname, 'lol.js')].filter(Boolean);
+    const datei = kandidaten.find((f) => fs.existsSync(f));
+    if (datei) lol = require(datei).erstelleLol(Object.assign({ daten, jetzt, senden, koerper, kontoName: (x) => (konten[x] ? konten[x].name : ''),
+      protokoll: (t) => { try { fs.appendFileSync(path.join(basis || path.dirname(daten), 'update.log'), new Date(jetzt()).toISOString().replace('T', ' ').slice(0, 19) + '  ' + t + '\n'); } catch (e) { /* egal */ } } }, lolOptionen || {}));
+  } catch (e) { console.error('LoL-Zentrale nicht geladen:', e.message); }
+
+  // Konto vollständig entfernen: Spielstand, Tageskopien, Sitzungen, Bestenliste, Minecraft-Verknüpfung (Whitelist), LoL-Accounts
   async function kontoEntfernen(k) {
+    if (lol) lol.kontoEntfernen(k);
     const vor = dateiname(k) + '-';
     fs.rmSync(path.join(daten, 'staende', dateiname(k) + '.json'), { force: true });
     for (const f of fs.readdirSync(path.join(daten, 'archiv'))) if (f.startsWith(vor)) fs.rmSync(path.join(daten, 'archiv', f), { force: true });
@@ -692,6 +703,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
       if (alt) { await whitelistSetzen(alt.mc, alt.uuid, false); delete zugang.konten[k]; zugangSpeichern(); mcProtokoll(konten[k].name + ' hat ' + alt.mc + ' entfernt'); }
       return senden(res, 200, {});
     }
+    if (weg.startsWith('/lol/') && lol) { const r = await lol.anfrage(weg, m, req, res, url, k); if (r !== false) return; }
     if (weg === '/minecraft/orte' && m === 'GET') {
       return senden(res, 200, { orte: orte.orte.map((o) => ({ id: o.id, name: o.name, kat: o.kat, welt: o.welt, x: o.x, y: o.y, z: o.z, notiz: o.notiz || '', zeit: o.zeit,
         von: o.vonMc || (konten[o.von] || {}).name || '?', eigen: o.von === k || admins.has(k) })), kategorien: KATEGORIEN, meinMc: zugang.konten[k] ? zugang.konten[k].mc : '' });
@@ -978,6 +990,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
           return senden(res, 400, { fehler: 'Unbekannte Aktion.' });
         }
       }
+      if (weg === '/admin/lol') { if (!lol) return senden(res, 503, { fehler: 'LoL-Zentrale nicht geladen.' }); return lol.admin(m, req, res); }
       if (weg === '/admin/konten' && m === 'GET') {
         const zuletzt = {};
         Object.values(sitzungen).forEach((x) => { zuletzt[x.schluessel] = Math.max(zuletzt[x.schluessel] || 0, x.zuletzt || x.erstellt || 0); });
@@ -1098,7 +1111,8 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
   const server = http.createServer((req, res) => {
     bearbeiten(req, res).catch((e) => { if (!res.headersSent) senden(res, e.status || 500, { fehler: e.status ? e.message : 'Serverfehler' }); if (!e.status) console.error(e); });
   });
-  server.on('close', () => { [logUhr, autoUhr, messUhr].forEach((u) => u && clearInterval(u)); });
+  server.on('close', () => { [logUhr, autoUhr, messUhr].forEach((u) => u && clearInterval(u)); if (lol) lol.schliessen(); });
+  server.lol = lol;
   server.zentraleMessen = zentraleMessen; server.autoUpdate = autoUpdate;
   server.mcLogPruefen = mcLogPruefen;
   return server;
