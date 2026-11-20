@@ -11,7 +11,7 @@
 //   POST /api/anmelden        { name, pin } → angemeldet (Cookie)
 //   POST /api/abmelden
 //   POST /api/admin/aktualisieren   (nur Admin) → startet die Windows-Aufgabe „Spielekiste\Update“ (neueste Version von GitHub)
-//   GET  /api/admin/status          (nur Admin) → { version, log: [letzte Zeilen von update.log], konten, duelle }
+//   GET  /api/admin/status          (nur Admin) → { version, log: [letzte Zeilen von update.log], konten }
 //   GET  /api/minecraft/info        (angemeldet) → Status, Adresse, Statistik je Spieler (Tode, Spielzeit, Kills, km), Karte ja/nein
 //   POST /api/minecraft/beitreten   (angemeldet) { name, code? } → eigenen Minecraft-Namen auf die Whitelist (Beitrittscode vom Admin)
 //   POST /api/minecraft/austreten   (angemeldet) → eigenen Namen wieder von der Whitelist
@@ -32,7 +32,7 @@
 //   POST /api/admin/aktion          (nur Admin) { aktion } → fest eingebaute Aktion (Dienst neu starten, Laptop neu starten)
 //   GET  /api/admin/protokoll?datei=update|konto|caddy|duckdns|erweiterungen → letzte 40 Zeilen
 //   GET  /api/admin/pruefen         (nur Admin) → { aktuell, neu, neuer, anzahl, aenderungen: [Commit-Titel] } – fragt GitHub
-//   POST /api/konto/loeschen  { pin } → Konto, Spielstand, Tageskopien, Bestenliste, Duelle und Anmeldungen löschen
+//   POST /api/konto/loeschen  { pin } → Konto, Spielstand, Tageskopien, Bestenliste und Anmeldungen löschen
 //   POST /api/abgleich        { basis, geraet, stand, aenderungen: { schlüssel: { v: text|null, alt?: true } } }
 //                             → { version, neu? }  (neu = nur Einträge, die seit „basis“ ein anderes Gerät geändert hat;
 //                                                   v: null = gelöscht – so geht nach einer Runde kaum etwas über die Leitung)
@@ -41,11 +41,6 @@
 //                             → Eintrag in der gemeinsamen Bestenliste (nur diese Zusammenfassung ist für andere sichtbar)
 //   GET  /api/bestenliste     → [{ name, ich?, xp, level, … }]  nach XP sortiert, nur für Angemeldete
 //
-// Duelle (beide spielen dieselbe Runde – gleicher Seed, gleiche Stufe –, wann sie wollen):
-//   POST /api/duell           { gegen, spiel? } → neues Duell (Spiel zufällig, wenn keins angegeben)
-//   GET  /api/duelle          → { duelle: [...], bilanz: { gegnername: { s, n, u } } }  eigene Duelle der letzten 30 Tage
-//   POST /api/duell/ergebnis  { id, p, m } → eigenes Ergebnis (nur einmal pro Duell)
-//   POST /api/duell/ablehnen  { id }
 //
 // Abgleich Eintrag für Eintrag: Jeder Eintrag merkt sich die Server-Version, in der er zuletzt geändert wurde.
 //  • Normale Änderungen (gerade gespielt) gelten immer – die zuletzt angekommene gewinnt.
@@ -56,13 +51,12 @@
 // Schutz: PIN nur als scrypt-Hash; nach 5 Fehlversuchen wird der Name gesperrt (15 min, danach doppelt so lang);
 // höchstens 30 Fehlversuche und 5 neue Konten pro Stunde und Anschluss; höchstens 50 Konten; Anfragen bis 10 MB.
 // Anmeldung per Cookie (HttpOnly, 1 Jahr). Im Datenordner: konten.json, sitzungen.json, staende/<name>.json,
-// archiv/<name>-JJJJ-MM-TT.json (Tageskopie, wird nach 30 Tagen gelöscht), bestenliste.json, duelle.json (30 Tage).
+// archiv/<name>-JJJJ-MM-TT.json (Tageskopie, wird nach 30 Tagen gelöscht), bestenliste.json.
 'use strict';
 const http = require('http'), fs = require('fs'), path = require('path'), crypto = require('crypto');
 
 const NAME_RE = /^[A-Za-z0-9ÄÖÜäöüß._-]{3,20}$/;
 const PIN_RE = /^\d{4,8}$/;
-const DUELL_SPIELE = ['farben', 'toene', 'augen', 'takt', 'funktion', 'punkte'];   // archivierte Spiele (Karten-Gefühl, Riffbau, Tiefgang) nicht mehr für neue Duelle
 const DUELL_TAGE = 7, DUELL_OFFEN_MAX = 20;
 const MAX_KONTEN = 50, MAX_BODY = 10 * 1024 * 1024, COOKIE = 'spielekiste_sitzung', SITZUNG_TAGE = 365;
 
@@ -222,8 +216,8 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
   };
   let konten = lesen('konten.json', {});        // schlüssel (klein) → { name, salz, hash, erstellt, fehl, sperreBis, sperreMin }
   let sitzungen = lesen('sitzungen.json', {});  // sha256(token) → { schluessel, erstellt }
-  let bestenliste = lesen('bestenliste.json', {});   // schlüssel → öffentliche Zusammenfassung
-  let duelle = lesen('duelle.json', {});             // id → { id, von, gegen, spiel, seed, erstellt, ergebnisse: { schlüssel: { p, m, z } }, abgelehnt? }
+  let bestenliste = lesen('bestenliste.json', {});
+  try { fs.rmSync(path.join(daten, 'duelle.json'), { force: true }); } catch (e) { /* Duelle gibt es nicht mehr – alte Daten weg */ }   // schlüssel → öffentliche Zusammenfassung
   const schluessel = (name) => name.normalize('NFC').toLowerCase();
   const dateiname = (k) => encodeURIComponent(k).replace(/%/g, '_');
 
@@ -787,7 +781,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
       const lies = (f) => { try { return fs.readFileSync(path.join(basis || path.dirname(daten), f), 'utf8'); } catch (e) { return ''; } };
       if (weg === '/admin/status' && m === 'GET') {
         return senden(res, 200, { version: lies('version.txt').trim().slice(0, 7), log: lies('update.log').trim().split(/\r?\n/).filter(Boolean).slice(-6),
-          konten: Object.keys(konten).length, duelle: Object.keys(duelle).length,
+          konten: Object.keys(konten).length,
           erweiterungen: { adguard: { installiert: fs.existsSync(path.join(basis || path.dirname(daten), 'AdGuardHome', 'AdGuardHome.exe')), laeuft: await dnsPruefen() } },
           erweiterungenLog: lies('erweiterungen.log').trim().split(/\r?\n/).filter(Boolean).slice(-4), lanIp: lanIp(), aufgabe: await aufgabeAbfragen(),
           autoUpdate: zentrale.autoUpdate, aktualisiertAm: (() => { try { return fs.statSync(path.join(ordnerBasis(), 'version.txt')).mtimeMs; } catch (e) { return null; } })(),
@@ -1065,55 +1059,11 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
       fs.rmSync(path.join(daten, standDatei), { force: true });
       for (const f of fs.readdirSync(path.join(daten, 'archiv'))) if (f.startsWith(vor)) fs.rmSync(path.join(daten, 'archiv', f), { force: true });
       Object.keys(sitzungen).forEach((h) => { if (sitzungen[h].schluessel === k) delete sitzungen[h]; });
-      Object.values(duelle).forEach((d) => { if (d.von === k || d.gegen === k) delete duelle[d.id]; });
       if (zugang.konten[k]) { const z = zugang.konten[k]; delete zugang.konten[k]; zugangSpeichern(); try { await whitelistSetzen(z.mc, z.uuid, false); } catch (e) { /* egal */ } }
       delete bestenliste[k]; delete konten[k];
-      schreiben('konten.json', konten); schreiben('sitzungen.json', sitzungen); schreiben('bestenliste.json', bestenliste); schreiben('duelle.json', duelle);
+      schreiben('konten.json', konten); schreiben('sitzungen.json', sitzungen); schreiben('bestenliste.json', bestenliste);
       res.setHeader('Set-Cookie', COOKIE + '=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
       return senden(res, 200, {});
-    }
-    // ---------- Duelle ----------
-    const duellFuer = (d) => {   // Sicht eines Teilnehmers
-      const gegner = d.von === k ? d.gegen : d.von, mein = d.ergebnisse[k] || null, sein = d.ergebnisse[gegner] || null;
-      const abgelaufen = !d.abgelehnt && (!mein || !sein) && jetzt() - d.erstellt > DUELL_TAGE * 864e5;
-      let ausgang = null;
-      if (mein && sein) ausgang = mein.p > sein.p ? 'sieg' : mein.p < sein.p ? 'niederlage' : 'unentschieden';
-      return { id: d.id, spiel: d.spiel, seed: d.seed, erstellt: d.erstellt, vonMir: d.von === k, gegner: konten[gegner] ? konten[gegner].name : '?',
-        mein, sein, ausgang, abgelehnt: !!d.abgelehnt, abgelaufen };
-    };
-    const meineDuelle = () => Object.values(duelle).filter((d) => (d.von === k || d.gegen === k) && jetzt() - d.erstellt < 30 * 864e5);
-    if (weg === '/duell' && m === 'POST') {
-      const b = await koerper(req), gk = schluessel(String(b.gegen || '').trim());
-      if (!konten[gk] || gk === k) return senden(res, 400, { fehler: 'Diesen Spieler gibt es nicht.' });
-      const spiel = b.spiel ? String(b.spiel) : DUELL_SPIELE[crypto.randomInt(DUELL_SPIELE.length)];
-      if (!DUELL_SPIELE.includes(spiel)) return senden(res, 400, { fehler: 'Dieses Spiel geht nicht als Duell.' });
-      const offen = meineDuelle().filter((d) => d.von === k && !d.abgelehnt && Object.keys(d.ergebnisse).length < 2 && jetzt() - d.erstellt < DUELL_TAGE * 864e5);
-      if (offen.length >= DUELL_OFFEN_MAX) return senden(res, 429, { fehler: 'Du hast schon ' + DUELL_OFFEN_MAX + ' offene Duelle.' });
-      const d = { id: crypto.randomBytes(8).toString('hex'), von: k, gegen: gk, spiel, seed: 'duell-' + crypto.randomBytes(6).toString('hex'), erstellt: jetzt(), ergebnisse: {} };
-      // aufräumen: Duelle älter als 30 Tage
-      Object.values(duelle).forEach((x) => { if (jetzt() - x.erstellt > 30 * 864e5) delete duelle[x.id]; });
-      duelle[d.id] = d; schreiben('duelle.json', duelle);
-      return senden(res, 200, duellFuer(d));
-    }
-    if (weg === '/duelle' && m === 'GET') {
-      const liste = meineDuelle().sort((a, b) => b.erstellt - a.erstellt).slice(0, 50).map(duellFuer);
-      const bilanz = {};
-      meineDuelle().map(duellFuer).forEach((d) => {
-        if (!d.ausgang) return;
-        const z = (bilanz[d.gegner] = bilanz[d.gegner] || { s: 0, n: 0, u: 0 });
-        z[d.ausgang === 'sieg' ? 's' : d.ausgang === 'niederlage' ? 'n' : 'u']++;
-      });
-      return senden(res, 200, { duelle: liste, bilanz });
-    }
-    if ((weg === '/duell/ergebnis' || weg === '/duell/ablehnen') && m === 'POST') {
-      const b = await koerper(req), d = duelle[String(b.id || '')];
-      if (!d || (d.von !== k && d.gegen !== k)) return senden(res, 404, { fehler: 'Duell nicht gefunden.' });
-      if (weg === '/duell/ablehnen') { if (d.gegen === k && !d.ergebnisse[k]) { d.abgelehnt = true; schreiben('duelle.json', duelle); } return senden(res, 200, duellFuer(d)); }
-      if (d.abgelehnt) return senden(res, 409, { fehler: 'Dieses Duell wurde abgelehnt.' });
-      if (d.ergebnisse[k]) return senden(res, 409, Object.assign({ fehler: 'Du hast dieses Duell schon gespielt.' }, duellFuer(d)));
-      d.ergebnisse[k] = { p: zahl(b.p, 0, 1e7), m: zahl(b.m, 0, 1e7), z: jetzt() };
-      schreiben('duelle.json', duelle);
-      return senden(res, 200, duellFuer(d));
     }
     return senden(res, 404, { fehler: 'Unbekannt' });
   }

@@ -178,7 +178,7 @@
   #screen-hub .hub-spalten, #screen-hub .hub-spalten > .spalte { display: contents !important; }
 }
 #screen-hub > .hub-leiste { order: -10; } #installKarte { order: -9; } #skGrussBox { order: -8; } #syTop3 { order: -7; } #skStart { order: -6; }
-#skFilter { order: -5; } #syDuelle { order: 1; } #skUnten { order: 2; } #syBestenliste { order: 3; } #hubFamilie { order: 4; } #hubVerlauf { order: 5; } #screen-hub > .hub-ds { order: 10; }
+#skFilter { order: -5; } #skUnten { order: 2; } #syBestenliste { order: 3; } #hubFamilie { order: 4; } #hubVerlauf { order: 5; } #screen-hub > .hub-ds { order: 10; }
 #screen-hub .hub-mehr { display: none; }
 
 /* Suche & Filter */

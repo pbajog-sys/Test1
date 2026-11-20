@@ -2,7 +2,7 @@
 
 Privater Homeserver auf einem Windows-Laptop (Huawei MateBook D, i3-10110U, 8 GB). Er liefert das Browserspiel
 „Spielekiste“ aus (Repo github.com/pbajog-sys/Test1, Zweig `spielstand-sync`) und betreibt Konten, Spielstand-Sync,
-Bestenliste und Duelle. Erreichbar unter https://spielkiste.duckdns.org (Telekom VDSL, Speedport Smart 4,
+und Bestenliste. Erreichbar unter https://spielkiste.duckdns.org (Telekom VDSL, Speedport Smart 4,
 Portweiterleitung TCP 80/443 auf diesen Laptop, feste lokale IP).
 
 ## Aufbau
@@ -12,7 +12,7 @@ Portweiterleitung TCP 80/443 auf diesen Laptop, feste lokale IP).
 | Caddy-Zertifikate (Let’s Encrypt) | `caddy-daten\` (über XDG_DATA_HOME) |
 | Spiel (statische Dateien) | `spiel\` – wird bei jedem Update komplett ersetzt, vorige Version in `spiel-vorher\` |
 | Konto-Server (Node.js, ohne Pakete) | `spielstand-server.js`, lauscht nur auf 127.0.0.1:8090, Caddy leitet `/api/*` dorthin |
-| **Daten – niemals löschen** | `daten\` (konten.json, verlauf.json, zentrale.json, sitzungen.json, staende\, archiv\, bestenliste.json, duelle.json) |
+| **Daten – niemals löschen** | `daten\` (konten.json, verlauf.json, zentrale.json, sitzungen.json, staende\, archiv\, bestenliste.json) |
 | Protokolle | `caddy.log`, `konto-server.log`, `update.log` |
 | Version | `version.txt` (Commit auf GitHub) |
 

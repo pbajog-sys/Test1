@@ -339,7 +339,7 @@ function systemZeigen() {
     + (s.platte ? k(gb(s.platte.frei), 'frei auf der Platte', 'von ' + gb(s.platte.gesamt), stufe(platteBelegt * 100, 85, 95), platteBelegt) : '')
     + (s.akku != null ? k(s.akku + ' %', s.netz ? '🔌 Akku, am Netz' : '🔋 Akku – NICHT am Netz', '', s.netz ? '' : 'schlecht') : '')
     + k(dauer(s.laeuftSeit), 'läuft seit', '')
-    + (status ? k(status.konten, 'Konten', status.duelle + ' Duelle') : '');
+    + (status ? k(status.konten, 'Konten', '') : '');
   $('rechnerName').textContent = s.name ? '· ' + s.name : '';
 }
 

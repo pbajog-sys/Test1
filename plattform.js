@@ -42,7 +42,7 @@ const SK_KATEGORIEN = [
   { id: 'wissen', name: 'Wissen & Sprache', emoji: '📚', karten: ['hubCello', 'hubStimmen', 'hubSlo', 'hubEng'] },
 ];
 // Archiviert (auf Wunsch): nicht mehr auf der Startseite, aber unten im „Archiv“ weiter spielbar – Spielstände bleiben.
-// Tagesaufgaben und neue Duelle nehmen nur noch sichtbare Spiele.
+// Tagesaufgaben nehmen nur noch sichtbare Spiele.
 const SK_ARCHIV = { karten: ['hubKrimi', 'hubRiff', 'hubKarte', 'hubTiefgang', 'hubFalten', 'hubZoom', 'hubGlas', 'hubWunder', 'hubNvl', 'hubFitness', 'hubScan', 'hubNaehen', 'hubDopamin', 'hubRage'], experiment: true };
 
 // ---------- Verlauf lesen: jeder Eintrag bekommt Leistung q (0–1) und Schwierigkeit d ----------

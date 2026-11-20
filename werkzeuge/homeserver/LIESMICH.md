@@ -17,12 +17,7 @@ Läuft daneben `spielstand-server.js`, fragt die App beim ersten Besuch einmal n
   alle registrierten Spieler nach XP mit stärkster Fähigkeit und Lieblingsspiel; Antippen zeigt alle Stärken,
   die meistgespielten Spiele und vergleicht die Fähigkeiten im Radar. Nur für Angemeldete. Liegt in
   `daten/bestenliste.json`.
-- Duelle: In der Bestenliste jemanden antippen → „⚔️ Zum Duell herausfordern“ → Spiel wählen (oder Zufall). Beide
-  spielen genau dieselbe Runde (gleicher Seed, Stufe „mittel“), wann sie wollen; der Zweite sieht das Ziel. Ergebnis,
-  Sieger und Duell-Bilanz pro Gegner im Dashboard unter „⚔️ Duelle“. Ablehnen möglich, offen nach 7 Tagen abgelaufen,
-  nach 30 Tagen gelöscht. 9 Spiele: Farben, Töne, Augenmaß, Takt, Funktions-Detektiv, Karten-Gefühl, Punktwolke,
-  Riffbau, Tiefgang.
-- Konto löschen: ☁️ → „Konto löschen“ mit PIN – löscht Konto, Spielstand, Tageskopien, Bestenliste und Duelle.
+- Konto löschen: ☁️ → „Konto löschen“ mit PIN – löscht Konto, Spielstand, Tageskopien und Bestenliste.
   Tageskopien werden ohnehin nach 30 Tagen gelöscht.
 - Die Datei-Sicherung (💾) ist entfernt – mit Konto sichert der Server. Eigene Songs werden nicht gesichert.
 - Namen sind eindeutig (Groß-/Kleinschreibung egal), PIN 4–8 Ziffern, nur als Hash gespeichert.

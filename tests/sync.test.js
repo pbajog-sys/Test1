@@ -241,47 +241,9 @@ const caddy = http.createServer((req, res) => {
   await C.click('#syVgl'); await ruhig(C, 800);
   ck('📊 öffnet den Radar-Vergleich mit Anna', /Anna \(Level/.test(await C.textContent('.sk-legende').catch(() => '')));
   await C.screenshot({ path: path.join(os.tmpdir(), 'sync-vergleich.png') });
-  // ---------- Duelle ----------
-  // A (Anna) fordert C (Ben) im Farb-Gedächtnis heraus und spielt sofort
-  await A.evaluate(() => { document.getElementById('profilWahl') && (document.getElementById('profilWahl').hidden = true); syBestenliste(true); }); await ruhig(A, 600);
-  await A.evaluate(() => syDuellWahl('Ben')); await ruhig(A, 300);
-  await A.click('[data-dspiel="farben"]'); await ruhig(A, 2500);
-  const duellA = await A.evaluate(() => ({ aktiv: JSON.parse(sessionStorage.getItem('spielekiste-duell') || 'null'), seed: fs && fs.seed, farben: JSON.stringify(fs && fs.farben), screen: document.querySelector('.screen.active') && document.querySelector('.screen.active').id }));
-  ck('Duell: A spielt sofort Farb-Gedächtnis mit dem Duell-Seed', duellA.aktiv && duellA.seed === duellA.aktiv.seed && /farben/.test(duellA.screen), duellA.screen + ' · ' + duellA.seed);
-  await A.evaluate(() => skNachSpiel('farben', 40, 50, '')); await ruhig(A, 2500);
-  ck('Duell: Ergebnis von A gespeichert, A wartet', /Warte auf Ben/.test(await A.textContent('#syDuelle').catch(() => '')));
-  // C sieht die Herausforderung und spielt exakt dieselbe Runde
-  await C.evaluate(() => { localStorage.setItem('spielekiste-duelle-gesehen', '{}'); zeigeHub(); syDuelleLaden(true); }); await ruhig(C, 1500);
-  const boxC = await C.textContent('#syDuelle').catch(() => '');
-  ck('Duell: C sieht „Anna fordert dich heraus“ mit Ziel', /Anna fordert dich heraus/.test(boxC) && /Ziel: 40/.test(boxC), boxC.replace(/\s+/g, ' ').trim().slice(0, 120));
-  await C.screenshot({ path: path.join(os.tmpdir(), 'sync-duelle.png') });
-  await C.evaluate(() => document.querySelector('[data-dlos]').click()); await ruhig(C, 2500);
-  const duellC = await C.evaluate(() => ({ seed: fs && fs.seed, farben: JSON.stringify(fs && fs.farben), gegner: fs && fs.gegner }));
-  ck('Duell: C bekommt genau dieselben Farben wie A', duellC.seed === duellA.seed && duellC.farben === duellA.farben && duellC.gegner && duellC.gegner.punkte === 40);
-  await C.evaluate(() => skNachSpiel('farben', 30, 50, '')); await ruhig(C, 2500);
-  await A.evaluate(() => syDuelleLaden(true)); await ruhig(A, 1200);
-  ck('Duell: Anna gewinnt 40 : 30, Ben verliert', /Gewonnen gegen Ben – 40 : 30/.test(await A.textContent('#syDuelle')) && /Verloren gegen Anna – 30 : 40/.test(await C.textContent('#syDuelle')));
-  const bilanzA = await A.evaluate(() => syBilanz.Ben);
-  ck('Duell-Bilanz: Anna 1 : 0 gegen Ben', bilanzA && bilanzA.s === 1 && bilanzA.n === 0);
-  const nochmal = await C.evaluate(async (id) => (await fetch('api/duell/ergebnis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, p: 99, m: 50 }) })).status, duellA.aktiv.id);
-  ck('Duell: Ergebnis nur einmal möglich', nochmal === 409);
-  // Ablehnen
-  await A.evaluate(async () => { await syApi('duell', 'POST', { gegen: 'Ben', spiel: 'augen' }); });
-  await C.evaluate(() => syDuelleLaden(true)); await ruhig(C, 1000);
-  await C.evaluate(() => document.querySelector('[data-dweg]').click()); await ruhig(C, 1200);
-  await A.evaluate(() => syDuelleLaden(true)); await ruhig(A, 1000);
-  ck('Duell ablehnen: A sieht „hat abgelehnt“', /Ben hat abgelehnt/.test(await A.textContent('#syDuelle')));
-  // Alle Duell-Spiele starten mit dem Duell-Seed
-  const ergebnisse = [];
-  for (const spiel of await A.evaluate(() => Object.keys(SY_DUELL_SPIELE))) {
-    await A.evaluate(() => zeigeHub());
-    await A.evaluate((spiel) => syDuellStarten({ id: 'test-' + spiel, spiel, seed: 'duell-test-' + spiel, gegner: 'Ben' }), spiel); await ruhig(A, 1800);
-    ergebnisse.push([spiel, await A.evaluate((spiel) => { try { return SY_DUELL_SPIELE[spiel].stand().seed; } catch (e) { return 'Fehler: ' + e.message; } }, spiel)]);
-    await A.evaluate(() => { sessionStorage.removeItem('spielekiste-duell'); try { taktStopp(); } catch (e) {} });
-  }
-  ck('Alle 9 Duell-Spiele starten mit dem Duell-Seed', ergebnisse.every(([sp, seed]) => seed === 'duell-test-' + sp), ergebnisse.filter(([sp, seed]) => seed !== 'duell-test-' + sp).map((x) => x.join('=')).join(', '));
-  const fremdDuell = await C.evaluate(async () => (await fetch('api/duell', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ gegen: 'Niemand' }) })).status);
-  ck('Duell gegen unbekannten Namen abgelehnt', fremdDuell === 400);
+  // ---------- Duelle gibt es nicht mehr ----------
+  const duellWeg = await C.evaluate(async () => [(await fetch('api/duelle')).status, typeof syDuellWahl, !!document.getElementById('syDuelle')]);
+  ck('Duelle entfernt: keine Schnittstelle, kein Knopf, kein Kasten', duellWeg[0] === 404 && duellWeg[1] === 'undefined' && !duellWeg[2], JSON.stringify(duellWeg));
 
   // ---------- Server-Zentrale (nur Admin) ----------
   ck('Admin: Anna ist Admin, Ben nicht', (await A.evaluate(async () => (await syApi('ich')).json.admin)) === true && (await C.evaluate(async () => (await syApi('ich')).json.admin)) === undefined);
