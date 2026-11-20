@@ -62,7 +62,7 @@ const http = require('http'), fs = require('fs'), path = require('path'), crypto
 
 const NAME_RE = /^[A-Za-z0-9ÄÖÜäöüß._-]{3,20}$/;
 const PIN_RE = /^\d{4,8}$/;
-const DUELL_SPIELE = ['farben', 'toene', 'augen', 'takt', 'funktion', 'karte', 'punkte', 'riff', 'tiefgang'];
+const DUELL_SPIELE = ['farben', 'toene', 'augen', 'takt', 'funktion', 'punkte'];   // archivierte Spiele (Karten-Gefühl, Riffbau, Tiefgang) nicht mehr für neue Duelle
 const DUELL_TAGE = 7, DUELL_OFFEN_MAX = 20;
 const MAX_KONTEN = 50, MAX_BODY = 10 * 1024 * 1024, COOKIE = 'spielekiste_sitzung', SITZUNG_TAGE = 365;
 

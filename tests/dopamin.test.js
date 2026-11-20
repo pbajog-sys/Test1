@@ -7,7 +7,7 @@ const ordner = process.argv[2] || '.';
   await ctx.addInitScript(() => { localStorage.setItem('walquiz.profile.v1', JSON.stringify({ aktiv: 't', liste: [{ id: 't', name: 'T', avatar: '🧪', farbe: '#22c55e' }] })); localStorage.setItem('walquiz.installhinweis.v1', 'weg'); });
   const p = await ctx.newPage(); const fehler = []; p.on('pageerror', (e) => fehler.push(e.message));
   await p.goto('http://localhost:8765/'); await p.waitForTimeout(1000);
-  await p.click('#hubDopamin'); await p.waitForTimeout(900);
+  await p.evaluate(() => { const a = document.getElementById('skArchiv'); if (a) a.open = true; }); await p.click('#hubDopamin'); await p.waitForTimeout(900);
   await p.screenshot({ path: ordner + '/dp-intro.png' });
   await p.click('[data-modus="voll"]'); await p.waitForTimeout(500);
   const r = await p.evaluate(() => $('dpBild').getBoundingClientRect().toJSON());

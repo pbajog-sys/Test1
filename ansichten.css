@@ -167,3 +167,89 @@
 /* Vollbild-Knopf */
 .vollbild-btn { border: 1px solid rgba(255,255,255,0.18); border-radius: 999px; background: rgba(255,255,255,0.08); color: var(--text); font: inherit; font-size: 1.05rem; width: 40px; height: 40px; cursor: pointer; flex: none; }
 .hub-knoepfe { display: flex; align-items: center; gap: 8px; min-width: 0; }
+
+
+/* ===================================================================
+   Startseite (Spielekiste) – Reihenfolge, Suche/Filter, Archiv, PC-Layout
+   Bis 1099 px: alles untereinander (Reihenfolge über „order“).
+   Ab 1100 px: links Heute + Spiele (Raster), rechts eine mitlaufende Seitenleiste.
+   =================================================================== */
+@media (max-width: 1099px) {
+  #screen-hub .hub-spalten, #screen-hub .hub-spalten > .spalte { display: contents !important; }
+}
+#screen-hub > .hub-leiste { order: -10; } #installKarte { order: -9; } #skGrussBox { order: -8; } #syTop3 { order: -7; } #skStart { order: -6; }
+#skFilter { order: -5; } #syDuelle { order: 1; } #skUnten { order: 2; } #syBestenliste { order: 3; } #hubFamilie { order: 4; } #hubVerlauf { order: 5; } #screen-hub > .hub-ds { order: 10; }
+#screen-hub .hub-mehr { display: none; }
+
+/* Suche & Filter */
+.sk-filter { display: flex; flex-direction: column; gap: 8px; margin: 18px 0 2px; }
+.sk-filter input[type=search] { width: 100%; box-sizing: border-box; font: inherit; font-size: 16px; padding: 10px 14px; border-radius: 14px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.05); color: inherit; }
+.sk-filter input[type=search]:focus { outline: 2px solid rgba(167,139,250,.7); outline-offset: 1px; }
+.sk-chips { display: flex; gap: 6px; overflow-x: auto; scrollbar-width: none; padding-bottom: 2px; }
+.sk-chips::-webkit-scrollbar { display: none; }
+.sk-chips button { flex: none; font: inherit; font-weight: 700; font-size: .85rem; padding: 7px 12px; border-radius: 999px; border: 1px solid rgba(255,255,255,.1); background: rgba(255,255,255,.05); color: inherit; cursor: pointer; white-space: nowrap; }
+.sk-chips button[aria-pressed="true"] { background: #f2f2fa; color: #12121c; border-color: transparent; }
+.sk-nichts { text-align: center; padding: 24px 0; }
+
+/* Archiv */
+.sk-archiv { margin-top: 10px; border-top: 1px solid rgba(255,255,255,.08); }
+.sk-archiv > summary { list-style: none; display: flex; align-items: center; gap: 10px; cursor: pointer; }
+.sk-archiv > summary::-webkit-details-marker { display: none; }
+.sk-archiv > summary .hub-h { margin-bottom: 10px; }
+.sk-archiv > summary small { font-weight: 600; opacity: .6; font-size: .8rem; }
+.sk-archiv-pfeil { margin-left: auto; opacity: .6; transition: transform .2s; }
+.sk-archiv[open] .sk-archiv-pfeil { transform: rotate(180deg); }
+.sk-archiv:not([open]) > summary { opacity: .75; }
+.sk-archiv .hub-game { filter: saturate(.75); }
+.sk-experiment-klein { margin-top: 12px; padding: 12px 14px; }
+
+/* ---------- PC: zwei Bereiche ---------- */
+@media (min-width: 1100px) {
+  .app:has(#screen-hub.active) { max-width: none; padding-left: clamp(20px, 2.4vw, 48px); padding-right: clamp(20px, 2.4vw, 48px); }
+  #screen-hub.active { display: grid; grid-template-columns: minmax(0, 1fr) 340px; column-gap: 28px; row-gap: 0; align-items: start; }
+  #screen-hub > .hub-leiste { grid-column: 1 / -1; grid-row: 1; }
+  #screen-hub > #installKarte { grid-column: 1 / -1; grid-row: 2; }
+  #screen-hub > #skStart { grid-column: 1; grid-row: 3; min-width: 0; }
+  #screen-hub .hub-spalten { display: contents; }
+  #screen-hub .hub-spalten > .spalte-a { display: flex; flex-direction: column; gap: 0; grid-column: 1; grid-row: 4; min-width: 0; }
+  #screen-hub .hub-spalten > .spalte-b { display: flex; flex-direction: column; gap: 14px; grid-column: 2; grid-row: 3 / span 2; position: sticky; top: 12px;
+    max-height: calc(100dvh - 24px); overflow-y: auto; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,.15) transparent; padding: 4px 4px 12px 0; align-items: stretch; }
+  #screen-hub > .hub-ds { grid-column: 1; grid-row: 5; }
+  #screen-hub .spalte-b > * { margin-top: 0 !important; width: auto !important; max-width: none !important; }
+  #screen-hub .spalte-b .hub-h { margin-top: 0; }
+
+  /* Filterleiste bleibt oben stehen */
+  .sk-filter { position: sticky; top: 0; z-index: 4; flex-direction: row; align-items: center; margin: 14px 0 0; padding: 10px 0; background: linear-gradient(rgba(9,9,15,.94), rgba(9,9,15,.94)); backdrop-filter: blur(10px); }
+  .sk-filter input[type=search] { width: 230px; flex: none; }
+  .sk-chips { flex: 1; min-width: 0; flex-wrap: nowrap; }
+
+  /* Gleichmäßiges Karten-Raster */
+  #screen-hub .hub-liste { grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)) !important; gap: 14px !important; }
+  #screen-hub .hub-liste > .hub-game { height: 100%; min-height: 150px; }
+  #screen-hub .hub-game .hg-titel { font-size: 1.28rem; line-height: 1.15; }
+  #screen-hub .hub-game .hg-pfeil { display: none; }
+  #screen-hub .hub-game .hg-av { zoom: .82; }
+  #screen-hub .hub-liste > .hub-game { padding: 16px 18px; gap: 14px; }
+  #screen-hub .hub-liste > .hub-game:hover { transform: translateY(-3px); }
+  #screen-hub .hub-game .hg-sub { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+  #screen-hub .hub-game .hg-best { display: block; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #screen-hub .sk-kat { margin-top: 6px; }
+
+  /* Seitenleiste: kompaktere Bausteine */
+  #syTop3 .sy-top3-liste, #syTop3 > div { gap: 8px; }
+  #skGrussBox .sk-gruss { width: 100%; }
+}
+
+/* ---------- Handy: kompakte Kacheln in zwei Spalten (weniger scrollen) ---------- */
+@media (max-width: 699px) {
+  #screen-hub .hub-liste { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+  #screen-hub .hub-liste > .hub-game { flex-direction: column; align-items: flex-start; gap: 6px; padding: 12px 12px 11px; border-radius: 18px; min-height: 0; height: 100%; box-shadow: 0 8px 26px rgba(124,58,237,0.18); }
+  #screen-hub .hub-game .hg-av { zoom: .62; }
+  #screen-hub .hub-game .hg-text { gap: 1px; width: 100%; min-width: 0; }
+  #screen-hub .hub-game .hg-titel { font-size: 1.02rem; line-height: 1.15; overflow-wrap: anywhere; }
+  #screen-hub .hub-game .hg-sub, #screen-hub .hub-game .hg-pfeil { display: none; }
+  #screen-hub .hub-game .hg-best { font-size: .7rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  #screen-hub .hub-game .hg-stern { top: 8px; right: 8px; }
+  #screen-hub .sk-kat .hub-h { margin: 16px 0 8px; }
+  .sk-filter { margin-top: 12px; }
+}

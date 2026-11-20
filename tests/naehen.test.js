@@ -10,7 +10,7 @@ const ordner = process.argv[2] || '.';
   const checks = [], ck = (n, ok, info = '') => { checks.push([n, ok]); console.log((ok ? '✓ ' : '✗ ') + n + (info ? ' – ' + info : '')); };
   const bild = (n) => p.screenshot({ path: ordner + '/' + n + '.png' });
   await p.goto('http://localhost:8765/'); await p.waitForTimeout(900);
-  ck('Hub-Karte in „Alltag“', await p.evaluate(() => !!document.querySelector('.sk-kat-alltag #hubNaehen')));
+  ck('Hub-Karte im Archiv', await p.evaluate(() => !!document.querySelector('#skArchiv #hubNaehen')));
   // Kaputter Spielstand → sichere Standardwerte
   const mig = await p.evaluate(() => { localStorage.setItem(NS_KEY, '{"muenzen":"x","lager":5,"kleider":null}'); const s = nsStore(); localStorage.removeItem(NS_KEY); return s.muenzen === 80 && Array.isArray(s.lager) && Array.isArray(s.kleider) && Array.isArray(s.fenster); });
   ck('Kaputter Spielstand wird sicher gelesen', mig);
@@ -22,7 +22,7 @@ const ordner = process.argv[2] || '.';
     return [nsBewerten(gut, a, 1, 1).gesamt, nsBewerten(schlecht, a, 1, 1).gesamt, nsBewerten(gut, a, 0.2, 0.2).gesamt];
   });
   ck('Wertung: Wunschkleid ≥ 0,9, Fehlgriff ≤ 0,4, schiefe Nähte kosten Punkte', wert[0] >= 0.9 && wert[1] <= 0.4 && wert[2] < wert[0] - 0.15, wert.map((v) => v.toFixed(2)).join(' / '));
-  await p.click('#hubNaehen'); await p.waitForTimeout(1200);
+  await p.evaluate(() => { const a = document.getElementById('skArchiv'); if (a) a.open = true; }); await p.click('#hubNaehen'); await p.waitForTimeout(1200);
   const start = await p.evaluate(() => nsStore());
   ck('Start: 80 Münzen, 3 m Baumwolle als Startstoff, leeres Schaufenster', start.muenzen === 80 && start.lager.length === 1 && start.lager[0].cm === 300 && (await p.locator('.ns-platz').count()) === 3);
   // Kater streicheln

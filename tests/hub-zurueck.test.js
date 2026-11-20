@@ -19,6 +19,7 @@ const ordner = process.argv[2] || '.';
   await p.goto('http://localhost:8765/'); await p.waitForTimeout(1200);
 
   for (const [id, zurueck, name] of [['hubBeat', '#bbZurueck', 'Beat-Bahnen'], ['hubFitness', '#fiZurueck', 'Fitness'], ['hubScan', '#scZurueck', 'Zutaten-Check']]) {
+    await p.evaluate(() => { const a = document.getElementById('skArchiv'); if (a) a.open = true; });
     await p.evaluate((i) => { const k = $(i); window.scrollTo(0, hubDocTop(k) - innerHeight * 0.55); }, id); await p.waitForTimeout(300);
     const vorher = await lage(id);
     const bx = await p.evaluate((i) => { const r = $(i).getBoundingClientRect(); return { x: r.left + r.width * 0.3, y: r.top + Math.min(40, r.height / 2) }; }, id);

@@ -266,7 +266,7 @@ const caddy = http.createServer((req, res) => {
   const nochmal = await C.evaluate(async (id) => (await fetch('api/duell/ergebnis', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id, p: 99, m: 50 }) })).status, duellA.aktiv.id);
   ck('Duell: Ergebnis nur einmal möglich', nochmal === 409);
   // Ablehnen
-  await A.evaluate(async () => { await syApi('duell', 'POST', { gegen: 'Ben', spiel: 'riff' }); });
+  await A.evaluate(async () => { await syApi('duell', 'POST', { gegen: 'Ben', spiel: 'augen' }); });
   await C.evaluate(() => syDuelleLaden(true)); await ruhig(C, 1000);
   await C.evaluate(() => document.querySelector('[data-dweg]').click()); await ruhig(C, 1200);
   await A.evaluate(() => syDuelleLaden(true)); await ruhig(A, 1000);

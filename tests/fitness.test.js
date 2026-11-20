@@ -21,7 +21,7 @@ const ordner = process.argv[2] || '.';
     fiHubText();
   });
   ck('Hub-Karte: 0 diese Woche, 2 gesamt', /0 Trainings diese Woche · 2 gesamt/.test(await p.textContent('#hubFitnessBest')), await p.textContent('#hubFitnessBest'));
-  await p.click('#hubFitness'); await p.waitForTimeout(800);
+  await p.evaluate(() => { const a = document.getElementById('skArchiv'); if (a) a.open = true; }); await p.click('#hubFitness'); await p.waitForTimeout(800);
   ck('Übersicht: Serie 2 Wochen (letzte Woche zählt noch), Fortschritt je Übung', /2\s*Wochen in Folge/.test(await p.textContent('.fi-kacheln')) && (await p.$$('[data-uebung]')).length === 3, await p.textContent('.fi-kacheln'));
   await bild('fi-start');
 
@@ -46,7 +46,7 @@ const ordner = process.argv[2] || '.';
   // Neu laden mitten im Training
   await p.reload(); await p.waitForTimeout(900);
   ck('Nach Neuladen: Training läuft weiter', /Training läuft/.test(await p.textContent('#hubFitnessBest')));
-  await p.click('#hubFitness'); await p.waitForTimeout(700);
+  await p.evaluate(() => { const a = document.getElementById('skArchiv'); if (a) a.open = true; }); await p.click('#hubFitness'); await p.waitForTimeout(700);
   ck('… Startknopf „Weiter“ mit 2 Einträgen', /Weiter mit dem laufenden Training/.test(await p.textContent('#fiLos')) && /2 Einträge/.test(await p.textContent('#fiLos')));
   await p.click('#fiLos'); await p.waitForTimeout(200);
   // Ausdauer
@@ -99,7 +99,7 @@ const ordner = process.argv[2] || '.';
     s.einheiten.push({ id: 'z', start: t, ende: t + 1800e3, eintraege: [{ u: 'bank', kg: 60, wdh: 10, t }, { u: 'bank', kg: 60, wdh: 10, t }, { u: 'bank', kg: 60, wdh: 10, t }] });
     fiSpeichern(s);
   });
-  await p.click('#hubFitness'); await p.waitForTimeout(700);
+  await p.evaluate(() => { const a = document.getElementById('skArchiv'); if (a) a.open = true; }); await p.click('#hubFitness'); await p.waitForTimeout(700);
   ck('Muskel-Karte der Woche: Brust leuchtet, Text nennt Brust', await p.evaluate(() => !!document.querySelector('.fi-woche .fi-muskel.an[data-muskel="brust"]') && /Brust/.test(document.querySelector('.fi-woche').textContent)));
   ck('Tipp des Tages und Icons in der Fortschrittsliste', (await p.$$('.fi-tipp')).length === 1 && (await p.$$('.fi-zeile .fi-icon svg')).length >= 3);
   await p.click('#fiLos'); await p.click('#fiNeueUebung'); await p.waitForTimeout(200);

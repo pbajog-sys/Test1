@@ -20,7 +20,7 @@ const ordner = process.argv[2] || '.';
   ck('Zoom: Proton → Universum = 41,7 ≈ 42 Zehnerschritte', Math.abs(d.schritte - 41.7) < 0.05, d.schritte.toFixed(2));
   ck('Zoom: Start (10 m Bildbreite) zeigt den Menschen', d.start.includes('Mensch'), d.start.join(', '));
   ck('Zoom: auf jeder der 43 Stufen ist etwas im Bild', d.leer.length === 0, 'leer bei 10^' + d.leer.join(', 10^'));
-  await p.click('#hubZoom'); await p.waitForTimeout(900);
+  await p.evaluate(() => { const a = document.getElementById('skArchiv'); if (a) a.open = true; }); await p.click('#hubZoom'); await p.waitForTimeout(900);
   await p.evaluate(() => { const s = $('zmSchieber'); s.value = 30; s.dispatchEvent(new Event('input')); });
   await p.click('#zmLos'); await p.waitForTimeout(400);
   await p.screenshot({ path: ordner + '/zm-start.png' });
@@ -41,7 +41,7 @@ const ordner = process.argv[2] || '.';
 
   // ---------- Glas ----------
   ck('Glas: Prozent- und Zahlformat', await p.evaluate(() => glProzent(55) === '3,13 %' && glProzent(59) === '50 %' && glZahlWort(2 ** 60) === '1,2 Trillionen' && glUhr(59) === '11:59'), await p.evaluate(() => [glProzent(55), glProzent(59), glProzent(40), glZahlWort(2 ** 60)].join(' | ')));
-  await p.click('#hubGlas'); await p.waitForTimeout(900); await p.click('#glLos'); await p.waitForTimeout(300);
+  await p.evaluate(() => { const a = document.getElementById('skArchiv'); if (a) a.open = true; }); await p.click('#hubGlas'); await p.waitForTimeout(900); await p.click('#glLos'); await p.waitForTimeout(300);
   await p.evaluate(() => { const s = $('glSchieber'); s.value = 59; s.dispatchEvent(new Event('input')); });
   await p.screenshot({ path: ordner + '/gl-frage1.png' });
   await p.click('#glAntwort'); await p.waitForTimeout(150);

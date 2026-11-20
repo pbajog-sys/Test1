@@ -200,8 +200,8 @@ function syTop3Zeigen() {
   if (!hub || syZustand !== 'ok' || !syListe.length) { if (box) box.remove(); return; }
   if (!box) {
     box = document.createElement('div'); box.id = 'syTop3'; box.className = 'sy-top3';
-    const nach = document.getElementById('installKarte') || document.getElementById('hubBuehne');
-    hub.insertBefore(box, nach ? nach.nextSibling : hub.firstChild);
+    const seite = hub.querySelector('.spalte-b');   // Seitenleiste am PC; am Handy sortiert CSS (order) es nach oben
+    if (seite) seite.insertBefore(box, seite.firstChild); else hub.insertBefore(box, hub.firstChild);
   }
   const ichI = syListe.findIndex((e) => e.ich), medaille = ['🥇', '🥈', '🥉'];
   const offen = (typeof syDuelle !== 'undefined' ? syDuelle : []).filter((du) => syDuellZustand(du) === 'du').length;

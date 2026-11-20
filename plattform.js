@@ -37,13 +37,13 @@ const SK_KRIMI = { mord: { name: 'Tatort', emoji: '🔎' }, wachen: { name: 'Wac
 // so geht nichts verloren und alles ließe sich mit einer Zeile wieder einblenden.
 const SK_AUSSORTIERT = { karten: ['hubQuizzes', 'hubPiranha'], spiele: ['piranha'], erfolge: ['piranha', 'abzeichen'] };
 const SK_KATEGORIEN = [
-  { id: 'denken', name: 'Denken & Logik', emoji: '🧠', karten: ['hubKrimi', 'hubKlassiker', 'hubFunktion', 'hubRiff'] },
-  { id: 'sinne', name: 'Sinne & Wahrnehmung', emoji: '👁️', karten: ['hubFarben', 'hubToene', 'hubSongs', 'hubStudio', 'hubBeat', 'hubTakt', 'hubAugen'] },
-  { id: 'zahlen', name: 'Zahlen & Welt', emoji: '🔢', karten: ['hubPunkte', 'hubZufall', 'hubKarte', 'hubTiefgang', 'hubZahlen', 'hubFalten', 'hubZoom', 'hubGlas', 'hubWunder'] },
-  { id: 'wissen', name: 'Wissen & Sprache', emoji: '📚', karten: ['hubCello', 'hubStimmen', 'hubSlo', 'hubEng', 'hubNvl'] },
-  { id: 'alltag', name: 'Alltag & Fitness', emoji: '💪', karten: ['hubFitness', 'hubScan', 'hubNaehen'] },
-  { id: 'perspektive', name: 'Perspektivwechsel', emoji: '🪞', karten: ['hubTierleben', 'hubDopamin', 'hubRage'] },
+  { id: 'denken', name: 'Denken & Zahlen', emoji: '🧠', karten: ['hubKlassiker', 'hubFunktion', 'hubPunkte', 'hubZufall', 'hubZahlen', 'hubTierleben'] },
+  { id: 'sinne', name: 'Sinne & Musik', emoji: '👁️', karten: ['hubFarben', 'hubToene', 'hubTakt', 'hubAugen', 'hubSongs', 'hubStudio', 'hubBeat'] },
+  { id: 'wissen', name: 'Wissen & Sprache', emoji: '📚', karten: ['hubCello', 'hubStimmen', 'hubSlo', 'hubEng'] },
 ];
+// Archiviert (auf Wunsch): nicht mehr auf der Startseite, aber unten im „Archiv“ weiter spielbar – Spielstände bleiben.
+// Tagesaufgaben und neue Duelle nehmen nur noch sichtbare Spiele.
+const SK_ARCHIV = { karten: ['hubKrimi', 'hubRiff', 'hubKarte', 'hubTiefgang', 'hubFalten', 'hubZoom', 'hubGlas', 'hubWunder', 'hubNvl', 'hubFitness', 'hubScan', 'hubNaehen', 'hubDopamin', 'hubRage'], experiment: true };
 
 // ---------- Verlauf lesen: jeder Eintrag bekommt Leistung q (0–1) und Schwierigkeit d ----------
 const skKlemm = (v, a, b) => Math.max(a, Math.min(b, v));
@@ -183,9 +183,9 @@ function skErfolgePruefen(melden = true) {
 
 // ---------- Tagesaufgaben ----------
 const SK_POOL = {
-  brain: [{ spiel: 'krimi', modus: 'mord' }, { spiel: 'krimi', modus: 'wachen' }, { spiel: 'krimi', modus: 'alibi' }, { spiel: 'krimi', modus: 'verhoer' }, { spiel: 'funktion' }],
+  brain: [{ spiel: 'funktion' }, { spiel: 'punkte' }, { spiel: 'zufall' }],
   sense: [{ spiel: 'farben' }, { spiel: 'toene' }, { spiel: 'augen' }, { spiel: 'takt' }],
-  chaos: [{ spiel: 'karte' }, { spiel: 'punkte' }, { spiel: 'riff' }, { spiel: 'tiefgang' }, { spiel: 'zufall' }, { spiel: 'krimi', modus: 'verhoer' }, { spiel: 'funktion' }],
+  chaos: [{ spiel: 'farben' }, { spiel: 'toene' }, { spiel: 'augen' }, { spiel: 'takt' }, { spiel: 'funktion' }, { spiel: 'punkte' }, { spiel: 'zufall' }],
 };
 const SK_SLOTS = [
   { id: 'brain', name: 'Daily Brain', emoji: '🧠', text: 'Eine Denkaufgabe' },
@@ -199,7 +199,7 @@ function skTagesAufgaben(datum = skDatum()) {
   const krimiStufe = wt === 1 ? 'leicht' : wt === 0 || wt >= 5 ? 'schwer' : 'mittel';
   const wahl = (l) => l[Math.floor(r() * l.length)];
   const brain = wahl(SK_POOL.brain), sense = wahl(SK_POOL.sense);
-  const chaos = wahl(SK_POOL.chaos.filter((c) => c.spiel !== brain.spiel));
+  const chaos = wahl(SK_POOL.chaos.filter((c) => c.spiel !== brain.spiel && c.spiel !== sense.spiel));
   return { datum, brain: { ...brain, stufe: krimiStufe }, sense, chaos: { ...chaos, stufe: krimiStufe } };
 }
 const skAufgabeName = (a) => (a.spiel === 'krimi' ? SK_KRIMI[a.modus].name : SK_SPIELE[a.spiel].name);
@@ -476,18 +476,20 @@ function skDashboard() {
   const A = skTagesAufgaben(), t = (D.tagesSt.tage || {})[A.datum] || {}, serie = skTagesSerie(D.tagesSt);
   const fertig = SK_SLOTS.filter((s) => t[s.id]).length;
   const exp = typeof labDieseWoche === 'function' ? labDieseWoche() : null;
-  start.innerHTML = '<button type="button" class="sk-gruss" id="skGruss" aria-label="Dein Profil öffnen">'
+  let grussBox = $('skGrussBox');
+  if (!grussBox) { grussBox = document.createElement('div'); grussBox.id = 'skGrussBox'; const b = hub.querySelector('.spalte-b'); if (b) b.insertBefore(grussBox, b.firstChild); else hub.insertBefore(grussBox, start); }
+  grussBox.innerHTML = '<button type="button" class="sk-gruss" id="skGruss" aria-label="Dein Profil öffnen">'
     + '<span class="sk-level"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" class="sk-ring-bg"/><circle cx="22" cy="22" r="19" class="sk-ring" style="stroke-dasharray:' + (119.4 * lv.anteil).toFixed(1) + ' 119.4"/></svg><b>' + lv.level + '</b></span>'
     + '<span class="sk-gruss-text"><small>' + skBegruessung() + (pr ? ', ' + pr.name : '') + '</small><b>Level ' + lv.level + '</b><span>' + fmt(xp.gesamt) + ' XP · Level ' + (lv.level + 1) + ' bei ' + fmt(lv.bis) + '</span></span>'
-    + skRadar([{ werte: D.skills.map((s) => s.wert), farbe: '#f59e0b' }], { klein: true }) + '</button>'
-    + '<div class="sk-tag-kopf"><h2 class="hub-h"><span>📅</span> Heute <small>' + fertig + ' / 3' + (serie.serie ? ' · 🔥 ' + serie.serie : '') + '</small></h2><button type="button" class="sk-teilen" id="skTagTeilen" aria-label="Tagesergebnis teilen">📤</button></div>'
+    + skRadar([{ werte: D.skills.map((s) => s.wert), farbe: '#f59e0b' }], { klein: true }) + '</button>';
+  start.innerHTML = '<div class="sk-tag-kopf"><h2 class="hub-h"><span>📅</span> Heute <small>' + fertig + ' / 3' + (serie.serie ? ' · 🔥 ' + serie.serie : '') + '</small></h2><button type="button" class="sk-teilen" id="skTagTeilen" aria-label="Tagesergebnis teilen">📤</button></div>'
     + '<div class="sk-tageskarten">' + SK_SLOTS.map((s) => {
       const a = A[s.id], r = t[s.id];
       return '<div class="sk-tageskarte sk-' + s.id + (r ? ' fertig' : '') + '"><span class="sk-slot">' + s.emoji + ' ' + s.name + '</span><span class="sk-spiel-emoji" aria-hidden="true">' + skAufgabeEmoji(a) + '</span>'
         + '<b>' + skAufgabeName(a) + '</b><small>' + (a.spiel === 'krimi' ? { leicht: 'Leicht', mittel: 'Mittel', schwer: 'Schwer' }[a.stufe] + ' · ' : '') + (r ? '✓ ' + skErgebnisText(r) : s.text) + '</small>'
         + (r ? '<button type="button" class="sk-karte-btn" data-karte="' + s.id + '">📤 Karte</button>' : '<button type="button" class="sk-los" data-slot="' + s.id + '">Los ▶</button>') + '</div>';
     }).join('') + '</div>'
-    + (exp ? '<button type="button" class="sk-experiment" id="skExperiment"><span class="sk-exp-nr">EXPERIMENT Nº ' + String(exp.nr).padStart(2, '0') + ' · KW ' + exp.kw + '</span><b>' + exp.e.emoji + ' ' + exp.e.titel + '</b><small>' + exp.e.teaser + '</small><span class="sk-exp-status">' + (exp.fertig ? '✓ durchgeführt · Ergebnis ansehen' : 'Versuch starten ›') + '</span></button>' : '');
+    + (exp && !SK_ARCHIV.experiment ? '<button type="button" class="sk-experiment" id="skExperiment"><span class="sk-exp-nr">EXPERIMENT Nº ' + String(exp.nr).padStart(2, '0') + ' · KW ' + exp.kw + '</span><b>' + exp.e.emoji + ' ' + exp.e.titel + '</b><small>' + exp.e.teaser + '</small><span class="sk-exp-status">' + (exp.fertig ? '✓ durchgeführt · Ergebnis ansehen' : 'Versuch starten ›') + '</span></button>' : '');
   start.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => skAufgabeStarten(b.dataset.slot)));
   start.querySelectorAll('[data-karte]').forEach((b) => b.addEventListener('click', () => skKarteZeigen(skKarteTagesaufgabe(b.dataset.karte, A.datum))));
   $('skGruss').addEventListener('click', skProfilZeigen);
@@ -497,6 +499,11 @@ function skDashboard() {
     try { await navigator.clipboard.writeText(text); skToast('📋 Tagesergebnis kopiert'); } catch (e) { skDialog('<textarea class="sk-code" readonly>' + text + '</textarea>'); }
   });
   if ($('skExperiment')) $('skExperiment').addEventListener('click', () => labZeigen());
+  const archivExp = $('skArchivExtra');
+  if (archivExp) {
+    archivExp.innerHTML = exp && SK_ARCHIV.experiment ? '<button type="button" class="sk-experiment sk-experiment-klein" id="skExperimentArchiv"><span class="sk-exp-nr">EXPERIMENT DER WOCHE · KW ' + exp.kw + '</span><b>' + exp.e.emoji + ' ' + exp.e.titel + '</b><span class="sk-exp-status">' + (exp.fertig ? '✓ durchgeführt · Ergebnis ansehen' : 'Versuch starten ›') + '</span></button>' : '';
+    if ($('skExperimentArchiv')) $('skExperimentArchiv').addEventListener('click', () => labZeigen());
+  }
   skUnten(D);
   skErfolgePruefen(true);
 }
@@ -519,6 +526,14 @@ function skKategorienEinrichten() {
   if (!a || a.dataset.kategorien) return;
   a.dataset.kategorien = '1';
   const alt = a.querySelector('.hub-liste') || a, verlauf = $('hubVerlauf');
+  // Suche + Filter (am PC oben angeheftet, am Handy waagerecht wischbar)
+  const filter = document.createElement('div');
+  filter.className = 'sk-filter'; filter.id = 'skFilter';
+  filter.innerHTML = '<input type="search" id="skSuche" placeholder="🔍 Spiel suchen …" autocomplete="off" aria-label="Spiel suchen">'
+    + '<div class="sk-chips" role="group" aria-label="Kategorie"><button type="button" data-f="" aria-pressed="true">Alle</button><button type="button" data-f="fav" aria-pressed="false">⭐ Favoriten</button>'
+    + SK_KATEGORIEN.map((k) => '<button type="button" data-f="' + k.id + '" aria-pressed="false">' + k.emoji + ' ' + k.name + '</button>').join('')
+    + '<button type="button" data-f="archiv" aria-pressed="false">🗄️ Archiv</button></div>';
+  a.appendChild(filter);
   const abschnitt = (emoji, name, cls) => {
     const sec = document.createElement('section');
     sec.className = 'sk-kat ' + cls;
@@ -535,10 +550,45 @@ function skKategorienEinrichten() {
   if (!fach) { fach = document.createElement('div'); fach.id = 'skAussortiert'; fach.hidden = true; document.body.appendChild(fach); }
   SK_AUSSORTIERT.karten.forEach((id) => { const el = $(id); if (el) fach.appendChild(el); });
   // was keiner Kategorie zugeordnet ist, bleibt sichtbar
-  const rest = [...alt.querySelectorAll(':scope > .hub-game')];
+  const rest = [...alt.querySelectorAll(':scope > .hub-game')].filter((el) => !SK_ARCHIV.karten.includes(el.id));
   if (rest.length) { const liste = abschnitt('✨', 'Weitere', ''); rest.forEach((el) => liste.appendChild(el)); }
+  // Archiv: eingeklappt ganz unten, Karten bleiben spielbar
+  const archiv = document.createElement('details');
+  archiv.className = 'sk-kat sk-archiv'; archiv.id = 'skArchiv';
+  archiv.innerHTML = '<summary><h2 class="hub-h"><span>🗄️</span> Archiv <small id="skArchivZahl"></small></h2><span class="sk-archiv-pfeil" aria-hidden="true">▾</span></summary><div class="hub-liste"></div><div id="skArchivExtra"></div>';
+  a.appendChild(archiv);
+  SK_ARCHIV.karten.forEach((id) => { const el = $(id); if (el) archiv.querySelector('.hub-liste').appendChild(el); });
   if (alt !== a && !alt.children.length) alt.remove();
   if (verlauf) { const b = document.querySelector('#screen-hub .spalte-b'); if (b) b.appendChild(verlauf); }
+  filter.querySelector('.sk-chips').addEventListener('click', (e) => {
+    const b = e.target.closest('[data-f]'); if (!b) return;
+    filter.querySelectorAll('[data-f]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+    skFilterAnwenden();
+    const ziel = a.querySelector('.sk-kat:not([hidden])');
+    if (ziel && innerWidth >= 1100 && filter.getBoundingClientRect().top <= 20) ziel.scrollIntoView({ block: 'start', behavior: 'smooth' });
+  });
+  $('skSuche').addEventListener('input', skFilterAnwenden);
+}
+// Filter/Suche anwenden: Abschnitte und Karten ein-/ausblenden
+function skFilterAnwenden() {
+  const a = document.querySelector('#screen-hub .spalte-a'); if (!a) return;
+  const f = (a.querySelector('.sk-chips [aria-pressed="true"]') || {}).dataset || {}, wahl = f.f || '', q = ($('skSuche') ? $('skSuche').value : '').trim().toLowerCase();
+  const archiv = $('skArchiv');
+  a.querySelectorAll('.sk-kat').forEach((sec) => {
+    const id = sec.id === 'skFavoriten' ? 'fav' : sec.id === 'skArchiv' ? 'archiv' : (/sk-kat-(\w+)/.exec(sec.className) || [])[1] || '';
+    let sichtbar = 0;
+    sec.querySelectorAll('.hub-game').forEach((el) => {
+      const passt = !q || el.textContent.toLowerCase().includes(q);
+      el.hidden = !passt; if (passt) sichtbar++;
+    });
+    const gewaehlt = !wahl || wahl === id;
+    sec.hidden = !gewaehlt || !sichtbar || (id === 'fav' && sec.dataset.leer === '1');
+  });
+  if (archiv && !archiv.hidden) archiv.open = wahl === 'archiv' || (!!q && wahl !== 'archiv' ? true : archiv.open);
+  let nichts = $('skNichts');
+  if (!nichts) { nichts = document.createElement('p'); nichts.id = 'skNichts'; nichts.className = 'sk-fein sk-nichts'; a.appendChild(nichts); }
+  const leer = ![...a.querySelectorAll('.sk-kat')].some((s) => !s.hidden);
+  nichts.hidden = !leer; nichts.textContent = q ? 'Kein Spiel gefunden für „' + q + '“.' : 'Hier ist noch nichts – mit ☆ an einer Karte landet sie in den Favoriten.';
 }
 
 // ---------- ⭐ Favoriten: Stern an jeder Karte, Favoriten stehen ganz oben (je Profil) ----------
@@ -558,17 +608,18 @@ function skFavoriten() {
   if (!sec) {
     sec = document.createElement('section'); sec.id = 'skFavoriten'; sec.className = 'sk-kat sk-kat-fav';
     sec.innerHTML = '<h2 class="hub-h"><span>⭐</span> Favoriten</h2><div class="hub-liste"></div>';
-    a.insertBefore(sec, a.querySelector('.sk-kat'));
+    a.insertBefore(sec, a.querySelector('.sk-kat:not(#skFilter)'));
   }
   const fav = sec.querySelector('.hub-liste');
   // erst alle Nicht-Favoriten zurück an ihren Platz (in der festen Reihenfolge), dann die Favoriten nach oben
-  SK_KATEGORIEN.forEach((k) => {
-    const liste = a.querySelector('.sk-kat-' + k.id + ' .hub-liste');
+  SK_KATEGORIEN.concat([{ id: 'archiv', karten: SK_ARCHIV.karten }]).forEach((k) => {
+    const liste = k.id === 'archiv' ? a.querySelector('#skArchiv .hub-liste') : a.querySelector('.sk-kat-' + k.id + ' .hub-liste');
     if (liste) k.karten.forEach((id) => { const el = $(id); if (el && !ids.includes(id)) liste.appendChild(el); });
   });
   ids.forEach((id) => fav.appendChild($(id)));
-  sec.hidden = !ids.length;
-  a.querySelectorAll('.sk-kat').forEach((s) => { if (s !== sec) s.hidden = !s.querySelector('.hub-game'); });
+  sec.dataset.leer = ids.length ? '' : '1';
+  if ($('skArchivZahl')) $('skArchivZahl').textContent = a.querySelectorAll('#skArchiv .hub-game').length + ' Spiele';
+  skFilterAnwenden();
   document.querySelectorAll('#screen-hub .hub-game').forEach((el) => {
     let s = el.querySelector('.hg-stern');
     if (!s) {

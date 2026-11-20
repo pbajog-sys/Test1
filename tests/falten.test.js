@@ -16,7 +16,7 @@ const ordner = process.argv[2] || '.';
   ck('Mars nach genau 49 Faltungen', m.mars === 49 && m.ziele.Mars === 49);
   ck('Zahlen wie im Reel (0,2 mm · 0,8 mm · 3,36 km · 429 km · 13.744 km)', m.f.slice(0, 5).join(' ') === '1=0,2 mm 3=0,8 mm 25=3,36 km 32=429 km 37=13.744 km', m.f.join(' · '));
 
-  await p.click('#hubFalten'); await p.waitForTimeout(900);
+  await p.evaluate(() => { const a = document.getElementById('skArchiv'); if (a) a.open = true; }); await p.click('#hubFalten'); await p.waitForTimeout(900);
   await p.screenshot({ path: ordner + '/ft-intro.png' });
   await p.evaluate(() => { const s = $('ftSchieber'); s.value = 600; s.dispatchEvent(new Event('input')); });
   const schaetzung = await p.evaluate(() => parseInt($('ftSchaetzung').textContent.replace(/\D/g, ''), 10));

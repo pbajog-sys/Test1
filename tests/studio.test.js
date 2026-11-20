@@ -17,7 +17,7 @@ const ordner = process.argv[2] || '.';
   const favIds = () => p.evaluate(() => [...document.querySelectorAll('#skFavoriten .hub-game')].map((x) => x.id).join(','));
   ck('Favoriten: Beat-Studio steht von Anfang an oben', (await favIds()) === 'hubStudio' && await p.evaluate(() => { const a = document.querySelector('#screen-hub .spalte-a'); return a.querySelector('.sk-kat') === $('skFavoriten'); }));
   await p.evaluate(() => $('skFavoriten').scrollIntoView()); await bild('fav-start');
-  await p.click('#hubFalten .hg-stern'); await p.waitForTimeout(300);
+  await p.evaluate(() => { const a = document.getElementById('skArchiv'); if (a) a.open = true; }); await p.click('#hubFalten .hg-stern'); await p.waitForTimeout(300);
   ck('Stern antippen: Falten wird Favorit, Spiel öffnet sich nicht', (await favIds()) === 'hubStudio,hubFalten' && await p.evaluate(() => $('screen-hub').classList.contains('active')));
   await p.click('#hubStudio .hg-stern'); await p.waitForTimeout(300);
   ck('Stern wieder aus: Studio zurück an seinen Platz (nach Song-Rätsel)', (await favIds()) === 'hubFalten' && await p.evaluate(() => $('hubStudio').previousElementSibling.id === 'hubSongs'));

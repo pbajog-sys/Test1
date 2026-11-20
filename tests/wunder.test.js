@@ -29,7 +29,7 @@ const ordner = process.argv[2] || '.';
   ck('Binär: Snare bei 8/24, Shaker auf ungeraden, Kick 0/10, Wobble ab 128', f.bits === 'true,true,false,true,false,true,true,true,false', f.bits);
 
   // ---------- Menü ----------
-  await p.click('#hubWunder'); await p.waitForTimeout(900);
+  await p.evaluate(() => { const a = document.getElementById('skArchiv'); if (a) a.open = true; }); await p.click('#hubWunder'); await p.waitForTimeout(900);
   await bild('wu-menue');
   ck('Menü mit vier Mustern', (await p.$$('.wu-modus')).length === 4);
 
