@@ -272,6 +272,16 @@ const caddy = http.createServer((req, res) => {
   const pText = await A.textContent('#prozesse');
   ck('Was braucht Leistung: Programme mit verständlichen Namen, Server-Programme markiert', /Windows Defender/.test(pText) && /21,5 %/.test(pText) && /Minecraft/.test(pText) && /2,8 GB/.test(pText) && /Microsoft Edge ×12/.test(pText) && (await A.$$('#prozesse td.wir')).length === 2, pText.replace(/\s+/g, ' ').slice(0, 200));
   ck('Was braucht Leistung: Ben darf nicht', (await C.evaluate(async () => (await syApi('admin/prozesse')).status)) === 403);
+  // Konten verwalten
+  const neuWeg = await A.evaluate(async () => (await fetch('api/registrieren', { method: 'POST', credentials: 'omit', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ name: 'Wegwerf', pin: '4711' }) })).status);
+  await A.evaluate(() => kontenLaden()); await ruhig(A, 600);
+  const kontoText = await A.textContent('#kontenListe');
+  ck('Konten: Liste mit allen Konten, Admin ohne Löschen-Knopf', neuWeg === 200 && /Wegwerf/.test(kontoText) && /Ben/.test(kontoText) && /Anna · Admin/.test(kontoText) && !(await A.$('[data-konto="Anna"]')), kontoText.replace(/\s+/g, ' ').slice(0, 160));
+  const benKonto = await C.evaluate(async () => [(await syApi('admin/konten')).status, (await syApi('admin/konto/loeschen', 'POST', { name: 'Wegwerf' })).status]);
+  const adminWeg = await A.evaluate(async () => (await api('admin/konto/loeschen', 'POST', { name: 'Anna' })).status);
+  await A.click('[data-konto="Wegwerf"]'); await ruhig(A, 900);
+  const kj = JSON.parse(fs.readFileSync(path.join(DATEN, 'konten.json'), 'utf8'));
+  ck('Konten: Ben darf nicht, Admin-Konto geschützt, Wegwerf gelöscht', benKonto.every((x) => x === 403) && adminWeg === 400 && !kj.wegwerf && !!kj.anna && !!kj.ben && !/Wegwerf/.test(await A.textContent('#kontenListe')), JSON.stringify(benKonto));
   await A.screenshot({ path: path.join(os.tmpdir(), 'sync-zentrale.png'), fullPage: true });
   // Updates
   await A.click('#pruefen'); await ruhig(A, 800);
@@ -347,6 +357,13 @@ const caddy = http.createServer((req, res) => {
     await ctx.close(); }
   await A.goto(URL_); await ruhig(A, 1500);
 
+  await A.evaluate(() => { const p = profile(); if (!p.aktiv || !p.liste.some((x) => x.id === p.aktiv)) { p.liste = [{ id: 'ich', name: 'Anna', avatar: '🦁', farbe: '#16a34a' }]; p.aktiv = 'ich'; } p.liste.push({ id: 'g1', name: 'Gast', avatar: '🐸', farbe: '#16a34a' }, { id: 'g2', name: 'Oma', avatar: '🦊', farbe: '#2563eb' }); saveJson(PROFIL_KEY, p);
+    localStorage.setItem('walquiz.profil.g1', '{}'); localStorage.setItem('walquiz.profil.g2', '{}'); pwBearbeiten = true; zeigeWahl(); }); await ruhig(A, 300);
+  const aufText = await A.textContent('#pwAufraeumen');
+  await A.click('#pwAufraeumen'); await ruhig(A, 500);
+  const nachher = await A.evaluate(() => ({ n: profile().liste.length, g1: localStorage.getItem('walquiz.profil.g1'), name: aktivesProfil().name }));
+  ck('Geräte-Profile: „Nur … behalten“ löscht alle anderen samt Daten', /Nur „.+“ behalten/.test(aufText) && nachher.n === 1 && nachher.g1 === null, JSON.stringify(nachher) + ' ' + aufText);
+  await A.evaluate(() => schliesseWahl());
   // ---------- Minecraft-Seite ----------
   const MC = path.join(DATEN, 'minecraft');
   fs.writeFileSync(path.join(MC, 'server.properties'), '#Minecraft server properties\r\nlevel-name=world\r\ndifficulty=easy\r\npvp=true\r\nmax-players=10\r\nmotd=Hallo\r\nlevel-seed=\r\nrcon.port=25575\r\n');

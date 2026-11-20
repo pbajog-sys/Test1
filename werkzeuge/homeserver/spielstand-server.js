@@ -23,6 +23,8 @@
 //   POST /api/admin/minecraft       (nur Admin) { aktion: 'freischalten'|'entfernen'|'start'|'stopp'|'neustart'|'einstellungen'|'neue-welt'|'karte'
 //                                    |'op'|'deop'|'kick'|'ban'|'pardon'|'befehl'|'plugin-suchen'|'plugin-installieren'|'plugin-entfernen', … }
 //   GET  /api/admin/verlauf?tage=1|7|30 (nur Admin) → Messpunkte alle 5 Min. (Dienste, CPU, RAM, °C, Spieler) + Verfügbarkeit in %
+//   GET  /api/admin/konten          (nur Admin) → alle Konten (Name, seit, zuletzt aktiv, Level, Minecraft-Name)
+//   POST /api/admin/konto/loeschen  (nur Admin) { name } → Konto samt Spielstand, Bestenliste, Sitzungen, Minecraft-Verknüpfung löschen (nie ein Admin)
 //   GET  /api/admin/prozesse        (nur Admin) → Programme, die gerade am meisten CPU/RAM brauchen
 //   GET/POST /api/admin/einstellungen (nur Admin) { autoUpdate?: bool, healthchecks?: 'https://hc-ping.com/…'|'' }
 //   POST /api/admin/adguard-listen  (nur Admin) { passwort } → empfohlene Sperrlisten (HaGeZi Pro + Threat Intelligence) in AdGuard eintragen
@@ -591,6 +593,17 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
     return r;
   }
 
+  // Konto vollständig entfernen: Spielstand, Tageskopien, Sitzungen, Bestenliste, Minecraft-Verknüpfung (Whitelist), Orte bleiben ohne Besitzer
+  async function kontoEntfernen(k) {
+    const vor = dateiname(k) + '-';
+    fs.rmSync(path.join(daten, 'staende', dateiname(k) + '.json'), { force: true });
+    for (const f of fs.readdirSync(path.join(daten, 'archiv'))) if (f.startsWith(vor)) fs.rmSync(path.join(daten, 'archiv', f), { force: true });
+    Object.keys(sitzungen).forEach((h) => { if (sitzungen[h].schluessel === k) delete sitzungen[h]; });
+    if (zugang.konten[k]) { const z = zugang.konten[k]; delete zugang.konten[k]; zugangSpeichern(); try { await whitelistSetzen(z.mc, z.uuid, false); } catch (e) { /* egal */ } }
+    delete bestenliste[k]; delete konten[k];
+    schreiben('konten.json', konten); schreiben('sitzungen.json', sitzungen); schreiben('bestenliste.json', bestenliste);
+  }
+
   async function bearbeiten(req, res) {
     const url = new URL(req.url, 'http://x'), weg = url.pathname.replace(/^.*?\/api\//, '/');
     // hinter Caddy: der echte Anschluss steht im letzten X-Forwarded-For-Eintrag
@@ -965,6 +978,26 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
           return senden(res, 400, { fehler: 'Unbekannte Aktion.' });
         }
       }
+      if (weg === '/admin/konten' && m === 'GET') {
+        const zuletzt = {};
+        Object.values(sitzungen).forEach((x) => { zuletzt[x.schluessel] = Math.max(zuletzt[x.schluessel] || 0, x.zuletzt || x.erstellt || 0); });
+        const liste = Object.entries(konten).map(([x, kt]) => {
+          let stand = 0; try { stand = fs.statSync(path.join(daten, 'staende', dateiname(x) + '.json')).mtimeMs; } catch (e) { /* noch kein Spielstand */ }
+          const bl = bestenliste[x] || {};
+          return { name: kt.name, admin: admins.has(x), ich: x === k, erstellt: kt.erstellt || null, zuletzt: Math.max(stand, zuletzt[x] || 0) || null,
+            level: bl.level || null, xp: bl.xp || null, mc: zugang.konten[x] ? zugang.konten[x].mc : '' };
+        }).sort((p, q) => (q.zuletzt || 0) - (p.zuletzt || 0));
+        return senden(res, 200, { konten: liste });
+      }
+      if (weg === '/admin/konto/loeschen' && m === 'POST') {
+        const b = await koerper(req), ziel = schluessel(String(b.name || ''));
+        if (!konten[ziel]) return senden(res, 404, { fehler: 'Dieses Konto gibt es nicht.' });
+        if (admins.has(ziel)) return senden(res, 400, { fehler: 'Das Admin-Konto kann hier nicht gelöscht werden.' });
+        const name = konten[ziel].name;
+        await kontoEntfernen(ziel);
+        protokollUpdate('Konto gelöscht: ' + name);
+        return senden(res, 200, { geloescht: name });
+      }
       if (weg === '/admin/prozesse' && m === 'GET') {
         const l = await prozesseAbfragen().catch(() => null);
         if (!l) return senden(res, 502, { fehler: 'Konnte die Programme gerade nicht abfragen.' });
@@ -1055,13 +1088,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
     if (weg === '/konto/loeschen' && m === 'POST') {
       const b = await koerper(req), konto = konten[k];
       if (!PIN_RE.test(String(b.pin || '')) || !pinOk(konto, String(b.pin))) return senden(res, 401, { fehler: 'Die PIN stimmt nicht.' });
-      const vor = dateiname(k) + '-';
-      fs.rmSync(path.join(daten, standDatei), { force: true });
-      for (const f of fs.readdirSync(path.join(daten, 'archiv'))) if (f.startsWith(vor)) fs.rmSync(path.join(daten, 'archiv', f), { force: true });
-      Object.keys(sitzungen).forEach((h) => { if (sitzungen[h].schluessel === k) delete sitzungen[h]; });
-      if (zugang.konten[k]) { const z = zugang.konten[k]; delete zugang.konten[k]; zugangSpeichern(); try { await whitelistSetzen(z.mc, z.uuid, false); } catch (e) { /* egal */ } }
-      delete bestenliste[k]; delete konten[k];
-      schreiben('konten.json', konten); schreiben('sitzungen.json', sitzungen); schreiben('bestenliste.json', bestenliste);
+      await kontoEntfernen(k);
       res.setHeader('Set-Cookie', COOKIE + '=; Path=/; HttpOnly; SameSite=Lax; Max-Age=0');
       return senden(res, 200, {});
     }

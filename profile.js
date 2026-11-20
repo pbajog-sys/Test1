@@ -84,7 +84,25 @@ function zeigeWahl() {
     b.addEventListener('click', () => zeigeForm(null));
     grid.appendChild(b);
   }
+  // Aufräumen: alle anderen Profile auf einmal löschen (nur im Verwalten-Modus, wird mit dem Konto auf alle Geräte übertragen)
+  let auf = $('pwAufraeumen');
+  if (!auf) { auf = document.createElement('button'); auf.type = 'button'; auf.id = 'pwAufraeumen'; auf.className = 'pw-verwalten'; auf.addEventListener('click', profileAufraeumen); $('pwVerwalten').after(auf); }
+  const ich = p.liste.find((x) => x.id === p.aktiv);
+  auf.hidden = !(pwBearbeiten && ich && p.liste.length > 1);
+  if (ich) auf.textContent = '🧹 Nur „' + ich.name + '“ behalten';
   document.documentElement.style.overflow = 'hidden';
+}
+function profileAufraeumen() {
+  const p = profile(), ich = p.liste.find((x) => x.id === p.aktiv);
+  if (!ich) return;
+  const weg = p.liste.filter((x) => x.id !== ich.id);
+  if (!weg.length || !confirm('Alle anderen Profile löschen (' + weg.map((x) => x.name).join(', ') + ')?\n\nIhre Abzeichen und Rekorde gehen verloren. „' + ich.name + '“ bleibt, wie es ist.')) return;
+  p.liste = [ich];
+  saveJson(PROFIL_KEY, p);
+  weg.forEach((x) => { try { localStorage.removeItem(profilAblage(x.id)); } catch {} });
+  pwBearbeiten = false;
+  profilHub();
+  zeigeWahl();
 }
 
 function schliesseWahl() {

@@ -50,7 +50,7 @@
   main { padding: 16px clamp(14px, 2.4vw, 32px) 48px; display: flex; flex-direction: column; gap: 16px; }
   .spalte { display: contents; }
   .karte { background: var(--flaeche); border: 1px solid var(--linie); border-radius: var(--r); padding: 16px; min-width: 0; }
-  #dienste { order: 1; } #updates { order: 2; } #system { order: 3; } #verlaufKarte { order: 4; } #erweiterungen { order: 5; } #benachrichtigung { order: 6; } #protokolle { order: 7; }
+  #dienste { order: 1; } #updates { order: 2; } #system { order: 3; } #verlaufKarte { order: 4; } #erweiterungen { order: 5; } #konten { order: 6; } #benachrichtigung { order: 7; } #protokolle { order: 8; }
   @media (min-width: 1000px) {
     main { display: grid; grid-template-columns: minmax(0, 2fr) minmax(320px, 1fr); align-items: start; }
     .spalte { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
@@ -97,6 +97,12 @@
   .prozesse th { color: var(--muted); font-weight: 700; font-size: .78rem; }
   .prozesse td small { display: block; color: var(--muted); font-size: .74rem; }
   .prozesse .wir { color: var(--accent-hell); }
+  /* Konten */
+  .konto { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 8px 0; border-top: 1px solid var(--linie); }
+  .konto:first-child { border-top: 0; }
+  .konto b { display: block; color: var(--text); }
+  .konto small { color: var(--muted); font-size: .78rem; }
+  .konto button { padding: 6px 10px; font-size: .82rem; }
   /* Updates */
   .version { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .version code { font-size: 1.3rem; font-weight: 800; color: var(--accent-hell); }
@@ -200,6 +206,10 @@
     <div class="erw" id="erwAdguard"></div>
     <div class="erw" id="erwMinecraft"></div>
   </section>
+  <section class="karte" id="konten">
+    <h2>👥 Konten <small id="kontenZahl"></small></h2>
+    <div id="kontenListe" class="klein muted">…</div>
+  </section>
   <section class="karte" id="benachrichtigung">
     <h2>🔔 Bei Ausfall benachrichtigen</h2>
     <div id="hcInhalt"></div>
@@ -242,7 +252,7 @@ async function laden() {
   if (ich.status !== 200) return hinweis('Der Server ist gerade nicht erreichbar – startet er vielleicht neu? Die Seite versucht es gleich wieder.', true);
   if (!ich.json.admin) return hinweis('Die Server-Zentrale ist nur für den Admin. <a href="./">Zurück zur Spielekiste</a>');
   $('hinweis').hidden = true; $('inhalt').hidden = false;
-  await Promise.all([statusLaden(), systemLaden(), verlaufLaden(), protokoll()]);
+  await Promise.all([statusLaden(), systemLaden(), verlaufLaden(), protokoll(), kontenLaden()]);
 }
 function hinweis(html, nochmal) {
   $('inhalt').hidden = true; $('hinweis').hidden = false; $('hinweis').innerHTML = '<p>' + html + '</p>';
@@ -468,6 +478,26 @@ async function agListen() {
   info.innerHTML = '✓ ' + (r.json.neu.length ? 'Hinzugefügt: ' + r.json.neu.map(esc).join(', ') : 'Die Listen waren schon aktiv.')
     + '<br>Aktiv: ' + r.json.listen.filter((l) => l.an).map((l) => esc(l.name) + ' (' + l.regeln.toLocaleString('de-DE') + ')').join(' · ');
 }
+
+// ---------- Konten ----------
+async function kontenLaden() {
+  const r = await api('admin/konten').catch(() => ({ status: 0 }));
+  if (r.status !== 200) return;
+  const l = r.json.konten, datum = (ms) => (ms ? new Date(ms).toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric', year: '2-digit' }) : '–');
+  $('kontenZahl').textContent = '· ' + l.length;
+  $('kontenListe').innerHTML = l.map((x) => '<div class="konto"><div><b>' + esc(x.name) + (x.admin ? ' <span class="muted">· Admin</span>' : '') + '</b>'
+    + '<small>' + (x.level ? 'Level ' + x.level + ' · ' : '') + 'zuletzt aktiv ' + (x.zuletzt ? vor(x.zuletzt) : '–') + ' · seit ' + datum(x.erstellt) + (x.mc ? ' · ⛏️ ' + esc(x.mc) : '') + '</small></div>'
+    + (x.admin ? '' : '<button type="button" class="gefahr" data-konto="' + esc(x.name) + '">🗑️ Löschen</button>') + '</div>').join('') || 'Noch keine Konten.';
+}
+$('kontenListe').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-konto]'); if (!b) return;
+  const n = b.dataset.konto;
+  if (!confirm('Konto „' + n + '“ endgültig löschen?\n\nSpielstand, Bestenliste-Eintrag und Anmeldungen werden gelöscht' + ' – eine Minecraft-Freischaltung über die Seite wird zurückgenommen.')) return;
+  b.disabled = true;
+  const x = await api('admin/konto/loeschen', 'POST', { name: n }).catch(() => ({ status: 0 }));
+  melden(x.status === 200 ? '✓ Konto „' + n + '“ gelöscht' : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
+  kontenLaden(); statusLaden();
+});
 
 // ---------- Benachrichtigung (healthchecks.io) ----------
 function benachrichtigungZeigen() {
