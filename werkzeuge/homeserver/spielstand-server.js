@@ -23,6 +23,7 @@
 //   POST /api/admin/minecraft       (nur Admin) { aktion: 'freischalten'|'entfernen'|'start'|'stopp'|'neustart'|'einstellungen'|'neue-welt'|'karte'
 //                                    |'op'|'deop'|'kick'|'ban'|'pardon'|'befehl'|'plugin-suchen'|'plugin-installieren'|'plugin-entfernen', … }
 //   GET  /api/admin/verlauf?tage=1|7|30 (nur Admin) → Messpunkte alle 5 Min. (Dienste, CPU, RAM, °C, Spieler) + Verfügbarkeit in %
+//   GET  /api/admin/prozesse        (nur Admin) → Programme, die gerade am meisten CPU/RAM brauchen
 //   GET/POST /api/admin/einstellungen (nur Admin) { autoUpdate?: bool, healthchecks?: 'https://hc-ping.com/…'|'' }
 //   POST /api/admin/adguard-listen  (nur Admin) { passwort } → empfohlene Sperrlisten (HaGeZi Pro + Threat Intelligence) in AdGuard eintragen
 //   POST /api/admin/erweiterung     (nur Admin) { name: 'adguard', passwort } bzw. { name: 'minecraft', eula: true } → startet ein fest eingebautes Installationsskript
@@ -141,6 +142,11 @@ const SYSTEM_WERTE = "$j = (Get-Process java -ErrorAction SilentlyContinue | Mea
   + "; @{ javaMB = [math]::Round($j / 1MB); tempC = $(if ($t -ne $null) { [math]::Round($t) } else { $null }); akku = $(if ($b) { [int]$b.EstimatedChargeRemaining } else { $null })"
   + "; netz = $(if ($b) { $b.BatteryStatus -ne 1 } else { $true }); diskFreiGB = [math]::Round($d.Free / 1GB, 1); laufzeitStd = [math]::Round($u.TotalHours, 1)"
   + "; takt = $(if ($p) { [int]$p } else { $null }) } | ConvertTo-Json -Compress";
+const PROZESSE = "$k = (Get-CimInstance Win32_ComputerSystem).NumberOfLogicalProcessors"
+  + "; Get-CimInstance Win32_PerfFormattedData_PerfProc_Process | Where-Object { $_.Name -notin '_Total','Idle' }"
+  + " | ForEach-Object { [pscustomobject]@{ n = ($_.Name -replace '#\\d+$',''); c = [double]$_.PercentProcessorTime / $k; r = [double]$_.WorkingSetPrivate / 1MB } }"
+  + " | Group-Object n | ForEach-Object { @{ name = $_.Name; cpu = [math]::Round(($_.Group | Measure-Object c -Sum).Sum, 1); ramMB = [math]::Round(($_.Group | Measure-Object r -Sum).Sum); anzahl = $_.Count } }"
+  + " | Sort-Object { -$_.cpu - $_.ramMB / 100000 } | Select-Object -First 40 | ConvertTo-Json -Compress";
 // ---------- Steuerung (nur Windows): fest eingebaute Aktionen, nie Befehle aus der Anfrage ----------
 const PS = (befehl, timeout = 10000) => new Promise((ok) => {
   if (process.platform !== 'win32') return ok(null);
@@ -194,10 +200,15 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
     const u = t.textures && t.textures.SKIN && t.textures.SKIN.url; if (!u || !/^https?:\/\/textures\.minecraft\.net\//.test(u)) throw new Error('kein Skin');
     const b = await fetch(u); if (!b.ok) throw new Error('Skin ' + b.status); return Buffer.from(await b.arrayBuffer());
   }, lanIp = LAN_IP, aufgabeAbfragen = AUFGABE_ABFRAGEN,
-  diensteAbfragen = DIENSTE_ABFRAGEN, aktionStarten = AKTION_STARTEN } = {}) {
+  diensteAbfragen = DIENSTE_ABFRAGEN, aktionStarten = AKTION_STARTEN, prozesseAbfragen = () => PS(PROZESSE, 20000) } = {}) {
+  // PowerShell zu starten kostet auf schwachen Laptops jedes Mal spürbar CPU → Abfragen 30 s merken (auch bei mehreren offenen Seiten)
+  const merken = (fn, ms = 30000) => { let zeit = 0, wert = null, laeuft = null;
+    return () => { if (laeuft) return laeuft; if (wert && jetzt() - zeit < ms) return Promise.resolve(wert);
+      laeuft = Promise.resolve().then(fn).then((w) => { wert = w; zeit = jetzt(); return w; }).finally(() => { laeuft = null; }); return laeuft; }; };
+  diensteAbfragen = merken(diensteAbfragen); systemWerte = merken(systemWerte); aufgabeAbfragen = merken(aufgabeAbfragen);
   let letzteAktion = 0;
   const letzteErweiterung = {};   // pro Erweiterung: wann zuletzt gestartet
-  let pruefCache = null;
+  let pruefCache = null, cpuSystemStand = null;
   let letztesUpdate = 0;
   const admins = new Set([].concat(admin).filter(Boolean).map((n) => String(n).normalize('NFC').toLowerCase()));
   if (!daten) throw new Error('Datenordner fehlt');
@@ -786,8 +797,11 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
         const os = require('os'), ordner = basis || path.dirname(daten);
         // CPU-Last: zwei Messungen im Abstand von 400 ms
         const zeiten = () => os.cpus().reduce((a, c) => { const t = c.times; a.ruhe += t.idle; a.alle += t.user + t.nice + t.sys + t.idle + t.irq; return a; }, { ruhe: 0, alle: 0 });
-        const z1 = zeiten(); await new Promise((ok) => setTimeout(ok, 400)); const z2 = zeiten();
-        const cpu = Math.round(100 * (1 - (z2.ruhe - z1.ruhe) / Math.max(1, z2.alle - z1.alle)));
+        // Schnitt seit der letzten Abfrage (≥ 5 s, gemessen bevor PowerShell startet) – sonst kurz 1 s messen
+        let z1 = cpuSystemStand && jetzt() - cpuSystemStand.zeit >= 5000 ? cpuSystemStand : null;
+        if (!z1) { z1 = zeiten(); await new Promise((ok) => setTimeout(ok, 1000)); }
+        const z2 = zeiten(); cpuSystemStand = Object.assign({ zeit: jetzt() }, z2);
+        const cpu = Math.max(0, Math.min(100, Math.round(100 * (1 - (z2.ruhe - z1.ruhe) / Math.max(1, z2.alle - z1.alle)))));
         let platte = null; try { const st = fs.statfsSync(ordner); platte = { frei: st.bavail * st.bsize, gesamt: st.blocks * st.bsize }; } catch (e) { /* ältere Node-Version */ }
         const w = (await diensteAbfragen()) || {};
         return senden(res, 200, { laeuftSeit: Math.round(os.uptime()), ram: { frei: os.freemem(), gesamt: os.totalmem() }, cpu, platte, akku: w.akku ?? null, netz: w.netz ?? null,
@@ -956,6 +970,11 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
           }
           return senden(res, 400, { fehler: 'Unbekannte Aktion.' });
         }
+      }
+      if (weg === '/admin/prozesse' && m === 'GET') {
+        const l = await prozesseAbfragen().catch(() => null);
+        if (!l) return senden(res, 502, { fehler: 'Konnte die Programme gerade nicht abfragen.' });
+        return senden(res, 200, { prozesse: [].concat(l).filter(Boolean) });
       }
       if (weg === '/admin/verlauf' && m === 'GET') {
         const tage = [1, 7, 30].includes(Number(url.searchParams.get('tage'))) ? Number(url.searchParams.get('tage')) : 1;

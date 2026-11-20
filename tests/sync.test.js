@@ -74,7 +74,7 @@ const erweiterungStarten = (skript, basis, env) => {
     p.push([jetzt - (288 - i) * 300000, caddy + '111-1', Math.round(18 + 14 * Math.sin(i / 20) + (i % 7)), 52 + (i % 11), 51 + Math.round(9 * Math.sin(i / 30)), i > 220 && i < 260 ? 1 + (i % 3) : 0]);
   }
   fs.writeFileSync(path.join(DATEN, 'verlauf.json'), JSON.stringify({ p })); }
-const api = erstelleServer({ autoTakt: 0, adguardApi, daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, erweiterungStarten, dnsPruefen: async () => adguardLaeuft, lanIp: () => '192.168.2.42',
+const api = erstelleServer({ autoTakt: 0, prozesseAbfragen: async () => [{ name: 'MsMpEng', cpu: 21.5, ramMB: 310, anzahl: 1 }, { name: 'java', cpu: 9.2, ramMB: 2900, anzahl: 1 }, { name: 'powershell', cpu: 3, ramMB: 120, anzahl: 4 }, { name: 'msedge', cpu: 0.4, ramMB: 850, anzahl: 12 }], adguardApi, daten: path.join(DATEN), basis: DATEN, admin: ['Anna'], github, erweiterungStarten, dnsPruefen: async () => adguardLaeuft, lanIp: () => '192.168.2.42',
   diensteAbfragen: async () => ({ dienste: { Caddy: 'Running', DuckDNS: 'Running', Update: 'Ready', AdGuard: 'fehlt' }, akku: 78, netz: true }),
   aktionStarten: (ps) => { aktionen.push(ps); },
   mcBefehl, aufgabeAusfuehren: async (art) => { mc.aufgaben.push(art); mc.laeuft = true; },
@@ -306,6 +306,10 @@ const caddy = http.createServer((req, res) => {
   ck('Server-Zentrale: System (CPU, RAM, °C, Akku am Netz, Konten) und Update-Aufgabe', /CPU/.test(kText) && /63 °C/.test(kText) && /78 %/.test(kText) && /am Netz/.test(kText) && /Konten/.test(kText)
     && /Datei nicht gefunden/.test(await A.textContent('#aufgabe')) && (await A.textContent('#version')) === 'aaaaaaa', kText.replace(/\s+/g, ' '));
   ck('Server-Zentrale: Verlauf als Kurve', (await A.$$('#kurve path.linie')).length === 1);
+  await A.click('#prozesseLos'); await ruhig(A, 800);
+  const pText = await A.textContent('#prozesse');
+  ck('Was braucht Leistung: Programme mit verständlichen Namen, Server-Programme markiert', /Windows Defender/.test(pText) && /21,5 %/.test(pText) && /Minecraft/.test(pText) && /2,8 GB/.test(pText) && /Microsoft Edge ×12/.test(pText) && (await A.$$('#prozesse td.wir')).length === 2, pText.replace(/\s+/g, ' ').slice(0, 200));
+  ck('Was braucht Leistung: Ben darf nicht', (await C.evaluate(async () => (await syApi('admin/prozesse')).status)) === 403);
   await A.screenshot({ path: path.join(os.tmpdir(), 'sync-zentrale.png'), fullPage: true });
   // Updates
   await A.click('#pruefen'); await ruhig(A, 800);

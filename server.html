@@ -90,6 +90,13 @@
   .balken { height: 5px; border-radius: 3px; background: var(--leer); margin-top: 6px; overflow: hidden; }
   .balken i { display: block; height: 100%; background: var(--accent); border-radius: 3px; }
 
+  /* Programme */
+  .prozesse { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: .86rem; }
+  .prozesse th, .prozesse td { padding: 6px 4px; border-bottom: 1px solid var(--linie); text-align: right; white-space: nowrap; }
+  .prozesse th:first-child, .prozesse td:first-child { text-align: left; white-space: normal; }
+  .prozesse th { color: var(--muted); font-weight: 700; font-size: .78rem; }
+  .prozesse td small { display: block; color: var(--muted); font-size: .74rem; }
+  .prozesse .wir { color: var(--accent-hell); }
   /* Updates */
   .version { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   .version code { font-size: 1.3rem; font-weight: 800; color: var(--accent-hell); }
@@ -185,7 +192,8 @@
   <section class="karte" id="system">
     <h2>🖥️ System <small id="rechnerName"></small></h2>
     <div class="kacheln" id="kacheln"></div>
-    <div class="zeile"><button type="button" class="gefahr" data-aktion="laptop-neustart">⏻ Laptop neu starten</button></div>
+    <div class="zeile"><button type="button" id="prozesseLos">🔍 Was braucht gerade Leistung?</button><button type="button" class="gefahr" data-aktion="laptop-neustart">⏻ Laptop neu starten</button></div>
+    <div id="prozesse"></div>
   </section>
   <section class="karte" id="erweiterungen">
     <h2>🧩 Erweiterungen</h2>
@@ -513,6 +521,35 @@ function kurveZeigen() {
 }
 $('metrik').addEventListener('click', (e) => { const b = e.target.closest('[data-m]'); if (!b) return; metrik = +b.dataset.m; $('metrik').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); if (verlauf) kurveZeigen(); });
 
+// ---------- Was braucht Leistung? ----------
+// [Anzeigename, Erklärung, gehört zum Server?]
+const PROGRAMME = {
+  java: ['Minecraft', 'der Minecraft-Server', true], javaw: ['Minecraft', 'der Minecraft-Server', true], node: ['Konto-Server', 'Spielekiste-Server', true],
+  caddy_windows_amd64: ['Webserver (Caddy)', 'liefert die Seite aus', true], caddy: ['Webserver (Caddy)', 'liefert die Seite aus', true], AdGuardHome: ['AdGuard', 'Werbeblocker', true],
+  powershell: ['PowerShell', 'Wachhund, DuckDNS und Abfragen dieser Seite', true], WmiPrvSE: ['Windows-Abfragen', 'beantwortet u. a. diese Seite', true],
+  MsMpEng: ['Windows Defender', 'Virenscanner – prüft neue Dateien'], MpDefenderCoreService: ['Windows Defender', 'Virenscanner'], NisSrv: ['Windows Defender', 'Netzwerkschutz'],
+  SearchIndexer: ['Windows-Suche', 'indexiert Dateien – auf einem Server unnötig'], SearchHost: ['Windows-Suche', 'Startmenü-Suche'],
+  TiWorker: ['Windows Update', 'installiert Updates'], TrustedInstaller: ['Windows Update', 'installiert Updates'], MoUsoCoreWorker: ['Windows Update', 'sucht Updates'], usocoreworker: ['Windows Update', 'sucht Updates'],
+  msedge: ['Microsoft Edge', 'Browser – Fenster offen?'], chrome: ['Google Chrome', 'Browser – Fenster offen?'], OneDrive: ['OneDrive', 'Cloud-Sync – auf dem Server unnötig'],
+  remoting_host: ['Chrome Remote Desktop', 'Fernzugriff'], Teams: ['Microsoft Teams', 'auf dem Server unnötig'], 'ms-teams': ['Microsoft Teams', 'auf dem Server unnötig'],
+  PCManager: ['Huawei PC Manager', 'Hersteller-Tool'], MateBookService: ['Huawei-Dienst', 'Hersteller-Tool'], HuaweiHiSuite: ['Huawei HiSuite', 'unnötig'],
+  explorer: ['Windows-Oberfläche', 'Desktop & Explorer'], dwm: ['Fensterdarstellung', 'Windows'], svchost: ['Windows-Dienste', 'viele kleine Systemdienste'], System: ['Windows-Kern', ''],
+  'Memory Compression': ['Speicher-Komprimierung', 'Windows: RAM wird knapp'], CompPkgSrv: ['Windows', 'Hintergrunddienst'], Widgets: ['Windows-Widgets', 'unnötig'], PhoneExperienceHost: ['Smartphone-Link', 'unnötig'],
+};
+$('prozesseLos').addEventListener('click', async () => {
+  const k = $('prozesseLos'), box = $('prozesse'); k.disabled = true; k.textContent = '⏳ Schaue nach …';
+  const r = await api('admin/prozesse').catch(() => ({ status: 0 }));
+  k.disabled = false; k.textContent = '🔍 Nochmal nachsehen';
+  if (r.status !== 200) { box.innerHTML = '<p class="klein">⚠️ ' + esc((r.json && r.json.fehler) || 'Hat nicht geklappt.') + '</p>'; return; }
+  const l = r.json.prozesse.slice().sort((a, b) => b.cpu - a.cpu || b.ramMB - a.ramMB).slice(0, 10);
+  const ramTop = r.json.prozesse.slice().sort((a, b) => b.ramMB - a.ramMB).slice(0, 5).filter((p) => !l.includes(p));
+  const zeile = (p) => { const i = PROGRAMME[p.name] || [p.name, '']; return '<tr><td' + (i[2] ? ' class="wir"' : '') + '>' + esc(i[0]) + (p.anzahl > 1 ? ' <span class="muted">×' + p.anzahl + '</span>' : '')
+    + '<small>' + esc(i[1] || p.name) + (i[2] ? ' · gehört zum Server' : '') + '</small></td><td>' + komma(p.cpu) + ' %</td><td>' + (p.ramMB >= 1024 ? komma(p.ramMB / 1024) + ' GB' : p.ramMB + ' MB') + '</td></tr>'; };
+  box.innerHTML = '<table class="prozesse"><thead><tr><th>Programm</th><th>CPU</th><th>RAM</th></tr></thead><tbody>' + l.map(zeile).join('')
+    + (ramTop.length ? '<tr><td colspan="3" class="muted" style="padding-top:12px">Viel Arbeitsspeicher:</td></tr>' + ramTop.map(zeile).join('') : '') + '</tbody></table>'
+    + '<p class="klein muted" style="margin:8px 0 0">Momentaufnahme. Blau = gehört zum Server. Kurzzeitig viel Defender oder Windows Update ist normal (z. B. nach einem Update).</p>';
+});
+
 // ---------- Steuerung & Protokolle ----------
 document.addEventListener('click', async (e) => {
   const b = e.target.closest('[data-aktion]'); if (!b) return;
@@ -533,7 +570,7 @@ async function protokoll() {
 $('protokollWahl').addEventListener('change', () => { $('protokoll').scrollTop = 1e9; protokoll(); });
 
 laden();
-setInterval(() => { if (!document.hidden && !$('inhalt').hidden) { statusLaden(); systemLaden(); protokoll(); } }, 15000);
+setInterval(() => { if (!document.hidden && !$('inhalt').hidden) { statusLaden(); systemLaden(); protokoll(); } }, 30000);
 setInterval(() => { if (!document.hidden && !$('inhalt').hidden) verlaufLaden(); }, 60000);
 addEventListener('resize', () => { if (verlauf) { dienstZeigen(); kurveZeigen(); } });
 </script>
