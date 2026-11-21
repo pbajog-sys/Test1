@@ -182,11 +182,16 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       }
       if (a.lp.length > 300) a.lp = a.lp.slice(-300);
     }
-    let masteryFehler = false;
+    let masteryFehler = '';
     if (masteryErneuern || !a.masteryZeit || jetzt() - a.masteryZeit > 864e5) {
-      const ms = await riot(plattform(acc.region) + '/lol/champion-mastery/v4/champion-masteries/by-puuid/' + acc.puuid + '/top?count=10');
-      if (ms.status === 200) { a.mastery = (ms.json || []).map((x) => ({ id: x.championId, p: x.championPoints, l: x.championLevel })); a.masteryZeit = jetzt(); }
-      else if (masteryErneuern) masteryFehler = true;
+      const ms = await riot(plattform(acc.region) + '/lol/champion-mastery/v4/champion-masteries/by-puuid/' + acc.puuid + '/top?count=10', true)
+        .catch((e) => { if (e.status === 401) throw e; return { status: e.status || 0 }; });
+      if (ms.status === 200 && Array.isArray(ms.json)) {
+        a.mastery = ms.json.map((x) => ({ id: x.championId, p: x.championPoints, l: x.championLevel }));
+        a.masteryZeit = jetzt();
+      } else if (masteryErneuern) {
+        masteryFehler = 'Champion-Meisterschaft: ' + (ms.status ? 'Riot HTTP ' + ms.status + '.' : 'Riot war nicht erreichbar.');
+      }
     }
     const idsPfad = regional(acc.region) + '/lol/match/v5/matches/by-puuid/' + acc.puuid + '/ids';
     const merkeIds = (ids) => { a.ids = [...new Set(a.ids.concat(ids))]; };
@@ -194,12 +199,12 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     // Ohne queue/type liefert Match-V5 alle Modi, auch neue Queues.
     const anzahl = a.ids.length && nachgeholt.includes('alle') ? 20 : 100;
     const ids = await riot(idsPfad + '?start=0&count=' + anzahl);
-    if (ids.status !== 200) throw new Error('Riot-Spieleliste konnte nicht geladen werden.');
+    if (ids.status !== 200) throw new Error('Spieleliste: Riot HTTP ' + ids.status + '.');
     merkeIds(ids.json || []);
     if (!nachgeholt.includes('alle')) nachgeholt.push('alle');
 
     // Pro Queue merken, damit ältere Installationen erneut nachholen und Fehler wiederholt werden.
-    for (const q of [450, ...MAYHEM_PVP_QUEUES]) {
+    for (const q of [420, 440, 450, ...MAYHEM_PVP_QUEUES]) {
       if (nachgeholt.includes(q)) continue;
       const mayhem = MAYHEM_PVP_QUEUES.includes(q);
       const r = await riot(idsPfad + '?queue=' + q + '&start=0&count=50', mayhem);
@@ -218,7 +223,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     for (const id of a.ids.filter((x) => spiele[x] && (spiele[x].x || 0) < 3 && !privateSpiele.has(x)).slice(0, 25)) {
       await spielHolen(acc.region, id);
     }
-    if (masteryFehler) acc.fehler = 'Riot hat die Champion-Meisterschaft gerade nicht geliefert.';
+    if (masteryFehler) acc.fehler = masteryFehler;
     else delete acc.fehler;
     a.geholt = jetzt(); speichern();
   }
@@ -230,7 +235,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       const nurTeam = nurKonto && String(nurKonto).startsWith('prime:') ? String(nurKonto).slice(6) : null;
       for (const [konto, liste] of Object.entries(zustand.personen)) {
         if (nurTeam || (nurKonto && konto !== nurKonto)) continue;
-        for (const acc of liste) { try { await accountHolen(acc, masteryErneuern); } catch (e) { if (e.status === 401 || e.status === 403) throw e; acc.fehler = e.message; } }
+        for (const acc of liste) { try { await accountHolen(acc, masteryErneuern); } catch (e) { if (e.status === 401 || e.status === 403) throw e; acc.fehler = e.status ? 'Riot vorübergehend nicht erreichbar (HTTP ' + e.status + ').' : (e.message.startsWith('Spieleliste:') ? e.message : 'Riot war beim Import nicht erreichbar.'); } }
       }
       if (!nurKonto || nurTeam) await prime.allesHolen(nurTeam);
       letzterLauf = jetzt();
@@ -462,7 +467,9 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     }
     if (weg === '/lol/person' && m === 'GET') {
       const filter = FILTER[url.searchParams.get('filter')] ? url.searchParams.get('filter') : 'alle', id = String(url.searchParams.get('id') || '');
-      const echt = echtePersonen(k), echteSpiele = Object.values(spiele), nutzeEcht = !!key() && echteSpiele.length > 0;
+      const echt = echtePersonen(k), echteSpiele = Object.values(spiele);
+      // Rang und Meisterschaft sind unabhängig vom Spielverlauf verfügbar.
+      const nutzeEcht = !!key() && (echteSpiele.length > 0 || echt.some((p) => p.id === id && p.puuids.length));
       const quelle = nutzeEcht ? { personen: echt, spiele: echteSpiele } : demo();
       const alle = quelle.personen.concat(autoMitspieler(quelle.personen, quelle.spiele)), person = alle.find((p) => p.id === id);
       if (!person) return senden(res, 404, { fehler: 'Diese Person gibt es nicht.' });
@@ -554,7 +561,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     }
     if (weg === '/lol/auto/einblenden' && m === 'POST') { zustand.ausgeblendet = {}; sofortSpeichern(); return senden(res, 200, {}); }
     if (weg === '/lol/aktualisieren' && m === 'GET') {
-      return senden(res, 200, { stand: manuelleLaeufe.get(k) || 'unbekannt' });
+      return senden(res, 200, manuelleLaeufe.get(k) || { stand: 'unbekannt' });
     }
     if (weg === '/lol/aktualisieren' && m === 'POST') {
       if (!key()) return senden(res, 409, { fehler: 'Es ist noch kein Riot-API-Key eingetragen – bis dahin gibt es Beispieldaten.' });
@@ -563,11 +570,17 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       if (!(zustand.personen[k] || []).length) return senden(res, 409, { fehler: 'Verknüpfe zuerst deinen Riot-Account auf der LoL-Seite.' });
       if (laeuft) return senden(res, 409, { fehler: 'Ein Riot-Import läuft bereits. Versuche es gleich noch einmal.' });
       letzteAktualisierung[k] = jetzt();
-      manuelleLaeufe.set(k, 'laeuft');
+      manuelleLaeufe.set(k, { stand: 'laeuft' });
       allesHolen(k, true).then((ok) => {
         const konten = zustand.personen[k] || [];
-        manuelleLaeufe.set(k, ok && konten.length && konten.every((acc) => acc.puuid && !acc.fehler) ? 'fertig' : 'fehler');
-      }, () => manuelleLaeufe.set(k, 'fehler'));
+        const fehler = [...new Set(konten.map((acc) => acc.fehler).filter(Boolean))];
+        if (ok && konten.length && konten.every((acc) => acc.puuid && !acc.fehler)) {
+          manuelleLaeufe.set(k, { stand: 'fertig' });
+        } else {
+          const meldung = fehler.join(' ') || (keyStatus === 'ungueltig' ? 'Riot hat den API-Key abgelehnt.' : '');
+          manuelleLaeufe.set(k, { stand: 'fehler', meldung });
+        }
+      }, () => manuelleLaeufe.set(k, { stand: 'fehler' }));
       return senden(res, 200, { gestartet: true });
     }
     const bm = /^\/lol\/bild\/(champion|profil|item|spell|rune)\/([A-Za-z0-9]{1,40})\.png$/.exec(weg);

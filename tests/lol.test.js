@@ -177,10 +177,32 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     ck('Key im falschen Format → 400', (await anfrage('admin/lol', 'POST', { key: 'abc' }, anna)).status === 400);
     const falsch = await anfrage('admin/lol', 'POST', { key: 'RGAPI-00000000-0000-4000-8000-000000000000' }, anna);
     ck('abgelaufener Key → 400 „Riot lehnt ab“, wird nicht gespeichert', falsch.status === 400 && /lehnt/.test(falsch.json.fehler) && !fs.existsSync(path.join(DATEN, 'riot-key.txt')) && (await anfrage('admin/lol', 'GET', null, anna)).json.key === 'fehlt', falsch.text);
+    let importErreicht, importFortsetzen;
+    const wartetAufDetails = new Promise((resolve) => { importErreicht = resolve; });
+    const pause = new Promise((resolve) => { importFortsetzen = resolve; });
+    riotHolenAktuell = async (url, key) => {
+      if (url.endsWith('/matches/EUW1_0')) { importErreicht(); await pause; }
+      return riotEcht(url, key);
+    };
     const gut = await anfrage('admin/lol', 'POST', { key: KEY }, anna);
     ck('gültiger Key gespeichert', gut.status === 200 && gut.json.key === 'ok' && fs.readFileSync(path.join(DATEN, 'riot-key.txt'), 'utf8').trim() === KEY, gut.text);
+    try {
+      await Promise.race([wartetAufDetails, warte(3000)]);
+      const profile = await Promise.all([
+        anfrage('lol/person?id=anna&filter=alle', 'GET', null, anna),
+        anfrage('lol/person?id=ben&filter=alle', 'GET', null, ben)
+      ]);
+      const ohneSpiele = profile.find((r) => r.status === 200 && r.json.quelle === 'riot' && r.json.mastery[0]?.c === 'Ahri');
+      ck('Echtes Profil zeigt Meisterschaft bereits vor dem ersten gespeicherten Match',
+        ohneSpiele?.json.filterSpiele === 0, JSON.stringify(profile.map((r) => [r.status, r.json.quelle, r.json.filterSpiele])));
+    } finally {
+      importFortsetzen();
+      riotHolenAktuell = riotEcht;
+    }
     const st = await bisFertig(anna);
     ck('danach alle wartenden Accounts geholt (3 Accounts, 6 Spiele)', st && st.accounts === 3 && st.spiele === 6 && st.key === 'ok', JSON.stringify(st));
+
+    ck('Nachimport fragt Solo/Duo und Flex gezielt ab', [420, 440].every((q) => riotAufrufe.some((url) => url.includes('/ids?queue=' + q + '&'))));
 
     console.log('Echte Auswertung');
     d = await anfrage('lol/daten', 'GET', null, ben);
@@ -203,6 +225,14 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
       (await anfrage('lol/aktualisieren', 'GET', null, anna)).json.stand === 'fertig'
       && neu.some((url) => url.includes('champion-mastery/v4') && url.includes('P-ANNA')));
     ck('beim Aktualisieren keine schon bekannten Spiele neu geholt', neu.length > 0 && !neu.some((u) => /matches\/EUW1_/.test(u)), neu.join(' '));
+    riotZeit += 120001;
+    riotHolenAktuell = (url, key) => url.includes('champion-mastery/v4') ? Promise.resolve({ status: 403 }) : riotEcht(url, key);
+    const teilImport = await anfrage('lol/aktualisieren', 'POST', {}, anna);
+    const teilStand = await bisFertig(anna);
+    const teilMeldung = await anfrage('lol/aktualisieren', 'GET', null, anna);
+    ck('Meisterschafts-403 meldet den betroffenen Datentyp und lässt Match-Import und Key aktiv',
+      teilImport.status === 200 && teilStand?.key === 'ok' && teilMeldung.json.stand === 'fehler' && /Champion-Meisterschaft: Riot HTTP 403/.test(teilMeldung.json.meldung));
+    riotHolenAktuell = riotEcht;
     ck('Account unbekannt bei Riot → 404', (await anfrage('lol/account', 'POST', { riotId: 'Gibtsnicht#EUW', region: 'euw1' }, cara)).status === 404);
 
     console.log('Key-Wechsel (Riot verschlüsselt PUUIDs pro Key)');

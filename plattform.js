@@ -542,7 +542,7 @@ function skDuoZeigen(vorschau) {
   });
 }
 
-function skZeigeLol(daten, profil) {
+function skZeigeLol(daten, profil, kartenModus = 'Kluft') {
   if (!profil || profil.quelle !== 'riot') {
     return ['<p>' + ((daten.meine || []).length ? 'Deine Profilwerte sind noch nicht verfügbar.' : 'Verknüpfe deinen Riot-Account für deine persönliche Übersicht.') + '</p>', ''];
   }
@@ -553,7 +553,9 @@ function skZeigeLol(daten, profil) {
   const rangKarte = (titel, rang, unter) => {
     const abzeichen = rang ? '<img src="bilder/raenge/' + rang.tier.toLowerCase() + '.webp" width="68" height="68" alt="">' : '';
     const text = rang ? skRangNamen[rang.tier] + (raenge.indexOf(rang.tier) < 7 && rang.div ? ' ' + rang.div : '') : 'Ohne Rang';
-    return '<div class="sk-rangkarte"><small>' + titel + '</small><div class="sk-rangbild">' + (abzeichen || '<span aria-hidden="true">◇</span>') + '</div><strong>' + skText(text) + '</strong><small>' + (unter || (rang ? skText(rang.lp) + ' LP' : '')) + '</small></div>';
+    const bilanz = !unter && Number.isFinite(rang?.w) && Number.isFinite(rang?.l) && rang.w + rang.l > 0
+      ? '<small>' + skZahl(rang.w) + ' S · ' + skZahl(rang.l) + ' N</small>' : '';
+    return '<div class="sk-rangkarte"><small>' + titel + '</small><div class="sk-rangbild">' + (abzeichen || '<span aria-hidden="true">◇</span>') + '</div><strong>' + skText(text) + '</strong><small>' + (unter || (rang ? skText(rang.lp) + ' LP' : '')) + '</small>' + bilanz + '</div>';
   };
   const konto = accounts.reduce((bestes, a) => Number(a.level) > (Number(bestes.level) || 0) ? a : bestes, {});
   const icon = Number(konto.icon);
@@ -562,25 +564,26 @@ function skZeigeLol(daten, profil) {
   const serie = (profil.spiele || []).findIndex((m) => !m.w);
   const siegeInFolge = serie < 0 ? (profil.spiele || []).length : serie;
   const lolFakten = [
-    profil.filterSpiele > 0 ? skKennzahl(skZahl(profil.filterSpiele), 'Kluft-Spiele im Verlauf') : '',
+    profil.filterSpiele > 0 ? skKennzahl(skZahl(profil.filterSpiele), 'Spiele im Verlauf · ' + kartenModus) : '',
     siegeInFolge > 1 ? skKennzahl(skZahl(siegeInFolge), 'Siege in Folge') : '',
     profil.champs && profil.champs[0] ? skKennzahl(skZahl(profil.champs[0].g), 'Spiele mit ' + skText(profil.champs[0].c)) : ''
   ].filter(Boolean).join('');
   const solo = rangFuer('solo'), flex = rangFuer('flex');
   const bilanz = profil.leistung || {}, letzte = (profil.spiele || []).slice(0, 4);
   const champions = (profil.mastery || []).slice(0, 3);
+  const masteryHinweis = accounts.find((a) => a.fehler)?.fehler || 'Riot hat für dieses Profil keine Meisterschaftsdaten geliefert.';
   const champBild = (name, groesse) => /^[a-z0-9]+$/i.test(name) ? '<img src="api/lol/bild/champion/' + encodeURIComponent(name) + '.png" alt="" width="' + groesse + '" height="' + groesse + '">' : '';
   return ['<div class="sk-lol-raenge">'
     + '<div class="sk-rangkarte"><small>Riot-Kontostufe</small><div class="sk-konto-bild">' + kontoBild + '<b aria-label="Level ' + skText(konto.level || 'unbekannt') + '">' + skText(konto.level || '–') + '</b></div>' + (kontoName ? '<strong>' + skText(kontoName) + '</strong>' : '') + '</div>'
     + rangKarte('Solo/Duo', solo) + rangKarte('Flex', flex) + rangKarte('5er-Gruppe', flex, 'Flex-Wertung')
     + '</div>'
-    + '<p class="sk-lol-form">' + (bilanz.alle ? '<strong>' + Number(bilanz.alle.wr) + ' %</strong> Siege in der Kluft' : 'Noch keine Kluft-Spiele') + (bilanz.neu ? ' <span>· <b>' + Number(bilanz.neu.wr) + ' %</b> in den letzten ' + Number(bilanz.neu.g) + ' Spielen</span>' : '') + '</p>'
-    + (letzte.length ? '<p class="sk-label sk-letzte-label">Letzte Spiele · Kluft</p><ul class="sk-lol-letzte">' + letzte.map((m) => {
+    + '<p class="sk-lol-form">' + (bilanz.alle ? '<strong>' + Number(bilanz.alle.wr) + ' %</strong> Siege · ' + kartenModus : 'Noch keine öffentlichen Spiele im gespeicherten Verlauf') + (bilanz.neu ? ' <span>· <b>' + Number(bilanz.neu.wr) + ' %</b> in den letzten ' + Number(bilanz.neu.g) + ' Spielen</span>' : '') + '</p>'
+    + (letzte.length ? '<p class="sk-label sk-letzte-label">Letzte Spiele · ' + kartenModus + '</p><ul class="sk-lol-letzte">' + letzte.map((m) => {
       const spieler = (m.p || [])[m.ich] || {}, datum = new Date(m.t);
       const zeit = m.t && Number.isFinite(datum.getTime()) ? '<time datetime="' + datum.toISOString() + '">' + datum.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', timeZone: SK_ZONE }) + '</time>' : '';
       return '<li class="' + (m.w ? 'sk-sieg' : 'sk-niederlage') + '">' + champBild(spieler.c, 36) + '<span><b>' + (m.w ? 'Sieg' : 'Niederlage') + '</b><small>' + skText(spieler.c) + '</small></span>' + zeit + '</li>';
     }).join('') + '</ul>' : ''),
-    '<div><h3>Champion-Meisterschaft</h3>' + (champions.length ? '<ul class="sk-meisterschaft">' + champions.map((c) => '<li><span>' + champBild(c.c, 54) + '<b aria-label="Meisterschaftsstufe ' + skText(c.l) + '">' + skText(c.l) + '</b></span><small>' + skText(c.c) + '</small></li>').join('') + '</ul>' : '<p>Noch keine Meisterschaftsdaten.</p>') + '</div>'
+    '<div><h3>Champion-Meisterschaft</h3>' + (champions.length ? '<ul class="sk-meisterschaft">' + champions.map((c) => '<li><span>' + champBild(c.c, 54) + '<b aria-label="Meisterschaftsstufe ' + skText(c.l) + '">' + skText(c.l) + '</b></span><small>' + skText(c.c) + '</small></li>').join('') + '</ul>' : '<p>' + skText(masteryHinweis) + '</p>') + '</div>'
     + '<div><div class="sk-duokopf"><h3>Siegquote mit Mitspielern</h3><select id="skDuoModus" aria-label="Spielmodus für Mitspieler-Siegquote">'
     + [...skDuoModi].filter(([id]) => id !== 'mayhem' || daten.mayhemVerfuegbar).map(([id, name]) => '<option value="' + id + '">' + name + '</option>').join('')
     + '</select></div><div id="skDuoErgebnis" aria-live="polite"></div></div>'
@@ -644,7 +647,7 @@ async function skLolAktualisieren(vorschau) {
         break;
       }
       if (status?.stand === 'fehler') {
-        vorschau.lolMeldung = 'Riot konnte die Daten gerade nicht vollständig liefern.';
+        vorschau.lolMeldung = status.meldung || 'Riot konnte die Daten gerade nicht vollständig liefern.';
         break;
       }
     }
@@ -706,10 +709,19 @@ function skGrossKacheln() {
     vorschau.lolZeit = Date.now();
     laden('lol', skDienstJson('lol/daten?filter=alle').then(async (d) => {
       if (!d) return '';
-      const profil = d.quelle === 'riot' && d.ichId
-        ? await skDienstJson('lol/person?id=' + encodeURIComponent(d.ichId) + '&filter=alle') : null;
+      const profilPfad = 'lol/person?id=' + encodeURIComponent(d.ichId);
+      let profil = d.ichId && (d.quelle === 'riot' || d.meine?.length)
+        ? await skDienstJson(profilPfad + '&filter=alle') : null;
+      let kartenModus = 'Kluft';
+      if (profil?.quelle === 'riot' && !profil.filterSpiele && !profil.spiele?.length && d.quelle === 'riot') {
+        const weitere = await skDienstJson(profilPfad + '&filter=jeder').catch(() => null);
+        if (weitere?.filterSpiele) {
+          profil = weitere;
+          kartenModus = 'Öffentliche Modi';
+        }
+      }
       vorschau.duos.set('alle', { html: skDuoErgebnis(d, 'alle'), zeit: Date.now() });
-      return skZeigeLol(d, profil);
+      return skZeigeLol(d, profil, kartenModus);
     }));
   }
   if (Date.now() - vorschau.mcZeit >= 60000) {
