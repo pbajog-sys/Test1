@@ -123,6 +123,9 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     ck('Beispiel: 6 Teams, 60 Turnierspiele, Meta, Matchups, Synergien', plD.status === 200 && plD.json.quelle === 'demo' && plD.json.teams.length === 6 && plD.json.spiele === 60 && plD.json.meta.length > 20 && Object.keys(plD.json.matchup).length > 50 && Object.keys(plD.json.synergie).length > 50);
     const t0 = plD.json.teams[0];
     ck('Beispiel-Team: Bilanz, Seiten, Spieler mit Rolle/Pool/Mastery, Bans, Drafts', t0.g === t0.blau[0] + t0.rot[0] && t0.spieler.length === 5 && t0.spieler.every((x) => x.rolle && x.champs.length && x.mastery.length) && t0.bans.length && t0.gebannt.length && t0.drafts[0].wir.length === 5 && t0.drafts[0].gegner);
+    const { riotIdsAusText } = require('../werkzeuge/homeserver/lol-prime.js');
+    ck('Riot-IDs aus op.gg-Link („team on op.gg“)', JSON.stringify(riotIdsAusText('https://op.gg/multisearch/euw?summoners=InP%20Migel%23EUW%2CInP%20D%C3%BCppi%23EUW%2CTobi+%C5%A0ama%23EUW')) === JSON.stringify(['InP Migel#EUW', 'InP Düppi#EUW', 'Tobi Šama#EUW']));
+    ck('Riot-IDs aus kopierter Liste (Anzeigename davor wird weggeschnitten)', JSON.stringify(riotIdsAusText('electricBobby InP Bobby#EUW\nDueppi InP Düppi#EUW\nInP Migel#EUW\nTop: Solo#EUW')) === JSON.stringify(['InP Bobby#EUW', 'InP Düppi#EUW', 'InP Migel#EUW', 'Solo#EUW']));
     ck('Team ohne Namen → 400', (await anfrage('lol/prime/team', 'POST', { name: '', text: 'A#EUW' }, ben)).status === 400);
     ck('zu wenige Riot-IDs → 400', (await anfrage('lol/prime/team', 'POST', { name: 'Zwei', text: 'Eins Spieler#EUW\nZwei Spieler#EUW' }, ben)).status === 400);
 

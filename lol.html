@@ -481,9 +481,9 @@
         <div class="zwei">
           <section class="karte">
             <h2 id="plFormTitel">➕ Team eintragen</h2>
-            <p class="klein muted" style="margin:-6px 0 10px">Auf primeleague.gg die Teamseite öffnen, den Kader (Spielerliste) markieren, kopieren und unten einfügen – die Riot-IDs (Name#Tag) werden automatisch herausgesucht.</p>
+            <p class="klein muted" style="margin:-6px 0 10px">Am einfachsten: auf primeleague.gg ein Spiel des Teams öffnen, beim Team auf <b>„team on op.gg“</b> lange drücken bzw. Rechtsklick → <b>Link kopieren</b> und unten einfügen. Es gehen auch kopierte Spielerlisten mit Riot-IDs (Name#Tag) – sie werden automatisch herausgesucht.</p>
             <div class="pl-form"><input id="plName" placeholder="Teamname" maxlength="40" autocomplete="off"><input id="plKurz" placeholder="Kürzel" maxlength="6" autocomplete="off">
-              <textarea id="plText" rows="7" placeholder="Kader hier einfügen, z. B.&#10;InP Migel#EUW&#10;InP John#EUW&#10;…"></textarea></div>
+              <textarea id="plText" rows="7" placeholder="op.gg-Link oder Spielerliste einfügen, z. B.&#10;https://op.gg/multisearch/euw?summoners=…&#10;oder: InP Migel#EUW, InP John#EUW, …"></textarea></div>
             <p class="klein" id="plVorschau"></p>
             <div class="zeile-knoepfe"><button type="button" class="haupt" id="plSpeichern">Team speichern</button><button type="button" id="plAbbrechen" hidden>Abbrechen</button></div>
           </section>
@@ -832,6 +832,8 @@ const ROLLE_REIHE = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'];
 const RIOT_ID_IM_TEXT = /([^\t\n\r#|·,;]{3,40})#([A-Za-z0-9]{2,5})(?![A-Za-z0-9])/gu;
 function riotIdsAusText(text) {   // gleiche Regeln wie der Server (lol-prime.js)
   const roh = [];
+  // Links (z. B. op.gg-Mehrfachsuche „team on op.gg“ von primeleague.gg) entschlüsseln: %23 → #, Kommas/Parameter → neue Zeile
+  text = String(text || '').replace(/https?:\/\/\S+/g, (u) => { try { return '\n' + decodeURIComponent(u.replace(/\+/g, ' ')).replace(/[?&=,]/g, '\n') + '\n'; } catch (e) { return u; } });
   for (const zeile of String(text || '').split(/\r?\n/)) {
     for (const m of zeile.matchAll(RIOT_ID_IM_TEXT)) {
       const alle = m[1].trim().split(/\s+/), w = [];   // so viele Wörter vom Ende, wie in 16 Zeichen passen

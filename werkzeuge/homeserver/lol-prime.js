@@ -20,6 +20,8 @@ const RIOT_ID_IM_TEXT = /([^\t\n\r#|·,;]{3,40})#([A-Za-z0-9]{2,5})(?![A-Za-z0-9
 // Riot-IDs aus eingefügtem Text (z. B. Kader von primeleague.gg): je Fundstelle die letzten Wörter vor dem # (max. 16 Zeichen)
 function riotIdsAusText(text) {
   const roh = [];
+  // Links (z. B. op.gg-Mehrfachsuche „team on op.gg“ von primeleague.gg) entschlüsseln: %23 → #, Kommas/Parameter → neue Zeile
+  text = String(text || '').replace(/https?:\/\/\S+/g, (u) => { try { return '\n' + decodeURIComponent(u.replace(/\+/g, ' ')).replace(/[?&=,]/g, '\n') + '\n'; } catch (e) { return u; } });
   for (const zeile of String(text || '').split(/\r?\n/)) {
     for (const m of zeile.matchAll(RIOT_ID_IM_TEXT)) {
       const alle = m[1].trim().split(/\s+/), w = [];   // so viele Wörter vom Ende, wie in 16 Zeichen passen
