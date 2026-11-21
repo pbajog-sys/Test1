@@ -4774,3 +4774,8 @@ a.bb-datei { text-decoration: none; }
 @media (max-width: 640px) {
   .spiel-ton-schwebend { bottom: calc(72px + env(safe-area-inset-bottom)); }
 }
+
+@media (max-width: 640px) {
+  .hub-leiste .hub-knoepfe { position: relative; }
+  .hub-leiste .spiel-ton { position: static; }
+}
