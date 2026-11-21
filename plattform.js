@@ -502,6 +502,7 @@ function skDashboard() {
 // Die Vorschau gehört zur aktiven Sitzung. Antworten einer früheren Anmeldung verwerfen.
 let skDienstVorschau = null;
 const skText = (wert) => String(wert ?? '').replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' })[c]);
+const skZahl = (wert) => Number(wert).toLocaleString('de-DE');
 const skRangNamen = { IRON: 'Eisen', BRONZE: 'Bronze', SILVER: 'Silber', GOLD: 'Gold', PLATINUM: 'Platin', EMERALD: 'Smaragd', DIAMOND: 'Diamant', MASTER: 'Meister', GRANDMASTER: 'Großmeister', CHALLENGER: 'Herausforderer' };
 const skKennzahl = (wert, text) => '<span><strong>' + skText(wert) + '</strong><small>' + text + '</small></span>';
 
@@ -518,7 +519,17 @@ function skZeigeLol(daten, profil) {
     const text = rang ? skRangNamen[rang.tier] + (raenge.indexOf(rang.tier) < 7 && rang.div ? ' ' + rang.div : '') : 'Ohne Rang';
     return '<div class="sk-rangkarte"><small>' + titel + '</small><div class="sk-rangbild">' + (abzeichen || '<span aria-hidden="true">◇</span>') + '</div><strong>' + skText(text) + '</strong><small>' + (unter || (rang ? skText(rang.lp) + ' LP' : '')) + '</small></div>';
   };
-  const level = Math.max(0, ...accounts.map((a) => Number(a.level) || 0));
+  const konto = accounts.reduce((bestes, a) => Number(a.level) > (Number(bestes.level) || 0) ? a : bestes, {});
+  const icon = Number(konto.icon);
+  const kontoBild = Number.isSafeInteger(icon) && icon > 0 ? '<img src="api/lol/bild/profil/' + icon + '.png" alt="" width="54" height="54">' : '';
+  const kontoName = (konto.riotId || '').split('#')[0];
+  const serie = (profil.spiele || []).findIndex((m) => !m.w);
+  const siegeInFolge = serie < 0 ? (profil.spiele || []).length : serie;
+  const lolFakten = [
+    profil.filterSpiele > 0 ? skKennzahl(skZahl(profil.filterSpiele), 'Kluft-Spiele im Verlauf') : '',
+    siegeInFolge > 1 ? skKennzahl(skZahl(siegeInFolge), 'Siege in Folge') : '',
+    profil.champs && profil.champs[0] ? skKennzahl(skZahl(profil.champs[0].g), 'Spiele mit ' + skText(profil.champs[0].c)) : ''
+  ].filter(Boolean).join('');
   const solo = rangFuer('solo'), flex = rangFuer('flex');
   const bilanz = profil.leistung || {}, letzte = (profil.spiele || []).slice(0, 4);
   const champions = (profil.mastery || []).slice(0, 3);
@@ -526,7 +537,7 @@ function skZeigeLol(daten, profil) {
   const personen = new Map((daten.personen || []).map((p) => [p.id, p.name]));
   const duos = (daten.duos || []).filter((d) => d.g > 0 && (d.a === daten.ichId || d.b === daten.ichId)).slice(0, 3);
   return ['<div class="sk-lol-raenge">'
-    + '<div class="sk-rangkarte"><small>Riot-Kontostufe</small><div class="sk-rangbild"><span class="sk-ranglevel">' + (level || '–') + '</span></div><strong>Kontostufe</strong></div>'
+    + '<div class="sk-rangkarte"><small>Riot-Kontostufe</small><div class="sk-konto-bild">' + kontoBild + '<b aria-label="Level ' + skText(konto.level || 'unbekannt') + '">' + skText(konto.level || '–') + '</b></div>' + (kontoName ? '<strong>' + skText(kontoName) + '</strong>' : '') + '</div>'
     + rangKarte('Solo/Duo', solo) + rangKarte('Flex', flex) + rangKarte('5er-Gruppe', flex, 'Flex-Wertung')
     + '</div>'
     + '<p class="sk-lol-form">' + (bilanz.alle ? '<strong>' + Number(bilanz.alle.wr) + ' %</strong> Siege in der Kluft' : 'Noch keine Kluft-Spiele') + (bilanz.neu ? ' <span>· <b>' + Number(bilanz.neu.wr) + ' %</b> in den letzten ' + Number(bilanz.neu.g) + ' Spielen</span>' : '') + '</p>'
@@ -540,8 +551,8 @@ function skZeigeLol(daten, profil) {
       const quote = Math.max(0, Math.min(100, Math.round(d.w / d.g * 100)));
       return '<li><span>' + skText(personen.get(d.a === daten.ichId ? d.b : d.a) || 'Mitspieler') + ' <small>· ' + Number(d.g) + ' Spiele</small></span><b>' + quote + ' %</b><meter min="0" max="100" value="' + quote + '" aria-label="Siegquote"></meter></li>';
     }).join('') + '</ul>' : '<p>Noch keine gemeinsamen Kluft-Spiele.</p>') + '</div>'
+    + (lolFakten ? '<div class="sk-lol-fakten"><h3>Kluft-Statistik</h3><div class="sk-kennzahlen">' + lolFakten + '</div></div>' : '')
   ];
-
 }
 
 function skZeigeMinecraft(info) {
@@ -550,20 +561,32 @@ function skZeigeMinecraft(info) {
   const online = info.online || [];
   const spieler = info.spieler || [], zugang = info.zugang || {};
   const gesamt = (feld) => spieler.reduce((summe, p) => summe + (Number(p[feld]) || 0), 0);
+  const tage = Math.floor((Date.now() - Number(info.weltErstellt)) / 864e5);
+  const weltstart = info.weltErstellt && Number.isFinite(tage) && tage >= 0 ? '<div class="sk-weltstart"><span class="sk-weltstart-icon" aria-hidden="true">✦</span><span><small title="Erstellungsdatum des Weltordners">Weltstart</small><strong><time datetime="' + new Date(info.weltErstellt).toISOString() + '">' + new Date(info.weltErstellt).toLocaleDateString('de-DE', { timeZone: SK_ZONE, day: 'numeric', month: 'long', year: 'numeric' }) + '</time></strong></span><b>' + (tage === 0 ? 'Tag 1' : 'Seit ' + skZahl(tage) + (tage === 1 ? ' Tag' : ' Tagen')) + '</b></div>' : '';
+  const min = gesamt('spielzeitMin');
+  const zeitText = (m) => skZahl(Math.floor(m / 60)) + ' Std. ' + (m % 60) + ' Min.';
+  const weltFakten = [
+    ['🍰', gesamt('kuchen'), 'Kuchenstücke verputzt'],
+    ['🎣', gesamt('fische'), 'Fische geangelt'],
+    ['🛏️', gesamt('schlaf'), 'Mal ins Bett gefallen'],
+    ['🦘', gesamt('spruenge'), 'Sprünge gemacht']
+  ].filter(([, n]) => n > 0);
+
   const aktion = info.admin && zugang.modus === 'code' ? '<a class="sk-dienstlink" href="minecraft.html#beitrittscode">Beitrittscode verwalten →</a>'
     : !mine && zugang.modus === 'code' ? '<a class="sk-dienstlink" href="minecraft.html#mitspielen">Mitspielen · Code beim Admin anfragen →</a>'
     : !mine && zugang.modus === 'offen' ? '<a class="sk-dienstlink" href="minecraft.html#mitspielen">Mitspielen →</a>' : '';
   return ['<p class="sk-mc-status"><i class="sk-punkt' + (info.laeuft ? ' an' : '') + '" aria-hidden="true"></i> '
     + (info.beschaeftigt ? skText(info.beschaeftigt) + ' …' : info.laeuft ? 'Online · ' + online.length + ' von ' + (Number(info.maxSpieler) || '–') + ' Spielern' : 'Offline') + '</p>'
-    + (online.length ? '<ul class="sk-champions">' + online.map((name) => '<li>' + skText(name) + '</li>').join('') + '</ul>' : '') + aktion,
+    + (online.length ? '<ul class="sk-champions">' + online.map((name) => '<li>' + skText(name) + '</li>').join('') + '</ul>' : '') + weltstart + aktion,
     '<div><h3>Weltstatistik</h3><div class="sk-kennzahlen">'
-    + (spieler.some((p) => typeof p.bloecke === 'number') ? skKennzahl(fmt(gesamt('bloecke')), 'Blöcke abgebaut') : '')
-    + skKennzahl(fmt(gesamt('mobKills')), 'Mobs getötet') + skKennzahl(fmt(spieler.length), 'Spieler mit Statistik')
-    + (info.weltErstellt ? skKennzahl(new Date(info.weltErstellt).toLocaleDateString('de-DE', { timeZone: SK_ZONE }), 'Weltordner erstellt') : '')
+    + (spieler.some((p) => typeof p.bloecke === 'number') ? skKennzahl(skZahl(gesamt('bloecke')), 'Blöcke abgebaut') : '')
+    + skKennzahl(skZahl(gesamt('mobKills')), 'Mobs getötet') + skKennzahl(skZahl(spieler.length), 'Spieler mit Statistik')
+    + (min > 0 ? skKennzahl(zeitText(min), 'Gemeinsame Spielzeit') : '')
+    + (gesamt('km') > 0 ? skKennzahl(skZahl(Math.round(gesamt('km') * 10) / 10) + ' km', 'Zurückgelegt') : '')
     + '</div></div><div><h3>Deine Statistik</h3>'
-    + (stats ? '<div class="sk-kennzahlen">' + skKennzahl(Math.floor(stats.spielzeitMin / 60) + ' Std. ' + (stats.spielzeitMin % 60) + ' Min.', 'Spielzeit')
-      + skKennzahl(stats.tode, 'Tode') + skKennzahl(stats.erfolge, 'Erfolge') + '</div>' : '<p>' + (mine ? 'Für deinen Namen sind noch keine Spielwerte da.' : 'Verknüpfe deinen Minecraft-Namen.') + '</p>') + '</div>'];
-
+    + (stats ? '<div class="sk-kennzahlen">' + skKennzahl(zeitText(stats.spielzeitMin), 'Spielzeit')
+      + skKennzahl(skZahl(stats.tode), 'Tode') + skKennzahl(skZahl(stats.erfolge), 'Erfolge') + (stats.bloecke > 0 ? skKennzahl(skZahl(stats.bloecke), 'Blöcke abgebaut') : '') + (stats.mobKills > 0 ? skKennzahl(skZahl(stats.mobKills), 'Mobs getötet') : '') + '</div>' : '<p>' + (mine ? 'Für deinen Namen sind noch keine Spielwerte da.' : 'Verknüpfe deinen Minecraft-Namen.') + '</p>') + '</div>'
+    + (weltFakten.length ? '<div class="sk-weltfakten"><h3>Kurioses aus der Welt</h3><ul>' + weltFakten.map(([symbol, anzahl, text]) => '<li><span aria-hidden="true">' + symbol + '</span><b>' + skZahl(anzahl) + '</b> ' + text + '</li>').join('') + '</ul></div>' : '')];
 }
 
 function skGrossKacheln() {
@@ -613,8 +636,18 @@ function skUnten(D) {
   if (!box) { box = document.createElement('div'); box.id = 'skUnten'; box.className = 'sk-unten'; b.insertBefore(box, b.firstChild); }
   const letzte = D.E.slice().reverse().slice(0, 5);
   const naechste = skErfolgeStand(D).filter((a) => !a.fertig).sort((x, y) => y.ist / y.ziel - x.ist / x.ziel).slice(0, 3);
-  const titel = new Set(D.E.map((e) => e.s));
-  box.innerHTML = (D.E.length ? '<section class="sk-spielfakten"><h2 class="hub-h">Deine Spiele in Zahlen</h2><div class="sk-kennzahlen">' + skKennzahl(fmt(D.E.length), 'Runden') + skKennzahl(fmt(titel.size), 'Spiele ausprobiert') + '</div></section>' : '')
+  const spiele = new Map(), tage = new Map();
+  for (const e of D.E) {
+    spiele.set(e.s, (spiele.get(e.s) || 0) + 1);
+    if (e.t) tage.set(e.t, (tage.get(e.t) || 0) + 1);
+  }
+  const [favorit, runden] = [...spiele].sort((a, b) => b[1] - a[1])[0] || [];
+  const titel = VERLAUF_SPIELE[favorit] && VERLAUF_SPIELE[favorit].name;
+  const rekord = [...tage.values()].reduce((max, n) => Math.max(max, n), 0);
+  box.innerHTML = (D.E.length ? '<section class="sk-spielfakten"><h2 class="hub-h">Deine Spiele in Zahlen</h2><div class="sk-kennzahlen">'
+    + skKennzahl(skZahl(D.E.length), 'Runden insgesamt') + skKennzahl(skZahl(spiele.size), 'Spiele ausprobiert')
+    + (rekord > 1 ? skKennzahl(skZahl(rekord), 'Runden am stärksten Spieltag') : '')
+    + (titel && runden > 1 ? skKennzahl(skZahl(runden), 'Noch eine Runde? · ' + skText(titel)) : '') + '</div></section>' : '')
     + '<h2 class="hub-h">Zuletzt gespielt</h2>'
     + (letzte.length ? '<div class="sk-letzte">' + letzte.map((e, i) => { const sp = VERLAUF_SPIELE[e.s] || { emoji: '🎮', name: e.s }; const ziel = SK_SPIELE[e.s] && SK_SPIELE[e.s].hub; return '<div class="sk-letzt"><span>' + sp.emoji + '</span><div>' + (ziel && $(ziel) && !SK_AUSSORTIERT.karten.includes(ziel) ? '<button type="button" class="sk-erneut" data-spiel="' + ziel + '">' + skText(sp.name) + '</button>' : '<b>' + skText(sp.name) + '</b>') + '<small>' + skText(e.i) + '</small></div><i>' + (e.m ? fmt(e.p) + '/' + e.m : '') + '</i><button type="button" data-e="' + i + '" aria-label="Ergebnis-Karte">📤</button></div>'; }).join('') + '</div>' : '<p class="sk-fein">Noch nichts gespielt.</p>')
     + (naechste.length ? '<h2 class="hub-h"><span>🏆</span> Nächste Erfolge</h2><div class="sk-naechste">' + naechste.map((a) => '<div><span>' + a.emoji + '</span><div><b>' + a.name + '</b><div class="sk-mini"><i style="width:' + Math.round((a.ist / a.ziel) * 100) + '%"></i></div></div><small>' + a.ist + '/' + a.ziel + '</small></div>').join('') + '</div>' : '');

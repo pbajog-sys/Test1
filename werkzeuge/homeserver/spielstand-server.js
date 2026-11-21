@@ -353,6 +353,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
       let erfolge = 0;
       try { const a = JSON.parse(fs.readFileSync(path.join(welt, 'advancements', f), 'utf8')); erfolge = Object.entries(a).filter(([x, v]) => v && v.done === true && !/^minecraft:recipes\//.test(x)).length; } catch (e) { /* noch keine */ }
       return { name: namen[uuid] || uuid.slice(0, 8), uuid: /^[0-9a-f-]{32,36}$/i.test(uuid) ? uuid : '', erfolge, tode: g('deaths'), spielzeitMin: Math.round((g('play_time') || g('play_one_minute')) / 1200),
+        kuchen: g('eat_cake_slice'), fische: g('fish_caught'), schlaf: g('sleep_in_bed'), spruenge: g('jump'),
         bloecke: Object.values((j.stats || {})['minecraft:mined'] || {}).reduce((summe, n) => summe + (Number(n) || 0), 0), mobKills: g('mob_kills'), spielerKills: g('player_kills'), km: Math.round(WEGE.reduce((a, k) => a + g(k), 0) / 10000) / 10, zuletzt: fs.statSync(datei).mtimeMs };
     }).sort((a, b) => b.spielzeitMin - a.spielzeitMin);
   }

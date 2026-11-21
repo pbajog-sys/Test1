@@ -254,7 +254,6 @@ body:has(#screen-hub.active) #ambient { display: none; }
 .sk-rangbild { display: grid; place-items: center; height: 66px; color: var(--raum-akzent); }
 .sk-rangbild img { object-fit: contain; max-height: 64px; filter: drop-shadow(0 3px 10px #9eb9fb38); }
 .sk-rangbild > span { font-size: 2.1rem; line-height: 1; }
-.sk-rangbild .sk-ranglevel { display: grid; place-items: center; padding: 0 6px; min-width: 52px; height: 48px; border-radius: 16px; border: 1px solid #cbc3f7; background: #8071bf29; font-size: 1.4rem; font-weight: 800; }
 .sk-lol-form { font-size: .84rem; color: var(--raum-leise); }
 .sk-lol-form strong { color: #c4ebf4; font-size: 1.05rem; }
 .sk-lol-letzte, .sk-meisterschaft, .sk-duos { margin: 0; padding: 0; list-style: none; }
@@ -277,3 +276,52 @@ body:has(#screen-hub.active) #ambient { display: none; }
 @media (min-width: 1350px) {
   .sk-lol-letzte { grid-template-columns: repeat(4, minmax(0, 1fr)); }
 }
+
+.sk-konto-bild {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 61px;
+  height: 61px;
+  margin: 4px 0 8px;
+  border: 2px solid #dfb968;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2d4c65, #152133 72%);
+  box-shadow: 0 0 0 2px #447ba2, 0 0 16px #50a6d33b;
+}
+.sk-konto-bild img { display: block; border-radius: 50%; object-fit: cover; }
+.sk-konto-bild b {
+  position: absolute;
+  bottom: -6px;
+  color: #ffe1a0;
+  background: #181e2b;
+  border: 1px solid #bd9953;
+  border-radius: 7px;
+  padding: 0 7px;
+  font-size: .77rem;
+  font-variant-numeric: tabular-nums;
+}
+.sk-rangkarte strong { overflow-wrap: anywhere; }
+.sk-lol-fakten, .sk-dienststats .sk-weltfakten { grid-column: 1 / -1; }
+.sk-weltstart {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 14px;
+  padding: 9px 12px;
+  border: 1px solid #e6bd6570;
+  border-radius: 12px;
+  background: linear-gradient(110deg, #573b25d9, #182333e8 76%);
+  color: #ffe0a0;
+}
+.sk-weltstart small, .sk-weltstart strong { display: block; line-height: 1.2; }
+.sk-weltstart small { color: #f1ce97; font-weight: 700; }
+.sk-weltstart strong { margin-top: 3px; font-size: 1.08rem; }
+.sk-weltstart > b { border: 1px solid #e6bd6570; border-radius: 20px; padding: 3px 7px; font-size: .74rem; }
+.sk-weltstart-icon { font-size: 1.5rem; text-shadow: 0 0 12px #ffdc8b75; }
+.sk-weltfakten ul { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.sk-weltfakten li { padding: 4px 8px; border-radius: 8px; border: 1px solid var(--raum-rand); background: var(--raum-eingabe); font-size: .8rem; }
+.sk-weltfakten li span { margin-right: 3px; }

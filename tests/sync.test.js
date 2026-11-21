@@ -369,7 +369,7 @@ const caddy = http.createServer((req, res) => {
   fs.writeFileSync(path.join(MC, 'server.properties'), '#Minecraft server properties\r\nlevel-name=world\r\ndifficulty=easy\r\npvp=true\r\nmax-players=10\r\nmotd=Hallo\r\nlevel-seed=\r\nrcon.port=25575\r\n');
   fs.mkdirSync(path.join(MC, 'world', 'stats'), { recursive: true });
   fs.writeFileSync(path.join(MC, 'usercache.json'), JSON.stringify([{ name: 'Steve', uuid: 'aaaa-1' }, { name: 'Alex', uuid: 'bbbb-2' }]));
-  fs.writeFileSync(path.join(MC, 'world', 'stats', 'aaaa-1.json'), JSON.stringify({ stats: { 'minecraft:mined': { 'minecraft:stone': 300, 'minecraft:dirt': 12 }, 'minecraft:custom': { 'minecraft:deaths': 7, 'minecraft:play_time': 72000 * 2, 'minecraft:mob_kills': 31, 'minecraft:walk_one_cm': 1234500, 'minecraft:sprint_one_cm': 500000 } } }));
+  fs.writeFileSync(path.join(MC, 'world', 'stats', 'aaaa-1.json'), JSON.stringify({ stats: { 'minecraft:mined': { 'minecraft:stone': 300, 'minecraft:dirt': 12 }, 'minecraft:custom': { 'minecraft:deaths': 7, 'minecraft:play_time': 72000 * 2, 'minecraft:mob_kills': 31, 'minecraft:eat_cake_slice': 8, 'minecraft:fish_caught': 19, 'minecraft:sleep_in_bed': 4, 'minecraft:jump': 80, 'minecraft:walk_one_cm': 1234500, 'minecraft:sprint_one_cm': 500000 } } }));
   fs.writeFileSync(path.join(MC, 'world', 'stats', 'bbbb-2.json'), JSON.stringify({ stats: { 'minecraft:custom': { 'minecraft:deaths': 2, 'minecraft:play_time': 36000, 'minecraft:player_kills': 3 } } }));
   fs.mkdirSync(path.join(MC, 'world', 'advancements'), { recursive: true });
   fs.writeFileSync(path.join(MC, 'world', 'advancements', 'aaaa-1.json'), JSON.stringify({ 'minecraft:story/mine_stone': { done: true }, 'minecraft:story/root': { done: true }, 'minecraft:recipes/misc/x': { done: true }, 'minecraft:story/smelt_iron': { done: false }, DataVersion: 4000 }));
@@ -383,7 +383,7 @@ const caddy = http.createServer((req, res) => {
   mc.online = ['Steve'];
   const benInfo = await C.evaluate(async () => { const r = await syApi('minecraft/info'); return [r.status, r.json]; });
   const steve = (benInfo[1].spieler || []).find((x) => x.name === 'Steve');
-  ck('Minecraft-Seite: jeder Angemeldete sieht Tode, Spielzeit, Kills, km und abgebaute Blöcke', benInfo[0] === 200 && steve && steve.tode === 7 && steve.spielzeitMin === 120 && steve.mobKills === 31 && steve.bloecke === 312 && benInfo[1].weltErstellt > 0 && steve.km === 17.3 && benInfo[1].spieler[1].spielerKills === 3 && benInfo[1].seed === undefined && steve.erfolge === 2, JSON.stringify(benInfo[1].spieler));
+  ck('Minecraft-Seite: jeder Angemeldete sieht Tode, Spielzeit, Kills, km, abgebaute Blöcke und Kuriositäten', benInfo[0] === 200 && steve && steve.tode === 7 && steve.spielzeitMin === 120 && steve.mobKills === 31 && steve.bloecke === 312 && steve.kuchen === 8 && steve.fische === 19 && steve.schlaf === 4 && steve.spruenge === 80 && benInfo[1].weltErstellt > 0 && steve.km === 17.3 && benInfo[1].spieler[1].spielerKills === 3 && benInfo[1].seed === undefined && steve.erfolge === 2, JSON.stringify(benInfo[1].spieler));
   const akt = benInfo[1].aktivitaet || [];
   ck('Minecraft-Seite: Online pro Tag aus den Server-Logs (einmal je Spieler und Tag, nur letzte 90 Tage)', akt.length === 3 && akt[0].tag === tag(3) && akt[0].spieler.join() === 'Alex,Steve' && akt[2].spieler.join() === 'Steve' && !JSON.stringify(akt).includes('Uralt'), JSON.stringify(akt));
   ck('Minecraft-Seite: ohne Anmeldung nichts', (await fetch('http://localhost:8766/api/minecraft/info')).status === 401);
