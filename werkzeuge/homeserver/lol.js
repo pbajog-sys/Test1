@@ -15,6 +15,7 @@
 //   POST /api/lol/auto/aufnehmen|ausblenden { u } · /api/lol/auto/einblenden → automatisch erkannte Mitspieler
 //   GET  /api/lol/person?id=…&filter=… → Spieler-Profil (Spielverlauf mit allen 10, Mastery, Rang-Verlauf, Aktivität … siehe lol-profil.js)
 //   /api/lol/prime…                  → Prime League (siehe lol-prime.js)
+//   GET  /api/lol/aktualisieren      → Status des eigenen manuellen Imports
 //   POST /api/lol/aktualisieren      → eigene Accounts sofort neu holen (höchstens alle 2 Min.)
 //   GET  /api/lol/bild/champion/<Name>.png, /api/lol/bild/profil/<id>.png → Bilder von Riots Data Dragon (zwischengespeichert)
 //   GET/POST /api/admin/lol          { key: 'RGAPI-…' | '' } → Key setzen/entfernen, Zustand
@@ -117,12 +118,13 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     return { status: r.status, json, warten: Number(r.headers.get('retry-after') || 0) };
   };
   const holen = riotHolen || STANDARD_HOLEN;
-  async function riot(url) {
+  async function riot(url, privateAntwortMoeglich = false) {
     const k = key(); if (!k) throw Object.assign(new Error('kein Key'), { status: 0 });
     for (let versuch = 0; versuch < 3; versuch++) {
       await drosseln();
       const r = await holen(url, k);
       if (r.status === 429) { await warten((r.warten || 10) * 1000); continue; }
+      if (r.status === 403 && privateAntwortMoeglich) return r;
       if (r.status === 401 || r.status === 403) { keyStatus = 'ungueltig'; throw Object.assign(new Error('Key ungültig oder abgelaufen'), { status: r.status }); }
       if (r.status >= 500) { await warten(2000); continue; }
       if (r.status === 200) keyStatus = 'ok';
@@ -145,8 +147,18 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
         ru: (() => { const st = (x.perks && x.perks.styles) || []; return [st[0] && st[0].selections && st[0].selections[0] ? st[0].selections[0].perk : 0, st[1] ? st[1].style : 0]; })() })) };
   }
 
+  // Private Matches können in einer ID-Liste stehen, obwohl Riot ihre Details sperrt.
+  // Nur auf diesen Match-Endpunkten ist 403 kein Befund über die Gültigkeit des Keys.
+  const privateSpiele = new Map();
+  async function spielHolen(region, id) {
+    const r = await riot(regional(region) + '/lol/match/v5/matches/' + id, true);
+    if (r.status === 200 && r.json && r.json.info) spiele[id] = kompakt(r.json);
+    if (r.status === 403) privateSpiele.set(id, jetzt() + 864e5);
+    return r.status;
+  }
+
   // Einen Account aktualisieren: PUUID, Profil, Rang, neue Spiele (beim ersten Mal bis zu 100)
-  async function accountHolen(acc) {
+  async function accountHolen(acc, masteryErneuern = false) {
     const [name, tag] = acc.riotId.split('#');
     if (!acc.puuid) {
       const r = await riot(regional(acc.region) + '/riot/account/v1/accounts/by-riot-id/' + encodeURIComponent(name) + '/' + encodeURIComponent(tag));
@@ -170,9 +182,11 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       }
       if (a.lp.length > 300) a.lp = a.lp.slice(-300);
     }
-    if (!a.masteryZeit || jetzt() - a.masteryZeit > 864e5) {
+    let masteryFehler = false;
+    if (masteryErneuern || !a.masteryZeit || jetzt() - a.masteryZeit > 864e5) {
       const ms = await riot(plattform(acc.region) + '/lol/champion-mastery/v4/champion-masteries/by-puuid/' + acc.puuid + '/top?count=10');
       if (ms.status === 200) { a.mastery = (ms.json || []).map((x) => ({ id: x.championId, p: x.championPoints, l: x.championLevel })); a.masteryZeit = jetzt(); }
+      else if (masteryErneuern) masteryFehler = true;
     }
     const idsPfad = regional(acc.region) + '/lol/match/v5/matches/by-puuid/' + acc.puuid + '/ids';
     const merkeIds = (ids) => { a.ids = [...new Set(a.ids.concat(ids))]; };
@@ -180,41 +194,43 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     // Ohne queue/type liefert Match-V5 alle Modi, auch neue Queues.
     const anzahl = a.ids.length && nachgeholt.includes('alle') ? 20 : 100;
     const ids = await riot(idsPfad + '?start=0&count=' + anzahl);
-    if (ids.status !== 200) return;
+    if (ids.status !== 200) throw new Error('Riot-Spieleliste konnte nicht geladen werden.');
     merkeIds(ids.json || []);
     if (!nachgeholt.includes('alle')) nachgeholt.push('alle');
 
     // Pro Queue merken, damit ältere Installationen erneut nachholen und Fehler wiederholt werden.
     for (const q of [450, ...MAYHEM_PVP_QUEUES]) {
       if (nachgeholt.includes(q)) continue;
-      const r = await riot(idsPfad + '?queue=' + q + '&start=0&count=50');
-      if (r.status !== 200) continue;
-      merkeIds(r.json || []);
+      const mayhem = MAYHEM_PVP_QUEUES.includes(q);
+      const r = await riot(idsPfad + '?queue=' + q + '&start=0&count=50', mayhem);
+      if (r.status === 200) merkeIds(r.json || []);
+      else if (!(mayhem && r.status === 403)) continue;
+      // Diese gezielte Abfrage ist optional. Neu freigegebene Spiele kommen auch über die normale ID-Liste.
       nachgeholt.push(q);
     }
     speichern();
     // Auch ältere IDs ohne gespeichertes Spiel erneut versuchen.
-    const fehlend = [...new Set((ids.json || []).concat(a.ids))].filter((id) => !spiele[id]);
+    const fehlend = [...new Set((ids.json || []).concat(a.ids))].filter((id) => !spiele[id] && !privateSpiele.has(id));
     for (const id of fehlend.slice(0, 100)) {
-      const m = await riot(regional(acc.region) + '/lol/match/v5/matches/' + id);
-      if (m.status === 200 && m.json && m.json.info) spiele[id] = kompakt(m.json);
-      if (m.status === 404) a.ids = a.ids.filter((x) => x !== id);
+      if (await spielHolen(acc.region, id) === 404) a.ids = a.ids.filter((x) => x !== id);
     }
     // Ältere Spiele schrittweise um Modus, Karte, Runen und Zauber ergänzen.
-    for (const id of a.ids.filter((x) => spiele[x] && (spiele[x].x || 0) < 3).slice(0, 25)) {
-      const m = await riot(regional(acc.region) + '/lol/match/v5/matches/' + id);
-      if (m.status === 200 && m.json && m.json.info) spiele[id] = kompakt(m.json);
+    for (const id of a.ids.filter((x) => spiele[x] && (spiele[x].x || 0) < 3 && !privateSpiele.has(x)).slice(0, 25)) {
+      await spielHolen(acc.region, id);
     }
+    if (masteryFehler) acc.fehler = 'Riot hat die Champion-Meisterschaft gerade nicht geliefert.';
+    else delete acc.fehler;
     a.geholt = jetzt(); speichern();
   }
-  async function allesHolen(nurKonto) {
+  async function allesHolen(nurKonto, masteryErneuern = false) {
     if (laeuft || !key() || keyStatus === 'ungueltig') return false;
     laeuft = true;
+    for (const [id, bis] of privateSpiele) if (bis <= jetzt()) privateSpiele.delete(id);
     try {
       const nurTeam = nurKonto && String(nurKonto).startsWith('prime:') ? String(nurKonto).slice(6) : null;
       for (const [konto, liste] of Object.entries(zustand.personen)) {
         if (nurTeam || (nurKonto && konto !== nurKonto)) continue;
-        for (const acc of liste) { try { await accountHolen(acc); } catch (e) { if (e.status === 401 || e.status === 403) throw e; acc.fehler = e.message; } }
+        for (const acc of liste) { try { await accountHolen(acc, masteryErneuern); } catch (e) { if (e.status === 401 || e.status === 403) throw e; acc.fehler = e.message; } }
       }
       if (!nurKonto || nurTeam) await prime.allesHolen(nurTeam);
       letzterLauf = jetzt();
@@ -430,6 +446,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
 
   // ---------- Anfragen ----------
   const letzteAktualisierung = {};
+  const manuelleLaeufe = new Map();
   async function anfrage(weg, m, req, res, url, k) {
     if (weg === '/lol/daten' && m === 'GET') {
       const filter = FILTER[url.searchParams.get('filter')] ? url.searchParams.get('filter') : 'alle';
@@ -438,7 +455,8 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       const quelle = nutzeEcht ? { personen: echt, spiele: echteSpiele } : demo();
       const vollstaendigeTeams = filter === 'flex' && url.searchParams.get('gruppe') === '5';
       const a = auswerten(quelle.personen.concat(autoMitspieler(quelle.personen, quelle.spiele)), quelle.spiele, filter, vollstaendigeTeams);
-      return senden(res, 200, Object.assign(a, { quelle: nutzeEcht ? 'riot' : 'demo', key: key() ? keyStatus : 'fehlt', filter, laeuft, letzterLauf: letzterLauf || null,
+      return senden(res, 200, Object.assign(a, { quelle: nutzeEcht ? 'riot' : 'demo', key: key() ? keyStatus : 'fehlt', filter,
+        mayhemVerfuegbar: nutzeEcht && echteSpiele.some((m) => m.d >= 300 && aramArt(m) === 'mayhem'), laeuft, letzterLauf: letzterLauf || null,
         ichId: k, ausgeblendet: Object.keys(zustand.ausgeblendet || {}).length, meine: (echt.find((p) => p.ich) || { accounts: [] }).accounts, alle: echt.map((p) => ({ id: p.id, name: p.name, ich: p.ich, gast: p.gast, accounts: p.accounts })),
         wahl: konten().filter((x) => x.id !== k).map((x) => ({ id: x.id, name: x.name })).concat(Object.entries(zustand.gaeste).map(([id, name]) => ({ id, name, gast: true }))).sort((x, y) => x.name.localeCompare(y.name, 'de')), regionen: Object.fromEntries(Object.entries(REGIONEN).map(([x, v]) => [x, v[0]])), ddragon: await ddragon(), version }));
     }
@@ -535,11 +553,21 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       return senden(res, 200, {});
     }
     if (weg === '/lol/auto/einblenden' && m === 'POST') { zustand.ausgeblendet = {}; sofortSpeichern(); return senden(res, 200, {}); }
+    if (weg === '/lol/aktualisieren' && m === 'GET') {
+      return senden(res, 200, { stand: manuelleLaeufe.get(k) || 'unbekannt' });
+    }
     if (weg === '/lol/aktualisieren' && m === 'POST') {
       if (!key()) return senden(res, 409, { fehler: 'Es ist noch kein Riot-API-Key eingetragen – bis dahin gibt es Beispieldaten.' });
-      if (jetzt() - (letzteAktualisierung[k] || 0) < 120e3) return senden(res, 429, { fehler: 'Gerade erst aktualisiert – in 2 Minuten wieder.' });
+      if (jetzt() - (letzteAktualisierung[k] || 0) < 120e3) return senden(res, 429, { fehler: 'Gerade erst aktualisiert – versuche es in zwei Minuten erneut.' });
+      if (keyStatus === 'ungueltig') return senden(res, 409, { fehler: 'Der Riot-Key muss auf der Server-Seite erneuert werden.' });
+      if (!(zustand.personen[k] || []).length) return senden(res, 409, { fehler: 'Verknüpfe zuerst deinen Riot-Account auf der LoL-Seite.' });
+      if (laeuft) return senden(res, 409, { fehler: 'Ein Riot-Import läuft bereits. Versuche es gleich noch einmal.' });
       letzteAktualisierung[k] = jetzt();
-      allesHolen(k).catch(() => {});
+      manuelleLaeufe.set(k, 'laeuft');
+      allesHolen(k, true).then((ok) => {
+        const konten = zustand.personen[k] || [];
+        manuelleLaeufe.set(k, ok && konten.length && konten.every((acc) => acc.puuid && !acc.fehler) ? 'fertig' : 'fehler');
+      }, () => manuelleLaeufe.set(k, 'fehler'));
       return senden(res, 200, { gestartet: true });
     }
     const bm = /^\/lol\/bild\/(champion|profil|item|spell|rune)\/([A-Za-z0-9]{1,40})\.png$/.exec(weg);
@@ -583,7 +611,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       if (alt && alt !== neu) {
         // Riot verschlüsselt PUUIDs pro Key: mit neuem Key alles neu zuordnen (Accounts neu auflösen, Spiele neu holen)
         Object.values(zustand.personen).forEach((l) => l.forEach((x) => { x.puuid = null; delete x.fehler; }));
-        zustand.accounts = {}; for (const id of Object.keys(spiele)) delete spiele[id]; prime.zuruecksetzen(); sofortSpeichern();
+        zustand.accounts = {}; privateSpiele.clear(); for (const id of Object.keys(spiele)) delete spiele[id]; prime.zuruecksetzen(); sofortSpeichern();
       }
       protokoll('LoL: Riot-Key eingetragen'); allesHolen().catch(() => {});
       return senden(res, 200, { key: keyStatus });

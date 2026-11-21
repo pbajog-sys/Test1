@@ -345,3 +345,19 @@ body:has(#screen-hub.active) #ambient { display: none; }
 .sk-dienststats .sk-duokopf h3 { margin: 0; }
 .sk-duokopf select { max-width: 100%; font: inherit; font-size: .78rem; color: var(--raum-text); padding: 4px 7px; background: var(--raum-eingabe); border: 1px solid var(--raum-rand); border-radius: 7px; }
 .sk-dienststats .sk-duohinweis { font-size: .72rem; }
+
+.sk-lol-aktionen { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+#skLolAktualisieren {
+  min-height: 40px;
+  padding: 6px 12px;
+  border: 1px solid var(--raum-rand);
+  border-radius: 9px;
+  background: var(--raum-eingabe);
+  color: var(--raum-text);
+  font: inherit;
+  font-size: .82rem;
+  font-weight: 800;
+  cursor: pointer;
+}
+#skLolAktualisieren:disabled { opacity: .6; cursor: wait; }
+#skLolMeldung { margin: 0 0 12px; font-size: .84rem; color: var(--raum-leise); }

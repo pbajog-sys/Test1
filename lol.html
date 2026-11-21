@@ -390,7 +390,7 @@
     <div class="marke">
       <div><h1>League of Legends</h1><p><a href="./">← Kompetenzzentrum</a></p></div>
     </div>
-    <div class="chips" id="filter" role="group" aria-label="Spielmodus"><button type="button" data-f="alle" aria-pressed="true">Alle (Kluft)</button><button type="button" data-f="solo" aria-pressed="false">Ranked Solo</button><button type="button" data-f="flex" aria-pressed="false">Ranked Flex</button><button type="button" data-f="normal" aria-pressed="false">Normal</button><button type="button" data-f="aram" aria-pressed="false">ARAM</button><button type="button" data-f="mayhem" aria-pressed="false">ARAM Mayhem</button><button type="button" data-f="jeder" aria-pressed="false">Alle Modi</button></div>
+    <div class="chips" id="filter" role="group" aria-label="Spielmodus"><button type="button" data-f="alle" aria-pressed="true">Alle (Kluft)</button><button type="button" data-f="solo" aria-pressed="false">Ranked Solo</button><button type="button" data-f="flex" aria-pressed="false">Ranked Flex</button><button type="button" data-f="normal" aria-pressed="false">Normal</button><button type="button" data-f="aram" aria-pressed="false">ARAM</button><button type="button" data-f="mayhem" aria-pressed="false" hidden>ARAM Mayhem</button><button type="button" data-f="jeder" aria-pressed="false">Alle Modi</button></div>
   </div>
 </header>
 <div class="banner" id="banner" hidden></div>
@@ -543,6 +543,12 @@ async function laden() {
   if (r.status !== 200) { $('hinweis').innerHTML = '<p class="muted">Der Server ist gerade nicht erreichbar.</p>'; return; }
   daten = r.json; $('hinweis').hidden = true; $('inhalt').hidden = false;
   const b = $('banner');
+  const mayhem = $('filter').querySelector('[data-f="mayhem"]');
+  mayhem.hidden = !daten.mayhemVerfuegbar;
+  if (mayhem.hidden && filter === 'mayhem') {
+    $('filter').querySelector('[data-f="alle"]').click();
+    return;
+  }
   b.hidden = daten.quelle === 'riot';
   b.innerHTML = daten.key === 'ungueltig' ? '⚠️ Der Riot-API-Key ist abgelaufen oder ungültig – der Admin kann ihn auf der Server-Seite erneuern. Bis dahin: Beispieldaten.'
     : daten.key === 'fehlt' ? '✨ <b>Beispieldaten</b> – so sieht es aus, sobald ein Riot-API-Key eingetragen ist. Deine Accounts kannst du schon jetzt unter „Meine Accounts“ eintragen.'
