@@ -513,28 +513,35 @@ function skZeigeLol(daten, profil) {
   const wert = (r) => raenge.indexOf(r.tier) * 400 + Math.max(0, divisionen.indexOf(r.div)) * 100 + r.lp;
   const accounts = profil.accounts || [];
   const rangFuer = (art) => accounts.map((a) => a.rang && a.rang[art]).filter((r) => r && skRangNamen[r.tier]).sort((a, b) => wert(b) - wert(a))[0];
-  const rangText = (r) => r ? skRangNamen[r.tier] + (r.div ? ' ' + r.div : '') + ' · ' + r.lp + ' LP' : 'Ohne Rang';
+  const rangKarte = (titel, rang, unter) => {
+    const abzeichen = rang ? '<img src="bilder/raenge/' + rang.tier.toLowerCase() + '.webp" width="68" height="68" alt="">' : '';
+    const text = rang ? skRangNamen[rang.tier] + (raenge.indexOf(rang.tier) < 7 && rang.div ? ' ' + rang.div : '') : 'Ohne Rang';
+    return '<div class="sk-rangkarte"><small>' + titel + '</small><div class="sk-rangbild">' + (abzeichen || '<span aria-hidden="true">◇</span>') + '</div><strong>' + skText(text) + '</strong><small>' + (unter || (rang ? skText(rang.lp) + ' LP' : '')) + '</small></div>';
+  };
   const level = Math.max(0, ...accounts.map((a) => Number(a.level) || 0));
+  const solo = rangFuer('solo'), flex = rangFuer('flex');
   const bilanz = profil.leistung || {}, letzte = (profil.spiele || []).slice(0, 4);
   const champions = (profil.mastery || []).slice(0, 3);
-  const champBild = (name) => /^[a-z0-9]+$/i.test(name) ? '<img src="api/lol/bild/champion/' + encodeURIComponent(name) + '.png" alt="" width="36" height="36">' : '';
+  const champBild = (name, groesse) => /^[a-z0-9]+$/i.test(name) ? '<img src="api/lol/bild/champion/' + encodeURIComponent(name) + '.png" alt="" width="' + groesse + '" height="' + groesse + '">' : '';
   const personen = new Map((daten.personen || []).map((p) => [p.id, p.name]));
   const duos = (daten.duos || []).filter((d) => d.g > 0 && (d.a === daten.ichId || d.b === daten.ichId)).slice(0, 3);
-  return ['<div class="sk-kennzahlen sk-lol-raenge">'
-    + skKennzahl(level || '–', 'Kontostufe')
-    + skKennzahl(rangText(rangFuer('solo')), 'Solo/Duo')
-    + skKennzahl(rangText(rangFuer('flex')), 'Flex')
-    + skKennzahl('Flex', '5er-Gruppe · kein eigener Rang')
+  return ['<div class="sk-lol-raenge">'
+    + '<div class="sk-rangkarte"><small>Riot-Kontostufe</small><div class="sk-rangbild"><span class="sk-ranglevel">' + (level || '–') + '</span></div><strong>Kontostufe</strong></div>'
+    + rangKarte('Solo/Duo', solo) + rangKarte('Flex', flex) + rangKarte('5er-Gruppe', flex, 'Flex-Wertung')
     + '</div>'
-    + '<p class="sk-label">' + (bilanz.alle ? bilanz.alle.wr + ' % Siege in der Kluft' : 'Noch keine Kluft-Spiele') + (bilanz.neu ? ' · ' + bilanz.neu.wr + ' % in den letzten ' + Number(bilanz.neu.g) + ' Spielen' : '') + '</p>'
-    + (letzte.length ? '<p class="sk-label sk-letzte-label">Letzte Spiele · Kluft</p><ul class="sk-dienstspiele">' + letzte.map((m) => {
+    + '<p class="sk-lol-form">' + (bilanz.alle ? '<strong>' + Number(bilanz.alle.wr) + ' %</strong> Siege in der Kluft' : 'Noch keine Kluft-Spiele') + (bilanz.neu ? ' <span>· <b>' + Number(bilanz.neu.wr) + ' %</b> in den letzten ' + Number(bilanz.neu.g) + ' Spielen</span>' : '') + '</p>'
+    + (letzte.length ? '<p class="sk-label sk-letzte-label">Letzte Spiele · Kluft</p><ul class="sk-lol-letzte">' + letzte.map((m) => {
       const spieler = (m.p || [])[m.ich] || {}, datum = new Date(m.t);
       const zeit = m.t && Number.isFinite(datum.getTime()) ? '<time datetime="' + datum.toISOString() + '">' + datum.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', timeZone: SK_ZONE }) + '</time>' : '';
-      return '<li><b class="' + (m.w ? 'sk-sieg' : 'sk-niederlage') + '">' + (m.w ? 'Sieg' : 'Niederlage') + '</b><span>' + skText(spieler.c) + '</span>' + zeit + '</li>';
-    }).join('') + '</ul>' : '<p>Für die Kluft sind noch keine Spiele gespeichert.</p>'),
-    '<div><h3>Champion-Meisterschaft</h3>' + (champions.length ? '<ul class="sk-champions">' + champions.map((c) => '<li>' + champBild(c.c) + skText(c.c) + ' · ' + skText(c.l) + '</li>').join('') + '</ul>' : '<p>Noch keine Meisterschaftsdaten.</p>') + '</div>'
-    + '<div><h3>Siegquote mit Mitspielern</h3>' + (duos.length ? '<ul class="sk-dienstspiele">' + duos.map((d) => '<li><span>' + skText(personen.get(d.a === daten.ichId ? d.b : d.a) || 'Mitspieler') + '</span><b>' + Math.round(d.w / d.g * 100) + ' %</b><small>' + Number(d.g) + ' Spiele</small></li>').join('') + '</ul>' : '<p>Noch keine gemeinsamen Kluft-Spiele.</p>') + '</div>'
-    ];
+      return '<li class="' + (m.w ? 'sk-sieg' : 'sk-niederlage') + '">' + champBild(spieler.c, 36) + '<span><b>' + (m.w ? 'Sieg' : 'Niederlage') + '</b><small>' + skText(spieler.c) + '</small></span>' + zeit + '</li>';
+    }).join('') + '</ul>' : ''),
+    '<div><h3>Champion-Meisterschaft</h3>' + (champions.length ? '<ul class="sk-meisterschaft">' + champions.map((c) => '<li><span>' + champBild(c.c, 54) + '<b aria-label="Meisterschaftsstufe ' + skText(c.l) + '">' + skText(c.l) + '</b></span><small>' + skText(c.c) + '</small></li>').join('') + '</ul>' : '<p>Noch keine Meisterschaftsdaten.</p>') + '</div>'
+    + '<div><h3>Siegquote mit Mitspielern</h3>' + (duos.length ? '<ul class="sk-duos">' + duos.map((d) => {
+      const quote = Math.max(0, Math.min(100, Math.round(d.w / d.g * 100)));
+      return '<li><span>' + skText(personen.get(d.a === daten.ichId ? d.b : d.a) || 'Mitspieler') + ' <small>· ' + Number(d.g) + ' Spiele</small></span><b>' + quote + ' %</b><meter min="0" max="100" value="' + quote + '" aria-label="Siegquote"></meter></li>';
+    }).join('') + '</ul>' : '<p>Noch keine gemeinsamen Kluft-Spiele.</p>') + '</div>'
+  ];
+
 }
 
 function skZeigeMinecraft(info) {
@@ -653,7 +660,7 @@ function skKategorienEinrichten() {
   if (rest.length) { const liste = abschnitt('✨', 'Weitere', ''); rest.forEach((el) => liste.appendChild(el)); }
   // Archiv: eigenes aufklappbares Fach, in der vollständigen Liste zunächst offen
   const archiv = document.createElement('details');
-  archiv.className = 'sk-kat sk-archiv'; archiv.id = 'skArchiv';
+  archiv.className = 'sk-kat sk-archiv'; archiv.id = 'skArchiv'; archiv.open = true;
   archiv.innerHTML = '<summary><h2 class="hub-h"><span>🗄️</span> Archiv <small id="skArchivZahl"></small></h2><span class="sk-archiv-pfeil" aria-hidden="true">▾</span></summary><div class="hub-liste"></div><div id="skArchivExtra"></div>';
   a.appendChild(archiv);
   SK_ARCHIV.karten.forEach((id) => { const el = $(id); if (el) archiv.querySelector('.hub-liste').appendChild(el); });

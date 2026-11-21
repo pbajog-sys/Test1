@@ -643,10 +643,10 @@ async function laden() {
   }
   if (info.admin) {
     await adminLaden();
-    if (location.hash === '#beitrittscode' && adminDaten && !$('verwaltung').open) {
+    if (location.hash === '#beitrittscode' && adminDaten) {
       history.replaceState(null, '', location.pathname + location.search);
-      tab = 'spieler';
-      $('verwaltungKnopf').click();
+      tabZeigen('spieler');
+      if (!$('verwaltung').open) $('verwaltungKnopf').click();
       $('zugangModus').scrollIntoView({ block: 'center' });
     }
   }
@@ -897,6 +897,9 @@ $('neueWelt').addEventListener('click', async () => {
 });
 
 laden();
+addEventListener('hashchange', () => {
+  if (location.hash === '#mitspielen' || location.hash === '#beitrittscode') laden();
+});
 addEventListener('resize', () => { if (info && info.installiert) verlauf(); });
 setInterval(() => { if (!document.hidden) laden(); }, 15000);
 </script>
