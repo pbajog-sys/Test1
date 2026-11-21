@@ -199,7 +199,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     if (!nachgeholt.includes('alle')) nachgeholt.push('alle');
 
     // Pro Queue merken, damit ältere Installationen erneut nachholen und Fehler wiederholt werden.
-    for (const q of [450, ...MAYHEM_PVP_QUEUES]) {
+    for (const q of [420, 440, 450, ...MAYHEM_PVP_QUEUES]) {
       if (nachgeholt.includes(q)) continue;
       const mayhem = MAYHEM_PVP_QUEUES.includes(q);
       const r = await riot(idsPfad + '?queue=' + q + '&start=0&count=50', mayhem);
@@ -462,7 +462,9 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     }
     if (weg === '/lol/person' && m === 'GET') {
       const filter = FILTER[url.searchParams.get('filter')] ? url.searchParams.get('filter') : 'alle', id = String(url.searchParams.get('id') || '');
-      const echt = echtePersonen(k), echteSpiele = Object.values(spiele), nutzeEcht = !!key() && echteSpiele.length > 0;
+      const echt = echtePersonen(k), echteSpiele = Object.values(spiele);
+      // Rang und Meisterschaft sind unabhängig vom Spielverlauf verfügbar.
+      const nutzeEcht = !!key() && (echteSpiele.length > 0 || echt.some((p) => p.id === id && p.puuids.length));
       const quelle = nutzeEcht ? { personen: echt, spiele: echteSpiele } : demo();
       const alle = quelle.personen.concat(autoMitspieler(quelle.personen, quelle.spiele)), person = alle.find((p) => p.id === id);
       if (!person) return senden(res, 404, { fehler: 'Diese Person gibt es nicht.' });
