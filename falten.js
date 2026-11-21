@@ -72,7 +72,7 @@ function ftAudio() {
   if (!ftAk) {
     const C = window.AudioContext || window.webkitAudioContext; if (!C) return null;
     const c = new C(), master = c.createGain(), komp = c.createDynamicsCompressor();
-    master.gain.value = 0.55; master.connect(komp).connect(c.destination);
+    master.gain.value = 0.55; master.connect(komp).connect(spielTonAusgang(c));
     ftAk = { c, master, takt: null, start: 0, schritt: 0, naechster: 0, stumm: ftStummMerk };
   }
   if (ftAk.c.state === 'suspended') ftAk.c.resume();

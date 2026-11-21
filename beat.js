@@ -242,9 +242,11 @@ function bbStart(was) {
     bb.auto = auto;
     bbTakt = setInterval(() => {
       if (!bb || bb.fertig) return;
-      while (bb.start + bb.schritt * s16 < A.c.currentTime + 0.15 && bb.schritt < BB_TAKTE * 16) {
+      const jetzt = A.c.currentTime;
+      while (bb.start + bb.schritt * s16 < jetzt + 0.15 && bb.schritt < BB_TAKTE * 16) {
         const t = bb.start + bb.schritt * s16;
-        if (!A.stumm) { bbSchritt(A, song, bb.schritt, t); if (auto.has(bb.schritt)) bbMelodie(A, t, song, auto.get(bb.schritt), 0.8); }
+        // Nach einer Pause nur noch anstehende Töne abspielen.
+        if (!A.stumm && t >= jetzt) { bbSchritt(A, song, bb.schritt, t); if (auto.has(bb.schritt)) bbMelodie(A, t, song, auto.get(bb.schritt), 0.8); }
         bb.schritt++;
       }
     }, 25);

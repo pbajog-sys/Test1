@@ -61,7 +61,7 @@ function spieleTon(midi, dauer = 1.1) {
       o.connect(filter); o.start(t); o.stop(t + dauer + 0.05);
     });
     vib.start(t); vib.stop(t + dauer + 0.05);
-    filter.connect(gain).connect(audioCtx.destination);
+    filter.connect(gain).connect(spielTonAusgang(audioCtx));
   } catch (e) { /* ohne Ton weiterspielen */ }
 }
 

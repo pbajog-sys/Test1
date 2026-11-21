@@ -89,7 +89,7 @@ function srSpielen(buf, wennFertig) {
   srStopp();
   try {
     const c = audio(), q = c.createBufferSource(), g = c.createGain();
-    g.gain.value = 0.9; q.buffer = buf; q.connect(g).connect(c.destination);
+    g.gain.value = 0.9; q.buffer = buf; q.connect(g).connect(spielTonAusgang(c));
     q.onended = () => { if (srQuelle === q) { srQuelle = null; if (wennFertig) wennFertig(); } };
     q.start(); srQuelle = q;
   } catch (e) { if (wennFertig) wennFertig(); }

@@ -89,7 +89,7 @@ function taktBusNeu() {
   if (taktBus) { try { taktBus.disconnect(); } catch (e) { /* schon weg */ } }
   taktBus = c.createGain();
   taktBus.gain.value = 0.9;
-  taktBus.connect(c.destination);
+  taktBus.connect(spielTonAusgang(c));
   return taktBus;
 }
 function rauschPuffer(c) {

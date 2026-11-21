@@ -455,7 +455,7 @@ if ('speechSynthesis' in window) { enStimmeSuchen(); if (speechSynthesis.addEven
 function enSprich(text, langsam) {
   if (!enStimme) return;
   speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text); u.voice = enStimme; u.lang = enStimme.lang; u.rate = langsam ? 0.65 : 0.95; speechSynthesis.speak(u);
+  const u = new SpeechSynthesisUtterance(text); u.voice = enStimme; u.lang = enStimme.lang; u.rate = langsam ? 0.65 : 0.95; spielTonSprache(u);
 }
 LH.paket({
   id: 'en', key: 'walquiz.lernhalle.en.v1', lang: 'en', titel: 'English Pro', sprache: 'Englisch', flagge: '🇬🇧', farbe1: '#2563eb', farbe2: '#dc2626', verlauf: 'eng',

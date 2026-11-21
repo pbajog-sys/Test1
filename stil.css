@@ -4733,3 +4733,49 @@ a.bb-datei { text-decoration: none; }
   .sk-gross-status { margin-top: 2px; font-size: .7rem; }
   .sk-gross-pfeil { display: none; }
 }
+
+.spiel-ton { position: relative; color: #eef3ff; font: 700 .9rem system-ui, sans-serif; }
+.spiel-ton summary {
+  display: grid;
+  place-items: center;
+  min-width: 40px;
+  min-height: 40px;
+  list-style: none;
+  border: 1px solid #ffffff3d;
+  border-radius: 50%;
+  background: #222b3bec;
+  cursor: pointer;
+}
+.spiel-ton summary::-webkit-details-marker { display: none; }
+.spiel-ton summary:focus-visible { outline: 2px solid #b9cbfc; outline-offset: 2px; }
+.spiel-ton-feld {
+  position: absolute;
+  z-index: 55;
+  top: calc(100% + 8px);
+  right: 0;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+  width: min(238px, calc(100vw - 28px));
+  padding: 12px;
+  border: 1px solid #566580;
+  border-radius: 12px;
+  background: #192437;
+  box-shadow: 0 8px 24px #0007;
+}
+.spiel-ton-feld input { grid-column: 1 / -1; width: 100%; margin: 0; accent-color: #b9cbfc; }
+.spiel-ton-schwebend {
+  position: fixed;
+  z-index: 49;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: calc(14px + env(safe-area-inset-bottom));
+}
+.spiel-ton-schwebend .spiel-ton-feld { top: auto; bottom: calc(100% + 8px); }
+@media (max-width: 640px) {
+  .spiel-ton-schwebend { bottom: calc(72px + env(safe-area-inset-bottom)); }
+}
+
+@media (max-width: 640px) {
+  .hub-leiste .hub-knoepfe { position: relative; }
+  .hub-leiste .spiel-ton { position: static; }
+}

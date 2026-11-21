@@ -73,7 +73,7 @@ function instTon(inst, midi, wann = 0, dauer = 1.6) {
   try {
     const c = instAudio(), t = c.currentTime + wann, f = 440 * Math.pow(2, (midi - 69) / 12);
     const g = c.createGain();
-    g.connect(c.destination);
+    g.connect(spielTonAusgang(c));
     if (inst === 'klavier') {
       // Klavier: Grundton und zwei Obertöne, schneller Anschlag, langes Ausklingen
       [[1, 0.32], [2, 0.12], [3, 0.05]].forEach(([k, v]) => {
