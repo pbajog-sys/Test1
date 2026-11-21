@@ -506,15 +506,19 @@ const skZahl = (wert) => Number(wert).toLocaleString('de-DE');
 const skRangNamen = { IRON: 'Eisen', BRONZE: 'Bronze', SILVER: 'Silber', GOLD: 'Gold', PLATINUM: 'Platin', EMERALD: 'Smaragd', DIAMOND: 'Diamant', MASTER: 'Meister', GRANDMASTER: 'Großmeister', CHALLENGER: 'Herausforderer' };
 const skKennzahl = (wert, text) => '<span><strong>' + skText(wert) + '</strong><small>' + text + '</small></span>';
 
-const skDuoModi = new Map([['alle', 'Alle (Kluft)'], ['solo', 'Solo/Duo'], ['flex', 'Flex'], ['5er', '5er'], ['aram', 'ARAM'], ['mayhem', 'Mayhem']]);
+const skDuoModi = new Map([['jeder', 'Alle öffentlichen Modi'], ['alle', 'Alle (Kluft)'], ['solo', 'Solo/Duo'], ['flex', 'Flex'], ['5er', '5er'], ['aram', 'ARAM'], ['mayhem', 'Mayhem']]);
 
 function skDuoErgebnis(daten, modus) {
   if (!daten || daten.quelle !== 'riot') return '<p>Für diesen Modus sind gerade keine Daten verfügbar.</p>';
   const personen = new Map((daten.personen || []).map((p) => [p.id, p.name]));
-  const duos = (daten.duos || []).filter((d) => d.g > 0 && (d.a === daten.ichId || d.b === daten.ichId)).slice(0, 3);
-  return (modus === '5er' ? '<p class="sk-duohinweis">Flex mit fünf eingetragenen Personen im selben Team.</p>' : '') + (duos.length ? '<ul class="sk-duos">' + duos.map((d) => {
+  const vorhanden = (daten.duos || []).filter((d) => d.g > 0);
+  const eigene = vorhanden.filter((d) => d.a === daten.ichId || d.b === daten.ichId);
+  const gruppe = !eigene.length && vorhanden.length > 0;
+  const duos = (gruppe ? vorhanden : eigene).slice(0, 3);
+  const name = (id) => personen.get(id) || 'Mitspieler';
+  return (modus === '5er' ? '<p class="sk-duohinweis">Flex mit fünf eingetragenen Personen im selben Team.</p>' : '') + (gruppe ? '<p class="sk-duohinweis">Gruppen-Duos · keine eigenen Duos für diesen Filter.</p>' : '') + (duos.length ? '<ul class="sk-duos">' + duos.map((d) => {
       const quote = Math.max(0, Math.min(100, Math.round(d.w / d.g * 100)));
-      return '<li><span>' + skText(personen.get(d.a === daten.ichId ? d.b : d.a) || 'Mitspieler') + ' <small>· ' + Number(d.g) + ' Spiele</small></span><b>' + quote + ' %</b><meter min="0" max="100" value="' + quote + '" aria-label="Siegquote"></meter></li>';
+      return '<li><span>' + skText(gruppe ? name(d.a) + ' & ' + name(d.b) : name(d.a === daten.ichId ? d.b : d.a)) + ' <small>· ' + Number(d.g) + ' Spiele</small></span><b>' + quote + ' %</b><meter min="0" max="100" value="' + quote + '" aria-label="Siegquote"></meter></li>';
     }).join('') + '</ul>' : '<p>Noch keine gemeinsamen Spiele in diesem Modus.</p>');
 }
 
@@ -526,8 +530,8 @@ async function skDienstJson(pfad) {
 function skDuoZeigen(vorschau) {
   const wahl = $('skDuoModus'), box = $('skDuoErgebnis');
   if (!wahl || !box) return;
-  if (vorschau.duoModus && ![...wahl.options].some((option) => option.value === vorschau.duoModus)) vorschau.duoModus = 'alle';
-  const modus = vorschau.duoModus || 'alle';
+  if (vorschau.duoModus && ![...wahl.options].some((option) => option.value === vorschau.duoModus)) vorschau.duoModus = 'jeder';
+  const modus = vorschau.duoModus || 'jeder';
   wahl.value = modus;
   const alt = vorschau.duos.get(modus);
   box.innerHTML = alt ? alt.html : '<p>Wird geladen …</p>';
@@ -538,7 +542,7 @@ function skDuoZeigen(vorschau) {
     vorschau.duoLaedt.delete(modus);
     if (skDienstVorschau !== vorschau || syZustand !== 'ok' || syName !== vorschau.konto) return;
     vorschau.duos.set(modus, { html: skDuoErgebnis(daten, modus), zeit: Date.now() });
-    if ((vorschau.duoModus || 'alle') === modus) skDuoZeigen(vorschau);
+    if ((vorschau.duoModus || 'jeder') === modus) skDuoZeigen(vorschau);
   });
 }
 
@@ -707,7 +711,7 @@ function skGrossKacheln() {
   });
   if (Date.now() - vorschau.lolZeit >= 60000) {
     vorschau.lolZeit = Date.now();
-    laden('lol', skDienstJson('lol/daten?filter=alle').then(async (d) => {
+    laden('lol', skDienstJson('lol/daten?filter=jeder').then(async (d) => {
       if (!d) return '';
       const profilPfad = 'lol/person?id=' + encodeURIComponent(d.ichId);
       let profil = d.ichId && (d.quelle === 'riot' || d.meine?.length)
@@ -720,7 +724,7 @@ function skGrossKacheln() {
           kartenModus = 'Öffentliche Modi';
         }
       }
-      vorschau.duos.set('alle', { html: skDuoErgebnis(d, 'alle'), zeit: Date.now() });
+      vorschau.duos.set('jeder', { html: skDuoErgebnis(d, 'jeder'), zeit: Date.now() });
       return skZeigeLol(d, profil, kartenModus);
     }));
   }

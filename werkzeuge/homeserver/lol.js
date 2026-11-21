@@ -184,10 +184,17 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     }
     let masteryFehler = '';
     if (masteryErneuern || !a.masteryZeit || jetzt() - a.masteryZeit > 864e5) {
-      const ms = await riot(plattform(acc.region) + '/lol/champion-mastery/v4/champion-masteries/by-puuid/' + acc.puuid + '/top?count=10', true)
+      const pfad = plattform(acc.region) + '/lol/champion-mastery/v4/champion-masteries/by-puuid/' + encodeURIComponent(acc.puuid);
+      const masteryHolen = (url) => riot(url, true)
         .catch((e) => { if (e.status === 401) throw e; return { status: e.status || 0 }; });
+      let ms = await masteryHolen(a.masteryListe ? pfad : pfad + '/top?count=10');
+      if (!a.masteryListe && ms.status === 400) {
+        ms = await masteryHolen(pfad);
+        if (ms.status === 200 && Array.isArray(ms.json)) a.masteryListe = true;
+      }
       if (ms.status === 200 && Array.isArray(ms.json)) {
-        a.mastery = ms.json.map((x) => ({ id: x.championId, p: x.championPoints, l: x.championLevel }));
+        a.mastery = ms.json.map((x) => ({ id: x.championId, p: x.championPoints, l: x.championLevel }))
+          .sort((a, b) => b.p - a.p).slice(0, 10);
         a.masteryZeit = jetzt();
       } else if (masteryErneuern) {
         masteryFehler = 'Champion-Meisterschaft: ' + (ms.status ? 'Riot HTTP ' + ms.status + '.' : 'Riot war nicht erreichbar.');
