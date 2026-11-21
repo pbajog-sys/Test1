@@ -157,6 +157,20 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       const m = await riot(regional(acc.region) + '/lol/match/v5/matches/' + id);
       if (m.status === 200 && m.json && m.json.info) spiele[id] = kompakt(m.json);
     }
+    // einmalig: ARAM und ARAM Mayhem gezielt nachholen (fallen sonst aus den letzten 100 Spielen heraus)
+    if (!a.aramGeholt) {
+      for (const q of [2400, 450]) {
+        const r = await riot(regional(acc.region) + '/lol/match/v5/matches/by-puuid/' + acc.puuid + '/ids?queue=' + q + '&start=0&count=50');
+        if (r.status !== 200) continue;
+        for (const id of r.json || []) {
+          if (!a.ids.includes(id)) a.ids.push(id);
+          if (spiele[id]) continue;
+          const m = await riot(regional(acc.region) + '/lol/match/v5/matches/' + id);
+          if (m.status === 200 && m.json && m.json.info) spiele[id] = kompakt(m.json);
+        }
+      }
+      a.aramGeholt = true;
+    }
     // ältere gespeicherte Spiele ohne Runen/Zauber nach und nach neu holen (15 je Durchlauf)
     for (const id of a.ids.filter((x) => spiele[x] && !spiele[x].x).slice(0, 15)) {
       const m = await riot(regional(acc.region) + '/lol/match/v5/matches/' + id);
