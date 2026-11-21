@@ -28,6 +28,15 @@ const REGIONEN = {
 };
 const FILTER = { alle: [400, 420, 430, 440, 490], solo: [420], flex: [440], normal: [400, 430, 490], aram: [450], mayhem: [2400] };
 const QUEUE_NAME = { 420: 'Ranked Solo', 440: 'Ranked Flex', 400: 'Normal Draft', 430: 'Normal Blind', 490: 'Quickplay', 450: 'ARAM', 2400: 'ARAM: Mayhem', 720: 'ARAM Clash', 1700: 'Arena', 1900: 'URF', 900: 'ARURF' };
+// ARAM-Varianten (neue Karten/Events bekommen neue Queue-Nummern) zusätzlich am Spielmodus erkennen
+const ARAM_Q = [450, 100, 720, 2400], ARAM_MODUS = /ARAM|KIWI|MAYHEM/i;
+const istAramSpiel = (m) => ARAM_Q.includes(m.q) || ARAM_MODUS.test(m.gm || '');
+function passtFilter(filter, m) {
+  if (filter === 'aram') return m.q === 450 || m.q === 100;
+  if (filter === 'mayhem') return m.q !== 0 && istAramSpiel(m) && m.q !== 450 && m.q !== 100 && m.q !== 720;
+  return (FILTER[filter] || FILTER.alle).includes(m.q);
+}
+const queueText = (m) => QUEUE_NAME[m.q] || (passtFilter('mayhem', m) ? 'ARAM: Mayhem' : 'Spiel ' + m.q);
 const ROLLEN = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'];
 const RIOT_ID = /^(.{3,16})#([A-Za-z0-9]{2,5})$/u;
 const { erstellePrime } = require('./lol-prime.js');
@@ -112,7 +121,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
   function kompakt(m) {
     const i = m.info || {}, bans = {};
     (i.teams || []).forEach((t) => { bans[t.teamId] = (t.bans || []).map((x) => x.championId).filter((x) => x > 0); });
-    return { x: 2, b: bans, id: m.metadata.matchId, t: i.gameStartTimestamp || i.gameCreation, d: i.gameDuration, q: i.queueId, v: String(i.gameVersion || '').split('.').slice(0, 2).join('.'),
+    return { x: 3, gm: i.gameMode || '', mp: i.mapId || 0, b: bans, id: m.metadata.matchId, t: i.gameStartTimestamp || i.gameCreation, d: i.gameDuration, q: i.queueId, v: String(i.gameVersion || '').split('.').slice(0, 2).join('.'),
       p: (i.participants || []).map((x) => ({ u: x.puuid, n: (x.riotIdGameName || x.summonerName || '?') + (x.riotIdTagline ? '#' + x.riotIdTagline : ''), c: x.championName,
         r: x.teamPosition || '', tm: x.teamId, w: !!x.win, k: x.kills, de: x.deaths, a: x.assists, cs: (x.totalMinionsKilled || 0) + (x.neutralMinionsKilled || 0),
         g: x.goldEarned, s: x.totalDamageDealtToChampions, vs: x.visionScore, it: [x.item0, x.item1, x.item2, x.item3, x.item4, x.item5, x.item6].map((v) => v || 0),
@@ -172,7 +181,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       a.aramGeholt = true;
     }
     // ältere gespeicherte Spiele ohne Runen/Zauber nach und nach neu holen (15 je Durchlauf)
-    for (const id of a.ids.filter((x) => spiele[x] && !spiele[x].x).slice(0, 15)) {
+    for (const id of a.ids.filter((x) => spiele[x] && (spiele[x].x || 0) < 3).slice(0, 25)) {
       const m = await riot(regional(acc.region) + '/lol/match/v5/matches/' + id);
       if (m.status === 200 && m.json && m.json.info) spiele[id] = kompakt(m.json);
     }
@@ -204,7 +213,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
   function autoMitspieler(personenListe, spielListe) {
     const bekannt = new Set(personenListe.flatMap((p) => p.puuids)), aus = zustand.ausgeblendet || {}, z = {};
     for (const m of spielListe) {
-      if (!AUTO_QUEUES.includes(m.q)) continue;
+      if (!AUTO_QUEUES.includes(m.q) && !istAramSpiel(m)) continue;
       const teams = {}; m.p.forEach((x) => { if (bekannt.has(x.u)) teams[x.tm] = true; });
       m.p.forEach((x) => {
         if (!teams[x.tm] || bekannt.has(x.u) || aus[x.u] || !x.n || x.n === '?') return;
@@ -223,12 +232,12 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     const vonPuuid = {}; personenListe.forEach((p) => p.puuids.forEach((u) => { vonPuuid[u] = p.id; }));
     const P = {}; personenListe.forEach((p) => { P[p.id] = { id: p.id, name: p.name, ich: p.ich, auto: p.auto, accounts: p.accounts, g: 0, w: 0, k: 0, de: 0, a: 0, cs: 0, min: 0, s: 0, vs: 0, rollen: {}, champs: {}, verlauf: [] }; });
     const duos = {}, gegner = {}, feed = [];
-    const liste = spielListe.filter((m) => queues.includes(m.q) && m.d >= 300).sort((a, b) => b.t - a.t);
+    const liste = spielListe.filter((m) => passtFilter(filter, m) && m.d >= 300).sort((a, b) => b.t - a.t);
     for (const m of liste) {
       const wir = m.p.filter((x) => vonPuuid[x.u]);
       if (!wir.length) continue;
       const teamKills = { 100: 0, 200: 0 }; m.p.forEach((x) => { teamKills[x.tm] = (teamKills[x.tm] || 0) + x.k; });
-      if (feed.length < 60) feed.push({ id: m.id, t: m.t, d: m.d, q: QUEUE_NAME[m.q] || 'Spiel ' + m.q, wir: wir.map((x) => ({ person: vonPuuid[x.u], c: x.c, r: aram ? '' : x.r, w: x.w, k: x.k, de: x.de, a: x.a, cs: x.cs, n: x.n,
+      if (feed.length < 60) feed.push({ id: m.id, t: m.t, d: m.d, q: queueText(m), wir: wir.map((x) => ({ person: vonPuuid[x.u], c: x.c, r: aram ? '' : x.r, w: x.w, k: x.k, de: x.de, a: x.a, cs: x.cs, n: x.n,
         kp: teamKills[x.tm] ? Math.round(((x.k + x.a) / teamKills[x.tm]) * 100) : 0, it: x.it || [], s: x.s || 0 })) });
       for (const x of wir) {
         const p = P[vonPuuid[x.u]], r = aram ? 'ARAM' : x.r || '?';
@@ -413,7 +422,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
         mastery = Object.values(summe).sort((a, b) => b.p - a.p).slice(0, 8);
         person.puuids.forEach((u) => { const a = zustand.accounts[u] || {}; (a.lp || []).forEach((x) => lpVerlauf.push(Object.assign({ acc: a.riotId }, x))); });
       } else ({ mastery, lpVerlauf } = demoProfilExtras(person, quelle.spiele));
-      const ergebnis = profil({ person, liste: quelle.spiele, queues: FILTER[filter], queueName: (q) => QUEUE_NAME[q] || 'Spiel ' + q, personVonPuuid: vonPuuid, mastery, lpVerlauf, champTags: Object.assign({}, DEMO_TAGS, namen._tags || {}) });
+      const ergebnis = profil({ person, liste: quelle.spiele, passt: (m) => passtFilter(filter, m), queueName: queueText, personVonPuuid: vonPuuid, mastery, lpVerlauf, champTags: Object.assign({}, DEMO_TAGS, namen._tags || {}) });
       return senden(res, 200, Object.assign(ergebnis, { quelle: nutzeEcht ? 'riot' : 'demo', auto: !!person.auto }));
     }
     if (weg === '/lol/account' && m === 'POST') {

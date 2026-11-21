@@ -42,9 +42,9 @@ function tagUndStunde(t) {
 }
 
 // person: { id, name, puuids, accounts }, liste: alle Spiele (kompakt), queues: erlaubte Queues
-function profil({ person, liste, queues, queueName, personVonPuuid, mastery, lpVerlauf, champTags }) {
+function profil({ person, liste, passt, queueName, personVonPuuid, mastery, lpVerlauf, champTags }) {
   const meine = new Set(person.puuids);
-  const spiele = liste.filter((m) => queues.includes(m.q) && m.d >= 300 && m.p.some((x) => meine.has(x.u))).sort((a, b) => b.t - a.t);
+  const spiele = liste.filter((m) => passt(m) && m.d >= 300 && m.p.some((x) => meine.has(x.u))).sort((a, b) => b.t - a.t);
   const champs = {}, rollen = {}, klassen = {}, mit = {}, woche = TAGE.map(() => [0, 0]), stunden = Array.from({ length: 24 }, () => [0, 0]);
   let g = 0, w = 0, k = 0, de = 0, a = 0, kpSumme = 0, dauer = 0;
   const zeilen = [];
@@ -66,7 +66,7 @@ function profil({ person, liste, queues, queueName, personVonPuuid, mastery, lpV
       const b = bewerten(m), gewinner = m.p.map((y, j) => j).filter((j) => m.p[j].w), verlierer = m.p.map((y, j) => j).filter((j) => !m.p[j].w);
       const bester = (l) => l.sort((p, q) => b.platz[p] - b.platz[q])[0];
       const mvp = bester(gewinner.slice()), ace = bester(verlierer.slice());
-      zeilen.push({ id: m.id, t: m.t, d: m.d, q: queueName(m.q), w: x.w, ich: i, kp: Math.round(kp * 100), platz: b.platz[i], note: b.note[i],
+      zeilen.push({ id: m.id, t: m.t, d: m.d, q: queueName(m), w: x.w, ich: i, kp: Math.round(kp * 100), platz: b.platz[i], note: b.note[i],
         orden: i === mvp ? 'MVP' : i === ace ? 'ACE' : '', etikett: etikett(m, i, b),
         p: m.p.map((y, j) => ({ n: y.n, person: personVonPuuid[y.u] || null, c: y.c, r: y.r, tm: y.tm, w: y.w, k: y.k, de: y.de, a: y.a, cs: y.cs, g: y.g, s: y.s, vs: y.vs, it: y.it || [], sp: y.sp || [], ru: y.ru || [], cl: y.cl || 0, note: b.note[j] })) });
     }
