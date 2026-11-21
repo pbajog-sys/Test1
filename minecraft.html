@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>⛏️ Minecraft</title>
+<title>Blockrevier · Spielraum</title>
 <link rel="stylesheet" href="fonts/fonts.css?v=153">
 <style>
   @font-face { font-family: "Pixel"; src: url(fonts/pixelify-400.woff2) format("woff2"); font-weight: 400; font-display: swap; }
@@ -254,19 +254,14 @@
   @media (min-width: 860px) { .speichern-leiste { bottom: -20px; margin: 10px -26px -20px; padding: 12px 26px; } .konfig-spalten { columns: 2; column-gap: 22px; } .gruppe { break-inside: avoid; } }
   details summary { cursor: pointer; color: var(--muted); font-weight: 700; margin-top: 10px; }
 </style>
+<link rel="stylesheet" href="spielraum.css?v=196">
 </head>
-<body>
+<body class="spielraum-seite spielraum-minecraft">
 <header class="kopf">
+  <img class="spielraum-motiv" src="bilder/blockrevier.webp" alt="Beleuchtete Hütte in einem kantigen Tannenwald">
   <div class="kopf-innen">
     <div class="marke">
-      <svg viewBox="0 0 8 8" shape-rendering="crispEdges" aria-hidden="true">
-        <rect width="8" height="8" fill="#7a5233"/><rect width="8" height="2" fill="#6fbf45"/><rect y="2" width="8" height="1" fill="#5aa83a"/>
-        <rect x="1" y="3" width="1" height="1" fill="#5aa83a"/><rect x="4" y="3" width="1" height="1" fill="#5aa83a"/><rect x="6" y="3" width="1" height="2" fill="#5aa83a"/>
-        <rect x="2" width="1" height="1" fill="#8ad65c"/><rect x="5" y="1" width="1" height="1" fill="#8ad65c"/><rect x="0" y="1" width="1" height="1" fill="#4f9a33"/>
-        <rect x="2" y="5" width="1" height="1" fill="#5c3d25"/><rect x="5" y="6" width="1" height="1" fill="#5c3d25"/><rect x="0" y="6" width="1" height="1" fill="#946540"/>
-        <rect x="4" y="4" width="1" height="1" fill="#946540"/><rect x="7" y="5" width="1" height="1" fill="#5c3d25"/><rect x="3" y="7" width="1" height="1" fill="#946540"/>
-      </svg>
-      <div><h1>Minecraft-Server</h1><p><a href="./">← Spielekiste</a> · <span id="unter">Wird geladen …</span></p></div>
+      <div><h1>Blockrevier</h1><p><a href="./">← Spielraum</a> · <span id="unter">Wird geladen …</span></p></div>
     </div>
     <span class="pille" id="statusPille" hidden><span class="punkt" id="punkt"></span><span id="statusText"></span> <small class="muted" id="version"></small></span>
     <span class="leistung" id="leistung" hidden></span>
@@ -621,7 +616,7 @@ function mitspielenFormular(z) {
 }
 async function laden() {
   let r; try { r = await api('minecraft/info'); } catch (e) { r = { status: 0 }; }
-  if (r.status === 401) { $('unter').innerHTML = 'Bitte zuerst in der <a href="./">Spielekiste</a> über ☁️ anmelden.'; return; }
+  if (r.status === 401) { $('unter').innerHTML = 'Bitte zuerst im <a href="./">Spielraum</a> über ☁️ anmelden.'; return; }
   if (r.status !== 200) { $('unter').textContent = 'Der Server ist gerade nicht erreichbar.'; return; }
   info = r.json;
   if (!info.installiert) { $('unter').textContent = 'Auf diesem Server ist (noch) kein Minecraft installiert.' + (info.admin ? ' Installieren kannst du es im ☁️-Menü unter „Erweiterungen“.' : ''); return; }

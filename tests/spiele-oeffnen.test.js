@@ -19,11 +19,11 @@ const { chromium, devices } = require('playwright');
         await p.goto('http://localhost:8765/'); await p.waitForTimeout(1300);
         continue;
       }
-      await p.evaluate((id) => $(id).click(), id); await p.waitForTimeout(900);
-      const wo = await p.evaluate(() => document.querySelector('.screen.active').id);
-      const gut = wo !== 'screen-hub';
+      await p.evaluate((id) => $(id).click(), id);
+      const gut = await p.waitForFunction(() => document.querySelector('.screen.active').id !== 'screen-hub', null, { timeout: 5000 })
+        .then(() => true, (e) => { if (e.name !== 'TimeoutError') throw e; return false; });
       gut ? ok++ : fail++;
-      if (!gut) console.log('✗', name, id, 'bleibt auf', wo);
+      if (!gut) console.log('✗', name, id, 'bleibt auf screen-hub');
     }
     await p.evaluate(() => zeigeHub());
     if (fehler.length) { fail++; console.log('✗', name, 'Seitenfehler:', fehler.join(' | ')); } else ok++;
