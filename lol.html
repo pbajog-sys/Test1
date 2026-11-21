@@ -4,14 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<meta name="theme-color" content="#070d18">
+<meta name="theme-color" content="#0b0b14">
 <title>LoL-Zentrale</title>
 <link rel="stylesheet" href="fonts/fonts.css?v=153">
 <style>
   :root {
-    --bg: #070d18; --flaeche: #0e1726; --flaeche2: #15213a; --slot: #0a1220; --linie: rgba(200,170,110,.14); --linie2: rgba(255,255,255,.06);
-    --text: #e8edf5; --muted: #8a97ad; --gold: #c8aa6e; --gold-hell: #f0e6d2; --teal: #0ac8b9;
-    --sieg: #3b82f6; --sieg-bg: rgba(59,130,246,.12); --niederlage: #e84057; --niederlage-bg: rgba(232,64,87,.12); --r: 12px;
+    --bg: #0b0b14; --flaeche: rgba(255,255,255,.07); --flaeche2: rgba(255,255,255,.12); --slot: rgba(255,255,255,.05); --linie: rgba(255,255,255,.16); --linie2: rgba(255,255,255,.09);
+    --text: #f5f5f7; --muted: rgba(235,235,245,.6); --gold: #0a84ff; --gold-hell: #ffffff; --teal: #64d2ff;
+    --sieg: #0a84ff; --sieg-bg: rgba(10,132,255,.14); --niederlage: #ff453a; --niederlage-bg: rgba(255,69,58,.13); --r: 22px;
+    --glas: rgba(255,255,255,.075); --glas-rand: rgba(255,255,255,.14); --unschaerfe: blur(28px) saturate(170%);
   }
   * { box-sizing: border-box; }
   body { margin: 0; background: radial-gradient(1200px 600px at 80% -10%, rgba(10,200,185,.08), transparent 60%), radial-gradient(900px 500px at -10% 0%, rgba(200,170,110,.09), transparent 60%), var(--bg); color: var(--text); font-family: "Nunito", system-ui, sans-serif; line-height: 1.45; min-height: 100vh; }
@@ -160,13 +161,70 @@
   .tipp-zeile { margin-top: 12px; font-size: .9rem; }
   #meldung { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #0a1220; border: 1px solid var(--linie); padding: 10px 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); max-width: calc(100vw - 32px); z-index: 5; }
   .fuss { padding: 0 clamp(14px, 2.4vw, 40px) 30px; font-size: .72rem; color: var(--muted); }
+
+  /* ---------- Glas-Design (Apple-Stil) ---------- */
+  body { font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "SF Pro Display", "Inter", system-ui, "Nunito", sans-serif; -webkit-font-smoothing: antialiased; letter-spacing: -.005em;
+    background: var(--bg); }
+  body::before { content: ""; position: fixed; inset: -20vmax; z-index: -1; pointer-events: none;
+    background: radial-gradient(38vmax 38vmax at 18% 12%, rgba(94,92,230,.55), transparent 62%), radial-gradient(34vmax 34vmax at 85% 8%, rgba(10,132,255,.45), transparent 60%),
+      radial-gradient(40vmax 40vmax at 78% 78%, rgba(191,90,242,.38), transparent 62%), radial-gradient(36vmax 36vmax at 10% 85%, rgba(100,210,255,.28), transparent 60%);
+    filter: blur(40px); }
+  h1, h2, h3 { letter-spacing: -.02em; }
+  h2 { font-weight: 700; }
+  .marke h1 { background: none; color: var(--text); font-weight: 700; font-size: 1.6rem; }
+  .marke svg { width: 44px; height: 44px; filter: drop-shadow(0 6px 16px rgba(10,132,255,.35)); }
+  .karte, .banner, .chips, .reiter, #meldung { background: var(--glas); border: 1px solid var(--glas-rand); -webkit-backdrop-filter: var(--unschaerfe); backdrop-filter: var(--unschaerfe);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,.14), 0 10px 40px rgba(0,0,0,.28); }
+  .karte { border-radius: var(--r); padding: 18px; }
+  .banner { border-radius: 18px; color: var(--text); }
+  /* Segment-Steuerung wie in iOS */
+  .chips, .reiter { border-radius: 999px; padding: 4px; gap: 2px; border-bottom: 1px solid var(--glas-rand); }
+  .chips button, .reiter button { border-radius: 999px; padding: 7px 14px; color: var(--muted); font-weight: 600; box-shadow: none; transition: background .2s, color .2s; }
+  .chips button[aria-pressed="true"], .reiter button[aria-selected="true"] { background: rgba(255,255,255,.18); color: #fff; box-shadow: inset 0 1px 0 rgba(255,255,255,.25), 0 2px 10px rgba(0,0,0,.2); }
+  .reiter { align-self: flex-start; max-width: 100%; }
+  /* Knöpfe und Felder */
+  button, .knopf { border-radius: 999px; font-weight: 600; background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.1); transition: background .15s, transform .1s; }
+  button:hover { background: rgba(255,255,255,.16); border-color: rgba(255,255,255,.18); }
+  button:active { transform: scale(.97); }
+  button.haupt { background: #0a84ff; color: #fff; border-color: transparent; box-shadow: 0 6px 18px rgba(10,132,255,.35); }
+  button.haupt:hover { background: #2b95ff; }
+  input, select { border-radius: 12px; background: rgba(255,255,255,.07); border: 1px solid rgba(255,255,255,.12); }
+  input:focus, select:focus { outline: 3px solid rgba(10,132,255,.55); outline-offset: 0; }
+  select option { background: #1c1c26; }
+  /* innere Flächen: hell durchscheinend, ohne eigene Unschärfe (schont das Handy) */
+  .person, .acc, .kachel, .platz { background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.09); border-radius: 18px; }
+  .person { transition: transform .15s, background .15s; }
+  .person:hover { border-color: rgba(255,255,255,.22); background: rgba(255,255,255,.09); transform: translateY(-1px); }
+  .bild { background: rgba(255,255,255,.1); color: var(--text); border-radius: 10px; }
+  .bild.gross { border: 0; border-radius: 18px; box-shadow: 0 0 0 1px rgba(255,255,255,.18), 0 8px 22px rgba(0,0,0,.35); }
+  .bild.mini { border-radius: 6px; }
+  .items .bild.mini { background: rgba(255,255,255,.08); }
+  .rolle { background: rgba(255,255,255,.12); color: #fff; border-radius: 999px; font-weight: 700; }
+  .spieler-zeile .champ .rolle { background: rgba(28,28,38,.9); }
+  .ich-marke { background: #0a84ff; color: #fff; border-radius: 999px; padding: 1px 7px; }
+  .auswahl button[aria-pressed="true"] { background: #0a84ff; color: #fff; border-color: transparent; }
+  .wr.top, .kda.top { color: #ff9f0a; } .wr.gut, .kda.gut { color: #30d158; } .wr.mies { color: #ff453a; }
+  .balken { height: 5px; border-radius: 99px; background: rgba(255,69,58,.85); }
+  .balken i { border-radius: 99px; }
+  .form i { border-radius: 99px; width: 7px; height: 7px; }
+  .spiel { border-radius: 16px; border: 1px solid rgba(255,255,255,.06); }
+  .spiel > i { border-radius: 0; }
+  .zusammen { color: var(--teal); }
+  th, td { border-bottom-color: rgba(255,255,255,.07); }
+  .matrix td.feld { border-radius: 10px; }
+  .matrix { border-collapse: separate; border-spacing: 3px; }
+  .matrix td, .matrix th { border-bottom: 0; }
+  #meldung { border-radius: 999px; padding: 11px 18px; }
+  .seite { scrollbar-color: rgba(255,255,255,.2) transparent; }
+  @media (max-width: 640px) { .karte { padding: 14px; border-radius: 20px; } .marke h1 { font-size: 1.35rem; } }
+  @media (prefers-reduced-transparency: reduce) { .karte, .banner, .chips, .reiter, #meldung { background: #1c1c26; -webkit-backdrop-filter: none; backdrop-filter: none; } }
 </style>
 </head>
 <body>
 <header class="kopf">
   <div class="kopf-innen">
     <div class="marke">
-      <svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="g" x1="0" x2="1"><stop offset="0" stop-color="#f0e6d2"/><stop offset="1" stop-color="#c8aa6e"/></linearGradient></defs><path d="M20 3 35 11v18L20 37 5 29V11z" fill="#0e1726" stroke="url(#g)" stroke-width="2"/><path d="M20 10 28 14.5v9L20 28l-8-4.5v-9z" fill="none" stroke="#0ac8b9" stroke-width="1.6"/><circle cx="20" cy="19" r="3" fill="#0ac8b9"/></svg>
+      <svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5e5ce6"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#64d2ff"/></linearGradient></defs><rect x="1" y="1" width="38" height="38" rx="11" fill="url(#g)"/><rect x="1.5" y="1.5" width="37" height="37" rx="10.5" fill="none" stroke="rgba(255,255,255,.45)"/><rect x="10" y="20" width="4.5" height="10" rx="2.2" fill="#fff" opacity=".75"/><rect x="17.75" y="13" width="4.5" height="17" rx="2.2" fill="#fff"/><rect x="25.5" y="17" width="4.5" height="13" rx="2.2" fill="#fff" opacity=".88"/></svg>
       <div><h1>LoL-Zentrale</h1><p><a href="./">← Spielekiste</a> · wer spielt wo am besten – und mit wem</p></div>
     </div>
     <div class="chips" id="filter" role="group" aria-label="Spielmodus"><button type="button" data-f="alle" aria-pressed="true">Alle (Kluft)</button><button type="button" data-f="solo" aria-pressed="false">Ranked Solo</button><button type="button" data-f="flex" aria-pressed="false">Ranked Flex</button><button type="button" data-f="normal" aria-pressed="false">Normal</button><button type="button" data-f="aram" aria-pressed="false">ARAM</button></div>
@@ -347,7 +405,7 @@ function duosZeigen() {
 // ---------- Rollen-Matrix ----------
 function matrixZeigen(ziel, voll) {
   const rollen = filter === 'aram' ? ['ARAM'] : ROLLEN;
-  const farbe = (w, g) => { if (!g) return ''; const p = w / g, a = g < 3 ? 0.1 : 0.18 + Math.min(0.5, Math.abs(p - 0.5) * 2.2); return 'background:' + (p >= 0.5 ? 'rgba(59,130,246,' + a + ')' : 'rgba(232,64,87,' + a + ')'); };
+  const farbe = (w, g) => { if (!g) return ''; const p = w / g, a = g < 3 ? 0.1 : 0.18 + Math.min(0.5, Math.abs(p - 0.5) * 2.2); return 'background:' + (p >= 0.5 ? 'rgba(10,132,255,' + a + ')' : 'rgba(255,69,58,' + a + ')'); };
   ziel.innerHTML = '<table class="matrix"><thead><tr><th>Spieler</th>' + rollen.map((r) => '<th style="text-align:center">' + (ROLLE_NAME[r] || r) + '</th>').join('') + '</tr></thead><tbody>'
     + daten.personen.map((p) => '<tr><td><b>' + esc(p.name) + '</b></td>' + rollen.map((r) => { const v = p.rollen[r];
       return v ? '<td class="feld" style="' + farbe(v.w, v.g) + '">' + pct(v.w, v.g) + ' %<small>' + v.g + (voll ? ' · KDA ' + kdaWert(v.k, v.de, v.a).toFixed(1).replace('.', ',') : '') + '</small></td>' : '<td class="feld leer">–</td>'; }).join('') + '</tr>').join('')
