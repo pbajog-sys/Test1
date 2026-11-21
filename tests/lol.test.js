@@ -41,7 +41,8 @@ const riotEcht = async (url, k) => {
   if (m) { const id = ACCS[(m[1] + '#' + m[2]).toLowerCase()]; return id ? { status: 200, json: { puuid: id, gameName: m[1], tagLine: m[2] } } : { status: 404, json: null }; }
   if ((m = /summoners\/by-puuid\/(.+)$/.exec(p))) return { status: 200, json: { profileIconId: 29, summonerLevel: 321 } };
   if ((m = /entries\/by-puuid\/(.+)$/.exec(p))) return { status: 200, json: m[1] === 'P-ANNA2' ? [{ queueType: 'RANKED_SOLO_5x5', tier: 'PLATINUM', rank: 'II', leaguePoints: 40, wins: 20, losses: 15 }] : [] };
-  if ((m = /champion-masteries\/by-puuid\/(.+)\/top$/.exec(p))) return { status: 200, json: [{ championId: 103, championPoints: 250000, championLevel: 12 }, { championId: 266, championPoints: 90000, championLevel: 7 }] };
+  if (p.endsWith('/champion-masteries/by-puuid/P-ANNA2/top')) return { status: 400, json: null };
+  if ((m = /champion-masteries\/by-puuid\/([^/]+)(?:\/top)?$/.exec(p))) return { status: 200, json: [{ championId: 103, championPoints: 250000, championLevel: 12 }, { championId: 266, championPoints: 90000, championLevel: 7 }] };
   if ((m = /matches\/by-puuid\/(.+)\/ids$/.exec(p))) {
     const typ = u.searchParams.get('type'), queue = u.searchParams.get('queue');
     if (queue === '2400' && SPIELE.EUW1_PRIVAT) return { status: 403, json: null };
@@ -221,6 +222,11 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     ck('Aktualisieren: erst 200, gleich danach 429', (await anfrage('lol/aktualisieren', 'POST', {}, anna)).status === 200 && (await anfrage('lol/aktualisieren', 'POST', {}, anna)).status === 429);
     await bisFertig(anna); await warte(100);
     const neu = riotAufrufe.slice(vorher);
+    ck('Meisterschaft: Top-400 nutzt die vollständige Liste und merkt sich den funktionierenden Abruf',
+      riotAufrufe.slice(0, vorher).some((url) => url.includes('/champion-masteries/by-puuid/P-ANNA2/top?count=10'))
+      && riotAufrufe.slice(0, vorher).some((url) => url.endsWith('/champion-masteries/by-puuid/P-ANNA2'))
+      && neu.some((url) => url.endsWith('/champion-masteries/by-puuid/P-ANNA2'))
+      && !neu.some((url) => url.includes('/champion-masteries/by-puuid/P-ANNA2/top')));
     ck('Manueller Import meldet Abschluss und aktualisiert die Champion-Meisterschaft',
       (await anfrage('lol/aktualisieren', 'GET', null, anna)).json.stand === 'fertig'
       && neu.some((url) => url.includes('champion-mastery/v4') && url.includes('P-ANNA')));
