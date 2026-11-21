@@ -483,10 +483,10 @@ function skDashboard() {
   start.innerHTML = '<div class="sk-gross" id="skGross" hidden>'
     + '<section class="sk-dienstzeile" id="skGrossLol" hidden><div class="sk-gross-kachel">'
     + '<img class="spielraum-motiv" src="bilder/duellbuch.webp" alt="Steinbrücke über einer Schlucht bei Nacht">'
-    + '<h2><a href="lol.html">League of Legends</a></h2><div id="skGrossLolDaten"></div></div><aside id="skGrossLolStats" class="sk-dienststats"></aside></section>'
+    + '<div class="sk-dienstkopf"><h2>League of Legends</h2><a class="sk-dienstweiter" href="lol.html">League of Legends öffnen <span aria-hidden="true">→</span></a></div><div id="skGrossLolDaten"></div></div><aside id="skGrossLolStats" class="sk-dienststats"></aside></section>'
     + '<section class="sk-dienstzeile" id="skGrossMc" hidden><div class="sk-gross-kachel">'
     + '<img class="spielraum-motiv" src="bilder/blockrevier.webp" alt="Beleuchtete Hütte in einem kantigen Tannenwald">'
-    + '<h2><a href="minecraft.html">Minecraft</a></h2><div id="skGrossMcDaten"></div></div><aside id="skGrossMcStats" class="sk-dienststats"></aside></section></div>'
+    + '<div class="sk-dienstkopf"><h2>Minecraft</h2><a class="sk-dienstweiter" href="minecraft.html">Minecraft öffnen <span aria-hidden="true">→</span></a></div><div id="skGrossMcDaten"></div></div><aside id="skGrossMcStats" class="sk-dienststats"></aside></section></div>'
     + (exp && !SK_ARCHIV.experiment ? '<button type="button" class="sk-experiment" id="skExperiment"><span class="sk-exp-nr">EXPERIMENT Nº ' + String(exp.nr).padStart(2, '0') + ' · KW ' + exp.kw + '</span><b>' + exp.e.emoji + ' ' + exp.e.titel + '</b><small>' + exp.e.teaser + '</small><span class="sk-exp-status">' + (exp.fertig ? '✓ durchgeführt · Ergebnis ansehen' : 'Versuch starten ›') + '</span></button>' : '');
   $('skGruss').addEventListener('click', skProfilZeigen);
   if ($('skExperiment')) $('skExperiment').addEventListener('click', () => labZeigen());
