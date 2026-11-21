@@ -353,7 +353,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
       let erfolge = 0;
       try { const a = JSON.parse(fs.readFileSync(path.join(welt, 'advancements', f), 'utf8')); erfolge = Object.entries(a).filter(([x, v]) => v && v.done === true && !/^minecraft:recipes\//.test(x)).length; } catch (e) { /* noch keine */ }
       return { name: namen[uuid] || uuid.slice(0, 8), uuid: /^[0-9a-f-]{32,36}$/i.test(uuid) ? uuid : '', erfolge, tode: g('deaths'), spielzeitMin: Math.round((g('play_time') || g('play_one_minute')) / 1200),
-        mobKills: g('mob_kills'), spielerKills: g('player_kills'), km: Math.round(WEGE.reduce((a, k) => a + g(k), 0) / 10000) / 10, zuletzt: fs.statSync(datei).mtimeMs };
+        bloecke: Object.values((j.stats || {})['minecraft:mined'] || {}).reduce((summe, n) => summe + (Number(n) || 0), 0), mobKills: g('mob_kills'), spielerKills: g('player_kills'), km: Math.round(WEGE.reduce((a, k) => a + g(k), 0) / 10000) / 10, zuletzt: fs.statSync(datei).mtimeMs };
     }).sort((a, b) => b.spielzeitMin - a.spielzeitMin);
   }
   // Wer war an welchem Tag online? Aus den Server-Logs (logs/JJJJ-MM-TT-n.log.gz + latest.log); gepackte Logs ändern sich nie → zwischenspeichern
@@ -675,7 +675,10 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
       if (!mcInstalliert()) return senden(res, 200, { installiert: false, admin: admins.has(k) });
       const st = await mcLaeuft();
       let version = ''; try { version = fs.readFileSync(path.join(mcOrdner(), 'paper-version.txt'), 'utf8').trim(); } catch (e) { /* egal */ }
-      return senden(res, 200, Object.assign({ installiert: true, admin: admins.has(k), adresse: String(req.headers.host || '').replace(/:\d+$/, ''), version, karte: mcKarteDa(),
+      const welt = path.join(mcOrdner(), mcProps()['level-name'] || 'world');
+      let weltErstellt = null;
+      try { weltErstellt = fs.statSync(welt).birthtimeMs || null; } catch (e) { /* Weltordner fehlt */ }
+      return senden(res, 200, Object.assign({ installiert: true, weltErstellt, admin: admins.has(k), adresse: String(req.headers.host || '').replace(/:\d+$/, ''), version, karte: mcKarteDa(),
         beschaeftigt: mcBeschaeftigt, spieler: mcStatistik(), aktivitaet: mcAktivitaet(),
         zugang: { modus: zugang.modus, mein: zugang.konten[k] ? zugang.konten[k].mc : '' }, leistung: await mcLeistung(st.laeuft), maxSpieler: Number(mcProps()['max-players']) || 20, seed: admins.has(k) ? mcProps()['level-seed'] || '' : undefined }, st));
     }

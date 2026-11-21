@@ -369,7 +369,7 @@ const caddy = http.createServer((req, res) => {
   fs.writeFileSync(path.join(MC, 'server.properties'), '#Minecraft server properties\r\nlevel-name=world\r\ndifficulty=easy\r\npvp=true\r\nmax-players=10\r\nmotd=Hallo\r\nlevel-seed=\r\nrcon.port=25575\r\n');
   fs.mkdirSync(path.join(MC, 'world', 'stats'), { recursive: true });
   fs.writeFileSync(path.join(MC, 'usercache.json'), JSON.stringify([{ name: 'Steve', uuid: 'aaaa-1' }, { name: 'Alex', uuid: 'bbbb-2' }]));
-  fs.writeFileSync(path.join(MC, 'world', 'stats', 'aaaa-1.json'), JSON.stringify({ stats: { 'minecraft:custom': { 'minecraft:deaths': 7, 'minecraft:play_time': 72000 * 2, 'minecraft:mob_kills': 31, 'minecraft:walk_one_cm': 1234500, 'minecraft:sprint_one_cm': 500000 } } }));
+  fs.writeFileSync(path.join(MC, 'world', 'stats', 'aaaa-1.json'), JSON.stringify({ stats: { 'minecraft:mined': { 'minecraft:stone': 300, 'minecraft:dirt': 12 }, 'minecraft:custom': { 'minecraft:deaths': 7, 'minecraft:play_time': 72000 * 2, 'minecraft:mob_kills': 31, 'minecraft:walk_one_cm': 1234500, 'minecraft:sprint_one_cm': 500000 } } }));
   fs.writeFileSync(path.join(MC, 'world', 'stats', 'bbbb-2.json'), JSON.stringify({ stats: { 'minecraft:custom': { 'minecraft:deaths': 2, 'minecraft:play_time': 36000, 'minecraft:player_kills': 3 } } }));
   fs.mkdirSync(path.join(MC, 'world', 'advancements'), { recursive: true });
   fs.writeFileSync(path.join(MC, 'world', 'advancements', 'aaaa-1.json'), JSON.stringify({ 'minecraft:story/mine_stone': { done: true }, 'minecraft:story/root': { done: true }, 'minecraft:recipes/misc/x': { done: true }, 'minecraft:story/smelt_iron': { done: false }, DataVersion: 4000 }));
@@ -383,7 +383,7 @@ const caddy = http.createServer((req, res) => {
   mc.online = ['Steve'];
   const benInfo = await C.evaluate(async () => { const r = await syApi('minecraft/info'); return [r.status, r.json]; });
   const steve = (benInfo[1].spieler || []).find((x) => x.name === 'Steve');
-  ck('Minecraft-Seite: jeder Angemeldete sieht Tode, Spielzeit, Kills, km', benInfo[0] === 200 && steve && steve.tode === 7 && steve.spielzeitMin === 120 && steve.mobKills === 31 && steve.km === 17.3 && benInfo[1].spieler[1].spielerKills === 3 && benInfo[1].seed === undefined && steve.erfolge === 2, JSON.stringify(benInfo[1].spieler));
+  ck('Minecraft-Seite: jeder Angemeldete sieht Tode, Spielzeit, Kills, km und abgebaute Blöcke', benInfo[0] === 200 && steve && steve.tode === 7 && steve.spielzeitMin === 120 && steve.mobKills === 31 && steve.bloecke === 312 && benInfo[1].weltErstellt > 0 && steve.km === 17.3 && benInfo[1].spieler[1].spielerKills === 3 && benInfo[1].seed === undefined && steve.erfolge === 2, JSON.stringify(benInfo[1].spieler));
   const akt = benInfo[1].aktivitaet || [];
   ck('Minecraft-Seite: Online pro Tag aus den Server-Logs (einmal je Spieler und Tag, nur letzte 90 Tage)', akt.length === 3 && akt[0].tag === tag(3) && akt[0].spieler.join() === 'Alex,Steve' && akt[2].spieler.join() === 'Steve' && !JSON.stringify(akt).includes('Uralt'), JSON.stringify(akt));
   ck('Minecraft-Seite: ohne Anmeldung nichts', (await fetch('http://localhost:8766/api/minecraft/info')).status === 401);
@@ -434,7 +434,11 @@ const caddy = http.createServer((req, res) => {
   ck('Selbst eintragen: anfangs aus', ausAn[0] === 403);
   const z1 = await post(A, 'admin/minecraft', { aktion: 'zugang', modus: 'code' });
   ck('Selbst eintragen: Admin schaltet „mit Code“ an, Code wird erzeugt', z1[0] === 200 && /^[a-z]+-[a-z]+-\d+$/.test(z1[1].code), JSON.stringify(z1));
-  await C.goto(URL_ + 'minecraft.html'); await ruhig(C, 1500);
+  await A.goto(URL_ + 'minecraft.html#beitrittscode');
+  await A.locator('#zugangNeu').waitFor({ state: 'visible', timeout: 5000 });
+  ck('Beitrittscode-Direktlink öffnet die Spieler-Verwaltung für Admins', await A.isVisible('#verwaltung') && await A.isVisible('#zugangNeu'));
+  await A.click('#vwZu');
+  await C.goto(URL_ + 'minecraft.html#mitspielen'); await ruhig(C, 1500);
   ck('Selbst eintragen: Ben sieht „Mitspielen“ mit Code-Feld', await C.isVisible('#mcBeiName') && await C.isVisible('#mcBeiCode'));
   await C.fill('#mcBeiName', 'notch'); await C.fill('#mcBeiCode', 'falsch'); await C.click('#mcBeiLos'); await ruhig(C, 800);
   const falschCode = await C.textContent('#toast');

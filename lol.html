@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0b0b14">
-<title>Duellbuch · Spielraum</title>
+<title>League of Legends · Kompetenzzentrum</title>
 <link rel="stylesheet" href="fonts/fonts.css?v=153">
 <style>
   :root {
@@ -381,14 +381,14 @@
   @media (max-width: 640px) { .karte { padding: 14px; border-radius: 20px; } .marke h1 { font-size: 1.35rem; } }
   @media (prefers-reduced-transparency: reduce) { .karte, .banner, .chips, .reiter, #meldung { background: #1c1c26; -webkit-backdrop-filter: none; backdrop-filter: none; } }
 </style>
-<link rel="stylesheet" href="spielraum.css?v=196">
+<link rel="stylesheet" href="spielraum.css?v=197">
 </head>
 <body class="spielraum-seite spielraum-lol">
 <header class="kopf">
   <img class="spielraum-motiv" src="bilder/duellbuch.webp" alt="Steinbrücke über einer Schlucht bei Nacht">
   <div class="kopf-innen">
     <div class="marke">
-      <div><h1>Duellbuch</h1><p><a href="./">← Spielraum</a> · League of Legends</p></div>
+      <div><h1>League of Legends</h1><p><a href="./">← Kompetenzzentrum</a></p></div>
     </div>
     <div class="chips" id="filter" role="group" aria-label="Spielmodus"><button type="button" data-f="alle" aria-pressed="true">Alle (Kluft)</button><button type="button" data-f="solo" aria-pressed="false">Ranked Solo</button><button type="button" data-f="flex" aria-pressed="false">Ranked Flex</button><button type="button" data-f="normal" aria-pressed="false">Normal</button><button type="button" data-f="aram" aria-pressed="false">ARAM</button><button type="button" data-f="mayhem" aria-pressed="false">ARAM Mayhem</button><button type="button" data-f="jeder" aria-pressed="false">Alle Modi</button></div>
   </div>
@@ -495,7 +495,7 @@
   </div>
 </main>
 <div class="leer-hinweis" id="hinweis" style="text-align:center;margin:14vh auto;max-width:520px;padding:0 20px"><p class="muted">Wird geladen …</p></div>
-<p class="fuss">Riot Games unterstützt Duellbuch nicht. Duellbuch gibt weder die Ansichten von Riot Games noch die von Personen wieder, die offiziell an dessen Angeboten mitwirken. Riot Games und die zugehörigen Angebote sind Marken oder eingetragene Marken von Riot Games, Inc.</p>
+<p class="fuss">Riot Games unterstützt diese Auswertung nicht. Sie gibt weder die Ansichten von Riot Games noch die von Personen wieder, die offiziell an dessen Angeboten mitwirken. Riot Games und die zugehörigen Angebote sind Marken oder eingetragene Marken von Riot Games, Inc.</p>
 <div id="meldung" role="status" hidden></div>
 
 <script>
@@ -539,12 +539,12 @@ const personVon = (id) => daten.personen.find((p) => p.id === id) || { name: '?'
 
 async function laden() {
   const r = await api('lol/daten?filter=' + filter).catch(() => ({ status: 0 }));
-  if (r.status === 401) { $('hinweis').innerHTML = '<p>Bitte zuerst im <a href="./">Spielraum</a> über ☁️ anmelden.</p>'; return; }
+  if (r.status === 401) { $('hinweis').innerHTML = '<p>Bitte zuerst im <a href="./">Kompetenzzentrum</a> über ☁️ anmelden.</p>'; return; }
   if (r.status !== 200) { $('hinweis').innerHTML = '<p class="muted">Der Server ist gerade nicht erreichbar.</p>'; return; }
   daten = r.json; $('hinweis').hidden = true; $('inhalt').hidden = false;
   const b = $('banner');
   b.hidden = daten.quelle === 'riot';
-  b.innerHTML = daten.key === 'ungueltig' ? '⚠️ Der Riot-API-Key ist abgelaufen oder ungültig – der Admin kann ihn in der Serverraum erneuern. Bis dahin: Beispieldaten.'
+  b.innerHTML = daten.key === 'ungueltig' ? '⚠️ Der Riot-API-Key ist abgelaufen oder ungültig – der Admin kann ihn auf der Server-Seite erneuern. Bis dahin: Beispieldaten.'
     : daten.key === 'fehlt' ? '✨ <b>Beispieldaten</b> – so sieht es aus, sobald ein Riot-API-Key eingetragen ist. Deine Accounts kannst du schon jetzt unter „Meine Accounts“ eintragen.'
     : '⏳ <b>Beispieldaten</b> – der Server holt gerade eure ersten Spiele bei Riot. Das kann ein paar Minuten dauern.';
   if (!$('region').options.length) $('region').innerHTML = Object.entries(daten.regionen).map(([k, v]) => '<option value="' + k + '"' + (k === 'euw1' ? ' selected' : '') + '>' + v + '</option>').join('');

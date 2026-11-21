@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
-<title>Blockrevier · Spielraum</title>
+<title>Minecraft · Kompetenzzentrum</title>
 <link rel="stylesheet" href="fonts/fonts.css?v=153">
 <style>
   @font-face { font-family: "Pixel"; src: url(fonts/pixelify-400.woff2) format("woff2"); font-weight: 400; font-display: swap; }
@@ -254,14 +254,14 @@
   @media (min-width: 860px) { .speichern-leiste { bottom: -20px; margin: 10px -26px -20px; padding: 12px 26px; } .konfig-spalten { columns: 2; column-gap: 22px; } .gruppe { break-inside: avoid; } }
   details summary { cursor: pointer; color: var(--muted); font-weight: 700; margin-top: 10px; }
 </style>
-<link rel="stylesheet" href="spielraum.css?v=196">
+<link rel="stylesheet" href="spielraum.css?v=197">
 </head>
 <body class="spielraum-seite spielraum-minecraft">
 <header class="kopf">
   <img class="spielraum-motiv" src="bilder/blockrevier.webp" alt="Beleuchtete Hütte in einem kantigen Tannenwald">
   <div class="kopf-innen">
     <div class="marke">
-      <div><h1>Blockrevier</h1><p><a href="./">← Spielraum</a> · <span id="unter">Wird geladen …</span></p></div>
+      <div><h1>Minecraft</h1><p><a href="./">← Kompetenzzentrum</a> · <span id="unter">Wird geladen …</span></p></div>
     </div>
     <span class="pille" id="statusPille" hidden><span class="punkt" id="punkt"></span><span id="statusText"></span> <small class="muted" id="version"></small></span>
     <span class="leistung" id="leistung" hidden></span>
@@ -616,7 +616,7 @@ function mitspielenFormular(z) {
 }
 async function laden() {
   let r; try { r = await api('minecraft/info'); } catch (e) { r = { status: 0 }; }
-  if (r.status === 401) { $('unter').innerHTML = 'Bitte zuerst im <a href="./">Spielraum</a> über ☁️ anmelden.'; return; }
+  if (r.status === 401) { $('unter').innerHTML = 'Bitte zuerst im <a href="./">Kompetenzzentrum</a> über ☁️ anmelden.'; return; }
   if (r.status !== 200) { $('unter').textContent = 'Der Server ist gerade nicht erreichbar.'; return; }
   info = r.json;
   if (!info.installiert) { $('unter').textContent = 'Auf diesem Server ist (noch) kein Minecraft installiert.' + (info.admin ? ' Installieren kannst du es im ☁️-Menü unter „Erweiterungen“.' : ''); return; }
@@ -627,7 +627,12 @@ async function laden() {
   $('spielerZahl').textContent = (info.spieler || []).length ? '· ' + info.spieler.length : '';
   $('version').textContent = info.version ? '' + info.version.replace(/^paper-|\.jar$/g, '').replace(/-(\d+)$/, ' (Paper-Build $1)') : '';
   $('adresse').textContent = info.adresse;
-  zeichnen(); mitspielen(); leistungZeigen(); if (!orteDaten || !document.hidden) orteLaden();
+  zeichnen(); mitspielen();
+  if (location.hash === '#mitspielen' && !$('mitspielen').hidden) {
+    history.replaceState(null, '', location.pathname + location.search);
+    $('mitspielen').scrollIntoView({ block: 'start' });
+  }
+  leistungZeigen(); if (!orteDaten || !document.hidden) orteLaden();
   $('karteVoll').hidden = !info.karte;
   if (info.karte) {
     if (!$('karteFrame')) $('karteInhalt').innerHTML = '<iframe id="karteFrame" src="api/minecraft/karte/" title="Weltkarte" loading="lazy"></iframe><p class="karte-tipp">Die Karte zeichnet sich nach und nach – überall dort, wo schon jemand war.</p>';
@@ -636,7 +641,15 @@ async function laden() {
       + (info.admin ? '<button type="button" class="haupt" id="karteLos">🗺️ Karte installieren</button><p class="klein muted">Der Server startet dafür einmal kurz neu.</p>' : '<p class="klein muted">Frag den Admin.</p>') + '</div></div>';
     const k = $('karteLos'); if (k) k.addEventListener('click', () => tun({ aktion: 'karte' }, 'Karte wird installiert, Server startet neu (ca. 1–2 Minuten)', k));
   }
-  if (info.admin) await adminLaden();
+  if (info.admin) {
+    await adminLaden();
+    if (location.hash === '#beitrittscode' && adminDaten && !$('verwaltung').open) {
+      history.replaceState(null, '', location.pathname + location.search);
+      tab = 'spieler';
+      $('verwaltungKnopf').click();
+      $('zugangModus').scrollIntoView({ block: 'center' });
+    }
+  }
   if (beschaeftigtVorher && !info.beschaeftigt) melden('✓ ' + beschaeftigtVorher + ' fertig');
   beschaeftigtVorher = info.beschaeftigt || '';
 }

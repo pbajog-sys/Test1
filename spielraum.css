@@ -204,3 +204,40 @@ body:has(#screen-hub.active) #ambient { display: none; }
   #screen-hub #skUnten { order: -6; }
   #screen-hub #skStart { order: -7; }
 }
+
+/* Zwei Dienstzeilen über der Spieleliste, jeweils mit eigener Statistik. */
+#screen-hub .sk-gross { grid-template-columns: minmax(0, 1fr); }
+.sk-dienstzeile { display: grid; gap: 14px; min-width: 0; }
+.sk-dienstzeile h2 { margin: 0 0 14px; font-size: clamp(1.35rem, 2.5vw, 2rem); line-height: 1.15; }
+.sk-dienstzeile h2 a { color: inherit; text-decoration: none; }
+.sk-dienstzeile h2 a:hover { text-decoration: underline; }
+.sk-dienststats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 184px), 1fr)); gap: 14px; min-width: 0; }
+.sk-dienststats > div, .sk-spielfakten {
+  padding: 14px;
+  border-radius: var(--raum-radius);
+  border: 1px solid var(--raum-rand);
+  background: var(--raum-karte);
+  min-width: 0;
+}
+.sk-dienststats h3 { margin: 0 0 10px; font-size: .95rem; }
+.sk-dienststats p { margin: 0; color: var(--raum-leise); font-size: .85rem; }
+.sk-dienststats .sk-dienstspiele li { grid-template-columns: minmax(0, 1fr) auto auto; overflow-wrap: anywhere; }
+.sk-letzte-label { margin-bottom: 5px; }
+.sk-lol-raenge { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sk-lol-raenge + p { margin-bottom: 0; }
+.sk-spielfakten { margin-bottom: 16px; }
+@media (min-width: 1100px) {
+  #screen-hub.active, .sk-dienstzeile { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 18px; }
+  .sk-lol-raenge { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .sk-dienststats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #screen-hub .sk-chips { flex: 1 1 300px; flex-wrap: wrap; }
+  #screen-hub > .sk-spielesammlung { grid-column: 1 / -1; grid-row: 4; margin-bottom: 12px; }
+  #screen-hub .hub-spalten > .spalte-a, #screen-hub .hub-spalten > .spalte-b { grid-row: 5; }
+  #screen-hub .hub-spalten > .spalte-b { position: static; max-height: none; overflow: visible; }
+  #screen-hub > .hub-ds { grid-row: 6; }
+}
+
+@media (max-width: 640px) {
+  #screen-hub .hub-leiste { flex-wrap: wrap; }
+  #screen-hub .hub-knoepfe { margin-inline-start: auto; }
+}

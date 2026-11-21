@@ -481,12 +481,12 @@ function skDashboard() {
     + '<span class="sk-gruss-text"><small>' + skBegruessung() + (pr ? ', ' + skText(pr.name) : '') + '</small><b>Level ' + lv.level + '</b><span>' + fmt(xp.gesamt) + ' XP · Level ' + (lv.level + 1) + ' bei ' + fmt(lv.bis) + '</span></span>'
     + skRadar([{ werte: D.skills.map((s) => s.wert), farbe: '#f59e0b' }], { klein: true }) + '</button>';
   start.innerHTML = '<div class="sk-gross" id="skGross" hidden>'
-    + '<a class="sk-gross-kachel" id="skGrossLol" href="lol.html" hidden>'
+    + '<section class="sk-dienstzeile" id="skGrossLol" hidden><div class="sk-gross-kachel">'
     + '<img class="spielraum-motiv" src="bilder/duellbuch.webp" alt="Steinbrücke über einer Schlucht bei Nacht">'
-    + '<div class="sk-ueberblick"><span class="sk-label">League of Legends</span><h2>Duellbuch</h2><div id="skGrossLolDaten"></div></div></a>'
-    + '<a class="sk-gross-kachel" id="skGrossMc" href="minecraft.html" hidden>'
+    + '<h2><a href="lol.html">League of Legends</a></h2><div id="skGrossLolDaten"></div></div><aside id="skGrossLolStats" class="sk-dienststats"></aside></section>'
+    + '<section class="sk-dienstzeile" id="skGrossMc" hidden><div class="sk-gross-kachel">'
     + '<img class="spielraum-motiv" src="bilder/blockrevier.webp" alt="Beleuchtete Hütte in einem kantigen Tannenwald">'
-    + '<div class="sk-ueberblick"><span class="sk-label">Minecraft</span><h2>Blockrevier</h2><div id="skGrossMcDaten"></div></div></a></div>'
+    + '<h2><a href="minecraft.html">Minecraft</a></h2><div id="skGrossMcDaten"></div></div><aside id="skGrossMcStats" class="sk-dienststats"></aside></section></div>'
     + (exp && !SK_ARCHIV.experiment ? '<button type="button" class="sk-experiment" id="skExperiment"><span class="sk-exp-nr">EXPERIMENT Nº ' + String(exp.nr).padStart(2, '0') + ' · KW ' + exp.kw + '</span><b>' + exp.e.emoji + ' ' + exp.e.titel + '</b><small>' + exp.e.teaser + '</small><span class="sk-exp-status">' + (exp.fertig ? '✓ durchgeführt · Ergebnis ansehen' : 'Versuch starten ›') + '</span></button>' : '');
   $('skGruss').addEventListener('click', skProfilZeigen);
   if ($('skExperiment')) $('skExperiment').addEventListener('click', () => labZeigen());
@@ -507,42 +507,56 @@ const skKennzahl = (wert, text) => '<span><strong>' + skText(wert) + '</strong><
 
 function skZeigeLol(daten, profil) {
   if (!profil || profil.quelle !== 'riot') {
-    return '<p>' + ((daten.meine || []).length ? 'Deine Profilwerte sind noch nicht verfügbar.' : 'Verknüpfe deinen Riot-Account für deine persönliche Übersicht.') + '</p><span class="sk-dienstlink">Zum Duellbuch →</span>';
+    return ['<p>' + ((daten.meine || []).length ? 'Deine Profilwerte sind noch nicht verfügbar.' : 'Verknüpfe deinen Riot-Account für deine persönliche Übersicht.') + '</p>', ''];
   }
   const raenge = Object.keys(skRangNamen), divisionen = ['IV', 'III', 'II', 'I'];
   const wert = (r) => raenge.indexOf(r.tier) * 400 + Math.max(0, divisionen.indexOf(r.div)) * 100 + r.lp;
   const accounts = profil.accounts || [];
   const rangFuer = (art) => accounts.map((a) => a.rang && a.rang[art]).filter((r) => r && skRangNamen[r.tier]).sort((a, b) => wert(b) - wert(a))[0];
-  const solo = rangFuer('solo'), rang = solo || rangFuer('flex');
+  const rangText = (r) => r ? skRangNamen[r.tier] + (r.div ? ' ' + r.div : '') + ' · ' + r.lp + ' LP' : 'Ohne Rang';
+  const level = Math.max(0, ...accounts.map((a) => Number(a.level) || 0));
   const bilanz = profil.leistung || {}, letzte = (profil.spiele || []).slice(0, 4);
-  const champions = (profil.champs || []).slice(0, 3);
-  const champBild = (name) => /^[a-z0-9]+$/i.test(name) ? '<img src="api/lol/bild/champion/' + encodeURIComponent(name) + '.png" alt="" width="24" height="24">' : '';
-  return '<div class="sk-kennzahlen">'
-    + skKennzahl(rang ? [skRangNamen[rang.tier], rang.div, '·', rang.lp + ' LP'].filter(Boolean).join(' ') : 'Ohne Rang', solo ? 'Solo-Rang' : rang ? 'Flex-Rang' : 'Rang')
-    + skKennzahl(bilanz.alle ? bilanz.alle.wr + ' %' : '–', 'Siegquote · Kluft')
-    + skKennzahl(bilanz.neu ? bilanz.neu.wr + ' %' : '–', bilanz.neu ? 'Form · letzte ' + Number(bilanz.neu.g) : 'Form')
+  const champions = (profil.mastery || []).slice(0, 3);
+  const champBild = (name) => /^[a-z0-9]+$/i.test(name) ? '<img src="api/lol/bild/champion/' + encodeURIComponent(name) + '.png" alt="" width="36" height="36">' : '';
+  const personen = new Map((daten.personen || []).map((p) => [p.id, p.name]));
+  const duos = (daten.duos || []).filter((d) => d.g > 0 && (d.a === daten.ichId || d.b === daten.ichId)).slice(0, 3);
+  return ['<div class="sk-kennzahlen sk-lol-raenge">'
+    + skKennzahl(level || '–', 'Kontostufe')
+    + skKennzahl(rangText(rangFuer('solo')), 'Solo/Duo')
+    + skKennzahl(rangText(rangFuer('flex')), 'Flex')
+    + skKennzahl('Flex', '5er-Gruppe · kein eigener Rang')
     + '</div>'
-    + (champions.length ? '<p class="sk-label">Meistgespielte Champions</p><ul class="sk-champions">' + champions.map((c) => '<li>' + champBild(c.c) + skText(c.c) + '</li>').join('') + '</ul>' : '')
-    + (letzte.length ? '<p class="sk-label">Letzte Spiele · Kluft</p><ul class="sk-dienstspiele">' + letzte.map((m) => {
+    + '<p class="sk-label">' + (bilanz.alle ? bilanz.alle.wr + ' % Siege in der Kluft' : 'Noch keine Kluft-Spiele') + (bilanz.neu ? ' · ' + bilanz.neu.wr + ' % in den letzten ' + Number(bilanz.neu.g) + ' Spielen' : '') + '</p>'
+    + (letzte.length ? '<p class="sk-label sk-letzte-label">Letzte Spiele · Kluft</p><ul class="sk-dienstspiele">' + letzte.map((m) => {
       const spieler = (m.p || [])[m.ich] || {}, datum = new Date(m.t);
       const zeit = m.t && Number.isFinite(datum.getTime()) ? '<time datetime="' + datum.toISOString() + '">' + datum.toLocaleDateString('de-DE', { day: '2-digit', month: '2-digit', timeZone: SK_ZONE }) + '</time>' : '';
       return '<li><b class="' + (m.w ? 'sk-sieg' : 'sk-niederlage') + '">' + (m.w ? 'Sieg' : 'Niederlage') + '</b><span>' + skText(spieler.c) + '</span>' + zeit + '</li>';
-    }).join('') + '</ul>' : '<p>Für die Kluft sind noch keine Spiele gespeichert.</p>')
-    + '<span class="sk-dienstlink">Zum Duellbuch →</span>';
+    }).join('') + '</ul>' : '<p>Für die Kluft sind noch keine Spiele gespeichert.</p>'),
+    '<div><h3>Champion-Meisterschaft</h3>' + (champions.length ? '<ul class="sk-champions">' + champions.map((c) => '<li>' + champBild(c.c) + skText(c.c) + ' · ' + skText(c.l) + '</li>').join('') + '</ul>' : '<p>Noch keine Meisterschaftsdaten.</p>') + '</div>'
+    + '<div><h3>Siegquote mit Mitspielern</h3>' + (duos.length ? '<ul class="sk-dienstspiele">' + duos.map((d) => '<li><span>' + skText(personen.get(d.a === daten.ichId ? d.b : d.a) || 'Mitspieler') + '</span><b>' + Math.round(d.w / d.g * 100) + ' %</b><small>' + Number(d.g) + ' Spiele</small></li>').join('') + '</ul>' : '<p>Noch keine gemeinsamen Kluft-Spiele.</p>') + '</div>'
+    ];
 }
 
 function skZeigeMinecraft(info) {
   const mine = info.zugang && info.zugang.mein;
   const stats = mine && (info.spieler || []).find((p) => p.name.toLowerCase() === mine.toLowerCase());
   const online = info.online || [];
-  return '<p class="sk-mc-status"><i class="sk-punkt' + (info.laeuft ? ' an' : '') + '" aria-hidden="true"></i> '
-    + (info.beschaeftigt ? skText(info.beschaeftigt) + ' …' : info.laeuft ? 'Online · ' + (online.length ? online.length + ' Spieler' : 'niemand online') : 'Offline') + '</p>'
-    + (online.length ? '<ul class="sk-champions">' + online.map((name) => '<li>' + skText(name) + '</li>').join('') + '</ul>' : '')
-    + (stats ? '<p class="sk-label">Deine Statistik · ' + skText(stats.name) + '</p><div class="sk-kennzahlen">'
-      + skKennzahl(Math.floor(stats.spielzeitMin / 60) + ' Std. ' + (stats.spielzeitMin % 60) + ' Min.', 'Spielzeit')
-      + skKennzahl(stats.tode, 'Tode') + skKennzahl(stats.erfolge, 'Erfolge') + '</div>'
-      : '<p>' + (mine ? 'Für deinen Namen sind noch keine Spielwerte da.' : 'Trage deinen Minecraft-Namen für deine persönliche Statistik ein.') + '</p>')
-    + '<span class="sk-dienstlink">Zum Blockrevier →</span>';
+  const spieler = info.spieler || [], zugang = info.zugang || {};
+  const gesamt = (feld) => spieler.reduce((summe, p) => summe + (Number(p[feld]) || 0), 0);
+  const aktion = info.admin && zugang.modus === 'code' ? '<a class="sk-dienstlink" href="minecraft.html#beitrittscode">Beitrittscode verwalten →</a>'
+    : !mine && zugang.modus === 'code' ? '<a class="sk-dienstlink" href="minecraft.html#mitspielen">Mitspielen · Code beim Admin anfragen →</a>'
+    : !mine && zugang.modus === 'offen' ? '<a class="sk-dienstlink" href="minecraft.html#mitspielen">Mitspielen →</a>' : '';
+  return ['<p class="sk-mc-status"><i class="sk-punkt' + (info.laeuft ? ' an' : '') + '" aria-hidden="true"></i> '
+    + (info.beschaeftigt ? skText(info.beschaeftigt) + ' …' : info.laeuft ? 'Online · ' + online.length + ' von ' + (Number(info.maxSpieler) || '–') + ' Spielern' : 'Offline') + '</p>'
+    + (online.length ? '<ul class="sk-champions">' + online.map((name) => '<li>' + skText(name) + '</li>').join('') + '</ul>' : '') + aktion,
+    '<div><h3>Weltstatistik</h3><div class="sk-kennzahlen">'
+    + (spieler.some((p) => typeof p.bloecke === 'number') ? skKennzahl(fmt(gesamt('bloecke')), 'Blöcke abgebaut') : '')
+    + skKennzahl(fmt(gesamt('mobKills')), 'Mobs getötet') + skKennzahl(fmt(spieler.length), 'Spieler mit Statistik')
+    + (info.weltErstellt ? skKennzahl(new Date(info.weltErstellt).toLocaleDateString('de-DE', { timeZone: SK_ZONE }), 'Weltordner erstellt') : '')
+    + '</div></div><div><h3>Deine Statistik</h3>'
+    + (stats ? '<div class="sk-kennzahlen">' + skKennzahl(Math.floor(stats.spielzeitMin / 60) + ' Std. ' + (stats.spielzeitMin % 60) + ' Min.', 'Spielzeit')
+      + skKennzahl(stats.tode, 'Tode') + skKennzahl(stats.erfolge, 'Erfolge') + '</div>' : '<p>' + (mine ? 'Für deinen Namen sind noch keine Spielwerte da.' : 'Verknüpfe deinen Minecraft-Namen.') + '</p>') + '</div>'];
+
 }
 
 function skGrossKacheln() {
@@ -556,10 +570,12 @@ function skGrossKacheln() {
   if (!skDienstVorschau || skDienstVorschau.konto !== syName) skDienstVorschau = { konto: syName, zeit: 0 };
   const vorschau = skDienstVorschau;
   const zeigen = () => {
-    $('skGrossLol').hidden = !vorschau.lol;
-    $('skGrossMc').hidden = !vorschau.mc;
-    $('skGrossLolDaten').innerHTML = vorschau.lol || '';
-    $('skGrossMcDaten').innerHTML = vorschau.mc || '';
+    for (const [id, inhalt] of [['skGrossLol', vorschau.lol], ['skGrossMc', vorschau.mc]]) {
+      $(id).hidden = !inhalt;
+      $(id + 'Daten').innerHTML = inhalt ? inhalt[0] : '';
+      $(id + 'Stats').innerHTML = inhalt ? inhalt[1] : '';
+      $(id + 'Stats').hidden = !inhalt || !inhalt[1];
+    }
     $('skGross').hidden = !vorschau.lol && !vorschau.mc;
   };
   zeigen();
@@ -590,7 +606,9 @@ function skUnten(D) {
   if (!box) { box = document.createElement('div'); box.id = 'skUnten'; box.className = 'sk-unten'; b.insertBefore(box, b.firstChild); }
   const letzte = D.E.slice().reverse().slice(0, 5);
   const naechste = skErfolgeStand(D).filter((a) => !a.fertig).sort((x, y) => y.ist / y.ziel - x.ist / x.ziel).slice(0, 3);
-  box.innerHTML = '<h2 class="hub-h">Zuletzt gespielt</h2>'
+  const titel = new Set(D.E.map((e) => e.s));
+  box.innerHTML = (D.E.length ? '<section class="sk-spielfakten"><h2 class="hub-h">Deine Spiele in Zahlen</h2><div class="sk-kennzahlen">' + skKennzahl(fmt(D.E.length), 'Runden') + skKennzahl(fmt(titel.size), 'Spiele ausprobiert') + '</div></section>' : '')
+    + '<h2 class="hub-h">Zuletzt gespielt</h2>'
     + (letzte.length ? '<div class="sk-letzte">' + letzte.map((e, i) => { const sp = VERLAUF_SPIELE[e.s] || { emoji: '🎮', name: e.s }; const ziel = SK_SPIELE[e.s] && SK_SPIELE[e.s].hub; return '<div class="sk-letzt"><span>' + sp.emoji + '</span><div>' + (ziel && $(ziel) && !SK_AUSSORTIERT.karten.includes(ziel) ? '<button type="button" class="sk-erneut" data-spiel="' + ziel + '">' + skText(sp.name) + '</button>' : '<b>' + skText(sp.name) + '</b>') + '<small>' + skText(e.i) + '</small></div><i>' + (e.m ? fmt(e.p) + '/' + e.m : '') + '</i><button type="button" data-e="' + i + '" aria-label="Ergebnis-Karte">📤</button></div>'; }).join('') + '</div>' : '<p class="sk-fein">Noch nichts gespielt.</p>')
     + (naechste.length ? '<h2 class="hub-h"><span>🏆</span> Nächste Erfolge</h2><div class="sk-naechste">' + naechste.map((a) => '<div><span>' + a.emoji + '</span><div><b>' + a.name + '</b><div class="sk-mini"><i style="width:' + Math.round((a.ist / a.ziel) * 100) + '%"></i></div></div><small>' + a.ist + '/' + a.ziel + '</small></div>').join('') + '</div>' : '');
   box.querySelectorAll('[data-spiel]').forEach((x) => x.addEventListener('click', () => $(x.dataset.spiel).click()));
@@ -605,12 +623,13 @@ function skKategorienEinrichten() {
   const titel = document.createElement('section');
   titel.className = 'sk-spielesammlung';
   titel.innerHTML = '<img class="spielraum-motiv" src="bilder/spielekiste.webp" alt="Holzwürfel und Spielsteine auf einem beleuchteten Tisch"><h2>Spielekiste</h2>';
-  a.appendChild(titel);
+  const hub = $('screen-hub');
+  hub.insertBefore(titel, hub.querySelector('.hub-spalten'));
   // Suche + Filter (am PC oben angeheftet, am Handy waagerecht wischbar)
   const filter = document.createElement('div');
   filter.className = 'sk-filter'; filter.id = 'skFilter';
   filter.innerHTML = '<input type="search" id="skSuche" placeholder="🔍 Spiel suchen …" autocomplete="off" aria-label="Spiel suchen">'
-    + '<div class="sk-chips" role="group" aria-label="Kategorie"><button type="button" data-f="uebersicht" aria-pressed="true">Übersicht</button><button type="button" data-f="" aria-pressed="false">Alle Spiele</button><button type="button" data-f="fav" aria-pressed="false">⭐ Favoriten</button>'
+    + '<div class="sk-chips" role="group" aria-label="Kategorie"><button type="button" data-f="" aria-pressed="true">Alle Spiele</button><button type="button" data-f="fav" aria-pressed="false">⭐ Favoriten</button>'
     + SK_KATEGORIEN.map((k) => '<button type="button" data-f="' + k.id + '" aria-pressed="false">' + k.emoji + ' ' + k.name + '</button>').join('')
     + '<button type="button" data-f="archiv" aria-pressed="false">🗄️ Archiv</button></div>';
   a.appendChild(filter);
@@ -632,7 +651,7 @@ function skKategorienEinrichten() {
   // was keiner Kategorie zugeordnet ist, bleibt sichtbar
   const rest = [...alt.querySelectorAll(':scope > .hub-game')].filter((el) => !SK_ARCHIV.karten.includes(el.id));
   if (rest.length) { const liste = abschnitt('✨', 'Weitere', ''); rest.forEach((el) => liste.appendChild(el)); }
-  // Archiv: eingeklappt ganz unten, Karten bleiben spielbar
+  // Archiv: eigenes aufklappbares Fach, in der vollständigen Liste zunächst offen
   const archiv = document.createElement('details');
   archiv.className = 'sk-kat sk-archiv'; archiv.id = 'skArchiv';
   archiv.innerHTML = '<summary><h2 class="hub-h"><span>🗄️</span> Archiv <small id="skArchivZahl"></small></h2><span class="sk-archiv-pfeil" aria-hidden="true">▾</span></summary><div class="hub-liste"></div><div id="skArchivExtra"></div>';
@@ -654,15 +673,14 @@ function skFilterAnwenden() {
   const a = document.querySelector('#screen-hub .spalte-a'); if (!a) return;
   const f = (a.querySelector('.sk-chips [aria-pressed="true"]') || {}).dataset || {}, wahl = f.f || '', q = ($('skSuche') ? $('skSuche').value : '').trim().toLowerCase();
   const archiv = $('skArchiv');
-  const uebersicht = wahl === 'uebersicht' && !q;
   a.querySelectorAll('.sk-kat').forEach((sec) => {
     const id = sec.id === 'skFavoriten' ? 'fav' : sec.id === 'skArchiv' ? 'archiv' : (/sk-kat-(\w+)/.exec(sec.className) || [])[1] || '';
     let sichtbar = 0;
     sec.querySelectorAll('.hub-game').forEach((el) => {
-      const passt = (!q || el.textContent.toLowerCase().includes(q)) && (!uebersicht || id === 'fav' || id === 'archiv' || sichtbar < 2);
+      const passt = !q || el.textContent.toLowerCase().includes(q);
       el.hidden = !passt; if (passt) sichtbar++;
     });
-    const gewaehlt = !wahl || wahl === 'uebersicht' || wahl === id;
+    const gewaehlt = !wahl || wahl === id;
     sec.hidden = !gewaehlt || !sichtbar || (id === 'fav' && sec.dataset.leer === '1');
   });
   if (archiv && !archiv.hidden) archiv.open = wahl === 'archiv' || (!!q && wahl !== 'archiv' ? true : archiv.open);
