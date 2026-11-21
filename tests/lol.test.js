@@ -225,6 +225,14 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
       (await anfrage('lol/aktualisieren', 'GET', null, anna)).json.stand === 'fertig'
       && neu.some((url) => url.includes('champion-mastery/v4') && url.includes('P-ANNA')));
     ck('beim Aktualisieren keine schon bekannten Spiele neu geholt', neu.length > 0 && !neu.some((u) => /matches\/EUW1_/.test(u)), neu.join(' '));
+    riotZeit += 120001;
+    riotHolenAktuell = (url, key) => url.includes('champion-mastery/v4') ? Promise.resolve({ status: 403 }) : riotEcht(url, key);
+    const teilImport = await anfrage('lol/aktualisieren', 'POST', {}, anna);
+    const teilStand = await bisFertig(anna);
+    const teilMeldung = await anfrage('lol/aktualisieren', 'GET', null, anna);
+    ck('Meisterschafts-403 meldet den betroffenen Datentyp und lässt Match-Import und Key aktiv',
+      teilImport.status === 200 && teilStand?.key === 'ok' && teilMeldung.json.stand === 'fehler' && /Champion-Meisterschaft: Riot HTTP 403/.test(teilMeldung.json.meldung));
+    riotHolenAktuell = riotEcht;
     ck('Account unbekannt bei Riot → 404', (await anfrage('lol/account', 'POST', { riotId: 'Gibtsnicht#EUW', region: 'euw1' }, cara)).status === 404);
 
     console.log('Key-Wechsel (Riot verschlüsselt PUUIDs pro Key)');

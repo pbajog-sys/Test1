@@ -647,7 +647,7 @@ async function skLolAktualisieren(vorschau) {
         break;
       }
       if (status?.stand === 'fehler') {
-        vorschau.lolMeldung = 'Riot konnte die Daten gerade nicht vollständig liefern.';
+        vorschau.lolMeldung = status.meldung || 'Riot konnte die Daten gerade nicht vollständig liefern.';
         break;
       }
     }
