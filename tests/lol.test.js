@@ -108,6 +108,16 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     ck('Aktualisieren ohne Key → 409 mit Erklärung', (await anfrage('lol/aktualisieren', 'POST', {}, ben)).status === 409);
     ck('ohne Key keine Anfrage an Riot', riotAufrufe.length === 0, riotAufrufe.join(' '));
 
+    console.log('Spieler-Profil (Beispiel)');
+    let pr = await anfrage('lol/person?id=demo-philip&filter=alle', 'GET', null, ben);
+    const sp0 = pr.json.spiele[0];
+    ck('Profil: Spielverlauf mit allen 10 Spielern, Zauber, Runen, Items, Note, Platz', pr.status === 200 && pr.json.spiele.length === 40 && sp0.p.length === 10 && sp0.p[sp0.ich].sp.length === 2 && sp0.p[sp0.ich].ru.length === 2 && sp0.p[sp0.ich].it.length === 7 && sp0.platz >= 1 && sp0.platz <= 10 && sp0.p.every((x) => x.note >= 3 && x.note <= 10));
+    ck('Profil: genau ein MVP (Gewinner) und ein ACE (Verlierer) je Spiel', pr.json.spiele.every((x) => { const ich = x.p[x.ich]; return !x.orden || (x.orden === 'MVP') === ich.w; }));
+    ck('Profil: Champions mit CS/Min., Mastery, LP-Verlauf, Mitspieler, Aktivität, Leistung, Spielstil', pr.json.champs[0].csMin > 0 && pr.json.mastery.length >= 4 && pr.json.lpVerlauf.length > 2 && pr.json.mitgespielt[0].person && pr.json.woche.length === 7 && pr.json.stunden.length === 24
+      && pr.json.woche.reduce((a, x) => a + x[0], 0) === pr.json.filterSpiele && pr.json.leistung.neu.g === 20 && Object.keys(pr.json.rollen).length && Object.keys(pr.json.klassen).length);
+    ck('Profil: Filter ARAM Mayhem und unbekannte Person', (await anfrage('lol/person?id=demo-philip&filter=mayhem', 'GET', null, ben)).json.spiele.length === 0 && (await anfrage('lol/person?id=niemand', 'GET', null, ben)).status === 404);
+    ck('Profil eines erkannten Mitspielers', (await anfrage('lol/person?id=auto%3Ademo-k1', 'GET', null, ben)).json.auto === true);
+
     console.log('Prime League (ohne Key: Beispiel-Teams)');
     let plD = await anfrage('lol/prime', 'GET', null, ben);
     ck('Beispiel: 6 Teams, 60 Turnierspiele, Meta, Matchups, Synergien', plD.status === 200 && plD.json.quelle === 'demo' && plD.json.teams.length === 6 && plD.json.spiele === 60 && plD.json.meta.length > 20 && Object.keys(plD.json.matchup).length > 50 && Object.keys(plD.json.synergie).length > 50);
@@ -173,6 +183,10 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     d = await anfrage('lol/daten', 'GET', null, ben);
     ck('nach Key-Wechsel alles neu zugeordnet (3 Accounts, 6 Spiele, Duo da)', st2 && st2.accounts === 3 && st2.spiele === 6 && d.json.duos.some((x) => [x.a, x.b].sort().join() === 'anna,ben' && x.g === 6) && d.json.personen.find((x) => x.name === 'Anna').g === 6, JSON.stringify(st2));
 
+    pr = await anfrage('lol/person?id=anna&filter=alle', 'GET', null, ben);
+    ck('echtes Profil: Spiele, Mastery mit Namen, LP-Verlauf vom Smurf', pr.status === 200 && pr.json.spiele.length === 6 && pr.json.mastery[0].c === 'Ahri' && pr.json.lpVerlauf.some((x) => x.q === 'solo' && x.tier === 'PLATINUM'), JSON.stringify({ m: pr.json.mastery, lp: pr.json.lpVerlauf }));
+    ck('Filter ARAM Mayhem (Queue 2400) wird angenommen', (await anfrage('lol/daten?filter=mayhem', 'GET', null, ben)).json.filter === 'mayhem');
+
     console.log('Prime League mit Riot-Daten');
     let tx = await anfrage('lol/prime/team', 'POST', { name: 'Team Eins', kurz: 'T1', text: 'Spieler\tRolle\nEins T1 Eins#EUW\nZwei T1 Zwei#EUW\nDrei T1 Drei#EUW\nVier T1 Vier#EUW\nFünf T1 Fuenf#EUW' }, ben);
     ck('Team aus eingefügtem Kader angelegt (Kürzel erkannt, 5 Spieler)', tx.status === 200 && tx.json.spieler.length === 5 && tx.json.spieler[0] === 'T1 Eins#EUW', tx.text);
@@ -227,7 +241,10 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
       for (const t of ['duos', 'rollen', 'aufstellung', 'spiele']) { await seite.click('[data-tab="' + t + '"]'); await warte(80); }
       ck(name + ': Aufstellung verteilt 5 Rollen', (await seite.$$('.platz')).length === 5 && /Siegchance/.test(await seite.textContent('#aufTipp')));
       await seite.click('[data-tab="gruppe"]'); await seite.click('.person >> nth=1'); await warte(150);
-      ck(name + ': Spieler-Profil mit Champions und Spielen', (await seite.$$('[data-panel="person"] tbody tr')).length > 3 && (await seite.$$('#personFeed .spiel')).length > 3);
+      await seite.waitForSelector('.sz');
+      ck(name + ': Spieler-Profil mit Spielverlauf, Meistgespielt, Mastery', (await seite.$$('.sz')).length === 15 && (await seite.$$('.mc')).length >= 5 && (await seite.$$('.ms-c')).length >= 4);
+      await seite.click('.sz-auf'); await warte(100); await seite.click('#szMehr'); await warte(100);
+      ck(name + ': Spiel aufklappen (10 Spieler) und weitere Spiele laden', (await seite.$$('.sz-details tbody tr')).length === 10 && (await seite.$$('.sz')).length === 35);
       await seite.fill('#riotId', 'Cara#EUW'); await seite.click('#hinzu'); await warte(400);
       ck(name + ': eigenen Account eingetragen, „wartet auf Riot-Key“', /Cara#EUW/.test(await seite.textContent('#meineListe')) && /wartet auf Riot-Key/.test(await seite.textContent('#meineListe')));
       await seite.click('[data-tab="prime"]'); await seite.waitForSelector('.pl-team'); await seite.click('.pl-team'); await warte(150);

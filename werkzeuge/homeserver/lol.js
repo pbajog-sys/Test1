@@ -8,11 +8,12 @@
 //   Rollen-Matrix und Spiele-Feed. Die „beste Aufstellung“ rechnet die Seite selbst aus diesen Zahlen.
 //
 // Schnittstellen (alle nur für Angemeldete; /admin/… nur für den Admin):
-//   GET  /api/lol/daten?filter=alle|solo|flex|normal|aram   → { quelle: 'demo'|'riot', key, personen, duos, gegner, feed, … }
+//   GET  /api/lol/daten?filter=alle|solo|flex|normal|aram|mayhem  → { quelle: 'demo'|'riot', key, personen, duos, gegner, feed, … }
 //   POST /api/lol/account            { riotId: 'Name#Tag', region: 'euw1', fuer?: Person, neuName?: 'Name' } → Account eintragen (für sich oder Mitspieler)
 //   POST /api/lol/account/entfernen  { riotId, person? }
 //   POST /api/lol/account/zuordnen   { riotId, person, nach | neuName }   → Account einer anderen Person geben
 //   POST /api/lol/auto/aufnehmen|ausblenden { u } · /api/lol/auto/einblenden → automatisch erkannte Mitspieler
+//   GET  /api/lol/person?id=…&filter=… → Spieler-Profil (Spielverlauf mit allen 10, Mastery, Rang-Verlauf, Aktivität … siehe lol-profil.js)
 //   /api/lol/prime…                  → Prime League (siehe lol-prime.js)
 //   POST /api/lol/aktualisieren      → eigene Accounts sofort neu holen (höchstens alle 2 Min.)
 //   GET  /api/lol/bild/champion/<Name>.png, /api/lol/bild/profil/<id>.png → Bilder von Riots Data Dragon (zwischengespeichert)
@@ -25,11 +26,12 @@ const REGIONEN = {
   na1: ['NA', 'americas'], br1: ['BR', 'americas'], la1: ['LAN', 'americas'], la2: ['LAS', 'americas'],
   kr: ['KR', 'asia'], jp1: ['JP', 'asia'], oc1: ['OCE', 'sea'], sg2: ['SG', 'sea'], tw2: ['TW', 'sea'], vn2: ['VN', 'sea'],
 };
-const FILTER = { alle: [400, 420, 430, 440, 490], solo: [420], flex: [440], normal: [400, 430, 490], aram: [450] };
-const QUEUE_NAME = { 420: 'Ranked Solo', 440: 'Ranked Flex', 400: 'Normal Draft', 430: 'Normal Blind', 490: 'Quickplay', 450: 'ARAM', 1700: 'Arena', 1900: 'URF', 900: 'ARURF' };
+const FILTER = { alle: [400, 420, 430, 440, 490], solo: [420], flex: [440], normal: [400, 430, 490], aram: [450], mayhem: [2400] };
+const QUEUE_NAME = { 420: 'Ranked Solo', 440: 'Ranked Flex', 400: 'Normal Draft', 430: 'Normal Blind', 490: 'Quickplay', 450: 'ARAM', 2400: 'ARAM: Mayhem', 720: 'ARAM Clash', 1700: 'Arena', 1900: 'URF', 900: 'ARURF' };
 const ROLLEN = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'];
 const RIOT_ID = /^(.{3,16})#([A-Za-z0-9]{2,5})$/u;
 const { erstellePrime } = require('./lol-prime.js');
+const { profil } = require('./lol-profil.js');
 // fester Zufall für Beispieldaten
 const rnd = (start) => { let s = start; return () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; }; };
 const POOL = { TOP: ['Aatrox', 'Darius', 'Garen', 'Fiora', 'Sett', 'Riven', 'Irelia', 'Yone'], JUNGLE: ['LeeSin', 'Viego', 'Graves', 'Hecarim', 'Kayn', 'Vi', 'Amumu', 'Diana'],
@@ -110,10 +112,12 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
   function kompakt(m) {
     const i = m.info || {}, bans = {};
     (i.teams || []).forEach((t) => { bans[t.teamId] = (t.bans || []).map((x) => x.championId).filter((x) => x > 0); });
-    return { b: bans, id: m.metadata.matchId, t: i.gameStartTimestamp || i.gameCreation, d: i.gameDuration, q: i.queueId, v: String(i.gameVersion || '').split('.').slice(0, 2).join('.'),
+    return { x: 2, b: bans, id: m.metadata.matchId, t: i.gameStartTimestamp || i.gameCreation, d: i.gameDuration, q: i.queueId, v: String(i.gameVersion || '').split('.').slice(0, 2).join('.'),
       p: (i.participants || []).map((x) => ({ u: x.puuid, n: (x.riotIdGameName || x.summonerName || '?') + (x.riotIdTagline ? '#' + x.riotIdTagline : ''), c: x.championName,
         r: x.teamPosition || '', tm: x.teamId, w: !!x.win, k: x.kills, de: x.deaths, a: x.assists, cs: (x.totalMinionsKilled || 0) + (x.neutralMinionsKilled || 0),
-        g: x.goldEarned, s: x.totalDamageDealtToChampions, vs: x.visionScore, it: [x.item0, x.item1, x.item2, x.item3, x.item4, x.item5, x.item6].map((v) => v || 0) })) };
+        g: x.goldEarned, s: x.totalDamageDealtToChampions, vs: x.visionScore, it: [x.item0, x.item1, x.item2, x.item3, x.item4, x.item5, x.item6].map((v) => v || 0),
+        sp: [x.summoner1Id || 0, x.summoner2Id || 0], cl: x.champLevel || 0,
+        ru: (() => { const st = (x.perks && x.perks.styles) || []; return [st[0] && st[0].selections && st[0].selections[0] ? st[0].selections[0].perk : 0, st[1] ? st[1].style : 0]; })() })) };
   }
 
   // Einen Account aktualisieren: PUUID, Profil, Rang, neue Spiele (beim ersten Mal bis zu 100)
@@ -132,12 +136,29 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     if (l.status === 200) {
       a.rang = {};
       (l.json || []).forEach((e) => { const art = e.queueType === 'RANKED_SOLO_5x5' ? 'solo' : e.queueType === 'RANKED_FLEX_SR' ? 'flex' : null; if (art) a.rang[art] = { tier: e.tier, div: e.rank, lp: e.leaguePoints, w: e.wins, l: e.losses }; });
+      // LP-Verlauf selbst mitschreiben (Riot liefert nur den aktuellen Stand)
+      a.lp = a.lp || [];
+      for (const q of ['solo', 'flex']) {
+        const r = a.rang[q]; if (!r) continue;
+        const alt = a.lp.filter((x) => x.q === q).pop();
+        if (!alt || alt.tier !== r.tier || alt.div !== r.div || alt.lp !== r.lp) a.lp.push({ t: jetzt(), q, tier: r.tier, div: r.div, lp: r.lp });
+      }
+      if (a.lp.length > 300) a.lp = a.lp.slice(-300);
+    }
+    if (!a.masteryZeit || jetzt() - a.masteryZeit > 864e5) {
+      const ms = await riot(plattform(acc.region) + '/lol/champion-mastery/v4/champion-masteries/by-puuid/' + acc.puuid + '/top?count=10');
+      if (ms.status === 200) { a.mastery = (ms.json || []).map((x) => ({ id: x.championId, p: x.championPoints, l: x.championLevel })); a.masteryZeit = jetzt(); }
     }
     const ids = await riot(regional(acc.region) + '/lol/match/v5/matches/by-puuid/' + acc.puuid + '/ids?start=0&count=' + (a.ids.length ? 20 : 100));
     if (ids.status !== 200) return;
     for (const id of ids.json || []) {
       if (!a.ids.includes(id)) a.ids.push(id);
       if (spiele[id]) continue;
+      const m = await riot(regional(acc.region) + '/lol/match/v5/matches/' + id);
+      if (m.status === 200 && m.json && m.json.info) spiele[id] = kompakt(m.json);
+    }
+    // ältere gespeicherte Spiele ohne Runen/Zauber nach und nach neu holen (15 je Durchlauf)
+    for (const id of a.ids.filter((x) => spiele[x] && !spiele[x].x).slice(0, 15)) {
       const m = await riot(regional(acc.region) + '/lol/match/v5/matches/' + id);
       if (m.status === 200 && m.json && m.json.info) spiele[id] = kompakt(m.json);
     }
@@ -165,7 +186,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
   const glatt = (w, g) => (w + 2.5) / (g + 5);   // Winrate, zur Mitte gezogen, damit 2 von 2 nicht 100 % „schlägt“
   // Automatisch erkannte Mitspieler: wer mindestens 3-mal mit jemandem aus der Gruppe im selben Team war (Premades),
   // aber nicht eingetragen ist. Zählt nur die gemeinsamen Spiele – kostet keine zusätzlichen Riot-Anfragen.
-  const AUTO_QUEUES = FILTER.alle.concat(450), AUTO_MIN = 3, AUTO_MAX = 10;
+  const AUTO_QUEUES = FILTER.alle.concat(450, 2400), AUTO_MIN = 3, AUTO_MAX = 10;
   function autoMitspieler(personenListe, spielListe) {
     const bekannt = new Set(personenListe.flatMap((p) => p.puuids)), aus = zustand.ausgeblendet || {}, z = {};
     for (const m of spielListe) {
@@ -184,7 +205,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
   }
 
   function auswerten(personenListe, spielListe, filter) {
-    const queues = FILTER[filter] || FILTER.alle, aram = filter === 'aram';
+    const queues = FILTER[filter] || FILTER.alle, aram = filter === 'aram' || filter === 'mayhem';
     const vonPuuid = {}; personenListe.forEach((p) => p.puuids.forEach((u) => { vonPuuid[u] = p.id; }));
     const P = {}; personenListe.forEach((p) => { P[p.id] = { id: p.id, name: p.name, ich: p.ich, auto: p.auto, accounts: p.accounts, g: 0, w: 0, k: 0, de: 0, a: 0, cs: 0, min: 0, s: 0, vs: 0, rollen: {}, champs: {}, verlauf: [] }; });
     const duos = {}, gegner = {}, feed = [];
@@ -225,6 +246,24 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
   }
 
   // ---------- Beispieldaten (fest, reproduzierbar) ----------
+  const DEMO_RUNEN = { TOP: [8010, 8437, 8230], JUNGLE: [8010, 8112, 8128, 8021], MIDDLE: [8112, 8229, 8214, 8005], BOTTOM: [8008, 8005, 8021, 9923], UTILITY: [8214, 8465, 8439, 8351] };
+  const DEMO_ITEMS = { TOP: [3071, 3047, 6630, 3053, 3742, 3026, 3065, 6333], JUNGLE: [6692, 3158, 3142, 6694, 3814, 3071, 3156, 3036], MIDDLE: [3089, 3020, 6655, 3157, 3135, 4645, 3165, 3102],
+    BOTTOM: [3031, 3006, 6672, 3036, 3072, 3094, 3085, 3139], UTILITY: [3190, 3109, 2065, 3222, 3107, 3504, 3158, 3117] };
+  const DEMO_TAGS = { Aatrox: ['Fighter'], Darius: ['Fighter'], Garen: ['Fighter'], Fiora: ['Fighter'], Sett: ['Fighter'], Riven: ['Fighter'], Irelia: ['Fighter'], Yone: ['Assassin'],
+    LeeSin: ['Fighter'], Viego: ['Assassin'], Graves: ['Marksman'], Hecarim: ['Fighter'], Kayn: ['Fighter'], Vi: ['Fighter'], Amumu: ['Tank'], Diana: ['Fighter'],
+    Ahri: ['Mage'], Sylas: ['Mage'], Yasuo: ['Fighter'], Orianna: ['Mage'], Lux: ['Mage'], Akali: ['Assassin'], Zed: ['Assassin'], Ekko: ['Assassin'],
+    Jinx: ['Marksman'], Kaisa: ['Marksman'], Ezreal: ['Marksman'], Caitlyn: ['Marksman'], Jhin: ['Marksman'], Vayne: ['Marksman'], MissFortune: ['Marksman'], Ashe: ['Marksman'],
+    Thresh: ['Support'], Lulu: ['Support'], Nami: ['Support'], Leona: ['Tank'], Nautilus: ['Tank'], Karma: ['Mage'], Morgana: ['Mage'], Pyke: ['Support'] };
+  function demoProfilExtras(person, liste) {
+    const meine = new Set(person.puuids), z = {};
+    liste.forEach((m) => m.p.forEach((x) => { if (meine.has(x.u)) z[x.c] = (z[x.c] || 0) + 1; }));
+    const r2 = rnd(person.name.length * 104729);
+    const mastery = Object.entries(z).sort((a, b) => b[1] - a[1]).slice(0, 8).map(([c, n]) => { const p = Math.round(n * 9000 + 30000 + r2() * 40000); return { c, p, l: Math.max(5, Math.floor(p / 11000)) }; });
+    const lpVerlauf = [];
+    (person.accounts || []).forEach((a) => { const r = a.rang && a.rang.solo; if (!r) return; let lp = r.lp - 40;
+      for (let i = 0; i < 12; i++) { lp = Math.max(0, Math.min(99, lp + Math.round((r2() - 0.42) * 30))); lpVerlauf.push({ acc: a.riotId, t: jetzt() - (12 - i) * 2.5 * 864e5, q: 'solo', tier: r.tier, div: r.div, lp: i === 11 ? r.lp : lp }); } });
+    return { mastery, lpVerlauf };
+  }
   let demoCache = null;
   function demo() {
     if (demoCache) return demoCache;
@@ -265,6 +304,16 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
         }
       });
       for (const tm of [100, 200]) { const kills = p.filter((x) => x.tm === tm).reduce((x, y) => x + y.k, 0); p.forEach((x) => { if (x.tm === tm) x.a = Math.min(x.a, Math.max(0, kills - x.k)); }); }
+      { const r2 = rnd(7919 * (n + 1)), w2 = (l) => l[Math.floor(r2() * l.length)];
+        p.forEach((x) => {
+          const rolle = x.r || ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'][Math.floor(r2() * 5)];
+          x.sp = [4, { TOP: w2([12, 14]), JUNGLE: 11, MIDDLE: w2([14, 12, 21]), BOTTOM: w2([7, 21]), UTILITY: w2([14, 3]) }[rolle]];
+          x.ru = [w2(DEMO_RUNEN[rolle]), w2([8000, 8100, 8200, 8300, 8400])];
+          x.cl = Math.min(18, Math.round(dauer / 120) + Math.floor(r2() * 4) - (rolle === 'UTILITY' ? 2 : 0));
+          const pool = DEMO_ITEMS[rolle].slice().sort(() => r2() - 0.5), anzahl = Math.min(6, Math.round(dauer / 420) + Math.floor(r2() * 2));
+          x.it = [0, 1, 2, 3, 4, 5].map((i) => (i < anzahl ? pool[i] : 0)).concat(rolle === 'UTILITY' ? 3364 : 3340);
+          x.vs = rolle === 'UTILITY' ? 40 + Math.floor(r2() * 50) : 10 + Math.floor(r2() * 25);
+        }); }
       // Kevin ist kein Eintrag, spielt aber oft mit (für „automatisch erkannte Mitspieler“) – ersetzt einen fremden Mitspieler
       if (n % 5 === 0) { const f = p.find((x) => x.tm === 100 && String(x.u).startsWith('fremd-')); if (f) { f.u = 'demo-k1'; f.n = 'KevKev#EUW'; } }
       spl.push({ id: 'DEMO_' + n, t: start + n * (60 * 864e5 / 420) + Math.floor(r() * 3e6), d: dauer, q, v: '15.10', p });
@@ -299,10 +348,24 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     if (champMap && champMap._v === ddVersion && jetzt() - (champMap._t || 0) < 7 * 864e5) return champMap;
     try {
       const v = await ddragon(), j = JSON.parse((await bild('https://ddragon.leagueoflegends.com/cdn/' + v + '/data/en_US/champion.json')).toString());
-      const m = { _v: v, _t: jetzt() }; Object.values(j.data || {}).forEach((c) => { m[c.key] = c.id; });
+      const m = { _v: v, _t: jetzt(), _tags: {} }; Object.values(j.data || {}).forEach((c) => { m[c.key] = c.id; m._tags[c.id] = c.tags || []; });
       champMap = m; schreib('champs.json', m);
     } catch (e) { champMap = champMap || {}; }
     return champMap;
+  }
+
+  let ddKarten = lies('dd-karten.json', null);   // Zauber-Nummer → Bilddatei, Runen-Nummer → Bildpfad
+  async function karten() {
+    if (ddKarten && ddKarten._v === ddVersion && jetzt() - (ddKarten._t || 0) < 7 * 864e5) return ddKarten;
+    try {
+      const v = await ddragon(), k = { _v: v, _t: jetzt(), spell: {}, rune: {} };
+      const sp = JSON.parse((await bild('https://ddragon.leagueoflegends.com/cdn/' + v + '/data/en_US/summoner.json')).toString());
+      Object.values(sp.data || {}).forEach((x) => { k.spell[x.key] = x.image && x.image.full; });
+      const ru = JSON.parse((await bild('https://ddragon.leagueoflegends.com/cdn/' + v + '/data/en_US/runesReforged.json')).toString());
+      (ru || []).forEach((st) => { k.rune[st.id] = st.icon; (st.slots || []).forEach((sl) => (sl.runes || []).forEach((r) => { k.rune[r.id] = r.icon; })); });
+      ddKarten = k; schreib('dd-karten.json', k);
+    } catch (e) { ddKarten = ddKarten || { spell: {}, rune: {} }; }
+    return ddKarten;
   }
 
   // ---------- Prime League ----------
@@ -320,6 +383,24 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       return senden(res, 200, Object.assign(a, { quelle: nutzeEcht ? 'riot' : 'demo', key: key() ? keyStatus : 'fehlt', filter, laeuft, letzterLauf: letzterLauf || null,
         ichId: k, ausgeblendet: Object.keys(zustand.ausgeblendet || {}).length, meine: (echt.find((p) => p.ich) || { accounts: [] }).accounts, alle: echt.map((p) => ({ id: p.id, name: p.name, ich: p.ich, gast: p.gast, accounts: p.accounts })),
         wahl: konten().filter((x) => x.id !== k).map((x) => ({ id: x.id, name: x.name })).concat(Object.entries(zustand.gaeste).map(([id, name]) => ({ id, name, gast: true }))).sort((x, y) => x.name.localeCompare(y.name, 'de')), regionen: Object.fromEntries(Object.entries(REGIONEN).map(([x, v]) => [x, v[0]])), ddragon: await ddragon(), version }));
+    }
+    if (weg === '/lol/person' && m === 'GET') {
+      const filter = FILTER[url.searchParams.get('filter')] ? url.searchParams.get('filter') : 'alle', id = String(url.searchParams.get('id') || '');
+      const echt = echtePersonen(k), echteSpiele = Object.values(spiele), nutzeEcht = !!key() && echteSpiele.length > 0;
+      const quelle = nutzeEcht ? { personen: echt, spiele: echteSpiele } : demo();
+      const alle = quelle.personen.concat(autoMitspieler(quelle.personen, quelle.spiele)), person = alle.find((p) => p.id === id);
+      if (!person) return senden(res, 404, { fehler: 'Diese Person gibt es nicht.' });
+      const vonPuuid = {}; alle.forEach((p) => p.puuids.forEach((u) => { vonPuuid[u] = { id: p.id, name: p.name }; }));
+      const namen = await champNamen();
+      let mastery = [], lpVerlauf = [];
+      if (nutzeEcht) {
+        const summe = {};
+        person.puuids.forEach((u) => ((zustand.accounts[u] || {}).mastery || []).forEach((x) => { const n = namen[x.id] || String(x.id), e = (summe[n] = summe[n] || { c: n, p: 0, l: 0 }); e.p += x.p; e.l = Math.max(e.l, x.l); }));
+        mastery = Object.values(summe).sort((a, b) => b.p - a.p).slice(0, 8);
+        person.puuids.forEach((u) => { const a = zustand.accounts[u] || {}; (a.lp || []).forEach((x) => lpVerlauf.push(Object.assign({ acc: a.riotId }, x))); });
+      } else ({ mastery, lpVerlauf } = demoProfilExtras(person, quelle.spiele));
+      const ergebnis = profil({ person, liste: quelle.spiele, queues: FILTER[filter], queueName: (q) => QUEUE_NAME[q] || 'Spiel ' + q, personVonPuuid: vonPuuid, mastery, lpVerlauf, champTags: Object.assign({}, DEMO_TAGS, namen._tags || {}) });
+      return senden(res, 200, Object.assign(ergebnis, { quelle: nutzeEcht ? 'riot' : 'demo', auto: !!person.auto }));
     }
     if (weg === '/lol/account' && m === 'POST') {
       const b = await koerper(req), riotId = String(b.riotId || '').trim().replace(/\s*#\s*/, '#'), region = String(b.region || 'euw1');
@@ -403,12 +484,21 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       allesHolen(k).catch(() => {});
       return senden(res, 200, { gestartet: true });
     }
-    const bm = /^\/lol\/bild\/(champion|profil|item)\/([A-Za-z0-9]{1,40})\.png$/.exec(weg);
+    const bm = /^\/lol\/bild\/(champion|profil|item|spell|rune)\/([A-Za-z0-9]{1,40})\.png$/.exec(weg);
     if (bm && m === 'GET') {
       const datei = path.join(ordner, 'bilder', bm[1] + '-' + bm[2] + '.png');
       let b = null;
       try { b = fs.readFileSync(datei); } catch (e) {
-        try { const v = await ddragon(); b = await bild('https://ddragon.leagueoflegends.com/cdn/' + v + '/img/' + ({ champion: 'champion/', profil: 'profileicon/', item: 'item/' }[bm[1]]) + bm[2] + '.png'); fs.writeFileSync(datei, b); } catch (x) { b = null; }
+        try {
+          const v = await ddragon();
+          let url = 'https://ddragon.leagueoflegends.com/cdn/' + v + '/img/' + ({ champion: 'champion/', profil: 'profileicon/', item: 'item/' }[bm[1]]) + bm[2] + '.png';
+          if (bm[1] === 'spell' || bm[1] === 'rune') {
+            const kt = await karten(), f = kt[bm[1]][bm[2]];
+            if (!f || !/^[A-Za-z0-9_\/.-]+\.png$/.test(f)) throw new Error('unbekannt');
+            url = bm[1] === 'spell' ? 'https://ddragon.leagueoflegends.com/cdn/' + v + '/img/spell/' + f : 'https://ddragon.leagueoflegends.com/cdn/img/' + f;
+          }
+          b = await bild(url); fs.writeFileSync(datei, b);
+        } catch (x) { b = null; }
       }
       if (!b) return senden(res, 404, { fehler: 'kein Bild' });
       res.writeHead(200, { 'Content-Type': 'image/png', 'Cache-Control': 'private, max-age=604800' }); return res.end(b);

@@ -175,6 +175,8 @@
   .platz .rolle { font-size: .8rem; padding: 4px 8px; }
   .platz b { display: block; font-size: 1.1rem; margin: 8px 0 2px; }
   .platz small { color: var(--muted); }
+  .erf { display: inline-block; margin-top: 6px; font-size: .68rem; font-weight: 700; padding: 2px 8px; border-radius: 999px; background: rgba(255,255,255,.08); color: var(--muted); }
+  .erf.viel { background: rgba(48,209,88,.14); color: #30d158; } .erf.wenig { background: rgba(255,159,10,.14); color: #ff9f0a; }
   .tipp-zeile { margin-top: 12px; font-size: .9rem; }
   /* Prime League */
   .pl-kopf { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin-bottom: 12px; }
@@ -219,6 +221,106 @@
   .pl-eigen button { padding: 4px 10px; font-size: .78rem; }
   .mu-zeile { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 5px 0; font-size: .86rem; }
   .meta-zeile { cursor: pointer; } .meta-zeile:hover td { background: rgba(255,255,255,.04); }
+  /* Spieler-Profil */
+  .pk-kopf { display: flex; align-items: center; gap: 16px 20px; flex-wrap: wrap; }
+  .pk-icon { width: 84px !important; height: 84px !important; border-radius: 24px !important; }
+  .pk-name { min-width: 0; margin-right: auto; }
+  .pk-name h2 { font-size: 1.7rem; margin: 0; }
+  .pk-name .acc { display: inline-flex; flex-direction: column; gap: 0; font-weight: 700; }
+  .pk-raenge { display: flex; gap: 10px; flex-wrap: wrap; }
+  .rk { min-width: 220px; padding: 12px 14px; border-radius: 18px; background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.09); display: grid; gap: 6px; }
+  .rk.leer { min-width: 150px; align-content: start; }
+  .rk-titel { font-size: .72rem; font-weight: 700; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+  .rk-zeile { display: flex; align-items: center; gap: 12px; }
+  .rk-zeile b { display: block; font-size: 1.05rem; } .rk-zeile span { font-size: .82rem; color: var(--muted); }
+  .rk-emblem { width: 44px; height: 44px; display: grid; place-items: center; flex: none; }
+  .rk-emblem i { width: 26px; height: 26px; border-radius: 7px; transform: rotate(45deg); background: linear-gradient(135deg, #fff8, var(--tc)); box-shadow: 0 0 18px var(--tc), inset 0 0 0 2px #fff5; }
+  .rk-wr { margin-left: auto; text-align: right; display: grid; font-size: .8rem; }
+  .rk-verlauf svg { width: 100%; height: 30px; display: block; }
+  .rk-verlauf small { color: var(--muted); font-size: .7rem; }
+  .pr { display: grid; gap: 14px; margin-top: 14px; grid-template-columns: minmax(0, 1fr); }
+  .pr-seite { display: flex; flex-direction: column; gap: 14px; min-width: 0; }
+  @media (min-width: 1200px) { .pr { grid-template-columns: 340px minmax(0, 1fr); align-items: start; } }
+  @media (max-width: 1199px) { .pr-seite { display: contents; } .pr > * { order: 4; } .pr-leistung { order: 1; } .pr-meist { order: 2; } .pr-haupt { order: 3; } }
+  .mehr { width: 100%; margin-top: 4px; }
+  .lk-raster { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .lk { background: rgba(255,255,255,.05); border-radius: 14px; padding: 10px 12px; display: grid; gap: 4px; }
+  .lk span { font-size: .74rem; color: var(--muted); } .lk b { font-size: 1.15rem; } .lk small { font-size: .7rem; color: var(--muted); }
+  .lk-balken { position: relative; height: 5px; border-radius: 99px; background: rgba(255,255,255,.1); }
+  .lk-balken i { position: absolute; inset: 0 auto 0 0; border-radius: 99px; background: #0a84ff; }
+  .lk-balken em { position: absolute; top: -3px; width: 2px; height: 11px; background: #fff; border-radius: 2px; }
+  .mc { display: grid; grid-template-columns: 36px minmax(0, 1fr) auto 64px; gap: 10px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--linie2); font-size: .84rem; }
+  .mc:last-child { border-bottom: 0; }
+  .mc small { display: block; color: var(--muted); font-size: .72rem; }
+  .mc-kda, .mc-wr { text-align: right; }
+  .ms { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px 6px; }
+  .ms-c { position: relative; display: grid; justify-items: center; text-align: center; gap: 2px; font-size: .74rem; }
+  .ms-c .ms-bild { width: 52px; height: 52px; border-radius: 16px; }
+  .ms-c em { position: absolute; top: 40px; font-style: normal; font-weight: 800; font-size: .68rem; padding: 0 6px; border-radius: 99px; background: linear-gradient(135deg, #bf5af2, #5e5ce6); }
+  .ms-c b { margin-top: 8px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; } .ms-c small { color: var(--muted); }
+  .ps-rollen { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; margin-bottom: 10px; }
+  .ps-rollen div { display: grid; justify-items: center; gap: 4px; padding: 8px 2px; border-radius: 12px; background: rgba(255,255,255,.04); font-size: .8rem; }
+  .ps-rollen .stark { background: rgba(10,132,255,.16); box-shadow: inset 0 0 0 1px rgba(10,132,255,.5); }
+  .ps-klasse { display: grid; grid-template-columns: 92px minmax(0, 1fr) 42px; gap: 8px; align-items: center; font-size: .8rem; padding: 3px 0; }
+  .ps-klasse b { text-align: right; }
+  .mg { display: grid; grid-template-columns: minmax(0, 1fr) auto 44px; gap: 8px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--linie2); font-size: .84rem; }
+  .mg:last-child { border-bottom: 0; } .mg small { color: var(--muted); margin-left: 3px; } .mg > span:last-child, .mg .wr { text-align: right; }
+  .mg a, .tn a, .sd a { color: inherit; text-decoration: none; } .mg a:hover, .tn a:hover, .sd a:hover { text-decoration: underline; }
+  .akt-woche { display: grid; grid-template-columns: repeat(7, 1fr); gap: 6px; height: 110px; align-items: end; }
+  .akt-woche div { display: grid; grid-template-rows: 1fr auto; height: 100%; align-items: end; justify-items: center; gap: 4px; }
+  .akt-woche i { width: 70%; min-height: 3px; border-radius: 6px 6px 3px 3px; background: rgba(255,255,255,.15); }
+  .akt-woche span { font-size: .7rem; color: var(--muted); }
+  .akt-std { display: grid; grid-template-columns: repeat(24, 1fr); gap: 2px; margin-top: 12px; }
+  .akt-std i { height: 18px; border-radius: 4px; background: rgba(255,255,255,.3); }
+  .akt-std-achse { display: flex; justify-content: space-between; font-size: .66rem; color: var(--muted); margin-top: 3px; }
+  /* Spielverlauf-Zeilen */
+  .sz { border-radius: 16px; margin-bottom: 8px; background: var(--niederlage-bg); border: 1px solid rgba(255,69,58,.18); overflow: hidden; }
+  .sz.w { background: var(--sieg-bg); border-color: rgba(10,132,255,.2); }
+  .sz-haupt { display: grid; grid-template-columns: 92px auto 96px 118px auto minmax(150px, 1fr) 28px; gap: 12px; align-items: center; padding: 10px 6px 10px 14px; box-shadow: inset 5px 0 0 var(--niederlage); }
+  .sz.w .sz-haupt { box-shadow: inset 5px 0 0 var(--sieg); }
+  .sz-info { display: grid; font-size: .74rem; color: var(--muted); }
+  .sz-info b { color: var(--text); font-size: .8rem; } .sz-info .erg { color: var(--niederlage); } .sz.w .sz-info .erg { color: var(--sieg); }
+  .sz-info hr { width: 46px; border: 0; border-top: 1px solid rgba(255,255,255,.15); margin: 4px 0; }
+  .sz-champ { display: flex; gap: 4px; align-items: center; }
+  .sz-portrait { position: relative; }
+  .bild.gross2 { width: 52px; height: 52px; border-radius: 50%; }
+  .sz-portrait em { position: absolute; right: -2px; bottom: -2px; font-style: normal; font-size: .66rem; font-weight: 800; background: rgba(20,20,30,.95); border-radius: 99px; padding: 0 5px; }
+  .sz-zauber { display: grid; gap: 3px; }
+  .bild.klein2 { transform: scale(.78); }
+  .bild.mikro { width: 16px; height: 16px; border-radius: 4px; }
+  .sz-kda { display: grid; gap: 1px; text-align: center; }
+  .sz-kda b { font-size: 1.02rem; } .sz-kda .rot { color: var(--niederlage); } .sz-kda > span { font-size: .74rem; color: var(--muted); }
+  .sz-orden { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; margin-top: 3px; }
+  .orden { font-style: normal; font-size: .64rem; font-weight: 800; padding: 1px 7px; border-radius: 99px; background: rgba(255,255,255,.12); }
+  .orden.mvp { background: linear-gradient(135deg, #ff9f0a, #ffd60a); color: #2a1a00; } .orden.ace { background: linear-gradient(135deg, #5e5ce6, #bf5af2); }
+  .orden.tag { background: rgba(48,209,88,.16); color: #30d158; }
+  .sz-werte { display: grid; font-size: .74rem; color: var(--muted); gap: 1px; } .sz-werte b { color: var(--text); }
+  .sz-items { display: grid; grid-template-columns: repeat(4, 22px); gap: 3px; }
+  .sz-items .bild.mini { background: rgba(255,255,255,.08); }
+  .sz-teams { display: grid; grid-template-columns: 1fr 1fr; gap: 0 10px; min-width: 0; }
+  .sz-teams > div { display: grid; gap: 1px; min-width: 0; }
+  .tn { display: flex; align-items: center; gap: 5px; font-size: .72rem; color: var(--muted); min-width: 0; }
+  .tn > a, .tn > span:last-child { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .tn.ich { color: var(--text); font-weight: 800; }
+  .sz-auf { align-self: stretch; padding: 0; border-radius: 10px; background: rgba(255,255,255,.06); font-size: 1rem; }
+  .sz.offen .sz-auf { transform: rotate(180deg); }
+  .sz-details { padding: 4px 12px 12px; display: grid; gap: 10px; background: rgba(0,0,0,.15); }
+  .sd { font-size: .78rem; } .sd th { font-size: .7rem; } .sd tr.ich td { background: rgba(255,255,255,.06); }
+  .sd .blau { color: var(--sieg); } .sd .rot { color: var(--niederlage); }
+  .sd-zauber { display: inline-grid; gap: 1px; }
+  .sd-dmg { display: inline-block; width: 46px; height: 5px; border-radius: 99px; background: rgba(255,255,255,.1); margin-right: 6px; vertical-align: middle; overflow: hidden; }
+  .sd-dmg i { display: block; height: 100%; background: #ff453a; }
+  @media (max-width: 1450px) { .sz-haupt { grid-template-columns: 86px auto 92px 112px auto minmax(0, 1fr) 28px; } .sz-teams .tn > a, .sz-teams .tn > span:last-child { max-width: 7em; } }
+  @media (max-width: 900px) {
+    .sz-haupt { grid-template-columns: auto minmax(0, 1fr) 32px; gap: 8px 12px; padding-left: 14px; }
+    .sz-info { grid-column: 1 / -1; display: flex; gap: 8px; align-items: baseline; flex-wrap: wrap; } .sz-info hr { display: none; }
+    .sz-champ { grid-column: 1; grid-row: 2; } .sz-kda { grid-column: 2; grid-row: 2; }
+    .sz-auf { grid-column: 3; grid-row: 2 / 5; }
+    .sz-werte { grid-column: 1 / 3; grid-row: 3; display: flex; gap: 4px 12px; flex-wrap: wrap; }
+    .sz-items { grid-column: 1 / 3; grid-row: 4; grid-template-columns: repeat(7, 24px); }
+    .sz-teams { display: none; }
+    .ms { grid-template-columns: repeat(4, 1fr); }
+  }
   #meldung { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #0a1220; border: 1px solid var(--linie); padding: 10px 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); max-width: calc(100vw - 32px); z-index: 5; }
   .fuss { padding: 0 clamp(14px, 2.4vw, 40px) 30px; font-size: .72rem; color: var(--muted); }
 
@@ -287,7 +389,7 @@
       <svg viewBox="0 0 40 40" aria-hidden="true"><defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#5e5ce6"/><stop offset=".55" stop-color="#0a84ff"/><stop offset="1" stop-color="#64d2ff"/></linearGradient></defs><rect x="1" y="1" width="38" height="38" rx="11" fill="url(#g)"/><rect x="1.5" y="1.5" width="37" height="37" rx="10.5" fill="none" stroke="rgba(255,255,255,.45)"/><rect x="10" y="20" width="4.5" height="10" rx="2.2" fill="#fff" opacity=".75"/><rect x="17.75" y="13" width="4.5" height="17" rx="2.2" fill="#fff"/><rect x="25.5" y="17" width="4.5" height="13" rx="2.2" fill="#fff" opacity=".88"/></svg>
       <div><h1>LoL-Zentrale</h1><p><a href="./">← Spielekiste</a> · wer spielt wo am besten – und mit wem</p></div>
     </div>
-    <div class="chips" id="filter" role="group" aria-label="Spielmodus"><button type="button" data-f="alle" aria-pressed="true">Alle (Kluft)</button><button type="button" data-f="solo" aria-pressed="false">Ranked Solo</button><button type="button" data-f="flex" aria-pressed="false">Ranked Flex</button><button type="button" data-f="normal" aria-pressed="false">Normal</button><button type="button" data-f="aram" aria-pressed="false">ARAM</button></div>
+    <div class="chips" id="filter" role="group" aria-label="Spielmodus"><button type="button" data-f="alle" aria-pressed="true">Alle (Kluft)</button><button type="button" data-f="solo" aria-pressed="false">Ranked Solo</button><button type="button" data-f="flex" aria-pressed="false">Ranked Flex</button><button type="button" data-f="normal" aria-pressed="false">Normal</button><button type="button" data-f="aram" aria-pressed="false">ARAM</button><button type="button" data-f="mayhem" aria-pressed="false">ARAM Mayhem</button></div>
   </div>
 </header>
 <div class="banner" id="banner" hidden></div>
@@ -415,10 +517,17 @@ const CHAMP_NAME = { MonkeyKing: 'Wukong', Kaisa: "Kai'Sa", KhaZix: "Kha'Zix", C
 const champName = (c) => CHAMP_NAME[c] || String(c).replace(/([a-z])([A-Z])/g, '$1 $2');
 const pct = (w, g) => (g ? Math.round((w / g) * 100) : 0);
 const glatt = (w, g) => (w + 4) / (g + 8);
+const istAram = () => filter === 'aram' || filter === 'mayhem';
+// Für die Aufstellung: Winrate stark zur Mitte gezogen (zählt erst mit vielen Spielen) + Bonus für Erfahrung auf der Rolle.
+// So schlägt „2 von 2 als Ersatz“ nicht die Hauptrolle mit 60 % in 40 Spielen.
+const sicher = (w, g) => (w + 7.5) / (g + 15);
+const erfahrung = (g) => 0.07 * Math.min(1, Math.log(1 + g) / Math.log(41)) - 0.035;
+const rollenWert = (v) => (v ? sicher(v.w, v.g) - 0.5 + erfahrung(v.g) : -0.09);
+const erfahrungText = (g) => (g >= 20 ? '<span class="erf viel">viel Erfahrung</span>' : g >= 6 ? '<span class="erf">etwas Erfahrung</span>' : '<span class="erf wenig">kaum Erfahrung</span>');
 const wrKlasse = (w, g) => { const p = pct(w, g); return g < 3 ? '' : p >= 60 ? 'top' : p >= 52 ? 'gut' : p < 45 ? 'mies' : ''; };
 const kdaWert = (k, d, a) => (d ? (k + a) / d : k + a);
 const kdaText = (k, d, a) => { const v = kdaWert(k, d, a); return '<span class="kda' + (v >= 4 ? ' top' : v >= 3 ? ' gut' : '') + '">' + (d ? v.toFixed(2).replace('.', ',') : 'Perfekt') + '</span>'; };
-const vor = (t) => { const s = (Date.now() - t) / 1000; return s < 3600 ? 'vor ' + Math.max(1, Math.round(s / 60)) + ' Min.' : s < 86400 ? 'vor ' + Math.round(s / 3600) + ' Std.' : 'vor ' + Math.round(s / 86400) + ' Tagen'; };
+const vor = (t) => { const s = (Date.now() - t) / 1000; return s < 3600 ? 'vor ' + Math.max(1, Math.round(s / 60)) + ' Min.' : s < 86400 ? 'vor ' + Math.round(s / 3600) + ' Std.' : Math.round(s / 86400) === 1 ? 'vor 1 Tag' : 'vor ' + Math.round(s / 86400) + ' Tagen'; };
 const dauer = (s) => Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
 const bild = (art, id, kl, alt) => '<img class="bild ' + (kl || '') + '" src="api/lol/bild/' + art + '/' + encodeURIComponent(id) + '.png" alt="' + esc(alt || '') + '" loading="lazy" onerror="this.outerHTML=\'<span class=&quot;bild ' + (kl || '') + '&quot;>' + esc(String(alt || id).slice(0, 1)) + '</span>\'">';
 const rangText = (r) => (r && TIER[r.tier] ? '<span class="rang" style="--tc:' + TIER[r.tier][1] + '"><i></i>' + TIER[r.tier][0] + (['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(r.tier) ? '' : ' ' + r.div) + ' · ' + r.lp + ' LP</span>' : '<span class="muted klein">ohne Rang</span>');
@@ -564,7 +673,7 @@ function duosZeigen() {
 
 // ---------- Rollen-Matrix ----------
 function matrixZeigen(ziel, voll) {
-  const rollen = filter === 'aram' ? ['ARAM'] : ROLLEN;
+  const rollen = istAram() ? ['ARAM'] : ROLLEN;
   const farbe = (w, g) => { if (!g) return ''; const p = w / g, a = g < 3 ? 0.1 : 0.18 + Math.min(0.5, Math.abs(p - 0.5) * 2.2); return 'background:' + (p >= 0.5 ? 'rgba(10,132,255,' + a + ')' : 'rgba(255,69,58,' + a + ')'); };
   ziel.innerHTML = '<table class="matrix"><thead><tr><th>Spieler</th>' + rollen.map((r) => '<th style="text-align:center">' + (ROLLE_NAME[r] || r) + '</th>').join('') + '</tr></thead><tbody>'
     + daten.personen.map((p) => '<tr><td><b>' + esc(p.name) + '</b></td>' + rollen.map((r) => { const v = p.rollen[r];
@@ -576,14 +685,14 @@ function matrixZeigen(ziel, voll) {
 function aufstellungZeigen() {
   $('auswahl').innerHTML = daten.personen.map((p) => '<button type="button" data-wahl="' + esc(p.id) + '" aria-pressed="' + auswahl.has(p.id) + '">' + esc(p.name) + '</button>').join('');
   const leute = daten.personen.filter((p) => auswahl.has(p.id)).slice(0, 5);
-  if (filter === 'aram') { $('aufstellung').innerHTML = ''; $('aufTipp').textContent = 'Bei ARAM gibt es keine festen Rollen – wähl oben einen anderen Modus.'; return; }
+  if (istAram()) { $('aufstellung').innerHTML = ''; $('aufTipp').textContent = 'Bei ARAM gibt es keine festen Rollen – wähl oben einen anderen Modus.'; return; }
   if (!leute.length) { $('aufstellung').innerHTML = ''; $('aufTipp').textContent = 'Wähle oben aus, wer mitspielt (bis zu 5).'; return; }
   const duo = {}; daten.duos.forEach((d) => { duo[d.a + '|' + d.b] = d; duo[d.b + '|' + d.a] = d; });
   let best = null;
   const probier = (i, frei, belegung) => {
     if (i === leute.length) {
-      let s = 0; belegung.forEach((r, j) => { const v = leute[j].rollen[r]; s += v ? glatt(v.w, v.g) - 0.5 : -0.06; });
-      for (let a = 0; a < leute.length; a++) for (let b = a + 1; b < leute.length; b++) { const d = duo[leute[a].id + '|' + leute[b].id]; if (d) s += (glatt(d.w, d.g) - 0.5) * 0.5; }
+      let s = 0; belegung.forEach((r, j) => { s += rollenWert(leute[j].rollen[r]); });
+      for (let a = 0; a < leute.length; a++) for (let b = a + 1; b < leute.length; b++) { const d = duo[leute[a].id + '|' + leute[b].id]; if (d) s += (sicher(d.w, d.g) - 0.5) * 0.5; }
       if (!best || s > best.s) best = { s, belegung: belegung.slice() };
       return;
     }
@@ -592,9 +701,9 @@ function aufstellungZeigen() {
   probier(0, ROLLEN, []);
   $('aufstellung').innerHTML = best.belegung.map((r, j) => { const p = leute[j], v = p.rollen[r], champ = p.champs.find((c) => c.haupt === r) || null;
     return '<div class="platz"><span class="rolle">' + ROLLE_NAME[r] + '</span><b>' + esc(p.name) + '</b>' + (champ ? '<div class="zelle-name" style="justify-content:center;margin:6px 0">' + bild('champion', champ.c, 'mini', champName(champ.c)) + '<small>' + esc(champName(champ.c)) + '</small></div>' : '')
-      + '<small>' + (v ? pct(v.w, v.g) + ' % in ' + v.g + ' Spielen' : 'noch nie gespielt') + '</small></div>'; }).join('');
-  const schaetzung = Math.round(Math.max(30, Math.min(75, 50 + (best.s / leute.length) * 100)));
-  $('aufTipp').innerHTML = '🎯 Geschätzte Siegchance mit dieser Aufstellung: <b>' + schaetzung + ' %</b> <span class="muted klein">(aus euren bisherigen Rollen- und Duo-Winraten; wenige Spiele zählen weniger)</span>';
+      + '<small>' + (v ? pct(v.w, v.g) + ' % in ' + v.g + (v.g === 1 ? ' Spiel' : ' Spielen') : 'noch nie gespielt') + '</small>' + erfahrungText(v ? v.g : 0) + '</div>'; }).join('');
+  const schaetzung = Math.round(Math.max(30, Math.min(75, 50 + (best.belegung.reduce((x, r, j) => { const v = leute[j].rollen[r]; return x + (v ? sicher(v.w, v.g) - 0.5 : -0.05); }, 0) / leute.length) * 100)));
+  $('aufTipp').innerHTML = '🎯 Geschätzte Siegchance mit dieser Aufstellung: <b>' + schaetzung + ' %</b> <span class="muted klein">(aus euren Rollen- und Duo-Winraten; wer eine Rolle oft spielt, zählt mehr als ein Ersatz mit 2 Glücks-Siegen)</span>';
 }
 $('auswahl').addEventListener('click', (e) => { const b = e.target.closest('[data-wahl]'); if (!b) return; const id = b.dataset.wahl;
   if (auswahl.has(id)) auswahl.delete(id); else if (auswahl.size < 5) auswahl.add(id); else melden('Höchstens 5 Spieler.'); aufstellungZeigen(); });
@@ -615,29 +724,107 @@ function feedZeigen(ziel, liste, nurPerson) {
   }).join('') || '<p class="klein muted">Keine Spiele in diesem Modus.</p>';
 }
 
-// ---------- Spieler-Profil ----------
-function personZeigen(id) {
+// ---------- Spieler-Profil (Aufbau wie op.gg/u.gg: Seitenleiste mit Rang, Leistung, Champions, Mastery, Spielstil,
+// Mitspielern und Aktivität – rechts der Spielverlauf mit allen 10 Spielern, aufklappbar) ----------
+const KLASSE = { Fighter: 'Kämpfer', Mage: 'Magier', Assassin: 'Assassine', Marksman: 'Schütze', Support: 'Unterstützer', Tank: 'Tank' };
+const TIER_REIHE = ['IRON', 'BRONZE', 'SILVER', 'GOLD', 'PLATINUM', 'EMERALD', 'DIAMOND', 'MASTER', 'GRANDMASTER', 'CHALLENGER'], DIV_REIHE = ['IV', 'III', 'II', 'I'];
+const lpWert = (x) => TIER_REIHE.indexOf(x.tier) * 400 + (TIER_REIHE.indexOf(x.tier) >= 7 ? 0 : DIV_REIHE.indexOf(x.div) * 100) + x.lp;
+const zahlDe = (z, n = 1) => Number(z).toFixed(n).replace('.', ',');
+const tausend = (z) => Math.round(z).toLocaleString('de-DE');
+let profilDaten = null, profilAnfrage = 0, offeneSpiele = new Set(), profilAnzahl = 15;
+
+function rangKarte(titel, r, verlauf) {
+  if (!r) return '<div class="rk leer"><span class="rk-titel">' + titel + '</span><span class="muted klein">ohne Rang</span></div>';
+  const t = TIER[r.tier] || ['?', '#888'], g = (r.w || 0) + (r.l || 0);
+  let linie = '';
+  if (verlauf.length >= 2) {
+    const werte = verlauf.map(lpWert), min = Math.min(...werte), max = Math.max(...werte), sp = Math.max(1, max - min);
+    const pkt = werte.map((v, i) => (i / (werte.length - 1)) * 100 + ',' + (28 - ((v - min) / sp) * 24)).join(' ');
+    const diff = werte[werte.length - 1] - werte[0];
+    linie = '<div class="rk-verlauf"><svg viewBox="0 0 100 30" preserveAspectRatio="none"><polyline points="' + pkt + '" fill="none" stroke="' + t[1] + '" stroke-width="2" vector-effect="non-scaling-stroke"/></svg><small>' + (diff >= 0 ? '+' : '') + diff + ' LP seit ' + new Date(verlauf[0].t).toLocaleDateString('de-DE', { day: 'numeric', month: 'numeric' }) + '</small></div>';
+  }
+  return '<div class="rk"><span class="rk-titel">' + titel + '</span><div class="rk-zeile"><span class="rk-emblem" style="--tc:' + t[1] + '"><i></i></span><div><b>' + t[0] + (['MASTER', 'GRANDMASTER', 'CHALLENGER'].includes(r.tier) ? '' : ' ' + r.div) + '</b><span>' + r.lp + ' LP</span></div>'
+    + (g ? '<div class="rk-wr"><span>' + r.w + 'S ' + r.l + 'N</span>' + wrText(r.w, g) + '</div>' : '') + '</div>' + linie + '</div>';
+}
+function leistungKachel(titel, neu, alle, text, anteil) {
+  return '<div class="lk"><span>' + titel + '</span><b>' + text(neu) + '</b><div class="lk-balken"><i style="width:' + Math.min(100, anteil(neu)) + '%"></i><em style="left:' + Math.min(100, anteil(alle)) + '%"></em></div><small>Saison ' + text(alle) + '</small></div>';
+}
+function spielZeile(s) {
+  const ich = s.p[s.ich], min = s.d / 60, offen = offeneSpiele.has(s.id);
+  const team = (tm) => s.p.filter((x) => x.tm === tm).map((x) => '<span class="tn' + (x === ich ? ' ich' : '') + '">' + bild('champion', x.c, 'mikro', '') + (x.person ? '<a href="#" data-person="' + esc(x.person.id) + '">' + esc(x.n.split('#')[0]) + '</a>' : '<span>' + esc(x.n.split('#')[0]) + '</span>') + '</span>').join('');
+  return '<div class="sz' + (s.w ? ' w' : '') + (offen ? ' offen' : '') + '"><div class="sz-haupt">'
+    + '<div class="sz-info"><b>' + esc(s.q) + '</b><span>' + vor(s.t) + '</span><hr><b class="erg">' + (s.w ? 'Sieg' : 'Niederlage') + '</b><span>' + dauer(s.d) + '</span></div>'
+    + '<div class="sz-champ"><span class="sz-portrait">' + bild('champion', ich.c, 'gross2', champName(ich.c)) + (ich.cl ? '<em>' + ich.cl + '</em>' : '') + '</span>'
+    + '<span class="sz-zauber">' + (ich.sp || []).map((x) => (x ? bild('spell', x, 'mini', ' ') : '<span class="bild mini"></span>')).join('') + '</span>'
+    + '<span class="sz-zauber">' + (ich.ru || []).map((x, i) => (x ? bild('rune', x, 'mini rund' + (i ? ' klein2' : ''), ' ') : '<span class="bild mini rund"></span>')).join('') + '</span></div>'
+    + '<div class="sz-kda"><b>' + ich.k + ' / <span class="rot">' + ich.de + '</span> / ' + ich.a + '</b><span>' + kdaText(ich.k, ich.de, ich.a) + ' KDA</span>'
+    + '<span class="sz-orden">' + (s.orden ? '<i class="orden ' + s.orden.toLowerCase() + '">' + s.orden + '</i>' : '<i class="orden">' + s.platz + '.</i>') + (s.etikett ? '<i class="orden tag">' + esc(s.etikett) + '</i>' : '') + '</span></div>'
+    + '<div class="sz-werte"><span>KP <b>' + s.kp + ' %</b></span><span>CS <b>' + ich.cs + '</b> (' + zahlDe(ich.cs / min) + ')</span><span>Schaden <b>' + tausend(ich.s || 0) + '</b></span><span>Note <b>' + zahlDe(ich.note) + '</b></span></div>'
+    + '<div class="sz-items">' + (ich.it || []).map((x, i) => (x ? bild('item', x, 'mini' + (i === 6 ? ' rund' : ''), ' ') : '<span class="bild mini' + (i === 6 ? ' rund' : '') + '"></span>')).join('') + '</div>'
+    + '<div class="sz-teams"><div>' + team(100) + '</div><div>' + team(200) + '</div></div>'
+    + '<button type="button" class="sz-auf" data-spiel="' + esc(s.id) + '" aria-label="Details" aria-expanded="' + offen + '">⌄</button></div>'
+    + (offen ? spielDetails(s) : '') + '</div>';
+}
+function spielDetails(s) {
+  const maxS = Math.max(...s.p.map((x) => x.s || 0), 1);
+  const teil = (tm) => { const l = s.p.filter((x) => x.tm === tm), w = l[0] && l[0].w, k = l.reduce((a, x) => a + x.k, 0);
+    return '<table class="sd"><thead><tr><th>' + (w ? '<span class="blau">Sieg</span>' : '<span class="rot">Niederlage</span>') + ' · ' + (tm === 100 ? 'Blau' : 'Rot') + ' · ' + k + ' Kills</th><th>Note</th><th>KDA</th><th>Schaden</th><th>Gold</th><th>CS</th><th>Sicht</th><th>Items</th></tr></thead><tbody>'
+      + l.map((x) => '<tr' + (x === s.p[s.ich] ? ' class="ich"' : '') + '><td><span class="zelle-name">' + bild('champion', x.c, 'mini', '') + '<span class="sd-zauber">' + (x.sp || []).map((z) => (z ? bild('spell', z, 'mikro', ' ') : '')).join('') + '</span>' + (x.person ? '<a href="#" data-person="' + esc(x.person.id) + '">' + esc(x.n) + '</a>' : esc(x.n)) + '</span></td>'
+        + '<td>' + zahlDe(x.note) + '</td><td>' + x.k + '/' + x.de + '/' + x.a + ' <small>' + kdaText(x.k, x.de, x.a) + '</small></td><td><span class="sd-dmg"><i style="width:' + Math.round(((x.s || 0) / maxS) * 100) + '%"></i></span>' + tausend(x.s || 0) + '</td>'
+        + '<td>' + zahlDe((x.g || 0) / 1000) + 'k</td><td>' + x.cs + '</td><td>' + (x.vs || 0) + '</td><td><span class="items">' + (x.it || []).map((z) => (z ? bild('item', z, 'mikro', ' ') : '')).join('') + '</span></td></tr>').join('') + '</tbody></table>'; };
+  return '<div class="sz-details tabelle">' + teil(100) + teil(200) + '</div>';
+}
+async function personZeigen(id) {
   const p = daten.personen.find((x) => x.id === id), box = document.querySelector('[data-panel="person"]');
+  if (!profilDaten || profilDaten.id !== id) profilAnzahl = 15;
   if (!p) { box.innerHTML = ''; return; }
   $('personTab').hidden = false; $('personTab').textContent = '👤 ' + p.name;
-  const partner = daten.duos.filter((d) => d.a === id || d.b === id).map((d) => ({ name: personVon(d.a === id ? d.b : d.a).name, g: d.g, w: d.w })).sort((a, b) => b.g - a.g);
-  const rollen = Object.entries(p.rollen).sort((a, b) => b[1].g - a[1].g);
-  box.innerHTML = '<section class="karte"><div class="profil">' + (p.champs[0] ? bild('champion', p.champs[0].c, 'gross', '') : '<span class="bild gross">' + esc(p.name[0]) + '</span>')
-    + '<div><h2>' + esc(p.name) + (p.ich ? '<span class="ich-marke">DU</span>' : p.auto ? '<span class="auto-marke" title="Spielt oft mit euch, ist aber nicht eingetragen">erkannt</span>' : '') + '</h2><div class="accs">' + p.accounts.map((a) => '<div class="acc">' + (a.icon ? bild('profil', a.icon, 'rund', '') : '') + '<div><b>' + esc(a.riotId) + '</b><small>' + esc(a.regionName) + (a.level ? ' · Lvl ' + a.level : '') + '</small></div>'
-      + '<div>' + (a.rang && a.rang.solo ? '<small>Solo</small>' + rangText(a.rang.solo) : '') + (a.rang && a.rang.flex ? '<small>Flex</small>' + rangText(a.rang.flex) : '') + (!a.rang || (!a.rang.solo && !a.rang.flex) ? '<small>ohne Rang</small>' : '') + '</div></div>').join('') + '</div></div></div>'
-    + (p.auto ? '<div class="auto-hinweis">🔍 <b>Automatisch erkannt</b> – spielt oft mit euch, ist aber nicht eingetragen. Die Zahlen zählen nur eure gemeinsamen Spiele.'
-      + '<div class="auto-knoepfe"><button type="button" class="haupt" data-auto-auf="' + esc(p.id.slice(5)) + '">➕ Fest aufnehmen</button><button type="button" data-auto-weg="' + esc(p.id.slice(5)) + '">🙈 Ausblenden</button></div></div>' : '')
-    + '<div class="kacheln"><div class="kachel"><b class="wr ' + wrKlasse(p.w, p.g) + '">' + pct(p.w, p.g) + ' %</b><span>Winrate · ' + p.g + ' Spiele</span></div><div class="kachel"><b>' + kdaText(p.k, p.de, p.a) + '</b><span>KDA · ' + (p.g ? (p.k / p.g).toFixed(1) + ' / ' + (p.de / p.g).toFixed(1) + ' / ' + (p.a / p.g).toFixed(1) : '–') + '</span></div>'
-    + '<div class="kachel"><b>' + String(p.csMin).replace('.', ',') + '</b><span>CS / Min.</span></div><div class="kachel"><b>' + p.schadenMin + '</b><span>Schaden / Min.</span></div><div class="kachel"><b>' + String(p.sichtMin).replace('.', ',') + '</b><span>Sicht / Min.</span></div>'
-    + '<div class="kachel"><b>' + (p.trend == null ? '–' : (p.trend > 0 ? '+' : '') + p.trend + ' %') + '</b><span>Trend (letzte 10)</span></div></div></section>'
-    + '<div class="zwei" style="margin-top:14px"><section class="karte"><h2>🏆 Champions</h2><div class="tabelle"><table><thead><tr><th>Champion</th><th>Spiele</th><th>Winrate</th><th>KDA</th><th>Rolle</th></tr></thead><tbody>'
-    + p.champs.map((c) => '<tr><td><span class="zelle-name">' + bild('champion', c.c, '', champName(c.c)) + '<b>' + esc(champName(c.c)) + '</b></span></td><td>' + c.g + '</td><td class="wr ' + wrKlasse(c.w, c.g) + '">' + pct(c.w, c.g) + ' %</td><td>' + kdaText(c.k, c.de, c.a) + '</td><td><span class="rolle">' + (ROLLE_KURZ[c.haupt] || c.haupt) + '</span></td></tr>').join('')
-    + '</tbody></table></div></section><div style="display:flex;flex-direction:column;gap:14px"><section class="karte"><h2>📍 Rollen</h2><div class="rollbar">'
-    + rollen.map(([r, v]) => '<span class="rolle">' + (ROLLE_KURZ[r] || r) + '</span><div class="balken"><i style="width:' + pct(v.w, v.g) + '%"></i></div><span><b class="wr ' + wrKlasse(v.w, v.g) + '">' + pct(v.w, v.g) + ' %</b> <span class="muted">· ' + v.g + '</span></span>').join('') + '</div></section>'
-    + '<section class="karte"><h2>🤝 Spielt oft mit</h2>' + (partner.map((x) => '<div class="duo"><div><b>' + esc(x.name) + '</b><small>' + x.g + ' Spiele zusammen</small></div><span class="wr ' + wrKlasse(x.w, x.g) + '">' + pct(x.w, x.g) + ' %</span></div>').join('') || '<p class="klein muted">Noch mit niemandem aus der Gruppe.</p>') + '</section></div></div>'
-    + '<section class="karte" style="margin-top:14px"><h2>📜 Letzte Spiele</h2><div id="personFeed"></div></section>';
-  feedZeigen($('personFeed'), daten.feed.filter((s) => s.wir.some((x) => x.person === id)).slice(0, 20), id);
+  if (!profilDaten || profilDaten.id !== id) box.innerHTML = '<section class="karte"><p class="muted">Profil wird geladen …</p></section>';
+  const nr = ++profilAnfrage, r = await api('lol/person?id=' + encodeURIComponent(id) + '&filter=' + filter).catch(() => ({ status: 0 }));
+  if (nr !== profilAnfrage) return;
+  if (r.status !== 200) { box.innerHTML = '<section class="karte"><p class="muted">Profil konnte nicht geladen werden.</p></section>'; return; }
+  const P = (profilDaten = r.json), acc0 = P.accounts.find((a) => a.icon) || P.accounts[0] || {};
+  const rangVon = (q) => { let b = null, acc = null; P.accounts.forEach((a) => { const x = a.rang && a.rang[q]; if (x && (!b || lpWert(x) > lpWert(b))) { b = x; acc = a.riotId; } }); return { r: b, verlauf: P.lpVerlauf.filter((x) => x.q === q && x.acc === acc) }; };
+  const solo = rangVon('solo'), flex = rangVon('flex'), L = P.leistung;
+  const rollenSumme = Object.values(P.rollen).reduce((a, b) => a + b, 0) || 1, klassenSumme = Object.values(P.klassen).reduce((a, b) => a + b, 0) || 1;
+  const maxTag = Math.max(1, ...P.woche.map((x) => x[0])), maxStd = Math.max(1, ...P.stunden.map((x) => x[0]));
+  box.innerHTML = '<section class="karte pk"><div class="pk-kopf">' + (acc0.icon ? bild('profil', acc0.icon, 'gross pk-icon', '') : P.champs[0] ? bild('champion', P.champs[0].c, 'gross pk-icon', '') : '<span class="bild gross pk-icon">' + esc(P.name[0]) + '</span>')
+    + '<div class="pk-name"><h2>' + esc(P.name) + (p.ich ? '<span class="ich-marke">DU</span>' : P.auto ? '<span class="auto-marke">erkannt</span>' : '') + '</h2>'
+    + '<div class="accs">' + P.accounts.map((a) => '<span class="acc">' + esc(a.riotId) + '<small>' + esc(a.regionName || '') + (a.level ? ' · Lvl ' + a.level : '') + '</small></span>').join('') + '</div></div>'
+    + '<div class="pk-raenge">' + rangKarte('Ranked Solo/Duo', solo.r, solo.verlauf) + rangKarte('Ranked Flex', flex.r, flex.verlauf) + '</div></div>'
+    + (P.auto ? '<div class="auto-hinweis">🔍 <b>Automatisch erkannt</b> – spielt oft mit euch, ist aber nicht eingetragen. Gezählt werden nur eure gemeinsamen Spiele.<div class="auto-knoepfe"><button type="button" class="haupt" data-auto-auf="' + esc(P.id.slice(5)) + '">➕ Fest aufnehmen</button><button type="button" data-auto-weg="' + esc(P.id.slice(5)) + '">🙈 Ausblenden</button></div></div>' : '')
+    + '</section>'
+    + '<div class="pr">'
+    + '<aside class="pr-seite">'
+    + (L.alle ? '<section class="karte pr-leistung"><h2>📈 Leistung <small>letzte ' + L.neu.g + ' vs. ' + L.alle.g + ' Spiele</small></h2><div class="lk-raster">'
+      + leistungKachel('Winrate', L.neu, L.alle, (x) => x.wr + ' %', (x) => x.wr) + leistungKachel('Ø KDA', L.neu, L.alle, (x) => zahlDe(x.kda, 2), (x) => x.kda * 16)
+      + leistungKachel('Kill-Beteiligung', L.neu, L.alle, (x) => x.kp + ' %', (x) => x.kp) + leistungKachel('Ø Spieldauer', L.neu, L.alle, (x) => dauer(x.dauer), (x) => (x.dauer / 2700) * 100) + '</div></section>' : '')
+    + '<section class="karte pr-meist"><h2>🏆 Meistgespielt <small>' + (FILTER_NAME[filter] || '') + '</small></h2>' + (P.champs.slice(0, 8).map((c) => '<div class="mc">' + bild('champion', c.c, '', champName(c.c)) + '<div><b>' + esc(champName(c.c)) + '</b><small>CS ' + c.cs + ' (' + zahlDe(c.csMin) + ')</small></div>'
+      + '<div class="mc-kda">' + kdaText(c.k, c.de, c.a) + '<small>' + zahlDe(c.k) + ' / ' + zahlDe(c.de) + ' / ' + zahlDe(c.a) + '</small></div><div class="mc-wr">' + wrText(c.w, c.g) + '<small>' + c.g + (c.g === 1 ? ' Spiel' : ' Spiele') + '</small></div></div>').join('') || '<p class="klein muted">Keine Spiele in diesem Modus.</p>') + '</section>'
+    + (P.mastery.length ? '<section class="karte"><h2>⭐ Mastery</h2><div class="ms">' + P.mastery.slice(0, 8).map((m) => '<div class="ms-c">' + bild('champion', m.c, 'ms-bild', champName(m.c)) + '<em>' + m.l + '</em><b>' + esc(champName(m.c)) + '</b><small>' + tausend(m.p) + '</small></div>').join('') + '</div></section>' : '')
+    + '<section class="karte"><h2>🎭 Spielstil</h2><div class="ps-rollen">' + ROLLE_REIHE.map((r) => { const a = Math.round(((P.rollen[r] || 0) / rollenSumme) * 100); return '<div class="' + (a >= 40 ? 'stark' : '') + '"><span class="rolle">' + ROLLE_KURZ[r] + '</span><b>' + a + ' %</b></div>'; }).join('') + '</div>'
+      + Object.entries(P.klassen).sort((a, b) => b[1] - a[1]).slice(0, 4).map(([k, n]) => '<div class="ps-klasse"><span>' + (KLASSE[k] || k) + '</span><div class="lk-balken"><i style="width:' + Math.round((n / klassenSumme) * 100) + '%"></i></div><b>' + Math.round((n / klassenSumme) * 100) + ' %</b></div>').join('') + '</section>'
+    + '<section class="karte"><h2>🤝 Zuletzt gespielt mit</h2>' + (P.mitgespielt.map((m) => '<div class="mg"><div>' + (m.person ? '<a href="#" data-person="' + esc(m.person.id) + '"><b>' + esc(m.n.split('#')[0]) + '</b></a>' : '<b>' + esc(m.n.split('#')[0]) + '</b>') + '<small>#' + esc(m.n.split('#')[1] || '') + '</small></div><span class="muted klein">' + m.w + 'S / ' + (m.g - m.w) + 'N · ' + m.g + '</span>' + wrText(m.w, m.g) + '</div>').join('') || '<p class="klein muted">Noch niemand doppelt.</p>') + '</section>'
+    + '<section class="karte"><h2>🗓️ Aktivität <small>Farbe = Winrate</small></h2><div class="akt-woche">' + P.woche.map((x, i) => '<div title="' + x[0] + ' Spiele · ' + pct(x[1], x[0]) + ' %"><i style="height:' + Math.round((x[0] / maxTag) * 100) + '%;' + aktFarbe(x) + '"></i><span>' + ['Mo', 'Di', 'Mi', 'Do', 'Fr', 'Sa', 'So'][i] + '</span></div>').join('') + '</div>'
+      + '<div class="akt-std">' + P.stunden.map((x, i) => '<i title="' + i + ' Uhr: ' + x[0] + ' Spiele' + (x[0] ? ' · ' + pct(x[1], x[0]) + ' %' : '') + '" style="opacity:' + (x[0] ? 0.25 + (x[0] / maxStd) * 0.75 : 0.08) + ';' + (x[0] ? aktFarbe(x) : '') + '"></i>').join('') + '</div><div class="akt-std-achse"><span>0</span><span>6</span><span>12</span><span>18</span><span>24 Uhr</span></div></section>'
+    + '</aside>'
+    + '<section class="karte pr-haupt"><h2>📜 Spielverlauf <small>' + P.filterSpiele + ' Spiele · ' + (FILTER_NAME[filter] || '') + '</small></h2><div id="szListe">' + (P.spiele.slice(0, profilAnzahl).map(spielZeile).join('') || '<p class="klein muted">Keine Spiele in diesem Modus.</p>') + '</div>'
+      + (P.spiele.length > profilAnzahl ? '<button type="button" class="mehr" id="szMehr">Weitere Spiele anzeigen (' + (P.spiele.length - profilAnzahl) + ')</button>' : '') + '</section>'
+    + '</div>';
 }
+const FILTER_NAME = { alle: 'Kluft', solo: 'Ranked Solo', flex: 'Ranked Flex', normal: 'Normal', aram: 'ARAM', mayhem: 'ARAM Mayhem' };
+const aktFarbe = (x) => (x[0] ? 'background:' + (x[1] / x[0] >= 0.5 ? 'rgba(10,132,255,' + (0.45 + (x[1] / x[0] - 0.5)) + ')' : 'rgba(255,69,58,' + (0.45 + (0.5 - x[1] / x[0])) + ')') : '');
+document.addEventListener('click', (e) => {
+  if (e.target.closest('#szMehr') && profilDaten) {
+    profilAnzahl += 20; $('szListe').innerHTML = profilDaten.spiele.slice(0, profilAnzahl).map(spielZeile).join('');
+    const k = $('szMehr'), rest = profilDaten.spiele.length - profilAnzahl; if (rest > 0) k.textContent = 'Weitere Spiele anzeigen (' + rest + ')'; else k.remove();
+    return;
+  }
+  const b = e.target.closest('.sz-auf'); if (!b || !profilDaten) return;
+  const id = b.dataset.spiel; if (offeneSpiele.has(id)) offeneSpiele.delete(id); else offeneSpiele.add(id);
+  const s = profilDaten.spiele.find((x) => x.id === id), alt = b.closest('.sz');
+  if (s && alt) alt.outerHTML = spielZeile(s);
+});
 
 // ---------- Prime League ----------
 let pl = null, plTab = 'teams', plGewaehlt = null, plMetaRolle = '', plMuChamp = null, plBearbeiten = null;
