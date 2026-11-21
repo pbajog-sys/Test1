@@ -9,8 +9,11 @@
 //
 // Schnittstellen (alle nur für Angemeldete; /admin/… nur für den Admin):
 //   GET  /api/lol/daten?filter=alle|solo|flex|normal|aram   → { quelle: 'demo'|'riot', key, personen, duos, gegner, feed, … }
-//   POST /api/lol/account            { riotId: 'Name#Tag', region: 'euw1' }   → eigenen Account hinzufügen
-//   POST /api/lol/account/entfernen  { riotId }
+//   POST /api/lol/account            { riotId: 'Name#Tag', region: 'euw1', fuer?: Person, neuName?: 'Name' } → Account eintragen (für sich oder Mitspieler)
+//   POST /api/lol/account/entfernen  { riotId, person? }
+//   POST /api/lol/account/zuordnen   { riotId, person, nach | neuName }   → Account einer anderen Person geben
+//   POST /api/lol/auto/aufnehmen|ausblenden { u } · /api/lol/auto/einblenden → automatisch erkannte Mitspieler
+//   /api/lol/prime…                  → Prime League (siehe lol-prime.js)
 //   POST /api/lol/aktualisieren      → eigene Accounts sofort neu holen (höchstens alle 2 Min.)
 //   GET  /api/lol/bild/champion/<Name>.png, /api/lol/bild/profil/<id>.png → Bilder von Riots Data Dragon (zwischengespeichert)
 //   GET/POST /api/admin/lol          { key: 'RGAPI-…' | '' } → Key setzen/entfernen, Zustand
@@ -26,6 +29,12 @@ const FILTER = { alle: [400, 420, 430, 440, 490], solo: [420], flex: [440], norm
 const QUEUE_NAME = { 420: 'Ranked Solo', 440: 'Ranked Flex', 400: 'Normal Draft', 430: 'Normal Blind', 490: 'Quickplay', 450: 'ARAM', 1700: 'Arena', 1900: 'URF', 900: 'ARURF' };
 const ROLLEN = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'];
 const RIOT_ID = /^(.{3,16})#([A-Za-z0-9]{2,5})$/u;
+const { erstellePrime } = require('./lol-prime.js');
+// fester Zufall für Beispieldaten
+const rnd = (start) => { let s = start; return () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; }; };
+const POOL = { TOP: ['Aatrox', 'Darius', 'Garen', 'Fiora', 'Sett', 'Riven', 'Irelia', 'Yone'], JUNGLE: ['LeeSin', 'Viego', 'Graves', 'Hecarim', 'Kayn', 'Vi', 'Amumu', 'Diana'],
+  MIDDLE: ['Ahri', 'Sylas', 'Yasuo', 'Orianna', 'Lux', 'Akali', 'Zed', 'Ekko'], BOTTOM: ['Jinx', 'Kaisa', 'Ezreal', 'Caitlyn', 'Jhin', 'Vayne', 'MissFortune', 'Ashe'],
+  UTILITY: ['Thresh', 'Lulu', 'Nami', 'Leona', 'Nautilus', 'Karma', 'Morgana', 'Pyke'] };
 
 function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoName, konten = () => [], istAdmin = () => false, protokoll = () => {}, takt = 10 * 60e3,
   riotHolen = null, bildHolen = null, warten = (ms) => new Promise((ok) => setTimeout(ok, ms)) }) {
@@ -58,7 +67,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     Object.keys(zustand.personen).forEach((id) => { if (!zustand.personen[id].length) delete zustand.personen[id]; });
     Object.keys(zustand.gaeste).forEach((id) => { if (!zustand.personen[id]) delete zustand.gaeste[id]; });
   }
-  let spiele = lies('spiele.json', {});   // matchId → kompaktes Spiel
+  const spiele = lies('spiele.json', {});   // matchId → kompaktes Spiel
   let keyStatus = key() ? 'unbekannt' : 'fehlt', letzterLauf = 0, laeuft = false, version = 1;
   let speichernUhr = null;
   const speichern = () => { version++; clearTimeout(speichernUhr); speichernUhr = setTimeout(() => { schreib('zustand.json', zustand); schreib('spiele.json', spiele); }, 300); };
@@ -99,8 +108,9 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
 
   // kompaktes Spiel: nur was die Auswertung braucht (alle 10 Teilnehmer, damit Mit- und Gegenspieler bekannt sind)
   function kompakt(m) {
-    const i = m.info || {};
-    return { id: m.metadata.matchId, t: i.gameStartTimestamp || i.gameCreation, d: i.gameDuration, q: i.queueId, v: String(i.gameVersion || '').split('.').slice(0, 2).join('.'),
+    const i = m.info || {}, bans = {};
+    (i.teams || []).forEach((t) => { bans[t.teamId] = (t.bans || []).map((x) => x.championId).filter((x) => x > 0); });
+    return { b: bans, id: m.metadata.matchId, t: i.gameStartTimestamp || i.gameCreation, d: i.gameDuration, q: i.queueId, v: String(i.gameVersion || '').split('.').slice(0, 2).join('.'),
       p: (i.participants || []).map((x) => ({ u: x.puuid, n: (x.riotIdGameName || x.summonerName || '?') + (x.riotIdTagline ? '#' + x.riotIdTagline : ''), c: x.championName,
         r: x.teamPosition || '', tm: x.teamId, w: !!x.win, k: x.kills, de: x.deaths, a: x.assists, cs: (x.totalMinionsKilled || 0) + (x.neutralMinionsKilled || 0),
         g: x.goldEarned, s: x.totalDamageDealtToChampions, vs: x.visionScore, it: [x.item0, x.item1, x.item2, x.item3, x.item4, x.item5, x.item6].map((v) => v || 0) })) };
@@ -137,10 +147,12 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     if (laeuft || !key() || keyStatus === 'ungueltig') return false;
     laeuft = true;
     try {
+      const nurTeam = nurKonto && String(nurKonto).startsWith('prime:') ? String(nurKonto).slice(6) : null;
       for (const [konto, liste] of Object.entries(zustand.personen)) {
-        if (nurKonto && konto !== nurKonto) continue;
+        if (nurTeam || (nurKonto && konto !== nurKonto)) continue;
         for (const acc of liste) { try { await accountHolen(acc); } catch (e) { if (e.status === 401 || e.status === 403) throw e; acc.fehler = e.message; } }
       }
+      if (!nurKonto || nurTeam) await prime.allesHolen(nurTeam);
       letzterLauf = jetzt();
       return true;
     } catch (e) { protokoll('LoL: ' + e.message); return false; }
@@ -216,11 +228,8 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
   let demoCache = null;
   function demo() {
     if (demoCache) return demoCache;
-    let s = 20260515; const r = () => { s = (s * 1103515245 + 12345) % 2147483648; return s / 2147483648; };
+    const r = rnd(20260515);
     const wahl = (l) => l[Math.floor(r() * l.length)];
-    const POOL = { TOP: ['Aatrox', 'Darius', 'Garen', 'Fiora', 'Sett', 'Riven', 'Irelia', 'Yone'], JUNGLE: ['LeeSin', 'Viego', 'Graves', 'Hecarim', 'Kayn', 'Vi', 'Amumu', 'Diana'],
-      MIDDLE: ['Ahri', 'Sylas', 'Yasuo', 'Orianna', 'Lux', 'Akali', 'Zed', 'Ekko'], BOTTOM: ['Jinx', 'Kaisa', 'Ezreal', 'Caitlyn', 'Jhin', 'Vayne', 'MissFortune', 'Ashe'],
-      UTILITY: ['Thresh', 'Lulu', 'Nami', 'Leona', 'Nautilus', 'Karma', 'Morgana', 'Pyke'] };
     const LEUTE = [
       { id: 'demo-philip', name: 'Philip', accounts: [['flip yo#meep', 'euw1', 'demo-p1', { tier: 'GOLD', div: 'II', lp: 47, w: 61, l: 55 }], ['meep smurf#EUW', 'euw1', 'demo-p2', { tier: 'PLATINUM', div: 'IV', lp: 12, w: 30, l: 22 }]],
         rollen: { JUNGLE: 0.07, MIDDLE: 0.02, TOP: -0.03, BOTTOM: -0.06, UTILITY: -0.02 }, lieblinge: ['Viego', 'LeeSin', 'Sylas', 'Ahri'] },
@@ -285,6 +294,20 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     return ddVersion;
   }
 
+  let champMap = lies('champs.json', null);
+  async function champNamen() {
+    if (champMap && champMap._v === ddVersion && jetzt() - (champMap._t || 0) < 7 * 864e5) return champMap;
+    try {
+      const v = await ddragon(), j = JSON.parse((await bild('https://ddragon.leagueoflegends.com/cdn/' + v + '/data/en_US/champion.json')).toString());
+      const m = { _v: v, _t: jetzt() }; Object.values(j.data || {}).forEach((c) => { m[c.key] = c.id; });
+      champMap = m; schreib('champs.json', m);
+    } catch (e) { champMap = champMap || {}; }
+    return champMap;
+  }
+
+  // ---------- Prime League ----------
+  const prime = erstellePrime({ zustand, spiele, riot, regional, plattform, kompakt, speichern, sofortSpeichern, senden, koerper, jetzt, protokoll, champNamen, demoPool: POOL, rnd, holen: (id) => allesHolen('prime:' + id).catch(() => {}) });
+
   // ---------- Anfragen ----------
   const letzteAktualisierung = {};
   async function anfrage(weg, m, req, res, url, k) {
@@ -348,6 +371,10 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       sofortSpeichern(); protokoll('LoL: ' + acc.riotId + ' → ' + personName(nach));
       return senden(res, 200, { person: personName(nach) });
     }
+    if (weg.startsWith('/lol/prime')) {
+      if (weg === '/lol/prime' && m === 'GET') await champNamen();
+      return prime.anfrage(weg, m, req, res, k, !!key() && keyStatus !== 'ungueltig');
+    }
     if (weg === '/lol/auto/aufnehmen' && m === 'POST') {
       // erkannten Mitspieler fest aufnehmen: wird Person (ohne Konto), ab dann werden alle seine Spiele geholt
       const b = await koerper(req), u = String(b.u || '');
@@ -408,7 +435,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       if (alt && alt !== neu) {
         // Riot verschlüsselt PUUIDs pro Key: mit neuem Key alles neu zuordnen (Accounts neu auflösen, Spiele neu holen)
         Object.values(zustand.personen).forEach((l) => l.forEach((x) => { x.puuid = null; delete x.fehler; }));
-        zustand.accounts = {}; spiele = {}; sofortSpeichern();
+        zustand.accounts = {}; for (const id of Object.keys(spiele)) delete spiele[id]; prime.zuruecksetzen(); sofortSpeichern();
       }
       protokoll('LoL: Riot-Key eingetragen'); allesHolen().catch(() => {});
       return senden(res, 200, { key: keyStatus });

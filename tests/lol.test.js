@@ -23,6 +23,15 @@ for (let n = 0; n < 6; n++) {
         kills: 5, deaths: 3, assists: 4, totalMinionsKilled: 180, neutralMinionsKilled: 10, goldEarned: 11000, totalDamageDealtToChampions: 20000, visionScore: 20, item0: 3031 };
     })) } };
 }
+const PL_SPIELER = { 't1 eins#euw': 'P-T1', 't1 zwei#euw': 'P-T2', 't1 drei#euw': 'P-T3', 't1 vier#euw': 'P-T4', 't1 fuenf#euw': 'P-T5' };
+Object.assign(ACCS, PL_SPIELER);
+for (let n = 0; n < 2; n++) {
+  SPIELE['EUW1_PL' + n] = { metadata: { matchId: 'EUW1_PL' + n }, info: { gameStartTimestamp: Date.now() - n * 864e5, gameDuration: 1900, queueId: 0, gameVersion: '15.10.1',
+    teams: [{ teamId: 100, bans: [{ championId: 103, pickTurn: 1 }, { championId: -1, pickTurn: 2 }] }, { teamId: 200, bans: [{ championId: 266, pickTurn: 1 }] }],
+    participants: ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'].flatMap((r, i) => [100, 200].map((tm) => ({ puuid: tm === 100 ? 'P-T' + (i + 1) : 'G-' + n + i, riotIdGameName: tm === 100 ? 'T1 ' + i : 'Gegner' + i, riotIdTagline: 'EUW',
+      championName: tm === 100 ? ['Darius', 'Viego', 'Ahri', 'Jinx', 'Leona'][i] : ['Garen', 'Amumu', 'Lux', 'Ezreal', 'Lulu'][i], teamPosition: r, teamId: tm, win: tm === 100 ? n === 0 : n !== 0,
+      kills: 3, deaths: 2, assists: 5, totalMinionsKilled: 200, neutralMinionsKilled: 0, goldEarned: 12000, totalDamageDealtToChampions: 20000, visionScore: 25, item0: 0 }))) } };
+}
 const riotEcht = async (url, k) => {
   riotAufrufe.push(url);
   if (k !== KEY) return { status: 401, json: null };
@@ -32,15 +41,16 @@ const riotEcht = async (url, k) => {
   if (m) { const id = ACCS[(m[1] + '#' + m[2]).toLowerCase()]; return id ? { status: 200, json: { puuid: id, gameName: m[1], tagLine: m[2] } } : { status: 404, json: null }; }
   if ((m = /summoners\/by-puuid\/(.+)$/.exec(p))) return { status: 200, json: { profileIconId: 29, summonerLevel: 321 } };
   if ((m = /entries\/by-puuid\/(.+)$/.exec(p))) return { status: 200, json: m[1] === 'P-ANNA2' ? [{ queueType: 'RANKED_SOLO_5x5', tier: 'PLATINUM', rank: 'II', leaguePoints: 40, wins: 20, losses: 15 }] : [] };
-  if ((m = /matches\/by-puuid\/(.+)\/ids$/.exec(p))) return { status: 200, json: Object.values(SPIELE).filter((s) => s.info.participants.some((x) => x.puuid === m[1])).map((s) => s.metadata.matchId) };
-  if ((m = /matches\/(EUW1_\d+)$/.exec(p))) return { status: 200, json: SPIELE[m[1]] };
+  if ((m = /champion-masteries\/by-puuid\/(.+)\/top$/.exec(p))) return { status: 200, json: [{ championId: 103, championPoints: 250000, championLevel: 12 }, { championId: 266, championPoints: 90000, championLevel: 7 }] };
+  if ((m = /matches\/by-puuid\/(.+)\/ids$/.exec(p))) { const turnier = u.searchParams.get('type') === 'tourney'; return { status: 200, json: Object.values(SPIELE).filter((s) => (s.info.queueId === 0) === turnier && s.info.participants.some((x) => x.puuid === m[1])).map((s) => s.metadata.matchId) }; }
+  if ((m = /matches\/(EUW1_\w+)$/.exec(p))) return { status: 200, json: SPIELE[m[1]] };
   return { status: 404, json: null };
 };
 let riotHolenAktuell = riotEcht;
 const riotHolen = (url, k) => riotHolenAktuell(url, k);
 let bildAufrufe = 0;
 const PNG = Buffer.from('89504e470d0a1a0a0000000d4948445200000001000000010806000000', 'hex');
-const bildHolen = async (url) => { bildAufrufe++; return url.endsWith('versions.json') ? Buffer.from('["15.10.1"]') : PNG; };
+const bildHolen = async (url) => { bildAufrufe++; return url.endsWith('versions.json') ? Buffer.from('["15.10.1"]') : url.endsWith('champion.json') ? Buffer.from(JSON.stringify({ data: { Ahri: { key: '103', id: 'Ahri' }, Aatrox: { key: '266', id: 'Aatrox' } } })) : PNG; };
 
 const api = erstelleServer({ daten: DATEN, basis: DATEN, admin: ['Anna'], autoTakt: 0, messTakt: 0, logTakt: 0, lolOptionen: { takt: 0, riotHolen, bildHolen, warten: async () => {} } });
 const TYPEN = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.png': 'image/png' };
@@ -98,7 +108,15 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     ck('Aktualisieren ohne Key → 409 mit Erklärung', (await anfrage('lol/aktualisieren', 'POST', {}, ben)).status === 409);
     ck('ohne Key keine Anfrage an Riot', riotAufrufe.length === 0, riotAufrufe.join(' '));
 
-    console.log('Accounts für Mitspieler');
+    console.log('Prime League (ohne Key: Beispiel-Teams)');
+    let plD = await anfrage('lol/prime', 'GET', null, ben);
+    ck('Beispiel: 6 Teams, 60 Turnierspiele, Meta, Matchups, Synergien', plD.status === 200 && plD.json.quelle === 'demo' && plD.json.teams.length === 6 && plD.json.spiele === 60 && plD.json.meta.length > 20 && Object.keys(plD.json.matchup).length > 50 && Object.keys(plD.json.synergie).length > 50);
+    const t0 = plD.json.teams[0];
+    ck('Beispiel-Team: Bilanz, Seiten, Spieler mit Rolle/Pool/Mastery, Bans, Drafts', t0.g === t0.blau[0] + t0.rot[0] && t0.spieler.length === 5 && t0.spieler.every((x) => x.rolle && x.champs.length && x.mastery.length) && t0.bans.length && t0.gebannt.length && t0.drafts[0].wir.length === 5 && t0.drafts[0].gegner);
+    ck('Team ohne Namen → 400', (await anfrage('lol/prime/team', 'POST', { name: '', text: 'A#EUW' }, ben)).status === 400);
+    ck('zu wenige Riot-IDs → 400', (await anfrage('lol/prime/team', 'POST', { name: 'Zwei', text: 'Eins Spieler#EUW\nZwei Spieler#EUW' }, ben)).status === 400);
+
+
     let x = await anfrage('lol/account', 'POST', { riotId: 'Dennis#EUW', region: 'euw1', neuName: 'Dennis' }, cara);
     d = await anfrage('lol/daten', 'GET', null, cara);
     ck('Cara trägt Account für „Dennis“ (ohne Konto) ein', x.status === 200 && x.json.person === 'Dennis' && d.json.wahl.some((p) => p.name === 'Dennis' && p.gast) && d.json.alle.some((p) => p.name === 'Dennis' && p.gast && p.accounts[0].darf), x.text);
@@ -155,6 +173,23 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     d = await anfrage('lol/daten', 'GET', null, ben);
     ck('nach Key-Wechsel alles neu zugeordnet (3 Accounts, 6 Spiele, Duo da)', st2 && st2.accounts === 3 && st2.spiele === 6 && d.json.duos.some((x) => [x.a, x.b].sort().join() === 'anna,ben' && x.g === 6) && d.json.personen.find((x) => x.name === 'Anna').g === 6, JSON.stringify(st2));
 
+    console.log('Prime League mit Riot-Daten');
+    let tx = await anfrage('lol/prime/team', 'POST', { name: 'Team Eins', kurz: 'T1', text: 'Spieler\tRolle\nEins T1 Eins#EUW\nZwei T1 Zwei#EUW\nDrei T1 Drei#EUW\nVier T1 Vier#EUW\nFünf T1 Fuenf#EUW' }, ben);
+    ck('Team aus eingefügtem Kader angelegt (Kürzel erkannt, 5 Spieler)', tx.status === 200 && tx.json.spieler.length === 5 && tx.json.spieler[0] === 'T1 Eins#EUW', tx.text);
+    ck('gleicher Teamname nochmal → 409', (await anfrage('lol/prime/team', 'POST', { name: 'team eins', text: 'T1 Eins#EUW\nT1 Zwei#EUW\nT1 Drei#EUW' }, ben)).status === 409);
+    await warte(50); await bisFertig(anna); await warte(100);
+    plD = await anfrage('lol/prime', 'GET', null, ben);
+    const te = plD.json.teams && plD.json.teams[0];
+    ck('Turnierspiele geholt: Team Eins 2 Spiele (1–1), Picks und Rollen', plD.json.quelle === 'riot' && plD.json.spiele === 2 && te && te.g === 2 && te.w === 1 && te.spieler.find((x) => x.riotId === 'T1 Eins#EUW').rolle === 'TOP', JSON.stringify(plD.json).slice(0, 300));
+    ck('Bans mit Champion-Namen (Nummern übersetzt, „kein Ban“ weggelassen)', te.bans.length === 1 && te.bans[0].c === 'Ahri' && te.gebannt[0].c === 'Aatrox', JSON.stringify([te.bans, te.gebannt]));
+    ck('Mastery je Spieler übersetzt', te.spieler[0].mastery[0].c === 'Ahri' && te.spieler[0].mastery[0].p === 250000);
+    ck('Lane-Matchup Darius vs Garen gezählt', JSON.stringify(plD.json.matchup['TOP|Darius|Garen']) === '[2,1]');
+    d = await anfrage('lol/daten', 'GET', null, ben);
+    ck('Turnierspiele verfälschen die Gruppen-Statistik nicht', d.json.personen.find((x) => x.name === 'Anna').g === 6);
+    ck('Team bearbeiten (Kürzel) und entfernen', (await anfrage('lol/prime/team/aendern', 'POST', { id: tx.json.id, kurz: 'EINS' }, cara)).status === 200
+      && (await anfrage('lol/prime', 'GET', null, ben)).json.eigeneTeams[0].kurz === 'EINS'
+      && (await anfrage('lol/prime/team/entfernen', 'POST', { id: tx.json.id }, cara)).status === 200 && (await anfrage('lol/prime', 'GET', null, ben)).json.eigeneTeams.length === 0);
+
     console.log('Bilder');
     let b = await fetch('http://127.0.0.1:8796/api/lol/bild/champion/Ahri.png', { headers: { Cookie: ben } });
     const n1 = bildAufrufe;
@@ -195,6 +230,10 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
       ck(name + ': Spieler-Profil mit Champions und Spielen', (await seite.$$('[data-panel="person"] tbody tr')).length > 3 && (await seite.$$('#personFeed .spiel')).length > 3);
       await seite.fill('#riotId', 'Cara#EUW'); await seite.click('#hinzu'); await warte(400);
       ck(name + ': eigenen Account eingetragen, „wartet auf Riot-Key“', /Cara#EUW/.test(await seite.textContent('#meineListe')) && /wartet auf Riot-Key/.test(await seite.textContent('#meineListe')));
+      await seite.click('[data-tab="prime"]'); await seite.waitForSelector('.pl-team'); await seite.click('.pl-team'); await warte(150);
+      ck(name + ': Prime League – Teams, Team-Details mit Drafts', (await seite.$$('.pl-team')).length === 6 && (await seite.$$('#plTeam .draft')).length > 5);
+      await seite.click('[data-pl="draft"]'); const gg = await seite.$$('[data-dh="g"]'); await gg[0].fill('Darius'); const uu = await seite.$$('[data-dh="u"]'); await uu[1].fill('Viego'); await warte(150);
+      ck(name + ': Draft-Helfer schlägt Top-Champions vor', /für Top/.test(await seite.textContent('#dhRolle')) && (await seite.$$('#dhVorschlaege .vorschlag')).length >= 3);
       await seite.click('[data-tab="spiele"]'); await warte(80);
       const breit = await seite.evaluate(() => document.documentElement.scrollWidth - innerWidth);
       ck(name + ': nichts ragt seitlich heraus', breit <= 1, breit + 'px');

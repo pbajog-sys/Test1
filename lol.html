@@ -176,6 +176,49 @@
   .platz b { display: block; font-size: 1.1rem; margin: 8px 0 2px; }
   .platz small { color: var(--muted); }
   .tipp-zeile { margin-top: 12px; font-size: .9rem; }
+  /* Prime League */
+  .pl-kopf { display: flex; align-items: center; gap: 10px 14px; flex-wrap: wrap; margin-bottom: 12px; }
+  .pl-banner { margin: 0 0 12px; }
+  .pl-teams { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .pl-team { text-align: left; display: grid; gap: 8px; padding: 14px; color: inherit; font: inherit; width: 100%; cursor: pointer; background: rgba(255,255,255,.055); border: 1px solid rgba(255,255,255,.09); border-radius: 18px; }
+  .pl-team:hover, .pl-team[aria-pressed="true"] { border-color: rgba(10,132,255,.7); background: rgba(10,132,255,.1); }
+  .pl-team .kopfz { display: flex; align-items: center; gap: 10px; }
+  .pl-kuerzel { flex: none; min-width: 46px; height: 46px; padding: 0 6px; border-radius: 14px; display: grid; place-items: center; font-weight: 800; font-size: .82rem; letter-spacing: .02em; background: linear-gradient(135deg, #5e5ce6, #0a84ff); color: #fff; }
+  .pl-team b { font-size: 1rem; display: block; }
+  .pl-team small { color: var(--muted); font-size: .78rem; }
+  .ikonen { display: flex; gap: 3px; flex-wrap: wrap; align-items: center; }
+  .ikonen .ik { position: relative; display: inline-flex; }
+  .ikonen .ik small { position: absolute; right: -3px; bottom: -4px; font-size: .58rem; font-weight: 800; background: rgba(20,20,30,.92); border-radius: 6px; padding: 0 3px; color: #fff; }
+  .bild.ban { filter: grayscale(1) brightness(.75); }
+  .pl-spieler td { vertical-align: middle; }
+  .draft { display: grid; grid-template-columns: 64px minmax(0, 1fr); gap: 4px 12px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--linie2); }
+  .draft:last-child { border-bottom: 0; }
+  .draft .erg { font-weight: 800; font-size: .84rem; } .draft .erg.w { color: var(--sieg); } .draft .erg.l { color: var(--niederlage); }
+  .draft .erg small { display: block; color: var(--muted); font-weight: 600; font-size: .7rem; }
+  .draft .seiten { display: grid; gap: 6px; min-width: 0; }
+  .draft .zeile { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: .8rem; }
+  .draft .zeile > span:first-child { min-width: 5.5em; color: var(--muted); }
+  .pl-wahl { display: flex; gap: 10px 16px; flex-wrap: wrap; margin: 4px 0 12px; font-size: .88rem; }
+  .pl-wahl label { display: flex; align-items: center; gap: 8px; }
+  .dh-bans { flex: 1; min-width: 240px; } .dh-bans input { flex: 1; }
+  .pl-draft { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .pl-draft h3 { font-size: .88rem; margin: 0 0 8px; }
+  .dh-slot { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 8px; align-items: center; margin-bottom: 6px; }
+  .dh-slot input { width: 100%; font-size: 15px; padding: 7px 10px; }
+  .vorschlag { display: grid; grid-template-columns: 40px minmax(0, 1fr) auto; gap: 4px 12px; align-items: center; padding: 9px 0; border-bottom: 1px solid var(--linie2); }
+  .vorschlag:last-child { border-bottom: 0; }
+  .vorschlag small { display: block; color: var(--muted); font-size: .76rem; }
+  .vorschlag .punkte { font-weight: 800; font-variant-numeric: tabular-nums; text-align: right; }
+  .pl-form { display: grid; grid-template-columns: minmax(0, 1fr) 90px; gap: 8px; }
+  .pl-form textarea { grid-column: 1 / -1; font: inherit; font-size: 15px; padding: 10px; border-radius: 12px; border: 1px solid rgba(255,255,255,.12); background: rgba(255,255,255,.07); color: var(--text); resize: vertical; }
+  .zeile-knoepfe { display: flex; gap: 8px; flex-wrap: wrap; }
+  .pl-eigen { padding: 10px 0; border-bottom: 1px solid var(--linie2); }
+  .pl-eigen:last-child { border-bottom: 0; }
+  .pl-eigen .kopfz { display: flex; align-items: center; gap: 8px; justify-content: space-between; }
+  .pl-eigen small { color: var(--muted); }
+  .pl-eigen button { padding: 4px 10px; font-size: .78rem; }
+  .mu-zeile { display: grid; grid-template-columns: 32px minmax(0, 1fr) auto; gap: 8px; align-items: center; padding: 5px 0; font-size: .86rem; }
+  .meta-zeile { cursor: pointer; } .meta-zeile:hover td { background: rgba(255,255,255,.04); }
   #meldung { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #0a1220; border: 1px solid var(--linie); padding: 10px 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); max-width: calc(100vw - 32px); z-index: 5; }
   .fuss { padding: 0 clamp(14px, 2.4vw, 40px) 30px; font-size: .72rem; color: var(--muted); }
 
@@ -275,6 +318,7 @@
       <button type="button" role="tab" data-tab="rollen" aria-selected="false">📍 Rollen</button>
       <button type="button" role="tab" data-tab="aufstellung" aria-selected="false">🧩 Aufstellung</button>
       <button type="button" role="tab" data-tab="spiele" aria-selected="false">📜 Spiele</button>
+      <button type="button" role="tab" data-tab="prime" aria-selected="false">🏆 Prime League</button>
     </nav>
 
     <div data-panel="gruppe">
@@ -302,6 +346,49 @@
       </section>
     </div>
     <div data-panel="spiele" hidden><section class="karte"><h2>📜 Letzte Spiele der Gruppe</h2><div id="feed"></div></section></div>
+    <div data-panel="prime" hidden>
+      <div class="pl-kopf">
+        <div class="chips" id="plNav" role="group" aria-label="Prime League"><button type="button" data-pl="teams" aria-pressed="true">Teams</button><button type="button" data-pl="draft" aria-pressed="false">🧠 Draft-Helfer</button><button type="button" data-pl="meta" aria-pressed="false">📊 Meta</button><button type="button" data-pl="verwalten" aria-pressed="false">✏️ Teams eintragen</button></div>
+        <span class="muted klein" id="plInfo"></span>
+      </div>
+      <div class="banner pl-banner" id="plBanner" hidden></div>
+      <div data-plp="teams"><div class="pl-teams" id="plTeams"></div><div id="plTeam"></div></div>
+      <div data-plp="draft" hidden>
+        <section class="karte">
+          <h2>🧠 Draft-Helfer <small>Was picken wir gegen das?</small></h2>
+          <div class="pl-wahl"><label>Wir sind <select id="dhWir"></select></label><label>Gegner <select id="dhDie"></select></label></div>
+          <div class="pl-draft">
+            <div><h3>Gegner-Picks</h3><div id="dhGegner"></div></div>
+            <div><h3>Unsere Picks <small class="muted">– leeres Feld = gesuchte Rolle</small></h3><div id="dhUns"></div></div>
+          </div>
+          <div class="pl-wahl"><label class="dh-bans">Bans (beide Seiten, mit Komma) <input id="dhBans" placeholder="z. B. Ahri, Viego" autocomplete="off" spellcheck="false" list="plChampListe"></label></div>
+          <datalist id="plChampListe"></datalist>
+        </section>
+        <div class="zwei" style="margin-top:14px">
+          <section class="karte"><h2>✨ Vorschläge <small id="dhRolle"></small></h2><div id="dhVorschlaege"></div></section>
+          <section class="karte"><h2>🔭 Gegner-Profil <small id="dhGegnerName"></small></h2><div id="dhGegnerInfo"></div></section>
+        </div>
+      </div>
+      <div data-plp="meta" hidden>
+        <div class="zwei">
+          <section class="karte"><h2>📊 Champions <small id="plMetaInfo"></small></h2><div class="chips" id="plMetaRolle" style="margin-bottom:10px"></div><div class="tabelle" id="plMeta"></div></section>
+          <section class="karte"><h2>⚔️ Matchups <small id="plMuName">– Champion links antippen</small></h2><div id="plMu"></div></section>
+        </div>
+      </div>
+      <div data-plp="verwalten" hidden>
+        <div class="zwei">
+          <section class="karte">
+            <h2 id="plFormTitel">➕ Team eintragen</h2>
+            <p class="klein muted" style="margin:-6px 0 10px">Auf primeleague.gg die Teamseite öffnen, den Kader (Spielerliste) markieren, kopieren und unten einfügen – die Riot-IDs (Name#Tag) werden automatisch herausgesucht.</p>
+            <div class="pl-form"><input id="plName" placeholder="Teamname" maxlength="40" autocomplete="off"><input id="plKurz" placeholder="Kürzel" maxlength="6" autocomplete="off">
+              <textarea id="plText" rows="7" placeholder="Kader hier einfügen, z. B.&#10;InP Migel#EUW&#10;InP John#EUW&#10;…"></textarea></div>
+            <p class="klein" id="plVorschau"></p>
+            <div class="zeile-knoepfe"><button type="button" class="haupt" id="plSpeichern">Team speichern</button><button type="button" id="plAbbrechen" hidden>Abbrechen</button></div>
+          </section>
+          <section class="karte"><h2>📋 Eingetragene Teams</h2><div id="plEigene"></div></section>
+        </div>
+      </div>
+    </div>
   </div>
 </main>
 <div class="leer-hinweis" id="hinweis" style="text-align:center;margin:14vh auto;max-width:520px;padding:0 20px"><p class="muted">Wird geladen …</p></div>
@@ -552,11 +639,191 @@ function personZeigen(id) {
   feedZeigen($('personFeed'), daten.feed.filter((s) => s.wir.some((x) => x.person === id)).slice(0, 20), id);
 }
 
+// ---------- Prime League ----------
+let pl = null, plTab = 'teams', plGewaehlt = null, plMetaRolle = '', plMuChamp = null, plBearbeiten = null;
+const ROLLE_REIHE = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'];
+const RIOT_ID_IM_TEXT = /([^\t\n\r#|·,;]{3,40})#([A-Za-z0-9]{2,5})(?![A-Za-z0-9])/gu;
+function riotIdsAusText(text) {   // gleiche Regeln wie der Server (lol-prime.js)
+  const roh = [];
+  for (const zeile of String(text || '').split(/\r?\n/)) {
+    for (const m of zeile.matchAll(RIOT_ID_IM_TEXT)) {
+      const alle = m[1].trim().split(/\s+/), w = [];   // so viele Wörter vom Ende, wie in 16 Zeichen passen
+      while (alle.length && (alle[alle.length - 1] + (w.length ? ' ' + w.join(' ') : '')).length <= 16) w.unshift(alle.pop());
+      while (w.length > 1 && /[:：]$/.test(w[0])) w.shift();   // „Top: Name#Tag“ → Bezeichnung weg
+      if (w.join(' ').length >= 3) roh.push({ w, tag: m[2] });
+    }
+  }
+  // Steht bei den meisten dasselbe Wort (Team-Kürzel wie „InP“) – dann alles davor abschneiden (Anzeigenamen der Seite)
+  const z = {}; roh.forEach((x) => new Set(x.w).forEach((wort) => { z[wort] = (z[wort] || 0) + 1; }));
+  const kuerzel = Object.entries(z).filter(([, n]) => n >= 2 && n >= roh.length / 2).sort((a, b) => b[1] - a[1])[0];
+  const ids = [], gesehen = new Set();
+  for (const x of roh) {
+    const i = kuerzel ? x.w.indexOf(kuerzel[0]) : -1, name = (i > 0 ? x.w.slice(i) : x.w).join(' ');
+    if (name.length < 3) continue;
+    const id = name + '#' + x.tag;
+    if (!gesehen.has(id.toLowerCase())) { gesehen.add(id.toLowerCase()); ids.push(id); }
+  }
+  return ids.slice(0, 12);
+}
+const wrText = (w, g) => '<span class="wr ' + wrKlasse(w, g) + '">' + pct(w, g) + ' %</span>';
+const ik = (c, zusatz, kl) => '<span class="ik" title="' + esc(champName(c)) + '">' + bild('champion', c, 'mini ' + (kl || ''), champName(c)) + (zusatz != null ? '<small>' + zusatz + '</small>' : '') + '</span>';
+const stat = (o, k) => (o && o[k]) || [0, 0];
+
+async function plLaden() {
+  const r = await api('lol/prime').catch(() => ({ status: 0 }));
+  if (r.status !== 200) { $('plTeams').innerHTML = '<p class="muted">Konnte die Prime-League-Daten nicht laden.</p>'; return; }
+  pl = r.json;
+  const b = $('plBanner'); b.hidden = pl.quelle === 'riot';
+  b.innerHTML = pl.eigeneTeams.length ? '⏳ <b>Beispiel-Teams</b> – eure eingetragenen Teams werden gerade bei Riot geholt' + (daten && daten.key === 'fehlt' ? ' (dafür braucht es den Riot-Key)' : '') + '.'
+    : '✨ <b>Beispiel-Teams</b> – so sieht es aus. Trag unter „✏️ Teams eintragen“ die Teams eurer Gruppe ein.';
+  $('plInfo').textContent = pl.spiele + ' Turnierspiele · ' + pl.teams.length + ' Teams';
+  $('plChampListe').innerHTML = pl.meta.map((c) => '<option value="' + esc(champName(c.c)) + '">').join('');
+  if (plGewaehlt && !pl.teams.some((t) => t.id === plGewaehlt)) plGewaehlt = null;
+  plTeamsZeigen(); plMetaZeigen(); plDraftEinrichten(); plEigeneZeigen();
+}
+function plTabZeigen(t) {
+  plTab = t;
+  $('plNav').querySelectorAll('[data-pl]').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.pl === t)));
+  document.querySelectorAll('[data-plp]').forEach((x) => { x.hidden = x.dataset.plp !== t; });
+}
+$('plNav').addEventListener('click', (e) => { const b = e.target.closest('[data-pl]'); if (b) plTabZeigen(b.dataset.pl); });
+
+// Teams
+function plTeamsZeigen() {
+  $('plTeams').innerHTML = pl.teams.map((t) => '<button type="button" class="pl-team" data-plteam="' + esc(t.id) + '" aria-pressed="' + (t.id === plGewaehlt) + '"><div class="kopfz"><span class="pl-kuerzel">' + esc(t.kurz || t.name.slice(0, 3).toUpperCase()) + '</span>'
+    + '<div><b>' + esc(t.name) + '</b><small>' + t.w + 'S ' + (t.g - t.w) + 'N · ' + wrText(t.w, t.g) + '</small></div></div>'
+    + '<div class="balken"><i style="width:' + pct(t.w, t.g) + '%"></i></div>'
+    + '<div class="ikonen">' + t.champs.slice(0, 6).map((c) => ik(c.c, c.g)).join('') + '</div></button>').join('') || '<p class="muted">Noch keine Teams.</p>';
+  plTeamZeigen();
+}
+$('plTeams').addEventListener('click', (e) => { const b = e.target.closest('[data-plteam]'); if (!b) return; plGewaehlt = plGewaehlt === b.dataset.plteam ? null : b.dataset.plteam; plTeamsZeigen(); if (plGewaehlt) $('plTeam').scrollIntoView({ behavior: 'smooth', block: 'start' }); });
+function plTeamZeigen() {
+  const t = pl.teams.find((x) => x.id === plGewaehlt), box = $('plTeam');
+  if (!t) { box.innerHTML = '<p class="klein muted">Team antippen für Details: Spieler-Pools, womit sie gewinnen, Bans und letzte Drafts.</p>'; return; }
+  const gewinnt = t.champs.filter((c) => c.g >= 2).sort((a, b) => glatt(b.w, b.g) - glatt(a.w, a.g)).slice(0, 10);
+  // Bann-Vorschläge: was sie oft UND erfolgreich spielen (Spieler-Komfort zählt mit)
+  const gefahr = t.champs.map((c) => ({ ...c, s: c.g * (glatt(c.w, c.g) - 0.35) })).sort((a, b) => b.s - a.s).slice(0, 5);
+  box.innerHTML = '<section class="karte"><div class="profil"><span class="pl-kuerzel" style="width:64px;height:64px;font-size:1.05rem">' + esc(t.kurz || t.name.slice(0, 3).toUpperCase()) + '</span><div><h2>' + esc(t.name) + '</h2><span class="muted klein">' + t.g + ' Turnierspiele</span></div></div>'
+    + '<div class="kacheln"><div class="kachel"><b>' + t.w + ' – ' + (t.g - t.w) + '</b><span>Bilanz</span></div><div class="kachel"><b>' + wrText(t.w, t.g) + '</b><span>Winrate</span></div>'
+    + '<div class="kachel"><b>' + wrText(t.blau[1], t.blau[0]) + '</b><span>Blaue Seite · ' + t.blau[0] + '</span></div><div class="kachel"><b>' + wrText(t.rot[1], t.rot[0]) + '</b><span>Rote Seite · ' + t.rot[0] + '</span></div>'
+    + '<div class="kachel"><b>' + (t.dauer ? dauer(t.dauer) : '–') + '</b><span>Ø Spieldauer</span></div></div>'
+    + '<div class="auto-hinweis">🚫 <b>Bann-Vorschläge gegen ' + esc(t.name) + ':</b> <span class="ikonen" style="display:inline-flex;vertical-align:middle;margin-left:6px">' + gefahr.map((c) => ik(c.c, pct(c.w, c.g) + '%')).join('') + '</span>'
+    + '<div class="klein muted" style="margin-top:6px">Was sie oft spielen und damit gewinnen: ' + gefahr.map((c) => esc(champName(c.c)) + ' (' + c.w + '/' + c.g + ')').join(', ') + '</div></div></section>'
+    + '<section class="karte" style="margin-top:14px"><h2>👥 Spieler & Champion-Pools <small>Liga-Spiele · Mastery (alle Modi)</small></h2><div class="tabelle"><table class="pl-spieler"><thead><tr><th>Spieler</th><th>Rolle</th><th>Spiele</th><th style="text-align:left">In der Liga</th><th style="text-align:left">Meiste Mastery</th></tr></thead><tbody>'
+    + t.spieler.slice().sort((a, b) => ROLLE_REIHE.indexOf(a.rolle) - ROLLE_REIHE.indexOf(b.rolle)).map((s) => '<tr><td><b>' + esc(s.riotId) + '</b>' + (s.fehler ? ' <span class="muted">⚠️ ' + esc(s.fehler) + '</span>' : '') + '</td><td>' + (s.rolle ? '<span class="rolle">' + ROLLE_KURZ[s.rolle] + '</span>' : '–') + '</td><td>' + (s.g ? s.g + ' · ' + wrText(s.w, s.g) : '–') + '</td>'
+      + '<td style="text-align:left"><div class="ikonen">' + s.champs.map((c) => ik(c.c, c.g)).join('') + '</div></td><td style="text-align:left"><div class="ikonen">' + s.mastery.slice(0, 6).map((c) => ik(c.c)).join('') + '</div></td></tr>').join('')
+    + '</tbody></table></div></section>'
+    + '<div class="zwei" style="margin-top:14px"><section class="karte"><h2>🏆 Gewinnt mit <small>ab 2 Spielen</small></h2>' + (gewinnt.map((c) => '<div class="mu-zeile">' + bild('champion', c.c, 'mini', '') + '<span>' + esc(champName(c.c)) + ' <small class="muted">· ' + c.g + ' Spiele</small></span>' + wrText(c.w, c.g) + '</div>').join('') || '<p class="klein muted">Noch zu wenig Spiele.</p>') + '</section>'
+    + '<section class="karte"><h2>🚫 Bans</h2><p class="klein muted" style="margin:0 0 6px">Bannen sie selbst:</p><div class="ikonen">' + (t.bans.map((c) => ik(c.c, c.g, 'ban')).join('') || '–') + '</div>'
+    + '<p class="klein muted" style="margin:12px 0 6px">Wird gegen sie gebannt (davor haben die Gegner Respekt):</p><div class="ikonen">' + (t.gebannt.map((c) => ik(c.c, c.g, 'ban')).join('') || '–') + '</div></section></div>'
+    + '<section class="karte" style="margin-top:14px"><h2>📜 Letzte Drafts</h2>' + (t.drafts.map((d) => '<div class="draft"><span class="erg ' + (d.w ? 'w' : 'l') + '">' + (d.w ? 'Sieg' : 'Niederlage') + '<small>' + (d.seite === 'blau' ? '🔵 Blau' : '🔴 Rot') + ' · ' + dauer(d.d) + '<br>' + vor(d.t) + '</small></span>'
+      + '<div class="seiten"><div class="zeile"><span>' + esc(t.kurz || 'Wir') + '</span><span class="ikonen">' + d.wir.map((x) => ik(x.c, ROLLE_KURZ[x.r] || '')).join('') + '</span><span class="ikonen" title="Bans">🚫 ' + d.bansWir.map((c) => ik(c, null, 'ban')).join('') + '</span></div>'
+      + '<div class="zeile"><span>' + esc(d.gegner || (d.gegnerSpieler || []).map((n) => n.split('#')[0]).join(', ') || 'Gegner') + '</span><span class="ikonen">' + d.die.map((x) => ik(x.c, ROLLE_KURZ[x.r] || '')).join('') + '</span><span class="ikonen">🚫 ' + d.bansDie.map((c) => ik(c, null, 'ban')).join('') + '</span></div></div></div>').join('') || '<p class="klein muted">Noch keine Spiele gefunden.</p>') + '</section>';
+}
+
+// Meta
+function plMetaZeigen() {
+  $('plMetaRolle').innerHTML = ['', ...ROLLE_REIHE].map((r) => '<button type="button" data-metarolle="' + r + '" aria-pressed="' + (r === plMetaRolle) + '">' + (r ? ROLLE_NAME[r] : 'Alle') + '</button>').join('');
+  const n = pl.spiele || 1, liste = pl.meta.filter((c) => !plMetaRolle || (c.rollen[plMetaRolle] || 0) >= Math.max(1, c.pick * 0.3));
+  $('plMetaInfo').textContent = '· ' + pl.spiele + ' Spiele';
+  $('plMeta').innerHTML = '<table><thead><tr><th>Champion</th><th>Präsenz</th><th>Picks</th><th>Bans</th><th>Winrate</th></tr></thead><tbody>'
+    + liste.slice(0, 60).map((c) => '<tr class="meta-zeile" data-mu="' + esc(c.c) + '"><td><span class="zelle-name">' + bild('champion', c.c, '', champName(c.c)) + '<b>' + esc(champName(c.c)) + '</b></span></td><td>' + Math.round(((c.pick + c.ban) / n) * 100) + ' %</td><td>' + c.pick + '</td><td>' + c.ban + '</td><td>' + (c.pick ? wrText(c.w, c.pick) : '–') + '</td></tr>').join('')
+    + '</tbody></table>';
+  plMuZeigen();
+}
+$('plMetaRolle').addEventListener('click', (e) => { const b = e.target.closest('[data-metarolle]'); if (b) { plMetaRolle = b.dataset.metarolle; plMetaZeigen(); } });
+$('plMeta').addEventListener('click', (e) => { const z = e.target.closest('[data-mu]'); if (z) { plMuChamp = z.dataset.mu; plMuZeigen(); if (innerWidth < 1300) $('plMu').scrollIntoView({ behavior: 'smooth', block: 'center' }); } });
+function plMuZeigen() {
+  const c = plMuChamp, box = $('plMu');
+  if (!c) { box.innerHTML = '<p class="klein muted">Wähle links einen Champion: dann siehst du, gegen wen er auf seiner Lane gewinnt oder verliert, gegen welche Champions allgemein – und mit wem er gut zusammenpasst.</p>'; return; }
+  $('plMuName').textContent = '– ' + champName(c);
+  const lane = [], gegen = [], mit = [];
+  for (const [k, v] of Object.entries(pl.matchup)) { const [r, a, b] = k.split('|'); if (a === c) lane.push({ r, c: b, g: v[0], w: v[1] }); }
+  for (const [k, v] of Object.entries(pl.gegen)) { const [a, b] = k.split('|'); if (a === c) gegen.push({ c: b, g: v[0], w: v[1] }); }
+  for (const [k, v] of Object.entries(pl.synergie)) { const [a, b] = k.split('|'); if (a === c || b === c) mit.push({ c: a === c ? b : a, g: v[0], w: v[1] }); }
+  const zeilen = (l, leer) => l.sort((a, b) => glatt(b.w, b.g) - glatt(a.w, a.g)).slice(0, 8).map((x) => '<div class="mu-zeile">' + bild('champion', x.c, 'mini', '') + '<span>' + esc(champName(x.c)) + (x.r ? ' <span class="rolle">' + ROLLE_KURZ[x.r] + '</span>' : '') + ' <small class="muted">· ' + x.g + '</small></span>' + wrText(x.w, x.g) + '</div>').join('') || '<p class="klein muted">' + leer + '</p>';
+  const schwach = (l) => l.slice().sort((a, b) => glatt(a.w, a.g) - glatt(b.w, b.g)).filter((x) => x.w / x.g < 0.5).slice(0, 5);
+  box.innerHTML = '<h3 class="klein" style="margin:0 0 4px">Auf der Lane gut gegen</h3>' + zeilen(lane.filter((x) => x.w / x.g >= 0.5), 'Noch keine Lane-Siege.')
+    + '<h3 class="klein" style="margin:12px 0 4px">Hat Probleme gegen (Konter)</h3>' + zeilen(schwach(lane.concat(gegen.filter((x) => x.g >= 2))), 'Kein klarer Konter in den Daten.')
+    + '<h3 class="klein" style="margin:12px 0 4px">Passt gut zu (im selben Team)</h3>' + zeilen(mit.filter((x) => x.g >= 2 && x.w / x.g >= 0.5), 'Noch zu wenig gemeinsame Spiele.');
+}
+
+// Draft-Helfer
+function plDraftEinrichten() {
+  const opts = '<option value="">–</option>' + pl.teams.map((t) => '<option value="' + esc(t.id) + '">' + esc(t.name) + '</option>').join('');
+  for (const id of ['dhWir', 'dhDie']) { const alt = $(id).value; $(id).innerHTML = opts; if (pl.teams.some((t) => t.id === alt)) $(id).value = alt; }
+  for (const [box, art] of [['dhGegner', 'g'], ['dhUns', 'u']]) if (!$(box).children.length)
+    $(box).innerHTML = ROLLE_REIHE.map((r) => '<div class="dh-slot"><span class="rolle">' + ROLLE_KURZ[r] + '</span><input data-dh="' + art + '" data-rolle="' + r + '" list="plChampListe" placeholder="' + (art === 'g' ? 'Champion des Gegners' : 'unser Champion') + '" autocomplete="off" spellcheck="false"></div>').join('');
+  plDraftRechnen();
+}
+const champVonText = (t) => { const x = String(t || '').trim().toLowerCase().replace(/[^a-z]/g, ''); if (!x) return null; const c = pl.meta.find((m) => m.c.toLowerCase() === x || champName(m.c).toLowerCase().replace(/[^a-z]/g, '') === x); return c ? c.c : null; };
+function plDraftRechnen() {
+  const gegner = {}, uns = {};
+  document.querySelectorAll('[data-dh]').forEach((i) => { const c = champVonText(i.value); if (c) (i.dataset.dh === 'g' ? gegner : uns)[i.dataset.rolle] = c; });
+  const bans = String($('dhBans').value).split(',').map(champVonText).filter(Boolean);
+  const offen = ROLLE_REIHE.filter((r) => !uns[r]), rolle = offen.length === 5 ? null : offen[0] || null;
+  const wir = pl.teams.find((t) => t.id === $('dhWir').value), die = pl.teams.find((t) => t.id === $('dhDie').value);
+  $('dhRolle').textContent = rolle ? '– für ' + ROLLE_NAME[rolle] : '';
+  // Gegner-Profil
+  $('dhGegnerName').textContent = die ? '– ' + die.name : '';
+  $('dhGegnerInfo').innerHTML = !die ? '<p class="klein muted">Wähle oben einen Gegner: dann siehst du, was seine Spieler gern spielen, was sie bannen – und was du bannen solltest.</p>'
+    : '<div class="mu-zeile" style="grid-template-columns:auto minmax(0,1fr)"><b class="klein">Bann-Tipps</b><span class="ikonen">' + die.champs.map((c) => ({ ...c, s: c.g * (glatt(c.w, c.g) - 0.35) })).sort((a, b) => b.s - a.s).slice(0, 5).map((c) => ik(c.c, pct(c.w, c.g) + '%')).join('') + '</span></div>'
+      + '<div class="mu-zeile" style="grid-template-columns:auto minmax(0,1fr)"><b class="klein">Die bannen</b><span class="ikonen">' + die.bans.slice(0, 6).map((c) => ik(c.c, c.g, 'ban')).join('') + '</span></div>'
+      + die.spieler.filter((s) => s.rolle).sort((a, b) => ROLLE_REIHE.indexOf(a.rolle) - ROLLE_REIHE.indexOf(b.rolle)).map((s) => '<div class="mu-zeile" style="grid-template-columns:40px minmax(0,1fr)"><span class="rolle">' + ROLLE_KURZ[s.rolle] + '</span><span class="ikonen" title="' + esc(s.riotId) + '">' + s.champs.slice(0, 4).map((c) => ik(c.c, c.g)).join('') + (s.mastery.length ? ' · ' + s.mastery.slice(0, 3).map((c) => ik(c.c)).join('') : '') + '</span></div>').join('');
+  if (!rolle) { $('dhVorschlaege').innerHTML = '<p class="klein muted">' + (offen.length ? 'Trag die Gegner-Picks und eure schon gewählten Champions ein. Die erste freie Rolle bei „Unsere Picks“ ist die, für die du einen Vorschlag willst.' : 'Alle fünf Rollen sind belegt – leere ein Feld bei „Unsere Picks“.') + '</p>'; return; }
+  const vergeben = new Set([...Object.values(gegner), ...Object.values(uns), ...bans]);
+  const kandidaten = new Map();
+  pl.meta.forEach((c) => { if ((c.rollen[rolle] || 0) > 0) kandidaten.set(c.c, c); });
+  const spieler = wir ? wir.spieler.find((s) => s.rolle === rolle) : null;
+  if (spieler) { spieler.champs.forEach((c) => kandidaten.set(c.c, kandidaten.get(c.c) || { c: c.c, pick: 0, w: 0 })); spieler.mastery.forEach((c) => kandidaten.set(c.c, kandidaten.get(c.c) || { c: c.c, pick: 0, w: 0 })); }
+  const vertrauen = (g) => g / (g + 3);
+  const liste = [...kandidaten.values()].filter((c) => !vergeben.has(c.c)).map((c) => {
+    const gruende = []; let s = 0;
+    if (gegner[rolle]) { const [g, w] = stat(pl.matchup, rolle + '|' + c.c + '|' + gegner[rolle]); if (g) { s += (glatt(w, g) - 0.5) * vertrauen(g) * 1.2; gruende.push('Lane vs. ' + champName(gegner[rolle]) + ' ' + w + '/' + g); } }
+    for (const e of Object.values(gegner)) { const [g, w] = stat(pl.gegen, c.c + '|' + e); if (g >= 2) { s += (glatt(w, g) - 0.5) * vertrauen(g) * 0.4; if (w / g >= 0.6) gruende.push('gg. ' + champName(e) + ' ' + w + '/' + g); } }
+    for (const o of Object.values(uns)) { const [g, w] = stat(pl.synergie, [c.c, o].sort().join('|')); if (g >= 2) { s += (glatt(w, g) - 0.5) * vertrauen(g) * 0.4; if (w / g >= 0.6) gruende.push('mit ' + champName(o) + ' ' + w + '/' + g); } }
+    if (c.pick) s += (glatt(c.w, c.pick) - 0.5) * 0.3;
+    if (spieler) { const sp = spieler.champs.find((x) => x.c === c.c), ms = spieler.mastery.findIndex((x) => x.c === c.c); if (sp || ms >= 0) { s += 0.04 + (sp ? Math.min(0.04, sp.g * 0.008) : 0); gruende.push('Komfort ' + spieler.riotId.split('#')[0] + (sp ? ' (' + sp.g + ' Liga-Spiele)' : ' (Mastery)')); } }
+    return { c: c.c, s, gruende, wr: c.pick ? pct(c.w, c.pick) + ' % in ' + c.pick : 'noch nicht gespielt' };
+  }).sort((a, b) => b.s - a.s).slice(0, 8);
+  $('dhVorschlaege').innerHTML = liste.map((x) => '<div class="vorschlag">' + bild('champion', x.c, '', champName(x.c)) + '<div><b>' + esc(champName(x.c)) + '</b><small>' + esc(x.gruende.join(' · ') || 'Liga-Winrate ' + x.wr) + '</small></div><span class="punkte ' + (x.s > 0.02 ? 'wr gut' : x.s < -0.02 ? 'wr mies' : '') + '">' + (x.s >= 0 ? '+' : '') + Math.round(x.s * 100) + '</span></div>').join('')
+    + '<p class="klein muted" style="margin-top:8px">Punkte = Lane-Matchup, Siege gegen die Gegner-Champions, Zusammenspiel mit euren Picks, Liga-Winrate und Komfort des Spielers. Wenige Spiele zählen wenig.</p>';
+}
+document.addEventListener('input', (e) => { if (e.target.closest('[data-dh], #dhBans')) plDraftRechnen(); });
+['dhWir', 'dhDie'].forEach((id) => $(id).addEventListener('change', plDraftRechnen));
+
+// Teams eintragen
+function plEigeneZeigen() {
+  $('plEigene').innerHTML = pl.eigeneTeams.map((t) => '<div class="pl-eigen"><div class="kopfz"><b>' + esc(t.name) + (t.kurz ? ' <small>' + esc(t.kurz) + '</small>' : '') + '</b><span class="zeile-knoepfe"><button type="button" data-plbearb="' + esc(t.id) + '">✏️</button><button type="button" data-plweg="' + esc(t.id) + '">✕</button></span></div>'
+    + '<small>' + t.spieler.map((s) => esc(s.riotId) + (s.fehler ? ' ⚠️' : s.ok ? ' ✓' : '')).join(' · ') + '</small>' + (t.geholt ? '<br><small>zuletzt geholt ' + vor(t.geholt) + '</small>' : '') + '</div>').join('')
+    || '<p class="klein muted">Noch keine Teams eingetragen – bis dahin siehst du Beispiel-Teams.</p>';
+}
+function plVorschau() { const ids = riotIdsAusText($('plText').value); $('plVorschau').innerHTML = ids.length ? '✓ ' + ids.length + ' Spieler erkannt: ' + ids.map(esc).join(' · ') : $('plText').value.trim() ? '⚠️ Keine Riot-IDs (Name#Tag) gefunden.' : ''; }
+$('plText').addEventListener('input', plVorschau);
+function plFormLeeren() { plBearbeiten = null; $('plName').value = ''; $('plKurz').value = ''; $('plText').value = ''; plVorschau(); $('plFormTitel').textContent = '➕ Team eintragen'; $('plAbbrechen').hidden = true; }
+$('plAbbrechen').addEventListener('click', plFormLeeren);
+$('plSpeichern').addEventListener('click', async () => {
+  const k = $('plSpeichern'); k.disabled = true;
+  const koerper = { name: $('plName').value, kurz: $('plKurz').value, text: $('plText').value };
+  const x = await api(plBearbeiten ? 'lol/prime/team/aendern' : 'lol/prime/team', 'POST', plBearbeiten ? Object.assign(koerper, { id: plBearbeiten }) : koerper).catch(() => ({ status: 0 }));
+  k.disabled = false;
+  if (x.status !== 200) { melden('⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.')); return; }
+  melden('✓ Team gespeichert' + (daten && daten.key !== 'fehlt' ? ' – die Turnierspiele werden jetzt geholt (dauert ein paar Minuten)' : ''));
+  plFormLeeren(); plLaden();
+});
+$('plEigene').addEventListener('click', async (e) => {
+  const bearb = e.target.closest('[data-plbearb]'), weg = e.target.closest('[data-plweg]');
+  if (bearb) { const t = pl.eigeneTeams.find((x) => x.id === bearb.dataset.plbearb); plBearbeiten = t.id; $('plName').value = t.name; $('plKurz').value = t.kurz; $('plText').value = t.spieler.map((s) => s.riotId).join('\n'); plVorschau(); $('plFormTitel').textContent = '✏️ ' + t.name + ' bearbeiten'; $('plAbbrechen').hidden = false; $('plName').focus(); }
+  if (weg && confirm('Team entfernen?')) { await api('lol/prime/team/entfernen', 'POST', { id: weg.dataset.plweg }); plLaden(); }
+});
+
 // ---------- Reiter & Filter ----------
 function tabZeigen(t) {
   tab = t;
   document.querySelectorAll('#reiter [data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === t)));
   document.querySelectorAll('[data-panel]').forEach((x) => { x.hidden = x.dataset.panel !== t; });
+  $('filter').style.display = t === 'prime' ? 'none' : '';
+  if (t === 'prime' && !pl) plLaden();
 }
 $('reiter').addEventListener('click', (e) => { const b = e.target.closest('[data-tab]'); if (b) tabZeigen(b.dataset.tab); });
 $('filter').addEventListener('click', (e) => { const b = e.target.closest('[data-f]'); if (!b) return; filter = b.dataset.f; $('filter').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); laden(); });

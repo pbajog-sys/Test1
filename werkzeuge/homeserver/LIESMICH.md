@@ -89,6 +89,11 @@ Riot-API-Key: Admin trägt ihn in der Server-Zentrale → Erweiterungen ein (ges
 nie an den Browser). Ohne Key zeigt die Seite Beispieldaten. Dev-Key (developer.riotgames.com) läuft nach 24 h ab →
 besser einen „Personal API Key“ beantragen (läuft nicht ab). Der Server holt alle 10 Min. neue Spiele (beim ersten
 Mal die letzten 100 je Account), gedrosselt auf Riots Limits; Daten in `daten\lol\` (Bilder-Cache `daten\lol\bilder\`).
+Mitspieler, die mindestens 3-mal im selben Team waren, erscheinen automatisch („erkannt“, nur gemeinsame Spiele) – fest
+aufnehmen oder ausblenden. Reiter **Prime League** (`lol-prime.js`): Teams per Hand eintragen (Kader von primeleague.gg
+kopieren/einfügen – die Seite selbst wird nicht abgefragt, Bot-Schutz), der Server holt deren Turnierspiele
+(match-v5 `type=tourney`, alle 6 Std.) und Mastery (1× am Tag). Auswertung: Team-Bilanz, Pools, Bans, Drafts, Meta,
+Matchups, Synergien und ein Draft-Helfer.
 
 **Minecraft-Seite** (`minecraft.html`, verlinkt im ☁️-Fenster, für alle Angemeldeten): Spielerköpfe (Skins holt der
 Server einmal täglich von Mojang, Cache `minecraft\koepfe\`), Rangliste (Tode, Spielzeit, Erfolge, Mobs, PvP, km – aus
