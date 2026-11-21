@@ -199,6 +199,9 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     ck('Aktualisieren: erst 200, gleich danach 429', (await anfrage('lol/aktualisieren', 'POST', {}, anna)).status === 200 && (await anfrage('lol/aktualisieren', 'POST', {}, anna)).status === 429);
     await bisFertig(anna); await warte(100);
     const neu = riotAufrufe.slice(vorher);
+    ck('Manueller Import meldet Abschluss und aktualisiert die Champion-Meisterschaft',
+      (await anfrage('lol/aktualisieren', 'GET', null, anna)).json.stand === 'fertig'
+      && neu.some((url) => url.includes('champion-mastery/v4') && url.includes('P-ANNA')));
     ck('beim Aktualisieren keine schon bekannten Spiele neu geholt', neu.length > 0 && !neu.some((u) => /matches\/EUW1_/.test(u)), neu.join(' '));
     ck('Account unbekannt bei Riot → 404', (await anfrage('lol/account', 'POST', { riotId: 'Gibtsnicht#EUW', region: 'euw1' }, cara)).status === 404);
 

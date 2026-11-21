@@ -15,6 +15,7 @@
 //   POST /api/lol/auto/aufnehmen|ausblenden { u } · /api/lol/auto/einblenden → automatisch erkannte Mitspieler
 //   GET  /api/lol/person?id=…&filter=… → Spieler-Profil (Spielverlauf mit allen 10, Mastery, Rang-Verlauf, Aktivität … siehe lol-profil.js)
 //   /api/lol/prime…                  → Prime League (siehe lol-prime.js)
+//   GET  /api/lol/aktualisieren      → Status des eigenen manuellen Imports
 //   POST /api/lol/aktualisieren      → eigene Accounts sofort neu holen (höchstens alle 2 Min.)
 //   GET  /api/lol/bild/champion/<Name>.png, /api/lol/bild/profil/<id>.png → Bilder von Riots Data Dragon (zwischengespeichert)
 //   GET/POST /api/admin/lol          { key: 'RGAPI-…' | '' } → Key setzen/entfernen, Zustand
@@ -157,7 +158,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
   }
 
   // Einen Account aktualisieren: PUUID, Profil, Rang, neue Spiele (beim ersten Mal bis zu 100)
-  async function accountHolen(acc) {
+  async function accountHolen(acc, masteryErneuern = false) {
     const [name, tag] = acc.riotId.split('#');
     if (!acc.puuid) {
       const r = await riot(regional(acc.region) + '/riot/account/v1/accounts/by-riot-id/' + encodeURIComponent(name) + '/' + encodeURIComponent(tag));
@@ -181,9 +182,11 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       }
       if (a.lp.length > 300) a.lp = a.lp.slice(-300);
     }
-    if (!a.masteryZeit || jetzt() - a.masteryZeit > 864e5) {
+    let masteryFehler = false;
+    if (masteryErneuern || !a.masteryZeit || jetzt() - a.masteryZeit > 864e5) {
       const ms = await riot(plattform(acc.region) + '/lol/champion-mastery/v4/champion-masteries/by-puuid/' + acc.puuid + '/top?count=10');
       if (ms.status === 200) { a.mastery = (ms.json || []).map((x) => ({ id: x.championId, p: x.championPoints, l: x.championLevel })); a.masteryZeit = jetzt(); }
+      else if (masteryErneuern) masteryFehler = true;
     }
     const idsPfad = regional(acc.region) + '/lol/match/v5/matches/by-puuid/' + acc.puuid + '/ids';
     const merkeIds = (ids) => { a.ids = [...new Set(a.ids.concat(ids))]; };
@@ -191,7 +194,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     // Ohne queue/type liefert Match-V5 alle Modi, auch neue Queues.
     const anzahl = a.ids.length && nachgeholt.includes('alle') ? 20 : 100;
     const ids = await riot(idsPfad + '?start=0&count=' + anzahl);
-    if (ids.status !== 200) return;
+    if (ids.status !== 200) throw new Error('Riot-Spieleliste konnte nicht geladen werden.');
     merkeIds(ids.json || []);
     if (!nachgeholt.includes('alle')) nachgeholt.push('alle');
 
@@ -215,9 +218,11 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     for (const id of a.ids.filter((x) => spiele[x] && (spiele[x].x || 0) < 3 && !privateSpiele.has(x)).slice(0, 25)) {
       await spielHolen(acc.region, id);
     }
+    if (masteryFehler) acc.fehler = 'Riot hat die Champion-Meisterschaft gerade nicht geliefert.';
+    else delete acc.fehler;
     a.geholt = jetzt(); speichern();
   }
-  async function allesHolen(nurKonto) {
+  async function allesHolen(nurKonto, masteryErneuern = false) {
     if (laeuft || !key() || keyStatus === 'ungueltig') return false;
     laeuft = true;
     for (const [id, bis] of privateSpiele) if (bis <= jetzt()) privateSpiele.delete(id);
@@ -225,7 +230,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       const nurTeam = nurKonto && String(nurKonto).startsWith('prime:') ? String(nurKonto).slice(6) : null;
       for (const [konto, liste] of Object.entries(zustand.personen)) {
         if (nurTeam || (nurKonto && konto !== nurKonto)) continue;
-        for (const acc of liste) { try { await accountHolen(acc); } catch (e) { if (e.status === 401 || e.status === 403) throw e; acc.fehler = e.message; } }
+        for (const acc of liste) { try { await accountHolen(acc, masteryErneuern); } catch (e) { if (e.status === 401 || e.status === 403) throw e; acc.fehler = e.message; } }
       }
       if (!nurKonto || nurTeam) await prime.allesHolen(nurTeam);
       letzterLauf = jetzt();
@@ -441,6 +446,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
 
   // ---------- Anfragen ----------
   const letzteAktualisierung = {};
+  const manuelleLaeufe = new Map();
   async function anfrage(weg, m, req, res, url, k) {
     if (weg === '/lol/daten' && m === 'GET') {
       const filter = FILTER[url.searchParams.get('filter')] ? url.searchParams.get('filter') : 'alle';
@@ -547,11 +553,21 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       return senden(res, 200, {});
     }
     if (weg === '/lol/auto/einblenden' && m === 'POST') { zustand.ausgeblendet = {}; sofortSpeichern(); return senden(res, 200, {}); }
+    if (weg === '/lol/aktualisieren' && m === 'GET') {
+      return senden(res, 200, { stand: manuelleLaeufe.get(k) || 'unbekannt' });
+    }
     if (weg === '/lol/aktualisieren' && m === 'POST') {
       if (!key()) return senden(res, 409, { fehler: 'Es ist noch kein Riot-API-Key eingetragen – bis dahin gibt es Beispieldaten.' });
-      if (jetzt() - (letzteAktualisierung[k] || 0) < 120e3) return senden(res, 429, { fehler: 'Gerade erst aktualisiert – in 2 Minuten wieder.' });
+      if (jetzt() - (letzteAktualisierung[k] || 0) < 120e3) return senden(res, 429, { fehler: 'Gerade erst aktualisiert – versuche es in zwei Minuten erneut.' });
+      if (keyStatus === 'ungueltig') return senden(res, 409, { fehler: 'Der Riot-Key muss auf der Server-Seite erneuert werden.' });
+      if (!(zustand.personen[k] || []).length) return senden(res, 409, { fehler: 'Verknüpfe zuerst deinen Riot-Account auf der LoL-Seite.' });
+      if (laeuft) return senden(res, 409, { fehler: 'Ein Riot-Import läuft bereits. Versuche es gleich noch einmal.' });
       letzteAktualisierung[k] = jetzt();
-      allesHolen(k).catch(() => {});
+      manuelleLaeufe.set(k, 'laeuft');
+      allesHolen(k, true).then((ok) => {
+        const konten = zustand.personen[k] || [];
+        manuelleLaeufe.set(k, ok && konten.length && konten.every((acc) => acc.puuid && !acc.fehler) ? 'fertig' : 'fehler');
+      }, () => manuelleLaeufe.set(k, 'fehler'));
       return senden(res, 200, { gestartet: true });
     }
     const bm = /^\/lol\/bild\/(champion|profil|item|spell|rune)\/([A-Za-z0-9]{1,40})\.png$/.exec(weg);

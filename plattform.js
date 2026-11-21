@@ -483,7 +483,7 @@ function skDashboard() {
   start.innerHTML = '<div class="sk-gross" id="skGross" hidden>'
     + '<section class="sk-dienstzeile" id="skGrossLol" hidden><div class="sk-gross-kachel">'
     + '<img class="spielraum-motiv" src="bilder/duellbuch.webp" alt="Steinbrücke über einer Schlucht bei Nacht">'
-    + '<div class="sk-dienstkopf"><h2>League of Legends</h2><a class="sk-dienstweiter" href="lol.html">League of Legends öffnen <span aria-hidden="true">→</span></a></div><div id="skGrossLolDaten"></div></div><aside id="skGrossLolStats" class="sk-dienststats"></aside></section>'
+    + '<div class="sk-dienstkopf"><h2>League of Legends</h2><div class="sk-lol-aktionen"><button type="button" id="skLolAktualisieren">Aktualisieren</button><a class="sk-dienstweiter" href="lol.html">League of Legends öffnen <span aria-hidden="true">→</span></a></div></div><p id="skLolMeldung" role="status" hidden></p><div id="skGrossLolDaten"></div></div><aside id="skGrossLolStats" class="sk-dienststats"></aside></section>'
     + '<section class="sk-dienstzeile" id="skGrossMc" hidden><div class="sk-gross-kachel">'
     + '<img class="spielraum-motiv" src="bilder/blockrevier.webp" alt="Beleuchtete Hütte in einem kantigen Tannenwald">'
     + '<div class="sk-dienstkopf"><h2>Minecraft</h2><a class="sk-dienstweiter" href="minecraft.html">Minecraft öffnen <span aria-hidden="true">→</span></a></div><div id="skGrossMcDaten"></div></div><aside id="skGrossMcStats" class="sk-dienststats"></aside></section></div>'
@@ -622,6 +622,43 @@ function skZeigeMinecraft(info) {
     + (weltFakten.length ? '<div class="sk-weltfakten"><h3>Kurioses aus der Welt</h3><ul>' + weltFakten.map(([symbol, anzahl, text]) => '<li><span aria-hidden="true">' + symbol + '</span><b>' + skZahl(anzahl) + '</b> ' + text + '</li>').join('') + '</ul></div>' : '')];
 }
 
+async function skLolAktualisieren(vorschau) {
+  if (vorschau.lolLaedt) return;
+  const aktiv = () => skDienstVorschau === vorschau && syZustand === 'ok' && syName === vorschau.konto;
+  vorschau.lolLaedt = true;
+  vorschau.lolMeldung = 'Riot-Daten werden geholt …';
+  skGrossKacheln();
+  try {
+    const r = await fetch('api/lol/aktualisieren', { method: 'POST', credentials: 'same-origin' });
+    if (!r.ok) {
+      const info = await r.json().catch(() => null);
+      vorschau.lolMeldung = info?.fehler || 'Aktualisierung fehlgeschlagen.';
+      return;
+    }
+    for (let i = 0; i < 7; i++) {
+      await new Promise((fertig) => setTimeout(fertig, 5000));
+      if (!aktiv() || document.hidden) break;
+      const status = await skDienstJson('lol/aktualisieren');
+      if (status?.stand === 'fertig') {
+        vorschau.lolMeldung = 'Riot-Daten aktualisiert.';
+        break;
+      }
+      if (status?.stand === 'fehler') {
+        vorschau.lolMeldung = 'Riot konnte die Daten gerade nicht vollständig liefern.';
+        break;
+      }
+    }
+    if (vorschau.lolMeldung === 'Riot-Daten werden geholt …') vorschau.lolMeldung = 'Der Import läuft im Hintergrund weiter. Die Übersicht lädt beim nächsten Öffnen neu.';
+    vorschau.lolZeit = 0;
+    vorschau.duos.clear();
+  } catch (e) {
+    vorschau.lolMeldung = 'Der Server war gerade nicht erreichbar.';
+  } finally {
+    vorschau.lolLaedt = false;
+    if (aktiv()) skGrossKacheln();
+  }
+}
+
 function skGrossKacheln() {
   const box = $('skGross');
   if (!box) return;
@@ -630,9 +667,14 @@ function skGrossKacheln() {
     box.hidden = true;
     return;
   }
-  if (!skDienstVorschau || skDienstVorschau.konto !== syName) skDienstVorschau = { konto: syName, zeit: 0, duos: new Map(), duoLaedt: new Set() };
+  if (!skDienstVorschau || skDienstVorschau.konto !== syName) skDienstVorschau = { konto: syName, lolZeit: 0, mcZeit: 0, duos: new Map(), duoLaedt: new Set() };
   const vorschau = skDienstVorschau;
   const zeigen = () => {
+    const knopf = $('skLolAktualisieren'), meldung = $('skLolMeldung');
+    knopf.disabled = !!vorschau.lolLaedt;
+    knopf.onclick = () => skLolAktualisieren(vorschau);
+    meldung.textContent = vorschau.lolMeldung || '';
+    meldung.hidden = !vorschau.lolMeldung;
     for (const [id, inhalt] of [['skGrossLol', vorschau.lol], ['skGrossMc', vorschau.mc]]) {
       $(id).hidden = !inhalt;
       const daten = $(id + 'Daten'), stats = $(id + 'Stats');
@@ -654,21 +696,26 @@ function skGrossKacheln() {
     }
   };
   zeigen();
-  if (Date.now() - vorschau.zeit < 60000) return;
-  vorschau.zeit = Date.now();
+
   const laden = (fach, abfrage) => abfrage.catch(() => '').then((html) => {
     if (skDienstVorschau !== vorschau || syZustand !== 'ok' || syName !== vorschau.konto) return;
     vorschau[fach] = html;
     zeigen();
   });
-  laden('lol', skDienstJson('lol/daten?filter=alle').then(async (d) => {
-    if (!d) return '';
-    const profil = d.quelle === 'riot' && d.ichId
-      ? await skDienstJson('lol/person?id=' + encodeURIComponent(d.ichId) + '&filter=alle') : null;
-    vorschau.duos.set('alle', { html: skDuoErgebnis(d, 'alle'), zeit: Date.now() });
-    return skZeigeLol(d, profil);
-  }));
-  laden('mc', skDienstJson('minecraft/info').then((i) => i && i.installiert ? skZeigeMinecraft(i) : ''));
+  if (Date.now() - vorschau.lolZeit >= 60000) {
+    vorschau.lolZeit = Date.now();
+    laden('lol', skDienstJson('lol/daten?filter=alle').then(async (d) => {
+      if (!d) return '';
+      const profil = d.quelle === 'riot' && d.ichId
+        ? await skDienstJson('lol/person?id=' + encodeURIComponent(d.ichId) + '&filter=alle') : null;
+      vorschau.duos.set('alle', { html: skDuoErgebnis(d, 'alle'), zeit: Date.now() });
+      return skZeigeLol(d, profil);
+    }));
+  }
+  if (Date.now() - vorschau.mcZeit >= 60000) {
+    vorschau.mcZeit = Date.now();
+    laden('mc', skDienstJson('minecraft/info').then((i) => i && i.installiert ? skZeigeMinecraft(i) : ''));
+  }
 }
 // Unten im Dashboard: zuletzt gespielt (mit Karte) und nächste Erfolge
 function skUnten(D) {
