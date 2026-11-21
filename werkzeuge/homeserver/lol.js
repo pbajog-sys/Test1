@@ -321,6 +321,11 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
           return senden(res, 400, { fehler: 'Riot lehnt den Key ab – abgelaufen oder vertippt?' });
         }
       }
+      if (alt && alt !== neu) {
+        // Riot verschlüsselt PUUIDs pro Key: mit neuem Key alles neu zuordnen (Accounts neu auflösen, Spiele neu holen)
+        Object.values(zustand.personen).forEach((l) => l.forEach((x) => { x.puuid = null; delete x.fehler; }));
+        zustand.accounts = {}; spiele = {}; sofortSpeichern();
+      }
       protokoll('LoL: Riot-Key eingetragen'); allesHolen().catch(() => {});
       return senden(res, 200, { key: keyStatus });
     }

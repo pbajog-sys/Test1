@@ -23,7 +23,7 @@ for (let n = 0; n < 6; n++) {
         kills: 5, deaths: 3, assists: 4, totalMinionsKilled: 180, neutralMinionsKilled: 10, goldEarned: 11000, totalDamageDealtToChampions: 20000, visionScore: 20, item0: 3031 };
     })) } };
 }
-const riotHolen = async (url, k) => {
+const riotEcht = async (url, k) => {
   riotAufrufe.push(url);
   if (k !== KEY) return { status: 401, json: null };
   const u = new URL(url), p = decodeURIComponent(u.pathname);
@@ -36,6 +36,8 @@ const riotHolen = async (url, k) => {
   if ((m = /matches\/(EUW1_\d+)$/.exec(p))) return { status: 200, json: SPIELE[m[1]] };
   return { status: 404, json: null };
 };
+let riotHolenAktuell = riotEcht;
+const riotHolen = (url, k) => riotHolenAktuell(url, k);
 let bildAufrufe = 0;
 const PNG = Buffer.from('89504e470d0a1a0a0000000d4948445200000001000000010806000000', 'hex');
 const bildHolen = async (url) => { bildAufrufe++; return url.endsWith('versions.json') ? Buffer.from('["15.10.1"]') : PNG; };
@@ -117,6 +119,14 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     const neu = riotAufrufe.slice(vorher);
     ck('beim Aktualisieren keine schon bekannten Spiele neu geholt', neu.length > 0 && !neu.some((u) => /matches\/EUW1_/.test(u)), neu.join(' '));
     ck('Account unbekannt bei Riot → 404', (await anfrage('lol/account', 'POST', { riotId: 'Gibtsnicht#EUW', region: 'euw1' }, cara)).status === 404);
+
+    console.log('Key-Wechsel (Riot verschlüsselt PUUIDs pro Key)');
+    const KEY2 = 'RGAPI-99999999-abcd-4ef0-9abc-1234567890ab';
+    const altHolen = riotHolenAktuell; riotHolenAktuell = async (url, k) => (k === KEY2 ? altHolen(url, KEY) : { status: 401, json: null });
+    ck('neuer Key gespeichert', (await anfrage('admin/lol', 'POST', { key: KEY2 }, anna)).json.key === 'ok');
+    const st2 = await bisFertig(anna);
+    d = await anfrage('lol/daten', 'GET', null, ben);
+    ck('nach Key-Wechsel alles neu zugeordnet (3 Accounts, 6 Spiele, Duo da)', st2 && st2.accounts === 3 && st2.spiele === 6 && d.json.duos.length === 1 && d.json.personen.find((x) => x.name === 'Anna').g === 6, JSON.stringify(st2));
 
     console.log('Bilder');
     let b = await fetch('http://127.0.0.1:8796/api/lol/bild/champion/Ahri.png', { headers: { Cookie: ben } });
