@@ -437,7 +437,6 @@ const caddy = http.createServer((req, res) => {
   await A.goto(URL_ + 'minecraft.html#beitrittscode');
   await A.locator('#zugangNeu').waitFor({ state: 'visible', timeout: 5000 });
   ck('Beitrittscode-Direktlink öffnet die Spieler-Verwaltung für Admins', await A.isVisible('#verwaltung') && await A.isVisible('#zugangNeu'));
-  await A.click('#vwZu');
   await C.goto(URL_ + 'minecraft.html#mitspielen'); await ruhig(C, 1500);
   ck('Selbst eintragen: Ben sieht „Mitspielen“ mit Code-Feld', await C.isVisible('#mcBeiName') && await C.isVisible('#mcBeiCode'));
   await C.fill('#mcBeiName', 'notch'); await C.fill('#mcBeiCode', 'falsch'); await C.click('#mcBeiLos'); await ruhig(C, 800);
