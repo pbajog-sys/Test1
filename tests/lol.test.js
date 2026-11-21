@@ -193,9 +193,9 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     const KEY2 = 'RGAPI-99999999-abcd-4ef0-9abc-1234567890ab';
     const altHolen = riotHolenAktuell; riotHolenAktuell = async (url, k) => (k === KEY2 ? altHolen(url, KEY) : { status: 401, json: null });
     const varianten = [
-      ['MAYHEM', 2405, 'ARAM', 12, true],
-      ['BRUECKE', 2401, 'KIWI', 14, true],
-      ['NEUMAYHEM', 2499, 'KIWI', 12, false],
+      ['MAYHEM', 2405, 'KIWI', 12, true],
+      ['BRUECKE', 2401, 'KIWI', 12, true],
+      ['NEUMAYHEM', 2499, 'KIWI_JADE', 12, false],
       ['NEUARAM', 4599, 'ARAM', 14, false],
       ['NEUKARTE', 4598, '', 12, false],
       ['ARAM', 450, 'ARAM', 12, false],
@@ -215,7 +215,7 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     ck('Mayhem: gezielter Nachimport und neue Queue mit KIWI', (await idsFuer('mayhem')).join() === 'EUW1_BRUECKE,EUW1_MAYHEM,EUW1_NEUMAYHEM');
     ck('ARAM: bekannte Queue, unbekannte Queue mit ARAM-Modus oder ARAM-Karte', (await idsFuer('aram')).join() === 'EUW1_ARAM,EUW1_NEUARAM,EUW1_NEUKARTE');
     ck('Alle (Kluft) enthält keine ARAM-Varianten', (await idsFuer('alle')).every((id) => /^EUW1_\d+$/.test(id)));
-    ck('Diagnose: Anzahl je Queue, Modus und Karte, nur für Admins', st2.spielModi.some((x) => x.queueId === 2401 && x.gameMode === 'KIWI' && x.mapId === 14 && x.anzahl === 1)
+    ck('Diagnose: Anzahl je Queue, Modus und Karte, nur für Admins', st2.spielModi.some((x) => x.queueId === 2401 && x.gameMode === 'KIWI' && x.mapId === 12 && x.anzahl === 1)
       && st2.spielModi.reduce((sum, x) => sum + x.anzahl, 0) === st2.spiele && (await anfrage('admin/lol', 'GET', null, ben)).status === 403);
 
 

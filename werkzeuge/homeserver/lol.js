@@ -26,8 +26,10 @@ const REGIONEN = {
   na1: ['NA', 'americas'], br1: ['BR', 'americas'], la1: ['LAN', 'americas'], la2: ['LAS', 'americas'],
   kr: ['KR', 'asia'], jp1: ['JP', 'asia'], oc1: ['OCE', 'sea'], sg2: ['SG', 'sea'], tw2: ['TW', 'sea'], vn2: ['VN', 'sea'],
 };
-// Queue-Namen aus CommunityDragon. Karten 12 und 14 sind ARAM-Karten laut Riot.
-const MAYHEM_QUEUES = [2400, 2401, 2403, 2405, 2410, 2450, 3240, 3270, 3280];
+// CommunityDragon: queues.json und Map12 (KIWI / KIWI_JADE, Bilgewater / Bloom).
+// Die aktuelle Kartenrotation teilt ID 12. ID 14 ist Riots historische Butcher's Bridge.
+const MAYHEM_PVP_QUEUES = [2400, 2401, 2403, 2405, 2410, 2450];
+const MAYHEM_QUEUES = MAYHEM_PVP_QUEUES.concat(3240, 3270, 3280);
 const ARAM_QUEUES = [450, 100, 62, 63, 64, 65, 860, 861, 930, 931, 3200, 3210, 3220, 3230, 3250];
 const ARAM_KARTEN = [12, 14];
 const FILTER = { alle: [400, 420, 430, 440, 490], solo: [420], flex: [440], normal: [400, 430, 490], aram: ARAM_QUEUES, mayhem: MAYHEM_QUEUES, jeder: [] };
@@ -183,7 +185,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     if (!nachgeholt.includes('alle')) nachgeholt.push('alle');
 
     // Pro Queue merken, damit ältere Installationen erneut nachholen und Fehler wiederholt werden.
-    for (const q of [450, ...MAYHEM_QUEUES]) {
+    for (const q of [450, ...MAYHEM_PVP_QUEUES]) {
       if (nachgeholt.includes(q)) continue;
       const r = await riot(idsPfad + '?queue=' + q + '&start=0&count=50');
       if (r.status !== 200) continue;
