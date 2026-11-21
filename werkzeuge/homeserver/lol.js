@@ -151,10 +151,30 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
 
   // ---------- Auswertung ----------
   const glatt = (w, g) => (w + 2.5) / (g + 5);   // Winrate, zur Mitte gezogen, damit 2 von 2 nicht 100 % „schlägt“
+  // Automatisch erkannte Mitspieler: wer mindestens 3-mal mit jemandem aus der Gruppe im selben Team war (Premades),
+  // aber nicht eingetragen ist. Zählt nur die gemeinsamen Spiele – kostet keine zusätzlichen Riot-Anfragen.
+  const AUTO_QUEUES = FILTER.alle.concat(450), AUTO_MIN = 3, AUTO_MAX = 10;
+  function autoMitspieler(personenListe, spielListe) {
+    const bekannt = new Set(personenListe.flatMap((p) => p.puuids)), aus = zustand.ausgeblendet || {}, z = {};
+    for (const m of spielListe) {
+      if (!AUTO_QUEUES.includes(m.q)) continue;
+      const teams = {}; m.p.forEach((x) => { if (bekannt.has(x.u)) teams[x.tm] = true; });
+      m.p.forEach((x) => {
+        if (!teams[x.tm] || bekannt.has(x.u) || aus[x.u] || !x.n || x.n === '?') return;
+        const e = (z[x.u] = z[x.u] || { g: 0, t: 0 }); e.g++;
+        if (m.t > e.t) { e.t = m.t; e.n = x.n; e.region = String(m.id).split('_')[0].toLowerCase(); }
+      });
+    }
+    return Object.entries(z).filter(([, e]) => e.g >= AUTO_MIN).sort((a, b) => b[1].g - a[1].g).slice(0, AUTO_MAX).map(([u, e]) => {
+      const region = REGIONEN[e.region] ? e.region : 'euw1';
+      return { id: 'auto:' + u, u, name: e.n.split('#')[0], ich: false, auto: true, puuids: [u], accounts: [{ riotId: e.n, region, regionName: REGIONEN[region][0], auto: true }] };
+    });
+  }
+
   function auswerten(personenListe, spielListe, filter) {
     const queues = FILTER[filter] || FILTER.alle, aram = filter === 'aram';
     const vonPuuid = {}; personenListe.forEach((p) => p.puuids.forEach((u) => { vonPuuid[u] = p.id; }));
-    const P = {}; personenListe.forEach((p) => { P[p.id] = { id: p.id, name: p.name, ich: p.ich, accounts: p.accounts, g: 0, w: 0, k: 0, de: 0, a: 0, cs: 0, min: 0, s: 0, vs: 0, rollen: {}, champs: {}, verlauf: [] }; });
+    const P = {}; personenListe.forEach((p) => { P[p.id] = { id: p.id, name: p.name, ich: p.ich, auto: p.auto, accounts: p.accounts, g: 0, w: 0, k: 0, de: 0, a: 0, cs: 0, min: 0, s: 0, vs: 0, rollen: {}, champs: {}, verlauf: [] }; });
     const duos = {}, gegner = {}, feed = [];
     const liste = spielListe.filter((m) => queues.includes(m.q) && m.d >= 300).sort((a, b) => b.t - a.t);
     for (const m of liste) {
@@ -185,7 +205,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     const personen = Object.values(P).map((p) => {
       const champs = Object.entries(p.champs).map(([c, v]) => ({ c, ...v, haupt: Object.entries(v.rollen).sort((x, y) => y[1] - x[1])[0][0] })).sort((x, y) => y.g - x.g);
       const form = p.verlauf.slice(0, 10), alt = p.verlauf.slice(10, 20);
-      return { id: p.id, name: p.name, ich: p.ich, accounts: p.accounts, g: p.g, w: p.w, k: p.k, de: p.de, a: p.a, csMin: p.min ? Math.round((p.cs / p.min) * 10) / 10 : 0,
+      return { id: p.id, name: p.name, ich: p.ich, auto: !!p.auto, accounts: p.accounts, g: p.g, w: p.w, k: p.k, de: p.de, a: p.a, csMin: p.min ? Math.round((p.cs / p.min) * 10) / 10 : 0,
         schadenMin: p.min ? Math.round(p.s / p.min) : 0, sichtMin: p.min ? Math.round((p.vs / p.min) * 100) / 100 : 0, rollen: p.rollen, champs: champs.slice(0, 15),
         form: p.verlauf.slice(0, 10), trend: form.length >= 5 && alt.length >= 5 ? Math.round((form.reduce((a, b) => a + b, 0) / form.length - alt.reduce((a, b) => a + b, 0) / alt.length) * 100) : null };
     }).sort((a, b) => b.g - a.g);
@@ -236,6 +256,8 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
         }
       });
       for (const tm of [100, 200]) { const kills = p.filter((x) => x.tm === tm).reduce((x, y) => x + y.k, 0); p.forEach((x) => { if (x.tm === tm) x.a = Math.min(x.a, Math.max(0, kills - x.k)); }); }
+      // Kevin ist kein Eintrag, spielt aber oft mit (für „automatisch erkannte Mitspieler“) – ersetzt einen fremden Mitspieler
+      if (n % 5 === 0) { const f = p.find((x) => x.tm === 100 && String(x.u).startsWith('fremd-')); if (f) { f.u = 'demo-k1'; f.n = 'KevKev#EUW'; } }
       spl.push({ id: 'DEMO_' + n, t: start + n * (60 * 864e5 / 420) + Math.floor(r() * 3e6), d: dauer, q, v: '15.10', p });
     }
     const personen = LEUTE.map((p) => ({ id: p.id, name: p.name, ich: false, puuids: p.accounts.map((a) => a[2]),
@@ -271,9 +293,9 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       const echt = echtePersonen(k), echteSpiele = Object.values(spiele);
       const nutzeEcht = !!key() && echteSpiele.length > 0;
       const quelle = nutzeEcht ? { personen: echt, spiele: echteSpiele } : demo();
-      const a = auswerten(quelle.personen, quelle.spiele, filter);
+      const a = auswerten(quelle.personen.concat(autoMitspieler(quelle.personen, quelle.spiele)), quelle.spiele, filter);
       return senden(res, 200, Object.assign(a, { quelle: nutzeEcht ? 'riot' : 'demo', key: key() ? keyStatus : 'fehlt', filter, laeuft, letzterLauf: letzterLauf || null,
-        ichId: k, meine: (echt.find((p) => p.ich) || { accounts: [] }).accounts, alle: echt.map((p) => ({ id: p.id, name: p.name, ich: p.ich, gast: p.gast, accounts: p.accounts })),
+        ichId: k, ausgeblendet: Object.keys(zustand.ausgeblendet || {}).length, meine: (echt.find((p) => p.ich) || { accounts: [] }).accounts, alle: echt.map((p) => ({ id: p.id, name: p.name, ich: p.ich, gast: p.gast, accounts: p.accounts })),
         wahl: konten().filter((x) => x.id !== k).map((x) => ({ id: x.id, name: x.name })).concat(Object.entries(zustand.gaeste).map(([id, name]) => ({ id, name, gast: true }))).sort((x, y) => x.name.localeCompare(y.name, 'de')), regionen: Object.fromEntries(Object.entries(REGIONEN).map(([x, v]) => [x, v[0]])), ddragon: await ddragon(), version }));
     }
     if (weg === '/lol/account' && m === 'POST') {
@@ -326,6 +348,27 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       sofortSpeichern(); protokoll('LoL: ' + acc.riotId + ' → ' + personName(nach));
       return senden(res, 200, { person: personName(nach) });
     }
+    if (weg === '/lol/auto/aufnehmen' && m === 'POST') {
+      // erkannten Mitspieler fest aufnehmen: wird Person (ohne Konto), ab dann werden alle seine Spiele geholt
+      const b = await koerper(req), u = String(b.u || '');
+      let n = null, region = 'euw1', t = 0;
+      for (const sp of Object.values(spiele)) { const x = sp.p.find((y) => y.u === u); if (x && sp.t > t) { t = sp.t; n = x.n; region = String(sp.id).split('_')[0].toLowerCase(); } }
+      if (!n) return senden(res, 404, { fehler: 'Diesen Mitspieler gibt es (noch) nicht in euren echten Spielen.' });
+      if (Object.values(zustand.personen).some((l) => l.some((x) => x.puuid === u))) return senden(res, 409, { fehler: 'Ist schon eingetragen.' });
+      const fuer = gastAnlegen(String(b.name || n.split('#')[0]).slice(0, 24)) || gastAnlegen('Mitspieler ' + n.slice(0, 8));
+      const liste = zustand.personen[fuer] || [];
+      if (liste.length >= 8) { aufraeumen(); return senden(res, 400, { fehler: 'Höchstens 8 Accounts pro Person.' }); }
+      liste.push({ riotId: n, region: REGIONEN[region] ? region : 'euw1', puuid: u, hinzu: jetzt(), von: k }); zustand.personen[fuer] = liste; sofortSpeichern();
+      protokoll('LoL: Mitspieler ' + n + ' aufgenommen'); allesHolen(fuer).catch(() => {});
+      return senden(res, 200, { person: personName(fuer) });
+    }
+    if (weg === '/lol/auto/ausblenden' && m === 'POST') {
+      const b = await koerper(req), u = String(b.u || '');
+      if (!u) return senden(res, 400, { fehler: 'Wen?' });
+      (zustand.ausgeblendet = zustand.ausgeblendet || {})[u] = true; sofortSpeichern();
+      return senden(res, 200, {});
+    }
+    if (weg === '/lol/auto/einblenden' && m === 'POST') { zustand.ausgeblendet = {}; sofortSpeichern(); return senden(res, 200, {}); }
     if (weg === '/lol/aktualisieren' && m === 'POST') {
       if (!key()) return senden(res, 409, { fehler: 'Es ist noch kein Riot-API-Key eingetragen – bis dahin gibt es Beispieldaten.' });
       if (jetzt() - (letzteAktualisierung[k] || 0) < 120e3) return senden(res, 429, { fehler: 'Gerade erst aktualisiert – in 2 Minuten wieder.' });

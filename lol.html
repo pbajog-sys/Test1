@@ -149,6 +149,9 @@
   .meine .acc button { padding: 3px 8px; font-size: .78rem; }
   .neu { display: grid; grid-template-columns: minmax(0, 1fr) 88px; gap: 6px; margin-top: 10px; }
   .neu button, .neu #fuer, .neu #neuName { grid-column: 1 / -1; }
+  .auto-marke { font-size: .66rem; font-weight: 700; margin-left: 6px; padding: 1px 7px; border-radius: 999px; background: rgba(100,210,255,.16); color: #64d2ff; vertical-align: middle; }
+  .auto-hinweis { margin-top: 14px; padding: 12px 14px; border-radius: 16px; background: rgba(100,210,255,.08); border: 1px solid rgba(100,210,255,.2); font-size: .86rem; }
+  .auto-knoepfe { display: flex; gap: 8px; margin-top: 10px; flex-wrap: wrap; }
   .alle { margin-top: 12px; border-top: 1px solid var(--linie2); padding-top: 10px; }
   .alle summary { cursor: pointer; font-weight: 700; font-size: .9rem; list-style: none; }
   .alle summary::-webkit-details-marker { display: none; }
@@ -366,7 +369,24 @@ function alleZeigen() {
         + (p.ich ? '' : '<option value="' + esc(daten.ichId) + '">mir</option>') + personWahl(p.id, false) + '</select>'
         + '<button type="button" data-entfernen="' + esc(a.riotId) + '" data-person="' + esc(p.id) + '" aria-label="' + esc(a.riotId) + ' entfernen">✕</button>' : '<span></span><span></span>') + '</div>').join('') + '</div>').join('')
     || '<p class="klein muted">Noch keine Accounts eingetragen.</p>';
+  const auto = daten.quelle === 'riot' ? daten.personen.filter((p) => p.auto) : [];
+  if (auto.length || daten.ausgeblendet) $('alleListe').innerHTML += '<div class="alle-person"><b>🔍 Automatisch erkannt <small>spielen oft mit euch</small></b>'
+    + auto.map((p) => '<div class="alle-acc"><span><b>' + esc(p.accounts[0].riotId) + '</b> <small>' + p.g + ' Spiele zusammen</small></span>'
+      + '<button type="button" data-auto-auf="' + esc(p.id.slice(5)) + '" title="Fest aufnehmen">➕</button><button type="button" data-auto-weg="' + esc(p.id.slice(5)) + '" title="Ausblenden">🙈</button></div>').join('')
+    + (daten.ausgeblendet ? '<div class="alle-acc"><span class="muted">' + daten.ausgeblendet + ' ausgeblendet</span><button type="button" data-auto-zurueck="1">wieder zeigen</button><span></span></div>' : '') + '</div>';
 }
+document.addEventListener('click', async (e) => {
+  const auf = e.target.closest('[data-auto-auf]'), weg = e.target.closest('[data-auto-weg]'), zur = e.target.closest('[data-auto-zurueck]');
+  if (!auf && !weg && !zur) return;
+  e.stopPropagation();
+  const x = auf ? await api('lol/auto/aufnehmen', 'POST', { u: auf.dataset.autoAuf }).catch(() => ({ status: 0 }))
+    : weg ? await api('lol/auto/ausblenden', 'POST', { u: weg.dataset.autoWeg }).catch(() => ({ status: 0 }))
+    : await api('lol/auto/einblenden', 'POST', {}).catch(() => ({ status: 0 }));
+  if (x.status !== 200) { melden('⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.')); return; }
+  melden(auf ? '✓ ' + x.json.person + ' aufgenommen – alle Spiele werden geholt' : weg ? '🙈 Ausgeblendet' : '✓ Wieder eingeblendet');
+  if (weg && gewaehlt === 'auto:' + weg.dataset.autoWeg) { gewaehlt = null; $('personTab').hidden = true; tabZeigen('gruppe'); }
+  laden();
+}, true);
 $('alleListe').addEventListener('change', async (e) => {
   const s = e.target.closest('[data-umhaengen]'); if (!s || !s.value) return;
   const koerper = { riotId: s.dataset.umhaengen, person: s.dataset.person };
@@ -419,7 +439,7 @@ function personenKurzZeigen() {
   $('personenZahl').textContent = '· ' + daten.personen.length;
   $('personenKurz').innerHTML = daten.personen.map((p) => '<div class="duo" style="cursor:pointer" data-person="' + esc(p.id) + '"><div class="zelle-name">'
     + (p.champs[0] ? bild('champion', p.champs[0].c, '', champName(p.champs[0].c)) : '<span class="bild">' + esc(p.name[0]) + '</span>')
-    + '<div><b>' + esc(p.name) + (p.ich ? '<span class="ich-marke">DU</span>' : '') + '</b><small>' + rangText(besterRang(p.accounts)) + '</small></div></div>'
+    + '<div><b>' + esc(p.name) + (p.ich ? '<span class="ich-marke">DU</span>' : p.auto ? '<span class="auto-marke" title="Spielt oft mit euch, ist aber nicht eingetragen">erkannt</span>' : '') + '</b><small>' + rangText(besterRang(p.accounts)) + '</small></div></div>'
     + '<div style="text-align:right"><span class="wr ' + wrKlasse(p.w, p.g) + '">' + pct(p.w, p.g) + ' %</span><small>' + p.g + ' Spiele</small></div></div>').join('') || '<p class="klein muted">Noch niemand.</p>';
 }
 function gruppeZeigen() {
@@ -427,7 +447,7 @@ function gruppeZeigen() {
   $('personen').innerHTML = daten.personen.map((p) => {
     const r = hauptrolle(p);
     return '<button type="button" class="person" data-person="' + esc(p.id) + '"><div class="kopfz">' + (p.champs[0] ? bild('champion', p.champs[0].c, 'gross', champName(p.champs[0].c)) : '<span class="bild gross">' + esc(p.name[0]) + '</span>')
-      + '<div><b>' + esc(p.name) + (p.ich ? '<span class="ich-marke">DU</span>' : '') + '</b>' + rangText(besterRang(p.accounts)) + '<div class="muted klein">' + p.accounts.length + (p.accounts.length === 1 ? ' Account' : ' Accounts') + (r ? ' · meist ' + ROLLE_NAME[r] : '') + '</div></div></div>'
+      + '<div><b>' + esc(p.name) + (p.ich ? '<span class="ich-marke">DU</span>' : p.auto ? '<span class="auto-marke" title="Spielt oft mit euch, ist aber nicht eingetragen">erkannt</span>' : '') + '</b>' + rangText(besterRang(p.accounts)) + '<div class="muted klein">' + p.accounts.length + (p.accounts.length === 1 ? ' Account' : ' Accounts') + (r ? ' · meist ' + ROLLE_NAME[r] : '') + '</div></div></div>'
       + '<div class="balken"><i style="width:' + pct(p.w, p.g) + '%"></i></div>'
       + '<div class="werte"><span><b class="wr ' + wrKlasse(p.w, p.g) + '">' + pct(p.w, p.g) + ' %</b> · ' + p.w + 'S ' + (p.g - p.w) + 'N</span><span>KDA ' + kdaText(p.k, p.de, p.a) + '</span></div>'
       + '<div class="werte"><span class="form">' + p.form.map((x) => '<i class="' + (x ? 'w' : '') + '"></i>').join('') + '</span><span>' + (p.trend == null ? '' : p.trend > 0 ? '📈 +' + p.trend + ' %' : p.trend < 0 ? '📉 ' + p.trend + ' %' : '➡️') + '</span></div>'
@@ -516,8 +536,10 @@ function personZeigen(id) {
   const partner = daten.duos.filter((d) => d.a === id || d.b === id).map((d) => ({ name: personVon(d.a === id ? d.b : d.a).name, g: d.g, w: d.w })).sort((a, b) => b.g - a.g);
   const rollen = Object.entries(p.rollen).sort((a, b) => b[1].g - a[1].g);
   box.innerHTML = '<section class="karte"><div class="profil">' + (p.champs[0] ? bild('champion', p.champs[0].c, 'gross', '') : '<span class="bild gross">' + esc(p.name[0]) + '</span>')
-    + '<div><h2>' + esc(p.name) + (p.ich ? '<span class="ich-marke">DU</span>' : '') + '</h2><div class="accs">' + p.accounts.map((a) => '<div class="acc">' + (a.icon ? bild('profil', a.icon, 'rund', '') : '') + '<div><b>' + esc(a.riotId) + '</b><small>' + esc(a.regionName) + (a.level ? ' · Lvl ' + a.level : '') + '</small></div>'
+    + '<div><h2>' + esc(p.name) + (p.ich ? '<span class="ich-marke">DU</span>' : p.auto ? '<span class="auto-marke" title="Spielt oft mit euch, ist aber nicht eingetragen">erkannt</span>' : '') + '</h2><div class="accs">' + p.accounts.map((a) => '<div class="acc">' + (a.icon ? bild('profil', a.icon, 'rund', '') : '') + '<div><b>' + esc(a.riotId) + '</b><small>' + esc(a.regionName) + (a.level ? ' · Lvl ' + a.level : '') + '</small></div>'
       + '<div>' + (a.rang && a.rang.solo ? '<small>Solo</small>' + rangText(a.rang.solo) : '') + (a.rang && a.rang.flex ? '<small>Flex</small>' + rangText(a.rang.flex) : '') + (!a.rang || (!a.rang.solo && !a.rang.flex) ? '<small>ohne Rang</small>' : '') + '</div></div>').join('') + '</div></div></div>'
+    + (p.auto ? '<div class="auto-hinweis">🔍 <b>Automatisch erkannt</b> – spielt oft mit euch, ist aber nicht eingetragen. Die Zahlen zählen nur eure gemeinsamen Spiele.'
+      + '<div class="auto-knoepfe"><button type="button" class="haupt" data-auto-auf="' + esc(p.id.slice(5)) + '">➕ Fest aufnehmen</button><button type="button" data-auto-weg="' + esc(p.id.slice(5)) + '">🙈 Ausblenden</button></div></div>' : '')
     + '<div class="kacheln"><div class="kachel"><b class="wr ' + wrKlasse(p.w, p.g) + '">' + pct(p.w, p.g) + ' %</b><span>Winrate · ' + p.g + ' Spiele</span></div><div class="kachel"><b>' + kdaText(p.k, p.de, p.a) + '</b><span>KDA · ' + (p.g ? (p.k / p.g).toFixed(1) + ' / ' + (p.de / p.g).toFixed(1) + ' / ' + (p.a / p.g).toFixed(1) : '–') + '</span></div>'
     + '<div class="kachel"><b>' + String(p.csMin).replace('.', ',') + '</b><span>CS / Min.</span></div><div class="kachel"><b>' + p.schadenMin + '</b><span>Schaden / Min.</span></div><div class="kachel"><b>' + String(p.sichtMin).replace('.', ',') + '</b><span>Sicht / Min.</span></div>'
     + '<div class="kachel"><b>' + (p.trend == null ? '–' : (p.trend > 0 ? '+' : '') + p.trend + ' %') + '</b><span>Trend (letzte 10)</span></div></div></section>'

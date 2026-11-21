@@ -18,7 +18,7 @@ for (let n = 0; n < 6; n++) {
   const sieg = n % 3 !== 0, wer = n < 4 ? 'P-ANNA' : 'P-ANNA2';
   SPIELE['EUW1_' + n] = { metadata: { matchId: 'EUW1_' + n }, info: { gameStartTimestamp: Date.now() - n * 36e5, gameDuration: 1800, queueId: 420, gameVersion: '15.10.1',
     participants: ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'].flatMap((r, i) => [100, 200].map((tm) => {
-      const u = tm === 100 && i === 0 ? wer : tm === 100 && i === 1 ? 'P-BEN' : 'X-' + n + tm + i;
+      const u = tm === 100 && i === 0 ? wer : tm === 100 && i === 1 ? 'P-BEN' : tm === 100 && i === 2 ? 'P-DORA' : 'X-' + n + tm + i;
       return { puuid: u, riotIdGameName: u, riotIdTagline: 'X', championName: i === 0 ? 'Ahri' : 'Garen', teamPosition: r, teamId: tm, win: tm === 100 ? sieg : !sieg,
         kills: 5, deaths: 3, assists: 4, totalMinionsKilled: 180, neutralMinionsKilled: 10, goldEarned: 11000, totalDamageDealtToChampions: 20000, visionScore: 20, item0: 3031 };
     })) } };
@@ -71,10 +71,16 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     const ben = (await anfrage('registrieren', 'POST', { name: 'Ben', pin: '1234' })).cookie;
     const cara = (await anfrage('registrieren', 'POST', { name: 'Cara', pin: '1234' })).cookie;
     let d = await anfrage('lol/daten', 'GET', null, ben);
-    ck('ohne Key: Beispieldaten mit Personen, Duos, Spielen', d.status === 200 && d.json.quelle === 'demo' && d.json.key === 'fehlt' && d.json.personen.length === 5 && d.json.duos.length > 3 && d.json.feed.length > 10, JSON.stringify(d.json).slice(0, 200));
+    ck('ohne Key: Beispieldaten mit Personen, Duos, Spielen', d.status === 200 && d.json.quelle === 'demo' && d.json.key === 'fehlt' && d.json.personen.filter((p) => !p.auto).length === 5 && d.json.duos.length > 3 && d.json.feed.length > 10, JSON.stringify(d.json).slice(0, 200));
+    const kevin = d.json.personen.find((p) => p.auto);
+    ck('Beispiel: Kevin (oft dabei, nicht eingetragen) automatisch erkannt', kevin && kevin.name === 'KevKev' && kevin.g >= 3 && kevin.accounts[0].riotId === 'KevKev#EUW', JSON.stringify(kevin && { n: kevin.name, g: kevin.g }));
+    ck('Beispiel: Kevin taucht in Duos auf', d.json.duos.some((x) => x.a === kevin.id || x.b === kevin.id));
+    ck('Kevin ausblenden → weg, einblenden → wieder da', (await anfrage('lol/auto/ausblenden', 'POST', { u: 'demo-k1' }, ben)).status === 200 && !(await anfrage('lol/daten', 'GET', null, ben)).json.personen.some((p) => p.auto)
+      && (await anfrage('lol/auto/einblenden', 'POST', {}, ben)).status === 200 && (await anfrage('lol/daten', 'GET', null, ben)).json.personen.some((p) => p.auto));
+    ck('Beispiel-Mitspieler kann man nicht fest aufnehmen (404)', (await anfrage('lol/auto/aufnehmen', 'POST', { u: 'demo-k1' }, ben)).status === 404);
     const smurf = d.json.personen.find((p) => p.name === 'Philip');
     ck('Beispiel: Smurf-Accounts zu einer Person zusammengeführt', smurf && smurf.accounts.length === 2);
-    const wrs = d.json.personen.map((p) => p.w / p.g);
+    const wrs = d.json.personen.filter((p) => !p.auto).map((p) => p.w / p.g);
     ck('Beispiel: realistische Winraten (40–60 %)', wrs.every((x) => x > 0.4 && x < 0.6), wrs.join(','));
     ck('Beispiel: Kill-Beteiligung nie über 100 %, keine negativen Werte', d.json.feed.every((s) => s.wir.every((x) => x.kp <= 100 && x.k >= 0 && x.a >= 0)));
     const aram = await anfrage('lol/daten?filter=aram', 'GET', null, ben);
@@ -124,13 +130,15 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     console.log('Echte Auswertung');
     d = await anfrage('lol/daten', 'GET', null, ben);
     const p = d.json.personen, pa = p.find((x) => x.name === 'Anna'), pb = p.find((x) => x.name === 'Ben');
-    ck('Quelle jetzt Riot, Anna + Ben als Personen', d.json.quelle === 'riot' && p.length === 2 && pa && pb, JSON.stringify(p.map((x) => x.name)));
+    ck('Quelle jetzt Riot, Anna + Ben als Personen', d.json.quelle === 'riot' && p.filter((x) => !x.auto).length === 2 && pa && pb, JSON.stringify(p.map((x) => x.name)));
+    const dora = p.find((x) => x.auto);
+    ck('Dora (in allen 6 Spielen dabei, nicht eingetragen) automatisch erkannt', dora && dora.name === 'P-DORA' && dora.g === 6 && dora.accounts[0].riotId === 'P-DORA#X', JSON.stringify(p.map((x) => x.name + (x.auto ? '*' : ''))));
     ck('Annas Main + Smurf zusammengeführt (6 Spiele, 4 Siege)', pa.g === 6 && pa.w === 4 && pa.accounts.length === 2, pa.g + '/' + pa.w);
     ck('Rang und Profil vom Smurf übernommen', pa.accounts.some((x) => x.rang && x.rang.solo && x.rang.solo.tier === 'PLATINUM' && x.level === 321));
     ck('Rollen: Anna Top, Ben Jungle', pa.rollen.TOP.g === 6 && pb.rollen.JUNGLE.g === 6);
-    const duo = d.json.duos[0];
-    ck('Duo Anna + Ben: 6 Spiele, 4 Siege, beste Rollen Top+Jungle', d.json.duos.length === 1 && duo.g === 6 && duo.w === 4 && Object.keys(duo.rollen).length === 1, JSON.stringify(duo));
-    ck('Spiele-Verlauf: zusammen gespielt, mit KP', d.json.feed.length === 6 && d.json.feed[0].wir.length === 2 && d.json.feed[0].wir[0].kp > 0);
+    const duo = d.json.duos.find((x) => [x.a, x.b].sort().join() === 'anna,ben');
+    ck('Duo Anna + Ben: 6 Spiele, 4 Siege, beste Rollen Top+Jungle', d.json.duos.length === 3 && duo.g === 6 && duo.w === 4 && Object.keys(duo.rollen).length === 1, JSON.stringify(duo));
+    ck('Spiele-Verlauf: zusammen gespielt, mit KP', d.json.feed.length === 6 && d.json.feed[0].wir.length === 3 && d.json.feed[0].wir[0].kp > 0);
     ck('Key steht in keiner Antwort an den Browser', !d.text.includes(KEY) && !(await anfrage('admin/lol', 'GET', null, anna)).text.includes(KEY));
     const vorher = riotAufrufe.length;
     ck('Aktualisieren: erst 200, gleich danach 429', (await anfrage('lol/aktualisieren', 'POST', {}, anna)).status === 200 && (await anfrage('lol/aktualisieren', 'POST', {}, anna)).status === 429);
@@ -145,7 +153,7 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     ck('neuer Key gespeichert', (await anfrage('admin/lol', 'POST', { key: KEY2 }, anna)).json.key === 'ok');
     const st2 = await bisFertig(anna);
     d = await anfrage('lol/daten', 'GET', null, ben);
-    ck('nach Key-Wechsel alles neu zugeordnet (3 Accounts, 6 Spiele, Duo da)', st2 && st2.accounts === 3 && st2.spiele === 6 && d.json.duos.length === 1 && d.json.personen.find((x) => x.name === 'Anna').g === 6, JSON.stringify(st2));
+    ck('nach Key-Wechsel alles neu zugeordnet (3 Accounts, 6 Spiele, Duo da)', st2 && st2.accounts === 3 && st2.spiele === 6 && d.json.duos.some((x) => [x.a, x.b].sort().join() === 'anna,ben' && x.g === 6) && d.json.personen.find((x) => x.name === 'Anna').g === 6, JSON.stringify(st2));
 
     console.log('Bilder');
     let b = await fetch('http://127.0.0.1:8796/api/lol/bild/champion/Ahri.png', { headers: { Cookie: ben } });
@@ -154,6 +162,15 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     ck('Champion-Bild über den Server, danach aus dem Zwischenspeicher', b.status === 200 && b.headers.get('content-type') === 'image/png' && bildAufrufe === n1);
     b = await fetch('http://127.0.0.1:8796/api/lol/bild/champion/..%2F..%2Fkonten.png', { headers: { Cookie: ben } });
     ck('Bildpfad mit ../ abgelehnt', b.status !== 200);
+
+    console.log('Mitspieler fest aufnehmen');
+    let au = await anfrage('lol/auto/aufnehmen', 'POST', { u: 'P-DORA' }, cara);
+    await bisFertig(anna); await warte(100);
+    d = await anfrage('lol/daten', 'GET', null, cara);
+    const doraFest = d.json.personen.find((x) => x.name === 'P-DORA');
+    ck('Dora aufgenommen: jetzt feste Person ohne Konto, Spiele geholt', au.status === 200 && doraFest && !doraFest.auto && doraFest.g === 6 && d.json.alle.some((x) => x.gast && x.name === 'P-DORA'), au.text);
+    ck('doppelt aufnehmen → 409', (await anfrage('lol/auto/aufnehmen', 'POST', { u: 'P-DORA' }, cara)).status === 409);
+    await anfrage('lol/account/entfernen', 'POST', { riotId: 'P-DORA#X', person: 'gast:p-dora' }, cara);
 
     console.log('Konto löschen');
     ck('Admin löscht Ben', (await anfrage('admin/konto/loeschen', 'POST', { name: 'Ben' }, anna)).status === 200);
@@ -171,7 +188,7 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
       ck(name + ': ohne Anmeldung Hinweis zur Spielekiste', /anmelden/.test(await seite.textContent('#hinweis')));
       await ctx.addCookies([{ name: cara.split('=')[0], value: cara.split('=').slice(1).join('='), url: 'http://localhost:8796' }]);
       await seite.reload(); await seite.waitForSelector('.person');
-      ck(name + ': Beispiel-Banner + 5 Spieler-Karten', !(await seite.isHidden('#banner')) && (await seite.$$('.person')).length === 5);
+      ck(name + ': Beispiel-Banner + 5 Spieler-Karten + Kevin als erkannt', !(await seite.isHidden('#banner')) && (await seite.$$('.person')).length === 6 && /erkannt/.test(await seite.textContent('#personen')));
       for (const t of ['duos', 'rollen', 'aufstellung', 'spiele']) { await seite.click('[data-tab="' + t + '"]'); await warte(80); }
       ck(name + ': Aufstellung verteilt 5 Rollen', (await seite.$$('.platz')).length === 5 && /Siegchance/.test(await seite.textContent('#aufTipp')));
       await seite.click('[data-tab="gruppe"]'); await seite.click('.person >> nth=1'); await warte(150);
