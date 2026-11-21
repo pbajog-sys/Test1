@@ -24,7 +24,7 @@ const pruefe = (name, bed, info = '') => { if (bed) ok++; else fail++; console.l
   const p = await ctx.newPage(); const fehler = []; p.on('pageerror', (e) => fehler.push(e.message));
   await p.goto('http://localhost:8765/'); await p.waitForTimeout(1500);
   await p.screenshot({ path: ordner + '/pt-dashboard.png', fullPage: true });
-  pruefe('Dashboard-Kopf sichtbar', await p.evaluate(() => !!$('skGruss') && !!$('skStart').querySelector('.sk-tageskarte')));
+  pruefe('Dashboard-Kopf sichtbar, ohne „Heute“-Leiste', await p.evaluate(() => !!$('skGruss') && !$('skStart').querySelector('.sk-tageskarte') && !!$('skGross') && $('skGross').hidden));
   pruefe('Kategorien angelegt', await p.evaluate(() => document.querySelectorAll('.sk-kat').length >= 5 && !!document.querySelector('.sk-kat #hubKrimi')));
   const xp = await p.evaluate(() => { const D = skDaten(); return skXP(D.E, D.tagesSt, D.expSt, D.erfolgSt); });
   pruefe('XP aus altem Verlauf', xp.spiele > 500, JSON.stringify(xp));
@@ -43,7 +43,7 @@ const pruefe = (name, bed, info = '') => { if (bed) ok++; else fail++; console.l
   const A = await p.evaluate(() => skTagesAufgaben());
   for (const slot of ['brain', 'sense', 'chaos']) {
     await p.evaluate(() => zeigeHub()); await p.waitForTimeout(500);
-    await p.click('[data-slot=' + slot + ']'); await p.waitForTimeout(2600);
+    await p.evaluate((x) => skAufgabeStarten(x), slot); await p.waitForTimeout(2600);
     const wo = await p.evaluate(() => document.querySelector('.screen.active').id);
     await p.screenshot({ path: ordner + '/pt-start-' + slot + '.png' });
     pruefe('Start ' + slot + ' (' + (A[slot].modus || A[slot].spiel) + ')', wo === 'screen-' + A[slot].spiel, wo);

@@ -92,6 +92,25 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     ck('Aktualisieren ohne Key → 409 mit Erklärung', (await anfrage('lol/aktualisieren', 'POST', {}, ben)).status === 409);
     ck('ohne Key keine Anfrage an Riot', riotAufrufe.length === 0, riotAufrufe.join(' '));
 
+    console.log('Accounts für Mitspieler');
+    let x = await anfrage('lol/account', 'POST', { riotId: 'Dennis#EUW', region: 'euw1', neuName: 'Dennis' }, cara);
+    d = await anfrage('lol/daten', 'GET', null, cara);
+    ck('Cara trägt Account für „Dennis“ (ohne Konto) ein', x.status === 200 && x.json.person === 'Dennis' && d.json.wahl.some((p) => p.name === 'Dennis' && p.gast) && d.json.alle.some((p) => p.name === 'Dennis' && p.gast && p.accounts[0].darf), x.text);
+    ck('Personen-Auswahl: andere Konten + Gäste, nicht man selbst', d.json.wahl.some((p) => p.name === 'Anna') && !d.json.wahl.some((p) => p.name === 'Cara') && d.json.ichId === 'cara');
+    x = await anfrage('lol/account', 'POST', { riotId: 'Cara Zwei#EUW', region: 'euw1', fuer: 'cara' }, ben);
+    ck('Ben trägt einen Account für Caras Konto ein', x.status === 200 && x.json.person === 'Cara');
+    ck('unbekannte Person → 404', (await anfrage('lol/account', 'POST', { riotId: 'Egal#EUW', region: 'euw1', fuer: 'niemand' }, ben)).status === 404);
+    ck('doppelt (bei anderer Person) → 409 mit Namen', /Dennis/.test((await anfrage('lol/account', 'POST', { riotId: 'dennis#euw', region: 'euw1' }, ben)).json.fehler));
+    ck('Cara darf Bens eigenen Account nicht entfernen/umhängen', (await anfrage('lol/account/entfernen', 'POST', { riotId: 'Ben#1234', person: 'ben' }, cara)).status === 403
+      && (await anfrage('lol/account/zuordnen', 'POST', { riotId: 'Ben#1234', person: 'ben', nach: 'cara' }, cara)).status === 403);
+    x = await anfrage('lol/account/zuordnen', 'POST', { riotId: 'Dennis#EUW', person: 'gast:dennis', nach: 'cara' }, ben);
+    d = await anfrage('lol/daten', 'GET', null, cara);
+    ck('Dennis-Account Cara zugeordnet, leerer Gast verschwindet', x.status === 200 && d.json.meine.length === 2 && !d.json.wahl.some((p) => p.name === 'Dennis'), x.text);
+    ck('Ben (hat ihn eingetragen) darf „Cara Zwei“ entfernen', (await anfrage('lol/account/entfernen', 'POST', { riotId: 'Cara Zwei#EUW', person: 'cara' }, ben)).status === 200);
+    ck('Cara entfernt ihren eigenen', (await anfrage('lol/account/entfernen', 'POST', { riotId: 'Dennis#EUW' }, cara)).status === 200);
+    ck('neue Person mit Namen eines Kontos → landet beim Konto', (await anfrage('lol/account', 'POST', { riotId: 'Bens Smurf#EUW', region: 'euw1', neuName: 'ben' }, cara)).json.person === 'Ben'
+      && (await anfrage('lol/account/entfernen', 'POST', { riotId: 'Bens Smurf#EUW', person: 'ben' }, cara)).status === 200);
+
     console.log('Riot-Key (nur Admin)');
     ck('Ben darf den Key nicht sehen/setzen', (await anfrage('admin/lol', 'GET', null, ben)).status === 403 && (await anfrage('admin/lol', 'POST', { key: KEY }, ben)).status === 403);
     ck('Key im falschen Format → 400', (await anfrage('admin/lol', 'POST', { key: 'abc' }, anna)).status === 400);

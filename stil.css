@@ -4701,3 +4701,35 @@ a.bb-datei { text-decoration: none; }
 .sk-dlg-in { grid-template-columns: minmax(0, 1fr); }
 .sk-dlg-in > * { min-width: 0; }
 .sk-dlg-in p, .sk-dlg-in li, .sk-dlg-in small, .sk-dlg-in div { overflow-wrap: anywhere; }
+
+/* Große Kacheln oben im Hub: LoL-Zentrale und Minecraft-Server */
+.sk-gross { display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr)); gap: 12px; margin: 10px 0 4px; }
+.sk-gross-kachel { position: relative; display: flex; align-items: center; gap: 16px; min-height: 112px; padding: 18px 22px; border-radius: 22px; color: #fff; text-decoration: none; overflow: hidden;
+  border: 1px solid rgba(255,255,255,.16); box-shadow: inset 0 1px 0 rgba(255,255,255,.18), 0 12px 34px rgba(0,0,0,.35); transition: transform .15s, box-shadow .15s; isolation: isolate; }
+.sk-gross-kachel::before { content: ""; position: absolute; inset: 0; z-index: -1; opacity: .95; }
+.sk-gross-kachel::after { content: ""; position: absolute; right: -40px; top: -60px; width: 220px; height: 220px; border-radius: 50%; z-index: -1; filter: blur(30px); opacity: .55; }
+.sk-gross-kachel:hover { transform: translateY(-2px); box-shadow: inset 0 1px 0 rgba(255,255,255,.22), 0 16px 40px rgba(0,0,0,.45); }
+.sk-gross-kachel:active { transform: scale(.985); }
+.sk-gross-lol::before { background: linear-gradient(135deg, #2b2a7a 0%, #0a4fb8 55%, #1679c9 100%); }
+.sk-gross-lol::after { background: #bf5af2; }
+.sk-gross-mc::before { background: linear-gradient(135deg, #1d4d1f 0%, #2f7a2c 55%, #5b8f2e 100%); }
+.sk-gross-mc::after { background: #ffd60a; opacity: .3; }
+.sk-gross-icon { flex: none; width: 60px; height: 60px; border-radius: 18px; display: grid; place-items: center; font-size: 30px; background: rgba(255,255,255,.16); border: 1px solid rgba(255,255,255,.25); box-shadow: inset 0 1px 0 rgba(255,255,255,.3); }
+.sk-gross-icon svg { width: 44px; height: 44px; }
+.sk-gross-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; }
+.sk-gross-text b { font-size: 1.35rem; letter-spacing: -.02em; }
+.sk-gross-text small { font-size: .9rem; color: rgba(255,255,255,.78); }
+.sk-gross-status { margin-top: 6px; font-size: .8rem; font-weight: 700; color: rgba(255,255,255,.92); display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sk-punkt { width: 8px; height: 8px; border-radius: 50%; background: rgba(255,255,255,.4); display: inline-block; }
+.sk-punkt.an { background: #30d158; box-shadow: 0 0 0 3px rgba(48,209,88,.25); }
+.sk-gross-pfeil { margin-left: auto; font-size: 2rem; opacity: .6; line-height: 1; }
+@media (max-width: 699px) {
+  .sk-gross { grid-template-columns: 1fr 1fr; gap: 8px; }
+  .sk-gross-kachel { flex-direction: column; align-items: flex-start; gap: 8px; min-height: 0; padding: 14px; border-radius: 18px; }
+  .sk-gross-icon { width: 42px; height: 42px; border-radius: 13px; font-size: 22px; }
+  .sk-gross-icon svg { width: 32px; height: 32px; }
+  .sk-gross-text b { font-size: 1.02rem; }
+  .sk-gross-text small { font-size: .74rem; }
+  .sk-gross-status { margin-top: 2px; font-size: .7rem; }
+  .sk-gross-pfeil { display: none; }
+}

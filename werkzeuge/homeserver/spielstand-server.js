@@ -599,7 +599,7 @@ function erstelleServer({ daten, jetzt = () => Date.now(), admin = [], basis = n
   try {
     const kandidaten = [basis && path.join(basis, 'spiel', 'werkzeuge', 'homeserver', 'lol.js'), path.join(__dirname, 'lol.js')].filter(Boolean);
     const datei = kandidaten.find((f) => fs.existsSync(f));
-    if (datei) lol = require(datei).erstelleLol(Object.assign({ daten, jetzt, senden, koerper, kontoName: (x) => (konten[x] ? konten[x].name : ''),
+    if (datei) lol = require(datei).erstelleLol(Object.assign({ daten, jetzt, senden, koerper, kontoName: (x) => (konten[x] ? konten[x].name : ''), konten: () => Object.entries(konten).map(([id, kt]) => ({ id, name: kt.name })), istAdmin: (x) => admins.has(x),
       protokoll: (t) => { try { fs.appendFileSync(path.join(basis || path.dirname(daten), 'update.log'), new Date(jetzt()).toISOString().replace('T', ' ').slice(0, 19) + '  ' + t + '\n'); } catch (e) { /* egal */ } } }, lolOptionen || {}));
   } catch (e) { console.error('LoL-Zentrale nicht geladen:', e.message); }
 

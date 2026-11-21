@@ -78,8 +78,10 @@ Aufgabe **Minecraft** (startet mit Windows, Neustart nach Absturz; `-Xmx2G` + em
 weder Windows noch der Wachhund den Server)/Neustart. Protokoll „Minecraft“ = `minecraft\logs\latest.log`.
 Erneutes Installieren aktualisiert Paper/Java, Welt und Einstellungen bleiben.
 
-**LoL-Zentrale** (`lol.html`, verlinkt im ☁️-Fenster, für alle Angemeldeten): Jeder trägt seine Riot-Accounts selbst
-ein (mehrere = Smurfs, werden zu einer Person zusammengeführt). Auswertung: Winrate/KDA/Rang je Person, Champions,
+**LoL-Zentrale** (`lol.html`, große Kachel oben im Hub + ☁️-Fenster, für alle Angemeldeten): Riot-Accounts werden selbst
+eingetragen (mehrere = Smurfs, werden zu einer Person zusammengeführt) – auch für Mitspieler, mit oder ohne
+Spielekiste-Konto („Gast“ = nur Name). Unter „Alle Accounts verwalten“ lassen sie sich umhängen/entfernen (die Person
+selbst, wer sie eingetragen hat, der Admin; Gäste darf jeder verwalten). Auswertung: Winrate/KDA/Rang je Person, Champions,
 Rollen-Matrix (wer spielt wo am besten), Duos (Winrate zusammen + beste Rollen-Kombi), Gegeneinander, „Beste
 Aufstellung“ (verteilt 2–5 Leute auf Rollen) und Spiele-Verlauf; Filter Solo/Flex/Normal/ARAM. Code: `lol.js`
 (wird vom Konto-Server aus `spiel\werkzeuge\homeserver\` geladen, kommt also mit jedem Update mit).

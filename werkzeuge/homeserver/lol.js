@@ -27,7 +27,7 @@ const QUEUE_NAME = { 420: 'Ranked Solo', 440: 'Ranked Flex', 400: 'Normal Draft'
 const ROLLEN = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'];
 const RIOT_ID = /^(.{3,16})#([A-Za-z0-9]{2,5})$/u;
 
-function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoName, protokoll = () => {}, takt = 10 * 60e3,
+function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoName, konten = () => [], istAdmin = () => false, protokoll = () => {}, takt = 10 * 60e3,
   riotHolen = null, bildHolen = null, warten = (ms) => new Promise((ok) => setTimeout(ok, ms)) }) {
   const ordner = path.join(daten, 'lol');
   fs.mkdirSync(path.join(ordner, 'bilder'), { recursive: true });
@@ -37,7 +37,27 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
   const key = () => { try { return fs.readFileSync(keyDatei, 'utf8').trim(); } catch (e) { return ''; } };
 
   // zustand: { personen: { konto: [{ riotId, region, puuid, fehler, hinzu }] }, accounts: { puuid: { riotId, region, icon, level, rang, ids: [], geholt } } }
-  let zustand = Object.assign({ personen: {}, accounts: {} }, lies('zustand.json', {}));
+  let zustand = Object.assign({ personen: {}, accounts: {}, gaeste: {} }, lies('zustand.json', {}));
+  zustand.gaeste = zustand.gaeste || {};
+
+  // Personen: Spielekiste-Konten (Schlüssel wie im Konto-Server) oder Mitspieler ohne Konto („gast:<name>“, nur ein Name)
+  const istGast = (id) => String(id).startsWith('gast:');
+  const personName = (id) => (istGast(id) ? zustand.gaeste[id] || id.slice(5) : kontoName(id) || id);
+  const gibtPerson = (id) => (istGast(id) ? !!zustand.gaeste[id] : konten().some((x) => x.id === id));
+  // Wer darf einen Account entfernen/umhängen: die Person selbst, wer ihn eingetragen hat, der Admin – Gäste verwaltet die ganze Gruppe
+  const darf = (k, person, acc) => person === k || istGast(person) || (acc && acc.von === k) || istAdmin(k);
+  function gastAnlegen(name) {
+    const n = String(name || '').trim().replace(/\s+/g, ' ');
+    if (n.length < 2 || n.length > 24 || /[<>]/.test(n)) return null;
+    const id = 'gast:' + n.toLowerCase();
+    if (konten().some((x) => x.name.toLowerCase() === n.toLowerCase())) return konten().find((x) => x.name.toLowerCase() === n.toLowerCase()).id;   // gibt's schon als Konto
+    zustand.gaeste[id] = zustand.gaeste[id] || n;
+    return id;
+  }
+  function aufraeumen() {   // leere Personen weg, Gäste ohne Accounts auch
+    Object.keys(zustand.personen).forEach((id) => { if (!zustand.personen[id].length) delete zustand.personen[id]; });
+    Object.keys(zustand.gaeste).forEach((id) => { if (!zustand.personen[id]) delete zustand.gaeste[id]; });
+  }
   let spiele = lies('spiele.json', {});   // matchId → kompaktes Spiel
   let keyStatus = key() ? 'unbekannt' : 'fehlt', letzterLauf = 0, laeuft = false, version = 1;
   let speichernUhr = null;
@@ -227,9 +247,9 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
   // echte Personen aus den Einträgen
   function echtePersonen(k) {
     return Object.entries(zustand.personen).filter(([, l]) => l.length).map(([konto, l]) => ({
-      id: konto, name: kontoName(konto) || konto, ich: konto === k,
+      id: konto, name: personName(konto), ich: konto === k, gast: istGast(konto),
       puuids: l.map((x) => x.puuid).filter(Boolean),
-      accounts: l.map((x) => { const a = (x.puuid && zustand.accounts[x.puuid]) || {}; return { riotId: x.riotId, region: x.region, regionName: (REGIONEN[x.region] || [x.region])[0], icon: a.icon || null, level: a.level || null, rang: a.rang || null, geholt: a.geholt || null, fehler: x.fehler || null, wartet: !x.puuid && !x.fehler }; }),
+      accounts: l.map((x) => { const a = (x.puuid && zustand.accounts[x.puuid]) || {}; return { darf: darf(k, konto, x), riotId: x.riotId, region: x.region, regionName: (REGIONEN[x.region] || [x.region])[0], icon: a.icon || null, level: a.level || null, rang: a.rang || null, geholt: a.geholt || null, fehler: x.fehler || null, wartet: !x.puuid && !x.fehler }; }),
     }));
   }
 
@@ -253,37 +273,58 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       const quelle = nutzeEcht ? { personen: echt, spiele: echteSpiele } : demo();
       const a = auswerten(quelle.personen, quelle.spiele, filter);
       return senden(res, 200, Object.assign(a, { quelle: nutzeEcht ? 'riot' : 'demo', key: key() ? keyStatus : 'fehlt', filter, laeuft, letzterLauf: letzterLauf || null,
-        meine: (echt.find((p) => p.ich) || { accounts: [] }).accounts, regionen: Object.fromEntries(Object.entries(REGIONEN).map(([x, v]) => [x, v[0]])), ddragon: await ddragon(), version }));
+        ichId: k, meine: (echt.find((p) => p.ich) || { accounts: [] }).accounts, alle: echt.map((p) => ({ id: p.id, name: p.name, ich: p.ich, gast: p.gast, accounts: p.accounts })),
+        wahl: konten().filter((x) => x.id !== k).map((x) => ({ id: x.id, name: x.name })).concat(Object.entries(zustand.gaeste).map(([id, name]) => ({ id, name, gast: true }))).sort((x, y) => x.name.localeCompare(y.name, 'de')), regionen: Object.fromEntries(Object.entries(REGIONEN).map(([x, v]) => [x, v[0]])), ddragon: await ddragon(), version }));
     }
     if (weg === '/lol/account' && m === 'POST') {
       const b = await koerper(req), riotId = String(b.riotId || '').trim().replace(/\s*#\s*/, '#'), region = String(b.region || 'euw1');
       if (!RIOT_ID.test(riotId)) return senden(res, 400, { fehler: 'Bitte die Riot-ID als Name#Tag eintragen (z. B. flip yo#meep).' });
       if (!REGIONEN[region]) return senden(res, 400, { fehler: 'Unbekannte Region.' });
-      const liste = (zustand.personen[k] = zustand.personen[k] || []);
+      let fuer = k;
+      if (b.neuName) { fuer = gastAnlegen(b.neuName); if (!fuer) return senden(res, 400, { fehler: 'Bitte einen Namen mit 2–24 Zeichen eingeben.' }); }
+      else if (b.fuer && b.fuer !== k) { if (!gibtPerson(String(b.fuer))) return senden(res, 404, { fehler: 'Diese Person gibt es nicht.' }); fuer = String(b.fuer); }
+      const liste = zustand.personen[fuer] || [];
       if (liste.length >= 8) return senden(res, 400, { fehler: 'Höchstens 8 Accounts pro Person.' });
       const gleich = (x) => x.riotId.toLowerCase() === riotId.toLowerCase() && x.region === region;
-      if (Object.entries(zustand.personen).some(([kk, l]) => kk !== k && l.some(gleich))) return senden(res, 409, { fehler: 'Diesen Account hat schon jemand anderes eingetragen.' });
-      if (liste.some(gleich)) return senden(res, 409, { fehler: 'Hast du schon eingetragen.' });
-      const acc = { riotId, region, puuid: null, hinzu: jetzt() };
+      const schonBei = Object.entries(zustand.personen).find(([, l]) => l.some(gleich));
+      if (schonBei) { aufraeumen(); return senden(res, 409, { fehler: schonBei[0] === fuer ? 'Ist schon eingetragen.' : 'Diesen Account hat schon ' + personName(schonBei[0]) + ' – bei Bedarf unter „Alle Accounts“ umhängen.' }); }
+      const acc = { riotId, region, puuid: null, hinzu: jetzt(), von: k };
       if (key() && keyStatus !== 'ungueltig') {
         try {
           const [name, tag] = riotId.split('#');
           const r = await riot(regional(region) + '/riot/account/v1/accounts/by-riot-id/' + encodeURIComponent(name) + '/' + encodeURIComponent(tag));
-          if (r.status === 404) return senden(res, 404, { fehler: 'Diesen Riot-Account gibt es nicht – Schreibweise, Tag und Region prüfen.' });
+          if (r.status === 404) { aufraeumen(); return senden(res, 404, { fehler: 'Diesen Riot-Account gibt es nicht – Schreibweise, Tag und Region prüfen.' }); }
           if (r.status === 200) { acc.puuid = r.json.puuid; acc.riotId = r.json.gameName + '#' + r.json.tagLine; }
-          if (acc.puuid && Object.values(zustand.personen).some((l) => l.some((x) => x.puuid === acc.puuid))) return senden(res, 409, { fehler: 'Diesen Account hat schon jemand eingetragen.' });
+          if (acc.puuid && Object.values(zustand.personen).some((l) => l.some((x) => x.puuid === acc.puuid))) { aufraeumen(); return senden(res, 409, { fehler: 'Diesen Account hat schon jemand eingetragen.' }); }
         } catch (e) { /* Key-Problem: trotzdem merken, wird später geprüft */ }
       }
-      liste.push(acc); sofortSpeichern(); protokoll('LoL: ' + (kontoName(k) || k) + ' hat ' + acc.riotId + ' eingetragen');
-      if (acc.puuid) allesHolen(k).catch(() => {});
-      return senden(res, 200, { account: acc.riotId, wartet: !acc.puuid });
+      liste.push(acc); zustand.personen[fuer] = liste; sofortSpeichern();
+      protokoll('LoL: ' + (kontoName(k) || k) + ' hat ' + acc.riotId + ' eingetragen' + (fuer !== k ? ' (für ' + personName(fuer) + ')' : ''));
+      if (acc.puuid) allesHolen(fuer).catch(() => {});
+      return senden(res, 200, { account: acc.riotId, wartet: !acc.puuid, person: personName(fuer) });
     }
     if (weg === '/lol/account/entfernen' && m === 'POST') {
-      const b = await koerper(req), riotId = String(b.riotId || '').toLowerCase(), liste = zustand.personen[k] || [];
-      const vorher = liste.length;
-      zustand.personen[k] = liste.filter((x) => x.riotId.toLowerCase() !== riotId);
-      if (zustand.personen[k].length === vorher) return senden(res, 404, { fehler: 'Account nicht gefunden.' });
+      const b = await koerper(req), riotId = String(b.riotId || '').toLowerCase(), person = b.person ? String(b.person) : k, liste = zustand.personen[person] || [];
+      const acc = liste.find((x) => x.riotId.toLowerCase() === riotId);
+      if (!acc) return senden(res, 404, { fehler: 'Account nicht gefunden.' });
+      if (!darf(k, person, acc)) return senden(res, 403, { fehler: 'Das darf nur ' + personName(person) + ' selbst (oder wer ihn eingetragen hat).' });
+      zustand.personen[person] = liste.filter((x) => x !== acc); aufraeumen();
       sofortSpeichern(); return senden(res, 200, {});
+    }
+    if (weg === '/lol/account/zuordnen' && m === 'POST') {
+      const b = await koerper(req), riotId = String(b.riotId || '').toLowerCase(), von = String(b.person || k), liste = zustand.personen[von] || [];
+      const acc = liste.find((x) => x.riotId.toLowerCase() === riotId);
+      if (!acc) return senden(res, 404, { fehler: 'Account nicht gefunden.' });
+      if (!darf(k, von, acc)) return senden(res, 403, { fehler: 'Das darf nur ' + personName(von) + ' selbst (oder wer ihn eingetragen hat).' });
+      let nach = String(b.nach || '');
+      if (b.neuName) { nach = gastAnlegen(b.neuName); if (!nach) return senden(res, 400, { fehler: 'Bitte einen Namen mit 2–24 Zeichen eingeben.' }); }
+      else if (!gibtPerson(nach)) return senden(res, 404, { fehler: 'Diese Person gibt es nicht.' });
+      if (nach === von) return senden(res, 200, {});
+      const ziel = zustand.personen[nach] || [];
+      if (ziel.length >= 8) { aufraeumen(); return senden(res, 400, { fehler: 'Höchstens 8 Accounts pro Person.' }); }
+      zustand.personen[von] = liste.filter((x) => x !== acc); ziel.push(acc); zustand.personen[nach] = ziel; aufraeumen();
+      sofortSpeichern(); protokoll('LoL: ' + acc.riotId + ' → ' + personName(nach));
+      return senden(res, 200, { person: personName(nach) });
     }
     if (weg === '/lol/aktualisieren' && m === 'POST') {
       if (!key()) return senden(res, 409, { fehler: 'Es ist noch kein Riot-API-Key eingetragen – bis dahin gibt es Beispieldaten.' });

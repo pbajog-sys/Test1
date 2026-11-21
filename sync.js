@@ -259,6 +259,7 @@ function syAnimation(art) {
   if (art === 'neu') { b.classList.remove('sy-laeuft'); void b.offsetWidth; b.classList.add('sy-neu'); setTimeout(() => b.classList.remove('sy-neu'), 3000); }
 }
 function syKnopf() {
+  if (typeof skGrossKacheln === 'function') try { skGrossKacheln(); } catch (e) { /* egal */ }
   let b = document.getElementById('syncBtn');
   if (syZustand === 'aus') { if (b) b.hidden = true; return; }
   if (!b) {

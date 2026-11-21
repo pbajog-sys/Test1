@@ -148,7 +148,21 @@
   .meine .acc { justify-content: space-between; width: 100%; }
   .meine .acc button { padding: 3px 8px; font-size: .78rem; }
   .neu { display: grid; grid-template-columns: minmax(0, 1fr) 88px; gap: 6px; margin-top: 10px; }
-  .neu button { grid-column: 1 / -1; }
+  .neu button, .neu #fuer, .neu #neuName { grid-column: 1 / -1; }
+  .alle { margin-top: 12px; border-top: 1px solid var(--linie2); padding-top: 10px; }
+  .alle summary { cursor: pointer; font-weight: 700; font-size: .9rem; list-style: none; }
+  .alle summary::-webkit-details-marker { display: none; }
+  .alle summary::after { content: " ›"; color: var(--muted); }
+  .alle[open] summary::after { content: " ⌄"; }
+  .alle summary small { color: var(--muted); font-weight: 600; }
+  .alle-person { margin-top: 12px; }
+  .alle-person > b { font-size: .86rem; display: flex; align-items: center; gap: 6px; }
+  .alle-person > b small { font-weight: 600; color: var(--muted); font-size: .72rem; }
+  .alle-acc { display: grid; grid-template-columns: minmax(0, 1fr) auto auto; gap: 6px; align-items: center; padding: 6px 0 0 4px; font-size: .82rem; }
+  .alle-acc span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .alle-acc small { color: var(--muted); }
+  .alle-acc select { font-size: .78rem; padding: 4px 6px; max-width: 120px; }
+  .alle-acc button { padding: 3px 8px; font-size: .78rem; }
 
   /* Aufstellung */
   .auswahl { display: flex; gap: 6px; flex-wrap: wrap; }
@@ -237,8 +251,11 @@
     <section class="karte meine" id="meine">
       <h2>🎮 Meine Accounts</h2>
       <div id="meineListe" class="klein muted"></div>
-      <div class="neu"><input id="riotId" placeholder="Name#Tag (z. B. flip yo#meep)" autocomplete="off" spellcheck="false"><select id="region"></select><button type="button" class="haupt" id="hinzu">Account hinzufügen</button></div>
-      <p class="klein muted" style="margin:8px 0 0">Mehrere Accounts (z. B. Smurfs) werden zu dir zusammengeführt. Alle Angemeldeten sehen die Auswertung.</p>
+      <div class="neu"><input id="riotId" placeholder="Name#Tag (z. B. flip yo#meep)" autocomplete="off" spellcheck="false"><select id="region" aria-label="Region"></select>
+        <select id="fuer" aria-label="Für wen"></select><input id="neuName" placeholder="Name des Mitspielers" maxlength="24" autocomplete="off" hidden>
+        <button type="button" class="haupt" id="hinzu">Account hinzufügen</button></div>
+      <p class="klein muted" style="margin:8px 0 0">Mehrere Accounts (z. B. Smurfs) werden zu einer Person zusammengeführt. Du kannst auch Accounts von Mitspielern eintragen – auch von Leuten ohne Spielekiste-Konto.</p>
+      <details class="alle" id="alleBox"><summary>👥 Alle Accounts verwalten <small id="alleZahl"></small></summary><div id="alleListe"></div></details>
       <div style="margin-top:8px"><button type="button" id="aktualisieren" class="klein">🔄 Meine Spiele jetzt holen</button></div>
     </section>
     <section class="karte" id="personenSeite">
@@ -337,7 +354,39 @@ async function laden() {
 function alles() { meineZeigen(); personenKurzZeigen(); gruppeZeigen(); duosZeigen(); matrixZeigen($('matrix'), true); aufstellungZeigen(); feedZeigen($('feed'), daten.feed); if (gewaehlt) personZeigen(gewaehlt); }
 
 // ---------- Meine Accounts ----------
+function personWahl(ohne, mitMir) {
+  return (mitMir ? '<option value="">Für mich</option>' : '') + daten.wahl.filter((x) => x.id !== ohne).map((x) => '<option value="' + esc(x.id) + '">' + (mitMir ? 'Für ' : '') + esc(x.name) + (x.gast ? ' (ohne Konto)' : '') + '</option>').join('')
+    + '<option value="+neu">' + (mitMir ? 'Für neue Person …' : '+ neue Person …') + '</option>';
+}
+function alleZeigen() {
+  $('alleZahl').textContent = '· ' + daten.alle.reduce((n, p) => n + p.accounts.length, 0);
+  $('alleListe').innerHTML = daten.alle.map((p) => '<div class="alle-person"><b>' + esc(p.name) + (p.ich ? ' <span class="ich-marke">DU</span>' : '') + (p.gast ? ' <small>ohne Konto</small>' : '') + '</b>'
+    + p.accounts.map((a) => '<div class="alle-acc"><span><b>' + esc(a.riotId) + '</b> <small>' + esc(a.regionName) + (a.fehler ? ' · ⚠️' : a.wartet ? ' · wartet' : '') + '</small></span>'
+      + (a.darf ? '<select data-umhaengen="' + esc(a.riotId) + '" data-person="' + esc(p.id) + '" aria-label="' + esc(a.riotId) + ' zuordnen"><option value="">zuordnen …</option>'
+        + (p.ich ? '' : '<option value="' + esc(daten.ichId) + '">mir</option>') + personWahl(p.id, false) + '</select>'
+        + '<button type="button" data-entfernen="' + esc(a.riotId) + '" data-person="' + esc(p.id) + '" aria-label="' + esc(a.riotId) + ' entfernen">✕</button>' : '<span></span><span></span>') + '</div>').join('') + '</div>').join('')
+    || '<p class="klein muted">Noch keine Accounts eingetragen.</p>';
+}
+$('alleListe').addEventListener('change', async (e) => {
+  const s = e.target.closest('[data-umhaengen]'); if (!s || !s.value) return;
+  const koerper = { riotId: s.dataset.umhaengen, person: s.dataset.person };
+  if (s.value === '+neu') { const n = prompt('Name der Person (auch ohne Spielekiste-Konto):'); if (!n) { s.value = ''; return; } koerper.neuName = n; }
+  else koerper.nach = s.value;
+  const x = await api('lol/account/zuordnen', 'POST', koerper).catch(() => ({ status: 0 }));
+  melden(x.status === 200 ? '✓ ' + s.dataset.umhaengen + ' gehört jetzt zu ' + (x.json.person || 'dir') : '⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
+  laden();
+});
+$('alleListe').addEventListener('click', async (e) => {
+  const b = e.target.closest('[data-entfernen]'); if (!b || !confirm(b.dataset.entfernen + ' entfernen?')) return;
+  const x = await api('lol/account/entfernen', 'POST', { riotId: b.dataset.entfernen, person: b.dataset.person }).catch(() => ({ status: 0 }));
+  if (x.status !== 200) melden('⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.'));
+  laden();
+});
+$('fuer').addEventListener('change', () => { $('neuName').hidden = $('fuer').value !== '+neu'; if (!$('neuName').hidden) $('neuName').focus(); });
 function meineZeigen() {
+  const alt = $('fuer').value; $('fuer').innerHTML = personWahl(null, true); if ([...$('fuer').options].some((o) => o.value === alt)) $('fuer').value = alt;
+  $('neuName').hidden = $('fuer').value !== '+neu';
+  alleZeigen();
   $('meineListe').innerHTML = daten.meine.length ? daten.meine.map((a) => '<div class="acc"><span class="zelle-name">' + (a.icon ? bild('profil', a.icon, 'rund', a.riotId) : '<span class="bild rund">' + esc(a.riotId[0]) + '</span>')
     + '<span><b style="color:var(--text)">' + esc(a.riotId) + '</b><small>' + esc(a.regionName) + ' · ' + (a.fehler ? '⚠️ ' + esc(a.fehler) : a.wartet ? (daten.key === 'fehlt' ? 'wartet auf Riot-Key' : 'wird geprüft …') : a.rang && (a.rang.solo || a.rang.flex) ? rangText(a.rang.solo || a.rang.flex) : a.level ? 'Level ' + a.level : 'wird geholt …') + '</small></span></span>'
     + '<button type="button" data-weg="' + esc(a.riotId) + '" aria-label="' + esc(a.riotId) + ' entfernen">✕</button></div>').join('') : 'Noch keine eigenen Accounts.';
@@ -345,10 +394,14 @@ function meineZeigen() {
 $('hinzu').addEventListener('click', async () => {
   const id = $('riotId').value.trim(); if (!id) { $('riotId').focus(); return; }
   const k = $('hinzu'); k.disabled = true;
-  const x = await api('lol/account', 'POST', { riotId: id, region: $('region').value }).catch(() => ({ status: 0 }));
+  const koerper = { riotId: id, region: $('region').value };
+  if ($('fuer').value === '+neu') { koerper.neuName = $('neuName').value.trim(); if (!koerper.neuName) { k.disabled = false; $('neuName').focus(); return; } }
+  else if ($('fuer').value) koerper.fuer = $('fuer').value;
+  const x = await api('lol/account', 'POST', koerper).catch(() => ({ status: 0 }));
   k.disabled = false;
   if (x.status !== 200) { melden('⚠️ ' + ((x.json && x.json.fehler) || 'Hat nicht geklappt.')); return; }
-  $('riotId').value = ''; melden('✓ ' + x.json.account + ' eingetragen' + (x.json.wartet ? ' – Spiele kommen, sobald der Riot-Key da ist' : ' – Spiele werden geholt')); laden();
+  $('riotId').value = ''; if ($('fuer').value === '+neu') { $('neuName').value = ''; $('fuer').value = ''; }
+  melden('✓ ' + x.json.account + ' eingetragen' + (koerper.fuer || koerper.neuName ? ' für ' + x.json.person : '') + (x.json.wartet ? ' – Spiele kommen, sobald der Riot-Key da ist' : ' – Spiele werden geholt')); laden();
 });
 $('riotId').addEventListener('keydown', (e) => { if (e.key === 'Enter') $('hinzu').click(); });
 $('meineListe').addEventListener('click', async (e) => {

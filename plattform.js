@@ -473,8 +473,6 @@ function skDashboard() {
   }
   const D = skDaten(), xp = skXP(D.E, D.tagesSt, D.expSt, D.erfolgSt), lv = skLevel(xp.gesamt);
   const pr = typeof aktivesProfil === 'function' ? aktivesProfil() : null;
-  const A = skTagesAufgaben(), t = (D.tagesSt.tage || {})[A.datum] || {}, serie = skTagesSerie(D.tagesSt);
-  const fertig = SK_SLOTS.filter((s) => t[s.id]).length;
   const exp = typeof labDieseWoche === 'function' ? labDieseWoche() : null;
   let grussBox = $('skGrussBox');
   if (!grussBox) { grussBox = document.createElement('div'); grussBox.id = 'skGrussBox'; const b = hub.querySelector('.spalte-b'); if (b) b.insertBefore(grussBox, b.firstChild); else hub.insertBefore(grussBox, start); }
@@ -482,30 +480,44 @@ function skDashboard() {
     + '<span class="sk-level"><svg viewBox="0 0 44 44" aria-hidden="true"><circle cx="22" cy="22" r="19" class="sk-ring-bg"/><circle cx="22" cy="22" r="19" class="sk-ring" style="stroke-dasharray:' + (119.4 * lv.anteil).toFixed(1) + ' 119.4"/></svg><b>' + lv.level + '</b></span>'
     + '<span class="sk-gruss-text"><small>' + skBegruessung() + (pr ? ', ' + pr.name : '') + '</small><b>Level ' + lv.level + '</b><span>' + fmt(xp.gesamt) + ' XP · Level ' + (lv.level + 1) + ' bei ' + fmt(lv.bis) + '</span></span>'
     + skRadar([{ werte: D.skills.map((s) => s.wert), farbe: '#f59e0b' }], { klein: true }) + '</button>';
-  start.innerHTML = '<div class="sk-tag-kopf"><h2 class="hub-h"><span>📅</span> Heute <small>' + fertig + ' / 3' + (serie.serie ? ' · 🔥 ' + serie.serie : '') + '</small></h2><button type="button" class="sk-teilen" id="skTagTeilen" aria-label="Tagesergebnis teilen">📤</button></div>'
-    + '<div class="sk-tageskarten">' + SK_SLOTS.map((s) => {
-      const a = A[s.id], r = t[s.id];
-      return '<div class="sk-tageskarte sk-' + s.id + (r ? ' fertig' : '') + '"><span class="sk-slot">' + s.emoji + ' ' + s.name + '</span><span class="sk-spiel-emoji" aria-hidden="true">' + skAufgabeEmoji(a) + '</span>'
-        + '<b>' + skAufgabeName(a) + '</b><small>' + (a.spiel === 'krimi' ? { leicht: 'Leicht', mittel: 'Mittel', schwer: 'Schwer' }[a.stufe] + ' · ' : '') + (r ? '✓ ' + skErgebnisText(r) : s.text) + '</small>'
-        + (r ? '<button type="button" class="sk-karte-btn" data-karte="' + s.id + '">📤 Karte</button>' : '<button type="button" class="sk-los" data-slot="' + s.id + '">Los ▶</button>') + '</div>';
-    }).join('') + '</div>'
+  // Oben zwei große Kacheln: LoL-Zentrale und Minecraft-Server (nur mit Konto-Server sichtbar, Inhalt füllt skGrossKacheln)
+  start.innerHTML = '<div class="sk-gross" id="skGross" hidden>'
+    + '<a class="sk-gross-kachel sk-gross-lol" id="skGrossLol" href="lol.html"><span class="sk-gross-icon" aria-hidden="true"><svg viewBox="0 0 40 40"><rect x="10" y="20" width="4.5" height="10" rx="2.2" fill="#fff" opacity=".75"/><rect x="17.75" y="13" width="4.5" height="17" rx="2.2" fill="#fff"/><rect x="25.5" y="17" width="4.5" height="13" rx="2.2" fill="#fff" opacity=".88"/></svg></span>'
+    + '<span class="sk-gross-text"><b>LoL-Zentrale</b><small>Wer spielt wo am besten – und mit wem</small><span class="sk-gross-status">Duos · Rollen · Aufstellung</span></span><span class="sk-gross-pfeil" aria-hidden="true">›</span></a>'
+    + '<a class="sk-gross-kachel sk-gross-mc" id="skGrossMc" href="minecraft.html" hidden><span class="sk-gross-icon" aria-hidden="true">⛏️</span>'
+    + '<span class="sk-gross-text"><b>Minecraft-Server</b><small>Statistik, Karte &amp; Orte</small><span class="sk-gross-status" id="skGrossMcStatus">…</span></span><span class="sk-gross-pfeil" aria-hidden="true">›</span></a>'
+    + '</div>'
     + (exp && !SK_ARCHIV.experiment ? '<button type="button" class="sk-experiment" id="skExperiment"><span class="sk-exp-nr">EXPERIMENT Nº ' + String(exp.nr).padStart(2, '0') + ' · KW ' + exp.kw + '</span><b>' + exp.e.emoji + ' ' + exp.e.titel + '</b><small>' + exp.e.teaser + '</small><span class="sk-exp-status">' + (exp.fertig ? '✓ durchgeführt · Ergebnis ansehen' : 'Versuch starten ›') + '</span></button>' : '');
-  start.querySelectorAll('[data-slot]').forEach((b) => b.addEventListener('click', () => skAufgabeStarten(b.dataset.slot)));
-  start.querySelectorAll('[data-karte]').forEach((b) => b.addEventListener('click', () => skKarteZeigen(skKarteTagesaufgabe(b.dataset.karte, A.datum))));
   $('skGruss').addEventListener('click', skProfilZeigen);
-  $('skTagTeilen').addEventListener('click', async () => {
-    const text = skTeilenText();
-    if (navigator.share) { try { await navigator.share({ text }); return; } catch (e) { return; } }
-    try { await navigator.clipboard.writeText(text); skToast('📋 Tagesergebnis kopiert'); } catch (e) { skDialog('<textarea class="sk-code" readonly>' + text + '</textarea>'); }
-  });
   if ($('skExperiment')) $('skExperiment').addEventListener('click', () => labZeigen());
   const archivExp = $('skArchivExtra');
   if (archivExp) {
     archivExp.innerHTML = exp && SK_ARCHIV.experiment ? '<button type="button" class="sk-experiment sk-experiment-klein" id="skExperimentArchiv"><span class="sk-exp-nr">EXPERIMENT DER WOCHE · KW ' + exp.kw + '</span><b>' + exp.e.emoji + ' ' + exp.e.titel + '</b><span class="sk-exp-status">' + (exp.fertig ? '✓ durchgeführt · Ergebnis ansehen' : 'Versuch starten ›') + '</span></button>' : '';
     if ($('skExperimentArchiv')) $('skExperimentArchiv').addEventListener('click', () => labZeigen());
   }
+  skGrossKacheln();
   skUnten(D);
   skErfolgePruefen(true);
+}
+// Große Kacheln: nur sichtbar, wenn ein Konto-Server da ist; Minecraft nur, wenn installiert (Status höchstens jede Minute abfragen)
+let skMcInfo = null, skMcZeit = 0;
+function skGrossKacheln() {
+  const box = $('skGross');
+  if (!box) return;
+  const zustand = typeof syZustand === 'string' ? syZustand : 'aus';
+  box.hidden = zustand === 'aus';
+  if (box.hidden) return;
+  const mc = $('skGrossMc'), zeigen = () => {
+    const i = skMcInfo;
+    mc.hidden = !(i && i.installiert);
+    if (mc.hidden) return;
+    const on = (i.online || []).length;
+    $('skGrossMcStatus').innerHTML = i.laeuft ? '<i class="sk-punkt an"></i>Läuft · ' + (on ? on + ' online' + (on <= 3 ? ': ' + i.online.map((x) => String(x).replace(/[<>&"]/g, '')).join(', ') : '') : 'niemand online') : '<i class="sk-punkt"></i>Gestoppt';
+  };
+  zeigen();
+  if (zustand !== 'ok' || Date.now() - skMcZeit < 60000) return;
+  skMcZeit = Date.now();
+  fetch('api/minecraft/info', { credentials: 'same-origin', cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).then((j) => { if (j) { skMcInfo = j; zeigen(); } }).catch(() => {});
 }
 // Unten im Dashboard: zuletzt gespielt (mit Karte) und nächste Erfolge
 function skUnten(D) {
