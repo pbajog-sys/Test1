@@ -26,6 +26,9 @@ const pruefe = (name, bed, info = '') => { if (bed) ok++; else fail++; console.l
   await p.screenshot({ path: ordner + '/pt-dashboard.png', fullPage: true });
   pruefe('Dashboard-Kopf sichtbar, ohne „Heute“-Leiste', await p.evaluate(() => !!$('skGruss') && !$('skStart').querySelector('.sk-tageskarte') && !!$('skGross') && $('skGross').hidden));
   pruefe('Kategorien angelegt', await p.evaluate(() => document.querySelectorAll('.sk-kat').length >= 5 && !!document.querySelector('.sk-kat #hubKrimi')));
+  pruefe('Alle Spiele sichtbar, Archiv zu Beginn offen und Dienstzeilen ohne Anmeldung ausgeblendet', await p.evaluate(() =>
+    document.querySelector('.sk-chips [aria-pressed="true"]').textContent === 'Alle Spiele'
+      && !$('hubZufall').hidden && $('skArchiv').open && $('skGross').hidden));
   const xp = await p.evaluate(() => { const D = skDaten(); return skXP(D.E, D.tagesSt, D.expSt, D.erfolgSt); });
   pruefe('XP aus altem Verlauf', xp.spiele > 500, JSON.stringify(xp));
   // Anti-Farming: 30 identische leichte Runden an einem Tag bringen höchstens 4,25 volle Runden

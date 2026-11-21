@@ -127,20 +127,19 @@ body:has(#screen-hub.active) #ambient { display: none; }
 #screen-hub .sk-gross-kachel::after { content: none; }
 #screen-hub .sk-gross-kachel:hover { transform: none; border-color: var(--raum-akzent); }
 #screen-hub .sk-gross-kachel .spielraum-motiv { object-position: 82% center; }
-.sk-ueberblick h2, .sk-spielesammlung h2 {
+.sk-spielesammlung h2 {
   margin: 3px 0 12px;
   font-size: clamp(1.6rem, 3vw, 2.3rem);
   line-height: 1.1;
   letter-spacing: -.035em;
 }
-.sk-ueberblick p { margin: 12px 0 6px; }
 .sk-label { font-size: .82rem; font-weight: 800; color: var(--raum-leise); }
 .sk-kennzahlen {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 118px), 1fr));
   gap: 6px;
 }
-.sk-kennzahlen > span, .sk-dienstspiele, .sk-champions li {
+.sk-kennzahlen > span, .sk-champions li {
   background: #111722de;
   border: 1px solid var(--raum-rand);
   border-radius: 9px;
@@ -148,14 +147,10 @@ body:has(#screen-hub.active) #ambient { display: none; }
 .sk-kennzahlen > span { display: grid; gap: 3px; align-content: start; padding: 8px 10px; }
 .sk-kennzahlen strong { line-height: 1.2; font-variant-numeric: tabular-nums; }
 .sk-kennzahlen small { color: var(--raum-leise); font-size: .75rem; }
-.sk-champions, .sk-dienstspiele { margin: 0; padding: 0; list-style: none; }
+.sk-champions { margin: 0; padding: 0; list-style: none; }
 .sk-champions { display: flex; flex-wrap: wrap; gap: 5px; }
 .sk-champions li { display: flex; align-items: center; gap: 6px; padding: 4px 7px; font-size: .78rem; }
 .sk-champions img { display: block; border-radius: 4px; }
-.sk-dienstspiele { padding: 2px 10px; }
-.sk-dienstspiele li { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) auto; gap: 8px; padding: 4px 0; font-size: .8rem; }
-.sk-dienstspiele li + li { border-top: 1px solid var(--raum-rand); }
-.sk-dienstspiele time { color: var(--raum-leise); }
 .sk-sieg { color: #9ee1b9; }
 .sk-niederlage { color: #f8abb3; }
 .sk-dienstlink { display: inline-block; margin-top: 14px; font-weight: 800; font-size: .87rem; color: var(--raum-akzent); }
@@ -204,3 +199,134 @@ body:has(#screen-hub.active) #ambient { display: none; }
   #screen-hub #skUnten { order: -6; }
   #screen-hub #skStart { order: -7; }
 }
+
+/* Zwei Dienstzeilen über der Spieleliste, jeweils mit eigener Statistik. */
+#screen-hub .sk-gross { grid-template-columns: minmax(0, 1fr); }
+.sk-dienstzeile { display: grid; gap: 14px; min-width: 0; }
+.sk-dienstzeile h2 { margin: 0 0 14px; font-size: clamp(1.35rem, 2.5vw, 2rem); line-height: 1.15; }
+.sk-dienstzeile h2 a { color: inherit; text-decoration: none; }
+.sk-dienstzeile h2 a:hover { text-decoration: underline; }
+.sk-dienststats { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 184px), 1fr)); gap: 14px; min-width: 0; }
+.sk-dienststats > div, .sk-spielfakten {
+  padding: 14px;
+  border-radius: var(--raum-radius);
+  border: 1px solid var(--raum-rand);
+  background: var(--raum-karte);
+  min-width: 0;
+}
+.sk-dienststats h3 { margin: 0 0 10px; font-size: .95rem; }
+.sk-dienststats p { margin: 0; color: var(--raum-leise); font-size: .85rem; }
+.sk-letzte-label { margin-bottom: 5px; }
+.sk-lol-raenge { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sk-lol-raenge + p { margin-bottom: 0; }
+.sk-spielfakten { margin-bottom: 16px; }
+@media (min-width: 1100px) {
+  #screen-hub.active, .sk-dienstzeile { grid-template-columns: minmax(0, 3fr) minmax(0, 2fr); column-gap: 18px; }
+  .sk-lol-raenge { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .sk-dienststats { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  #screen-hub .sk-chips { flex: 1 1 300px; flex-wrap: wrap; }
+  #screen-hub > .sk-spielesammlung { grid-column: 1 / -1; grid-row: 4; margin-bottom: 12px; }
+  #screen-hub .hub-spalten > .spalte-a, #screen-hub .hub-spalten > .spalte-b { grid-row: 5; }
+  #screen-hub .hub-spalten > .spalte-b { position: static; max-height: none; overflow: visible; }
+  #screen-hub > .hub-ds { grid-row: 6; }
+}
+
+@media (max-width: 640px) {
+  #screen-hub .hub-leiste { flex-wrap: wrap; }
+  #screen-hub .hub-knoepfe { margin-inline-start: auto; }
+}
+
+.sk-lol-raenge, .sk-lol-letzte { display: grid; gap: 8px; }
+.sk-rangkarte {
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  text-align: center;
+  min-width: 0;
+  padding: 10px 4px;
+  min-height: 122px;
+  border: 1px solid #b9cbfc43;
+  border-radius: 13px;
+  background: radial-gradient(ellipse at 50% 48%, #67558345, transparent 72%), #151725d9;
+}
+.sk-rangkarte small { color: var(--raum-leise); font-size: .71rem; }
+.sk-rangkarte strong { font-size: .91rem; line-height: 1.15; }
+.sk-rangbild { display: grid; place-items: center; height: 66px; color: var(--raum-akzent); }
+.sk-rangbild img { object-fit: contain; max-height: 64px; filter: drop-shadow(0 3px 10px #9eb9fb38); }
+.sk-rangbild > span { font-size: 2.1rem; line-height: 1; }
+.sk-lol-form { font-size: .84rem; color: var(--raum-leise); }
+.sk-lol-form strong { color: #c4ebf4; font-size: 1.05rem; }
+.sk-lol-letzte, .sk-meisterschaft, .sk-duos { margin: 0; padding: 0; list-style: none; }
+.sk-lol-letzte { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+.sk-lol-letzte li { display: flex; align-items: center; gap: 6px; background: #121926e8; border-inline-start: 2px solid currentColor; border-radius: 7px; padding: 5px; font-size: .76rem; min-width: 0; }
+.sk-lol-letzte img { border-radius: 5px; flex: none; }
+.sk-lol-letzte small, .sk-lol-letzte time, .sk-duos small { display: block; font-size: .69rem; color: var(--raum-leise); overflow-wrap: anywhere; }
+.sk-lol-letzte time { margin-inline-start: auto; }
+#skGrossLolStats > div { background: radial-gradient(ellipse at 50% 0%, #67619824, transparent 80%), var(--raum-karte); }
+.sk-meisterschaft { display: flex; flex-wrap: wrap; justify-content: space-evenly; gap: 14px 8px; padding: 12px 0; }
+.sk-meisterschaft li { display: grid; justify-items: center; gap: 7px; min-width: 52px; }
+.sk-meisterschaft li > span { position: relative; width: 54px; height: 54px; border-radius: 50%; background: var(--raum-eingabe); }
+.sk-meisterschaft img { border-radius: 50%; border: 2px solid #c7b4f9; }
+.sk-meisterschaft b { position: absolute; bottom: -5px; right: -4px; border-radius: 8px; background: #241c39; border: 1px solid #baa5eb; padding: 1px 5px; font-size: .7rem; }
+.sk-meisterschaft small { font-size: .76rem; }
+.sk-duos li { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: start; gap: 2px 8px; margin: 8px 0; font-size: .84rem; overflow-wrap: anywhere; }
+.sk-duos meter { grid-column: 1 / -1; width: 100%; height: 9px; }
+.sk-duos meter::-webkit-meter-bar { background: var(--raum-eingabe); border-color: var(--raum-rand); }
+.sk-duos meter::-webkit-meter-optimum-value { background: #a6d9d8; }
+@media (min-width: 1350px) {
+  .sk-lol-letzte { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
+.sk-konto-bild {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 61px;
+  height: 61px;
+  margin: 4px 0 8px;
+  border: 2px solid #dfb968;
+  border-radius: 50%;
+  background: radial-gradient(circle, #2d4c65, #152133 72%);
+  box-shadow: 0 0 0 2px #447ba2, 0 0 16px #50a6d33b;
+}
+.sk-konto-bild img { display: block; border-radius: 50%; object-fit: cover; }
+.sk-konto-bild b {
+  position: absolute;
+  bottom: -6px;
+  color: #ffe1a0;
+  background: #181e2b;
+  border: 1px solid #bd9953;
+  border-radius: 7px;
+  padding: 0 7px;
+  font-size: .77rem;
+  font-variant-numeric: tabular-nums;
+}
+.sk-rangkarte strong { overflow-wrap: anywhere; }
+.sk-lol-fakten, .sk-dienststats .sk-weltfakten { grid-column: 1 / -1; }
+.sk-weltstart {
+  display: flex;
+  width: fit-content;
+  max-width: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  margin-top: 14px;
+  padding: 9px 12px;
+  border: 1px solid #e6bd6570;
+  border-radius: 12px;
+  background: linear-gradient(110deg, #573b25d9, #182333e8 76%);
+  color: #ffe0a0;
+}
+.sk-weltstart small, .sk-weltstart strong { display: block; line-height: 1.2; }
+.sk-weltstart small { color: #f1ce97; font-weight: 700; }
+.sk-weltstart strong { margin-top: 3px; font-size: 1.08rem; }
+.sk-weltstart > b { border: 1px solid #e6bd6570; border-radius: 20px; padding: 3px 7px; font-size: .74rem; }
+.sk-weltstart-icon { font-size: 1.5rem; text-shadow: 0 0 12px #ffdc8b75; }
+.sk-weltfakten ul { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; list-style: none; }
+.sk-weltfakten li { padding: 4px 8px; border-radius: 8px; border: 1px solid var(--raum-rand); background: var(--raum-eingabe); font-size: .8rem; }
+.sk-weltfakten li span { margin-right: 3px; }
+
+.sk-duokopf { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 10px; margin-bottom: 8px; }
+.sk-dienststats .sk-duokopf h3 { margin: 0; }
+.sk-duokopf select { max-width: 100%; font: inherit; font-size: .78rem; color: var(--raum-text); padding: 4px 7px; background: var(--raum-eingabe); border: 1px solid var(--raum-rand); border-radius: 7px; }
+.sk-dienststats .sk-duohinweis { font-size: .72rem; }

@@ -1,11 +1,21 @@
 // Service Worker: App offline verfügbar machen. Walfotos werden beim ersten Anzeigen zwischengespeichert.
-const VERSION = 'walquiz-v196';
+const VERSION = 'walquiz-v197';
 const SHELL = [
   './',
   'index.html',
   'stil.css',
   'ansichten.css',
   'spielraum.css',
+  'bilder/raenge/iron.webp',
+  'bilder/raenge/bronze.webp',
+  'bilder/raenge/silver.webp',
+  'bilder/raenge/gold.webp',
+  'bilder/raenge/platinum.webp',
+  'bilder/raenge/emerald.webp',
+  'bilder/raenge/diamond.webp',
+  'bilder/raenge/master.webp',
+  'bilder/raenge/grandmaster.webp',
+  'bilder/raenge/challenger.webp',
   'bilder/duellbuch.webp',
   'bilder/blockrevier.webp',
   'bilder/spielekiste.webp',
