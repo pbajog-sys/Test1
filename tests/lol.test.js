@@ -42,7 +42,17 @@ const riotEcht = async (url, k) => {
   if ((m = /summoners\/by-puuid\/(.+)$/.exec(p))) return { status: 200, json: { profileIconId: 29, summonerLevel: 321 } };
   if ((m = /entries\/by-puuid\/(.+)$/.exec(p))) return { status: 200, json: m[1] === 'P-ANNA2' ? [{ queueType: 'RANKED_SOLO_5x5', tier: 'PLATINUM', rank: 'II', leaguePoints: 40, wins: 20, losses: 15 }] : [] };
   if ((m = /champion-masteries\/by-puuid\/(.+)\/top$/.exec(p))) return { status: 200, json: [{ championId: 103, championPoints: 250000, championLevel: 12 }, { championId: 266, championPoints: 90000, championLevel: 7 }] };
-  if ((m = /matches\/by-puuid\/(.+)\/ids$/.exec(p))) { const turnier = u.searchParams.get('type') === 'tourney'; return { status: 200, json: Object.values(SPIELE).filter((s) => (s.info.queueId === 0) === turnier && s.info.participants.some((x) => x.puuid === m[1])).map((s) => s.metadata.matchId) }; }
+  if ((m = /matches\/by-puuid\/(.+)\/ids$/.exec(p))) {
+    const typ = u.searchParams.get('type'), queue = u.searchParams.get('queue');
+    const start = Number(u.searchParams.get('start') || 0), count = Number(u.searchParams.get('count') || 20);
+    const ids = Object.values(SPIELE).filter((s) => {
+      if (queue !== null && s.info.queueId !== Number(queue)) return false;
+      if (typ === 'tourney' && s.info.queueId !== 0) return false;
+      if (!queue && !typ && (s.info.queueId === 0 || s.nurQueue)) return false;
+      return s.info.participants.some((x) => x.puuid === m[1]);
+    }).map((s) => s.metadata.matchId);
+    return { status: 200, json: ids.slice(start, start + count) };
+  }
   if ((m = /matches\/(EUW1_\w+)$/.exec(p))) return { status: 200, json: SPIELE[m[1]] };
   return { status: 404, json: null };
 };
@@ -52,7 +62,8 @@ let bildAufrufe = 0;
 const PNG = Buffer.from('89504e470d0a1a0a0000000d4948445200000001000000010806000000', 'hex');
 const bildHolen = async (url) => { bildAufrufe++; return url.endsWith('versions.json') ? Buffer.from('["15.10.1"]') : url.endsWith('champion.json') ? Buffer.from(JSON.stringify({ data: { Ahri: { key: '103', id: 'Ahri' }, Aatrox: { key: '266', id: 'Aatrox' } } })) : PNG; };
 
-const api = erstelleServer({ daten: DATEN, basis: DATEN, admin: ['Anna'], autoTakt: 0, messTakt: 0, logTakt: 0, lolOptionen: { takt: 0, riotHolen, bildHolen, warten: async () => {} } });
+let riotZeit = Date.now();
+const api = erstelleServer({ daten: DATEN, basis: DATEN, admin: ['Anna'], autoTakt: 0, messTakt: 0, logTakt: 0, lolOptionen: { takt: 0, riotHolen, bildHolen, jetzt: () => riotZeit, warten: async (ms) => { riotZeit += ms; } } });
 const TYPEN = { '.html': 'text/html', '.js': 'text/javascript', '.css': 'text/css', '.woff2': 'font/woff2', '.png': 'image/png' };
 const caddy = http.createServer((q, s) => {
   if (q.url.startsWith('/api/')) { const p = http.request({ port: 8797, path: q.url, method: q.method, headers: q.headers }, (r) => { s.writeHead(r.statusCode, r.headers); r.pipe(s); }); q.pipe(p); return; }
@@ -181,14 +192,32 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     console.log('Key-Wechsel (Riot verschlüsselt PUUIDs pro Key)');
     const KEY2 = 'RGAPI-99999999-abcd-4ef0-9abc-1234567890ab';
     const altHolen = riotHolenAktuell; riotHolenAktuell = async (url, k) => (k === KEY2 ? altHolen(url, KEY) : { status: 401, json: null });
+    const varianten = [
+      ['MAYHEM', 2405, 'ARAM', 12, true],
+      ['BRUECKE', 2401, 'KIWI', 14, true],
+      ['NEUMAYHEM', 2499, 'KIWI', 12, false],
+      ['NEUARAM', 4599, 'ARAM', 14, false],
+      ['NEUKARTE', 4598, '', 12, false],
+      ['ARAM', 450, 'ARAM', 12, false],
+    ];
+    for (const [name, queueId, gameMode, mapId, nurQueue] of varianten) {
+      const matchId = 'EUW1_' + name;
+      SPIELE[matchId] = { metadata: { matchId }, info: { ...SPIELE.EUW1_0.info, queueId, gameMode, mapId }, nurQueue };
+    }
     ck('neuer Key gespeichert', (await anfrage('admin/lol', 'POST', { key: KEY2 }, anna)).json.key === 'ok');
     const st2 = await bisFertig(anna);
     d = await anfrage('lol/daten', 'GET', null, ben);
-    ck('nach Key-Wechsel alles neu zugeordnet (3 Accounts, 6 Spiele, Duo da)', st2 && st2.accounts === 3 && st2.spiele === 6 && d.json.duos.some((x) => [x.a, x.b].sort().join() === 'anna,ben' && x.g === 6) && d.json.personen.find((x) => x.name === 'Anna').g === 6, JSON.stringify(st2));
+    ck('nach Key-Wechsel alles neu zugeordnet (3 Accounts, 12 Spiele, Kluft-Duo mit 6 Spielen)', st2 && st2.accounts === 3 && st2.spiele === 12 && d.json.duos.some((x) => [x.a, x.b].sort().join() === 'anna,ben' && x.g === 6) && d.json.personen.find((x) => x.name === 'Anna').g === 6, JSON.stringify(st2));
 
     pr = await anfrage('lol/person?id=anna&filter=alle', 'GET', null, ben);
     ck('echtes Profil: Spiele, Mastery mit Namen, LP-Verlauf vom Smurf', pr.status === 200 && pr.json.spiele.length === 6 && pr.json.mastery[0].c === 'Ahri' && pr.json.lpVerlauf.some((x) => x.q === 'solo' && x.tier === 'PLATINUM'), JSON.stringify({ m: pr.json.mastery, lp: pr.json.lpVerlauf }));
-    ck('Filter ARAM Mayhem (Queue 2400) wird angenommen', (await anfrage('lol/daten?filter=mayhem', 'GET', null, ben)).json.filter === 'mayhem');
+    const idsFuer = async (filter) => (await anfrage('lol/person?id=anna&filter=' + filter, 'GET', null, ben)).json.spiele.map((s) => s.id).sort();
+    ck('Mayhem: gezielter Nachimport und neue Queue mit KIWI', (await idsFuer('mayhem')).join() === 'EUW1_BRUECKE,EUW1_MAYHEM,EUW1_NEUMAYHEM');
+    ck('ARAM: bekannte Queue, unbekannte Queue mit ARAM-Modus oder ARAM-Karte', (await idsFuer('aram')).join() === 'EUW1_ARAM,EUW1_NEUARAM,EUW1_NEUKARTE');
+    ck('Alle (Kluft) enthält keine ARAM-Varianten', (await idsFuer('alle')).every((id) => /^EUW1_\d+$/.test(id)));
+    ck('Diagnose: Anzahl je Queue, Modus und Karte, nur für Admins', st2.spielModi.some((x) => x.queueId === 2401 && x.gameMode === 'KIWI' && x.mapId === 14 && x.anzahl === 1)
+      && st2.spielModi.reduce((sum, x) => sum + x.anzahl, 0) === st2.spiele && (await anfrage('admin/lol', 'GET', null, ben)).status === 403);
+
 
     console.log('Prime League mit Riot-Daten');
     let tx = await anfrage('lol/prime/team', 'POST', { name: 'Team Eins', kurz: 'T1', text: 'Spieler\tRolle\nEins T1 Eins#EUW\nZwei T1 Zwei#EUW\nDrei T1 Drei#EUW\nVier T1 Vier#EUW\nFünf T1 Fuenf#EUW' }, ben);

@@ -141,6 +141,11 @@
   pre#protokoll { background: #07090c; border: 1px solid var(--linie); border-radius: 9px; padding: 10px 12px; height: 300px; overflow: auto; font-size: .76rem; line-height: 1.4; white-space: pre-wrap; overflow-wrap: anywhere; margin: 10px 0 0; }
   #meldung { position: fixed; left: 50%; bottom: max(16px, env(safe-area-inset-bottom)); transform: translateX(-50%); background: #0b0f14; border: 1px solid var(--linie); padding: 10px 16px; border-radius: 12px; box-shadow: 0 10px 30px rgba(0,0,0,.5); max-width: calc(100vw - 32px); z-index: 5; }
   .leer-hinweis { max-width: 520px; margin: 12vh auto; text-align: center; padding: 0 20px; }
+  .lol-diagnose { margin-top: 12px; }
+  .lol-diagnose summary { cursor: pointer; }
+  .lol-diagnose-tabelle { overflow-x: auto; margin-top: 8px; }
+  .lol-diagnose table { width: 100%; border-collapse: collapse; font-size: .82rem; }
+  .lol-diagnose th, .lol-diagnose td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--linie); }
 </style>
 </head>
 <body>
@@ -490,6 +495,11 @@ async function lolLaden() {
     + ' · ' + i.accounts + ' Accounts · ' + i.spiele + ' Spiele' + (i.letzterLauf ? ' · zuletzt geholt ' + vor(i.letzterLauf) : '') + (i.laeuft ? ' · ⏳ holt gerade' : '') + '</p>'
     + '<div class="zeile" style="margin-top:6px"><input id="lolKey" type="password" placeholder="RGAPI-…" autocomplete="off" spellcheck="false" style="flex:1"><button type="button" class="haupt" id="lolKeyLos">Key speichern</button></div>'
     + '<div class="zeile" style="margin-top:6px"><a class="knopf" href="lol.html">🎮 Zur LoL-Seite</a><a class="knopf" href="https://developer.riotgames.com/" target="_blank" rel="noopener">Key holen ↗</a>' + (i.key !== 'fehlt' ? '<button type="button" id="lolKeyWeg">Key entfernen</button>' : '') + '</div>';
+  const modi = i.spielModi || [];
+  box.insertAdjacentHTML('beforeend', '<details class="lol-diagnose"><summary>Gespeicherte Spiele nach Modus</summary>'
+    + (modi.length ? '<div class="lol-diagnose-tabelle"><table><thead><tr><th scope="col">Queue-ID</th><th scope="col">Spielmodus</th><th scope="col">Karten-ID</th><th scope="col">Anzahl</th></tr></thead><tbody>'
+      + modi.map((m) => '<tr>' + [m.queueId, m.gameMode, m.mapId, m.anzahl].map((w) => '<td>' + esc(w ?? '–') + '</td>').join('') + '</tr>').join('')
+      + '</tbody></table></div>' : '<p>Keine Spiele gespeichert.</p>') + '</details>');
   box.querySelector('#lolKeyLos').addEventListener('click', async (e) => {
     const k = box.querySelector('#lolKey').value.trim(); if (!k) return;
     e.target.disabled = true;

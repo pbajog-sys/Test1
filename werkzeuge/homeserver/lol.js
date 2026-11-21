@@ -26,18 +26,31 @@ const REGIONEN = {
   na1: ['NA', 'americas'], br1: ['BR', 'americas'], la1: ['LAN', 'americas'], la2: ['LAS', 'americas'],
   kr: ['KR', 'asia'], jp1: ['JP', 'asia'], oc1: ['OCE', 'sea'], sg2: ['SG', 'sea'], tw2: ['TW', 'sea'], vn2: ['VN', 'sea'],
 };
-const FILTER = { alle: [400, 420, 430, 440, 490], solo: [420], flex: [440], normal: [400, 430, 490], aram: [450], mayhem: [2400], jeder: [] };
-const QUEUE_NAME = { 420: 'Ranked Solo', 440: 'Ranked Flex', 400: 'Normal Draft', 430: 'Normal Blind', 490: 'Quickplay', 450: 'ARAM', 2400: 'ARAM: Mayhem', 720: 'ARAM Clash', 1700: 'Arena', 1900: 'URF', 900: 'ARURF' };
-// ARAM-Varianten (neue Karten/Events bekommen neue Queue-Nummern) zusätzlich am Spielmodus erkennen
-const ARAM_Q = [450, 100, 720, 2400], ARAM_MODUS = /ARAM|KIWI|MAYHEM/i;
-const istAramSpiel = (m) => ARAM_Q.includes(m.q) || ARAM_MODUS.test(m.gm || '');
+// Queue-Namen aus CommunityDragon. Karten 12 und 14 sind ARAM-Karten laut Riot.
+const MAYHEM_QUEUES = [2400, 2401, 2403, 2405, 2410, 2450, 3240, 3270, 3280];
+const ARAM_QUEUES = [450, 100, 62, 63, 64, 65, 860, 861, 930, 931, 3200, 3210, 3220, 3230, 3250];
+const ARAM_KARTEN = [12, 14];
+const FILTER = { alle: [400, 420, 430, 440, 490], solo: [420], flex: [440], normal: [400, 430, 490], aram: ARAM_QUEUES, mayhem: MAYHEM_QUEUES, jeder: [] };
+const QUEUE_NAME = { 420: 'Ranked Solo', 440: 'Ranked Flex', 400: 'Normal Draft', 430: 'Normal Blind', 490: 'Quickplay', 720: 'ARAM Clash', 1700: 'Arena', 1900: 'URF', 900: 'ARURF' };
+
+function aramArt(m) {
+  if (m.q === 0 || m.q === 720 || QUEUE_NAME[m.q]) return '';
+  if (MAYHEM_QUEUES.includes(m.q)) return 'mayhem';
+  if (ARAM_QUEUES.includes(m.q)) return 'aram';
+  if (/KIWI|MAYHEM/i.test(m.gm || '')) return 'mayhem';
+  if (/ARAM/i.test(m.gm || '') || ARAM_KARTEN.includes(m.mp)) return 'aram';
+  return '';
+}
 function passtFilter(filter, m) {
   if (filter === 'jeder') return m.q !== 0;
-  if (filter === 'aram') return m.q === 450 || m.q === 100;
-  if (filter === 'mayhem') return m.q !== 0 && istAramSpiel(m) && m.q !== 450 && m.q !== 100 && m.q !== 720;
+  if (filter === 'aram' || filter === 'mayhem') return aramArt(m) === filter;
   return (FILTER[filter] || FILTER.alle).includes(m.q);
 }
-const queueText = (m) => QUEUE_NAME[m.q] || (passtFilter('mayhem', m) ? 'ARAM: Mayhem' : 'Spiel ' + m.q) + (QUEUE_NAME[m.q] ? '' : ' [' + m.q + (m.gm ? ' · ' + m.gm : ' · Modus noch unbekannt') + ']');
+function queueText(m) {
+  const art = aramArt(m);
+  if (art) return art === 'mayhem' ? 'ARAM: Mayhem' : 'ARAM';
+  return QUEUE_NAME[m.q] || 'Spiel [' + m.q + ' · ' + (m.gm || 'Modus noch unbekannt') + ']';
+}
 const ROLLEN = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'];
 const RIOT_ID = /^(.{3,16})#([A-Za-z0-9]{2,5})$/u;
 const { erstellePrime } = require('./lol-prime.js');
@@ -159,29 +172,33 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       const ms = await riot(plattform(acc.region) + '/lol/champion-mastery/v4/champion-masteries/by-puuid/' + acc.puuid + '/top?count=10');
       if (ms.status === 200) { a.mastery = (ms.json || []).map((x) => ({ id: x.championId, p: x.championPoints, l: x.championLevel })); a.masteryZeit = jetzt(); }
     }
-    const ids = await riot(regional(acc.region) + '/lol/match/v5/matches/by-puuid/' + acc.puuid + '/ids?start=0&count=' + (a.ids.length ? 20 : 100));
+    const idsPfad = regional(acc.region) + '/lol/match/v5/matches/by-puuid/' + acc.puuid + '/ids';
+    const merkeIds = (ids) => { a.ids = [...new Set(a.ids.concat(ids))]; };
+    const nachgeholt = (a.aramQueuesGeholt = a.aramQueuesGeholt || []);
+    // Ohne queue/type liefert Match-V5 alle Modi, auch neue Queues.
+    const anzahl = a.ids.length && nachgeholt.includes('alle') ? 20 : 100;
+    const ids = await riot(idsPfad + '?start=0&count=' + anzahl);
     if (ids.status !== 200) return;
-    for (const id of ids.json || []) {
-      if (!a.ids.includes(id)) a.ids.push(id);
-      if (spiele[id]) continue;
+    merkeIds(ids.json || []);
+    if (!nachgeholt.includes('alle')) nachgeholt.push('alle');
+
+    // Pro Queue merken, damit ältere Installationen erneut nachholen und Fehler wiederholt werden.
+    for (const q of [450, ...MAYHEM_QUEUES]) {
+      if (nachgeholt.includes(q)) continue;
+      const r = await riot(idsPfad + '?queue=' + q + '&start=0&count=50');
+      if (r.status !== 200) continue;
+      merkeIds(r.json || []);
+      nachgeholt.push(q);
+    }
+    speichern();
+    // Auch ältere IDs ohne gespeichertes Spiel erneut versuchen.
+    const fehlend = [...new Set((ids.json || []).concat(a.ids))].filter((id) => !spiele[id]);
+    for (const id of fehlend.slice(0, 100)) {
       const m = await riot(regional(acc.region) + '/lol/match/v5/matches/' + id);
       if (m.status === 200 && m.json && m.json.info) spiele[id] = kompakt(m.json);
+      if (m.status === 404) a.ids = a.ids.filter((x) => x !== id);
     }
-    // einmalig: ARAM und ARAM Mayhem gezielt nachholen (fallen sonst aus den letzten 100 Spielen heraus)
-    if (!a.aramGeholt) {
-      for (const q of [2400, 450]) {
-        const r = await riot(regional(acc.region) + '/lol/match/v5/matches/by-puuid/' + acc.puuid + '/ids?queue=' + q + '&start=0&count=50');
-        if (r.status !== 200) continue;
-        for (const id of r.json || []) {
-          if (!a.ids.includes(id)) a.ids.push(id);
-          if (spiele[id]) continue;
-          const m = await riot(regional(acc.region) + '/lol/match/v5/matches/' + id);
-          if (m.status === 200 && m.json && m.json.info) spiele[id] = kompakt(m.json);
-        }
-      }
-      a.aramGeholt = true;
-    }
-    // ältere gespeicherte Spiele ohne Runen/Zauber nach und nach neu holen (15 je Durchlauf)
+    // Ältere Spiele schrittweise um Modus, Karte, Runen und Zauber ergänzen.
     for (const id of a.ids.filter((x) => spiele[x] && (spiele[x].x || 0) < 3).slice(0, 25)) {
       const m = await riot(regional(acc.region) + '/lol/match/v5/matches/' + id);
       if (m.status === 200 && m.json && m.json.info) spiele[id] = kompakt(m.json);
@@ -210,11 +227,11 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
   const glatt = (w, g) => (w + 2.5) / (g + 5);   // Winrate, zur Mitte gezogen, damit 2 von 2 nicht 100 % „schlägt“
   // Automatisch erkannte Mitspieler: wer mindestens 3-mal mit jemandem aus der Gruppe im selben Team war (Premades),
   // aber nicht eingetragen ist. Zählt nur die gemeinsamen Spiele – kostet keine zusätzlichen Riot-Anfragen.
-  const AUTO_QUEUES = FILTER.alle.concat(450, 2400), AUTO_MIN = 3, AUTO_MAX = 10;
+  const AUTO_MIN = 3, AUTO_MAX = 10;
   function autoMitspieler(personenListe, spielListe) {
     const bekannt = new Set(personenListe.flatMap((p) => p.puuids)), aus = zustand.ausgeblendet || {}, z = {};
     for (const m of spielListe) {
-      if (!AUTO_QUEUES.includes(m.q) && !istAramSpiel(m)) continue;
+      if (!FILTER.alle.includes(m.q) && !aramArt(m) && m.q !== 720) continue;
       const teams = {}; m.p.forEach((x) => { if (bekannt.has(x.u)) teams[x.tm] = true; });
       m.p.forEach((x) => {
         if (!teams[x.tm] || bekannt.has(x.u) || aus[x.u] || !x.n || x.n === '?') return;
@@ -555,7 +572,15 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       return senden(res, 200, { key: keyStatus });
     }
     const acc = Object.values(zustand.personen).reduce((a, l) => a + l.length, 0);
-    return senden(res, 200, { key: key() ? keyStatus : 'fehlt', accounts: acc, spiele: Object.keys(spiele).length, letzterLauf: letzterLauf || null, laeuft });
+    const gruppen = new Map();
+    for (const { q, gm, mp } of Object.values(spiele)) {
+      const queueId = q ?? null, gameMode = gm || null, mapId = mp || null;
+      const gruppe = JSON.stringify([queueId, gameMode, mapId]);
+      if (!gruppen.has(gruppe)) gruppen.set(gruppe, { queueId, gameMode, mapId, anzahl: 0 });
+      gruppen.get(gruppe).anzahl++;
+    }
+    const spielModi = [...gruppen.values()].sort((a, b) => b.anzahl - a.anzahl || a.queueId - b.queueId);
+    return senden(res, 200, { key: key() ? keyStatus : 'fehlt', accounts: acc, spiele: Object.keys(spiele).length, spielModi, letzterLauf: letzterLauf || null, laeuft });
   }
   function kontoEntfernen(k) { if (zustand.personen[k]) { delete zustand.personen[k]; sofortSpeichern(); } }
   function schliessen() { if (uhr) clearInterval(uhr); clearTimeout(speichernUhr); }
