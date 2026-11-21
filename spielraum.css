@@ -1,0 +1,206 @@
+/* Gemeinsame Gestaltung für den Hub und die drei Server-Seiten. */
+:root {
+  --raum-bg: #10141d;
+  --raum-karte: #181e2b;
+  --raum-eingabe: #111722;
+  --raum-rand: #30394b;
+  --raum-text: #f0f3fa;
+  --raum-leise: #aebbd0;
+  --raum-akzent: #b9cbfc;
+  --raum-radius: 16px;
+  --raum-abstand: clamp(14px, 2.5vw, 40px);
+  --raum-schrift: "Nunito", system-ui, sans-serif;
+}
+
+.spielraum-seite {
+  --bg: var(--raum-bg);
+  --flaeche: var(--raum-karte);
+  --flaeche2: #242d3e;
+  --slot: var(--raum-eingabe);
+  --linie: var(--raum-rand);
+  --linie2: var(--raum-rand);
+  --text: var(--raum-text);
+  --muted: var(--raum-leise);
+  --r: var(--raum-radius);
+  --glas: var(--raum-karte);
+  --glas-rand: var(--raum-rand);
+  --unschaerfe: none;
+  --pixel: var(--raum-schrift);
+  background: var(--raum-bg);
+  color: var(--raum-text);
+  font-family: var(--raum-schrift);
+}
+.spielraum-seite :is(.kopf, main) { padding-inline: var(--raum-abstand); }
+.spielraum-seite .kopf {
+  position: relative;
+  isolation: isolate;
+  min-height: 138px;
+  display: grid;
+  align-items: center;
+  padding-block: 24px;
+  background: var(--raum-karte);
+  border-bottom: 1px solid var(--raum-rand);
+}
+.spielraum-seite .kopf::after { content: none; }
+.spielraum-seite .kopf-innen { min-width: 0; }
+.spielraum-seite .marke h1 {
+  font-size: clamp(1.9rem, 4vw, 2.7rem);
+  letter-spacing: -.035em;
+  line-height: 1.12;
+  background: none;
+  color: var(--raum-text);
+}
+.spielraum-seite main { padding-top: 22px; gap: 20px; }
+.spielraum-seite .karte {
+  padding: clamp(14px, 2vw, 22px);
+  background: var(--raum-karte);
+  border: 1px solid var(--raum-rand);
+  box-shadow: none;
+}
+.spielraum-lol::before { content: none; }
+.spielraum-seite button.haupt {
+  background: var(--raum-akzent);
+  color: #111722;
+  box-shadow: none;
+}
+.spielraum-seite button.haupt:hover { background: #d7e1ff; }
+.spielraum-lol :is(.chips, .reiter, .banner) { box-shadow: none; }
+.spielraum-seite .karte h2 { font-size: 1.08rem; letter-spacing: -.01em; }
+.spielraum-lol .chips button[data-f="jeder"]:not([aria-pressed="true"]) { color: var(--raum-leise); font-weight: 600; }
+
+.spielraum-motiv {
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: right center;
+  z-index: -2;
+  pointer-events: none;
+}
+.spielraum-seite .kopf:has(.spielraum-motiv)::before,
+#screen-hub :is(.sk-gross-kachel, .sk-spielesammlung)::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: linear-gradient(90deg, #111623 0%, #111623e8 32%, #11162342 100%);
+}
+
+body:has(#screen-hub.active) {
+  background: var(--raum-bg);
+  color: var(--raum-text);
+}
+body:has(#screen-hub.active) #ambient { display: none; }
+#screen-hub { font-family: var(--raum-schrift); }
+#screen-hub .hub-leiste {
+  padding-block: 8px 14px;
+  margin-bottom: 16px;
+  border-bottom: 1px solid var(--raum-rand);
+}
+#screen-hub .hub-marke {
+  font: 800 clamp(1.55rem, 3vw, 2.15rem)/1.1 var(--raum-schrift);
+  color: var(--raum-text);
+  letter-spacing: -.04em;
+}
+#screen-hub .sk-gross {
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 375px), 1fr));
+  gap: 16px;
+  margin: 0 0 20px;
+}
+#screen-hub .sk-gross-kachel,
+#screen-hub .sk-spielesammlung {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  border: 1px solid var(--raum-rand);
+  border-radius: var(--raum-radius);
+  background: var(--raum-karte);
+  color: var(--raum-text);
+  box-shadow: none;
+}
+#screen-hub .sk-gross-kachel {
+  display: block;
+  min-height: 0;
+  padding: clamp(16px, 2.3vw, 30px);
+}
+#screen-hub .sk-gross-kachel::after { content: none; }
+#screen-hub .sk-gross-kachel:hover { transform: none; border-color: var(--raum-akzent); }
+#screen-hub .sk-gross-kachel .spielraum-motiv { object-position: 82% center; }
+.sk-ueberblick h2, .sk-spielesammlung h2 {
+  margin: 3px 0 12px;
+  font-size: clamp(1.6rem, 3vw, 2.3rem);
+  line-height: 1.1;
+  letter-spacing: -.035em;
+}
+.sk-ueberblick p { margin: 12px 0 6px; }
+.sk-label { font-size: .82rem; font-weight: 800; color: var(--raum-leise); }
+.sk-kennzahlen {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 118px), 1fr));
+  gap: 6px;
+}
+.sk-kennzahlen > span, .sk-dienstspiele, .sk-champions li {
+  background: #111722de;
+  border: 1px solid var(--raum-rand);
+  border-radius: 9px;
+}
+.sk-kennzahlen > span { display: grid; gap: 3px; align-content: start; padding: 8px 10px; }
+.sk-kennzahlen strong { line-height: 1.2; font-variant-numeric: tabular-nums; }
+.sk-kennzahlen small { color: var(--raum-leise); font-size: .75rem; }
+.sk-champions, .sk-dienstspiele { margin: 0; padding: 0; list-style: none; }
+.sk-champions { display: flex; flex-wrap: wrap; gap: 5px; }
+.sk-champions li { display: flex; align-items: center; gap: 6px; padding: 4px 7px; font-size: .78rem; }
+.sk-champions img { display: block; border-radius: 4px; }
+.sk-dienstspiele { padding: 2px 10px; }
+.sk-dienstspiele li { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) auto; gap: 8px; padding: 4px 0; font-size: .8rem; }
+.sk-dienstspiele li + li { border-top: 1px solid var(--raum-rand); }
+.sk-dienstspiele time { color: var(--raum-leise); }
+.sk-sieg { color: #9ee1b9; }
+.sk-niederlage { color: #f8abb3; }
+.sk-dienstlink { display: inline-block; margin-top: 14px; font-weight: 800; font-size: .87rem; color: var(--raum-akzent); }
+.sk-mc-status { font-weight: 800; }
+
+#screen-hub .sk-spielesammlung {
+  display: flex;
+  align-items: center;
+  min-height: 100px;
+  padding: 18px 24px;
+  order: -5;
+}
+.sk-spielesammlung h2 { margin: 0; }
+#screen-hub .sk-filter {
+  position: static;
+  flex-wrap: wrap;
+  padding: 0;
+  margin: 14px 0 2px;
+  background: none;
+  order: -4;
+}
+#screen-hub .sk-filter input { background: var(--raum-eingabe); border-color: var(--raum-rand); }
+#screen-hub .sk-chips { min-width: 0; gap: 5px; }
+#screen-hub .sk-chips button[aria-pressed="true"] { background: var(--raum-akzent); color: #111722; }
+#screen-hub .hub-liste > .hub-game {
+  min-height: 96px;
+  background: var(--raum-karte);
+  border: 1px solid var(--raum-rand);
+  border-radius: var(--raum-radius);
+  box-shadow: none;
+}
+#screen-hub .hub-game .hg-titel { font-family: var(--raum-schrift); font-size: 1.05rem; background: none; color: var(--raum-text); }
+#screen-hub .hub-game .hg-sub { color: var(--raum-leise); }
+#screen-hub .sk-letzt .sk-erneut { width: auto; height: auto; padding: 0; background: none; color: var(--raum-akzent); font: inherit; font-weight: 800; text-align: left; }
+#screen-hub .sk-letzt .sk-erneut:hover { text-decoration: underline; }
+#screen-hub :is(.sk-gruss, .sk-letzt, .sk-naechste > div) { background: var(--raum-karte); border-color: var(--raum-rand); box-shadow: none; }
+
+@media (min-width: 1100px) {
+  #screen-hub > #skStart { grid-column: 1 / -1; }
+  #screen-hub .hub-spalten > .spalte-b { grid-row: 4; }
+  #screen-hub .spalte-a .hub-liste { grid-template-columns: repeat(auto-fit, minmax(min(100%, 255px), 1fr)) !important; }
+}
+@media (max-width: 1099px) {
+  #screen-hub .sk-filter { flex-wrap: nowrap; }
+  #screen-hub .sk-chips { width: 100%; }
+  #screen-hub #skUnten { order: -6; }
+  #screen-hub #skStart { order: -7; }
+}

@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <meta name="robots" content="noindex">
 <meta name="theme-color" content="#0d1014">
-<title>🖥️ Server-Zentrale</title>
+<title>Serverraum · Spielraum</title>
 <link rel="stylesheet" href="fonts/fonts.css?v=153">
 <style>
   :root {
@@ -147,13 +147,13 @@
   .lol-diagnose table { width: 100%; border-collapse: collapse; font-size: .82rem; }
   .lol-diagnose th, .lol-diagnose td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--linie); }
 </style>
+<link rel="stylesheet" href="spielraum.css?v=196">
 </head>
-<body>
+<body class="spielraum-seite spielraum-server">
 <header class="kopf">
   <div class="kopf-innen">
     <div class="marke">
-      <svg viewBox="0 0 40 40" aria-hidden="true"><rect x="4" y="5" width="32" height="12" rx="3" fill="#1f2a33" stroke="#5fd0e0" stroke-width="2"/><rect x="4" y="22" width="32" height="12" rx="3" fill="#1f2a33" stroke="#5fd0e0" stroke-width="2"/><circle cx="11" cy="11" r="2" fill="#6fd36b"/><circle cx="11" cy="28" r="2" fill="#6fd36b"/><rect x="17" y="10" width="14" height="2" rx="1" fill="#5fd0e0" opacity=".6"/><rect x="17" y="27" width="14" height="2" rx="1" fill="#5fd0e0" opacity=".6"/></svg>
-      <div><h1>Server-Zentrale</h1><p><a href="./">← Spielekiste</a> · <span id="host"></span></p></div>
+      <div><h1>Serverraum</h1><p><a href="./">← Spielraum</a> · <span id="host"></span></p></div>
     </div>
     <span class="pille" id="gesamt" hidden><span class="punkt" id="gesamtPunkt"></span><span id="gesamtText"></span></span>
     <span class="pille" id="versionPille" hidden></span>
@@ -254,9 +254,9 @@ const ZUSTAND = { Running: 'läuft', Ready: 'gestoppt', Disabled: 'deaktiviert',
 // ---------- Laden ----------
 async function laden() {
   const ich = await api('ich').catch(() => ({ status: 0 }));
-  if (ich.status === 401) return hinweis('Bitte zuerst in der <a href="./">Spielekiste</a> über ☁️ anmelden.');
+  if (ich.status === 401) return hinweis('Bitte zuerst im <a href="./">Spielraum</a> über ☁️ anmelden.');
   if (ich.status !== 200) return hinweis('Der Server ist gerade nicht erreichbar – startet er vielleicht neu? Die Seite versucht es gleich wieder.', true);
-  if (!ich.json.admin) return hinweis('Die Server-Zentrale ist nur für den Admin. <a href="./">Zurück zur Spielekiste</a>');
+  if (!ich.json.admin) return hinweis('Der Serverraum ist nur für den Admin. <a href="./">Zurück zum Spielraum</a>');
   $('hinweis').hidden = true; $('inhalt').hidden = false;
   await Promise.all([statusLaden(), systemLaden(), verlaufLaden(), protokoll(), kontenLaden(), lolLaden()]);
 }
@@ -300,7 +300,7 @@ function gesamtZeigen() {
   $('gesamtPunkt').className = 'punkt ' + (probleme.length ? 'schlecht' : akkuAus ? 'warn' : 'gut');
   $('gesamtText').textContent = probleme.length ? '⚠️ ' + probleme.map((n) => DIENST_INFO[n][0]).join(', ') + (probleme.length === 1 ? ' ist gestört' : ' sind gestört')
     : akkuAus ? 'Läuft auf Akku!' : 'Alles läuft';
-  document.title = (probleme.length ? '⚠️ ' : '✓ ') + 'Server-Zentrale';
+  document.title = (probleme.length ? '⚠️ ' : '✓ ') + 'Serverraum';
 }
 
 // ---------- Dienste mit Zeitstrahl ----------
@@ -438,7 +438,7 @@ function erweiterungenZeigen() {
     mb.innerHTML = '<h3><span class="punkt ' + (i.laeuft ? 'gut' : i.beschaeftigt ? 'warn' : '') + '"></span>⛏️ Minecraft (Java)</h3>'
       + '<p>' + (i.beschaeftigt ? '⏳ ' + esc(i.beschaeftigt) + ' …' : i.laeuft ? 'Läuft · <b>' + (i.online || []).length + '</b> online' + ((i.online || []).length ? ': ' + i.online.map(esc).join(', ') : '') : 'Gestoppt')
       + (i.version ? ' · ' + esc(i.version.replace(/^paper-|\.jar$/g, '')) : '') + '</p>'
-      + '<div class="zeile" style="margin-top:6px"><a class="knopf" href="minecraft.html">⛏️ Zur Minecraft-Seite</a>'
+      + '<div class="zeile" style="margin-top:6px"><a class="knopf" href="minecraft.html">⛏️ Zum Blockrevier</a>'
       + (i.laeuft ? '<button type="button" data-mc="stopp">⏹ Stopp</button>' : '<button type="button" data-mc="start">▶️ Start</button>') + '</div>';
   } else {
     mb.innerHTML = '<h3><span class="punkt"></span>⛏️ Minecraft (Java)</h3><p>Eigener Server für dich und deine Freunde – mit Statistik, Karte und Verwaltung.</p>'
@@ -485,16 +485,16 @@ async function agListen() {
     + '<br>Aktiv: ' + r.json.listen.filter((l) => l.an).map((l) => esc(l.name) + ' (' + l.regeln.toLocaleString('de-DE') + ')').join(' · ');
 }
 
-// ---------- LoL-Zentrale (Riot-API-Key) ----------
+// ---------- Duellbuch (Riot-API-Key) ----------
 async function lolLaden() {
   const r = await api('admin/lol').catch(() => ({ status: 0 })), box = $('erwLol');
   if (r.status !== 200) { box.hidden = true; return; }
   const i = r.json, ok = i.key === 'ok' || i.key === 'unbekannt';
-  box.innerHTML = '<h3><span class="punkt ' + (ok ? 'gut' : i.key === 'ungueltig' ? 'schlecht' : '') + '"></span>🎮 LoL-Zentrale</h3>'
+  box.innerHTML = '<h3><span class="punkt ' + (ok ? 'gut' : i.key === 'ungueltig' ? 'schlecht' : '') + '"></span>🎮 Duellbuch</h3>'
     + '<p>' + (i.key === 'fehlt' ? 'Ohne Riot-Key zeigt die Seite Beispieldaten.' : i.key === 'ungueltig' ? '⚠️ Riot lehnt den Key ab – abgelaufen? Neuen eintragen.' : 'Riot-Key aktiv')
     + ' · ' + i.accounts + ' Accounts · ' + i.spiele + ' Spiele' + (i.letzterLauf ? ' · zuletzt geholt ' + vor(i.letzterLauf) : '') + (i.laeuft ? ' · ⏳ holt gerade' : '') + '</p>'
     + '<div class="zeile" style="margin-top:6px"><input id="lolKey" type="password" placeholder="RGAPI-…" autocomplete="off" spellcheck="false" style="flex:1"><button type="button" class="haupt" id="lolKeyLos">Key speichern</button></div>'
-    + '<div class="zeile" style="margin-top:6px"><a class="knopf" href="lol.html">🎮 Zur LoL-Seite</a><a class="knopf" href="https://developer.riotgames.com/" target="_blank" rel="noopener">Key holen ↗</a>' + (i.key !== 'fehlt' ? '<button type="button" id="lolKeyWeg">Key entfernen</button>' : '') + '</div>';
+    + '<div class="zeile" style="margin-top:6px"><a class="knopf" href="lol.html">🎮 Zum Duellbuch</a><a class="knopf" href="https://developer.riotgames.com/" target="_blank" rel="noopener">Key holen ↗</a>' + (i.key !== 'fehlt' ? '<button type="button" id="lolKeyWeg">Key entfernen</button>' : '') + '</div>';
   const modi = i.spielModi || [];
   box.insertAdjacentHTML('beforeend', '<details class="lol-diagnose"><summary>Gespeicherte Spiele nach Modus</summary>'
     + (modi.length ? '<div class="lol-diagnose-tabelle"><table><thead><tr><th scope="col">Queue-ID</th><th scope="col">Spielmodus</th><th scope="col">Karten-ID</th><th scope="col">Anzahl</th></tr></thead><tbody>'
