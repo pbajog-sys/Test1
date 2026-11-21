@@ -26,17 +26,18 @@ const REGIONEN = {
   na1: ['NA', 'americas'], br1: ['BR', 'americas'], la1: ['LAN', 'americas'], la2: ['LAS', 'americas'],
   kr: ['KR', 'asia'], jp1: ['JP', 'asia'], oc1: ['OCE', 'sea'], sg2: ['SG', 'sea'], tw2: ['TW', 'sea'], vn2: ['VN', 'sea'],
 };
-const FILTER = { alle: [400, 420, 430, 440, 490], solo: [420], flex: [440], normal: [400, 430, 490], aram: [450], mayhem: [2400] };
+const FILTER = { alle: [400, 420, 430, 440, 490], solo: [420], flex: [440], normal: [400, 430, 490], aram: [450], mayhem: [2400], jeder: [] };
 const QUEUE_NAME = { 420: 'Ranked Solo', 440: 'Ranked Flex', 400: 'Normal Draft', 430: 'Normal Blind', 490: 'Quickplay', 450: 'ARAM', 2400: 'ARAM: Mayhem', 720: 'ARAM Clash', 1700: 'Arena', 1900: 'URF', 900: 'ARURF' };
 // ARAM-Varianten (neue Karten/Events bekommen neue Queue-Nummern) zusätzlich am Spielmodus erkennen
 const ARAM_Q = [450, 100, 720, 2400], ARAM_MODUS = /ARAM|KIWI|MAYHEM/i;
 const istAramSpiel = (m) => ARAM_Q.includes(m.q) || ARAM_MODUS.test(m.gm || '');
 function passtFilter(filter, m) {
+  if (filter === 'jeder') return m.q !== 0;
   if (filter === 'aram') return m.q === 450 || m.q === 100;
   if (filter === 'mayhem') return m.q !== 0 && istAramSpiel(m) && m.q !== 450 && m.q !== 100 && m.q !== 720;
   return (FILTER[filter] || FILTER.alle).includes(m.q);
 }
-const queueText = (m) => QUEUE_NAME[m.q] || (passtFilter('mayhem', m) ? 'ARAM: Mayhem' : 'Spiel ' + m.q);
+const queueText = (m) => QUEUE_NAME[m.q] || (passtFilter('mayhem', m) ? 'ARAM: Mayhem' : 'Spiel ' + m.q) + (QUEUE_NAME[m.q] ? '' : ' [' + m.q + (m.gm ? ' · ' + m.gm : ' · Modus noch unbekannt') + ']');
 const ROLLEN = ['TOP', 'JUNGLE', 'MIDDLE', 'BOTTOM', 'UTILITY'];
 const RIOT_ID = /^(.{3,16})#([A-Za-z0-9]{2,5})$/u;
 const { erstellePrime } = require('./lol-prime.js');
