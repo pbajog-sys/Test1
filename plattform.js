@@ -526,6 +526,7 @@ async function skDienstJson(pfad) {
 function skDuoZeigen(vorschau) {
   const wahl = $('skDuoModus'), box = $('skDuoErgebnis');
   if (!wahl || !box) return;
+  if (vorschau.duoModus && ![...wahl.options].some((option) => option.value === vorschau.duoModus)) vorschau.duoModus = 'alle';
   const modus = vorschau.duoModus || 'alle';
   wahl.value = modus;
   const alt = vorschau.duos.get(modus);
@@ -581,7 +582,7 @@ function skZeigeLol(daten, profil) {
     }).join('') + '</ul>' : ''),
     '<div><h3>Champion-Meisterschaft</h3>' + (champions.length ? '<ul class="sk-meisterschaft">' + champions.map((c) => '<li><span>' + champBild(c.c, 54) + '<b aria-label="Meisterschaftsstufe ' + skText(c.l) + '">' + skText(c.l) + '</b></span><small>' + skText(c.c) + '</small></li>').join('') + '</ul>' : '<p>Noch keine Meisterschaftsdaten.</p>') + '</div>'
     + '<div><div class="sk-duokopf"><h3>Siegquote mit Mitspielern</h3><select id="skDuoModus" aria-label="Spielmodus für Mitspieler-Siegquote">'
-    + [...skDuoModi].map(([id, name]) => '<option value="' + id + '">' + name + '</option>').join('')
+    + [...skDuoModi].filter(([id]) => id !== 'mayhem' || daten.mayhemVerfuegbar).map(([id, name]) => '<option value="' + id + '">' + name + '</option>').join('')
     + '</select></div><div id="skDuoErgebnis" aria-live="polite"></div></div>'
     + (lolFakten ? '<div class="sk-lol-fakten"><h3>Kluft-Statistik</h3><div class="sk-kennzahlen">' + lolFakten + '</div></div>' : '')
   ];

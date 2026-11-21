@@ -44,6 +44,7 @@ const riotEcht = async (url, k) => {
   if ((m = /champion-masteries\/by-puuid\/(.+)\/top$/.exec(p))) return { status: 200, json: [{ championId: 103, championPoints: 250000, championLevel: 12 }, { championId: 266, championPoints: 90000, championLevel: 7 }] };
   if ((m = /matches\/by-puuid\/(.+)\/ids$/.exec(p))) {
     const typ = u.searchParams.get('type'), queue = u.searchParams.get('queue');
+    if (queue === '2400' && SPIELE.EUW1_PRIVAT) return { status: 403, json: null };
     const start = Number(u.searchParams.get('start') || 0), count = Number(u.searchParams.get('count') || 20);
     const ids = Object.values(SPIELE).filter((s) => {
       if (queue !== null && s.info.queueId !== Number(queue)) return false;
@@ -53,6 +54,7 @@ const riotEcht = async (url, k) => {
     }).map((s) => s.metadata.matchId);
     return { status: 200, json: ids.slice(start, start + count) };
   }
+  if (p === '/lol/match/v5/matches/EUW1_PRIVAT') return { status: 403, json: null };
   if ((m = /matches\/(EUW1_\w+)$/.exec(p))) return { status: 200, json: SPIELE[m[1]] };
   return { status: 404, json: null };
 };
@@ -203,6 +205,7 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     console.log('Key-Wechsel (Riot verschlüsselt PUUIDs pro Key)');
     const KEY2 = 'RGAPI-99999999-abcd-4ef0-9abc-1234567890ab';
     const altHolen = riotHolenAktuell; riotHolenAktuell = async (url, k) => (k === KEY2 ? altHolen(url, KEY) : { status: 401, json: null });
+    SPIELE.EUW1_PRIVAT = { metadata: { matchId: 'EUW1_PRIVAT' }, info: { ...SPIELE.EUW1_0.info, queueId: 2400, gameMode: 'KIWI', mapId: 12 } };
     const varianten = [
       ['MAYHEM', 2405, 'KIWI', 12, true],
       ['BRUECKE', 2401, 'KIWI', 12, true],
@@ -217,12 +220,16 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     }
     ck('neuer Key gespeichert', (await anfrage('admin/lol', 'POST', { key: KEY2 }, anna)).json.key === 'ok');
     const st2 = await bisFertig(anna);
+    ck('Private Mayhem-Details und gezieltes 403 lassen den Key gültig und den Import weiterlaufen',
+      st2 && st2.key === 'ok' && riotAufrufe.some((u) => u.includes('/ids?queue=2400'))
+      && riotAufrufe.filter((u) => u.endsWith('/matches/EUW1_PRIVAT')).length === 1);
     d = await anfrage('lol/daten', 'GET', null, ben);
     ck('nach Key-Wechsel alles neu zugeordnet (3 Accounts, 12 Spiele, Kluft-Duo mit 6 Spielen)', st2 && st2.accounts === 3 && st2.spiele === 12 && d.json.duos.some((x) => [x.a, x.b].sort().join() === 'anna,ben' && x.g === 6) && d.json.personen.find((x) => x.name === 'Anna').g === 6, JSON.stringify(st2));
 
     pr = await anfrage('lol/person?id=anna&filter=alle', 'GET', null, ben);
     ck('echtes Profil: Spiele, Mastery mit Namen, LP-Verlauf vom Smurf', pr.status === 200 && pr.json.spiele.length === 6 && pr.json.mastery[0].c === 'Ahri' && pr.json.lpVerlauf.some((x) => x.q === 'solo' && x.tier === 'PLATINUM'), JSON.stringify({ m: pr.json.mastery, lp: pr.json.lpVerlauf }));
     const idsFuer = async (filter) => (await anfrage('lol/person?id=anna&filter=' + filter, 'GET', null, ben)).json.spiele.map((s) => s.id).sort();
+    ck('Mayhem-Auswahl ist nur bei echten verfügbaren Spielen freigegeben', d.json.mayhemVerfuegbar === true && aram.json.mayhemVerfuegbar === false);
     ck('Mayhem: gezielter Nachimport und neue Queue mit KIWI', (await idsFuer('mayhem')).join() === 'EUW1_BRUECKE,EUW1_MAYHEM,EUW1_NEUMAYHEM');
     ck('ARAM: bekannte Queue, unbekannte Queue mit ARAM-Modus oder ARAM-Karte', (await idsFuer('aram')).join() === 'EUW1_ARAM,EUW1_NEUARAM,EUW1_NEUKARTE');
     ck('Alle (Kluft) enthält keine ARAM-Varianten', (await idsFuer('alle')).every((id) => /^EUW1_\d+$/.test(id)));
@@ -281,6 +288,7 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
       await ctx.addCookies([{ name: cara.split('=')[0], value: cara.split('=').slice(1).join('='), url: 'http://localhost:8796' }]);
       await seite.reload(); await seite.waitForSelector('.person');
       ck(name + ': Beispiel-Banner + 5 Spieler-Karten + Kevin als erkannt', !(await seite.isHidden('#banner')) && (await seite.$$('.person')).length === 6 && /erkannt/.test(await seite.textContent('#personen')));
+      ck(name + ': Mayhem-Filter ohne verfügbare Spiele ausgeblendet', await seite.locator('[data-f="mayhem"]').isHidden());
       for (const t of ['duos', 'rollen', 'aufstellung', 'spiele']) { await seite.click('[data-tab="' + t + '"]'); await warte(80); }
       ck(name + ': Aufstellung verteilt 5 Rollen', (await seite.$$('.platz')).length === 5 && /Siegchance/.test(await seite.textContent('#aufTipp')));
       await seite.click('[data-tab="gruppe"]'); await seite.click('.person >> nth=1'); await warte(150);
