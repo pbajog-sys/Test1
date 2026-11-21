@@ -282,7 +282,7 @@ const SprechKI = (() => {
         erg.innerHTML = wortHtml(v) + '<div class="ski-gehoert">Gehört: „' + esc(v.text || '…') + '“ <small>' + Math.round(v.quote * 100) + ' % · ' + (r.quelle === 'whisper' ? 'Whisper' : 'Browser') + '</small></div>'
           + '<div class="ski-urteil ' + (v.ok ? 'gut' : 'schlecht') + '">' + urteil + '</div>'
           + '<div class="ski-knoepfe">' + (r.url ? '<button type="button" class="ski-k" data-url="' + r.url + '">▶️ Ich</button>' : '') + (opt.sprich ? '<button type="button" class="ski-k" data-orig="1">🔊 Original</button>' : '') + '</div>';
-        erg.querySelectorAll('[data-url]').forEach((b) => b.addEventListener('click', () => new Audio(b.dataset.url).play().catch(() => {})));
+        erg.querySelectorAll('[data-url]').forEach((b) => b.addEventListener('click', () => spielTonMedium(b.dataset.url).play().catch(() => {})));
         erg.querySelectorAll('[data-orig]').forEach((b) => b.addEventListener('click', () => opt.sprich(opt.ziel)));
         status.textContent = r.quelle === 'whisper' ? '🧠 Whisper auf dem Gerät' : '🌐 Browser-Erkennung';
         if (opt.onErgebnis) opt.onErgebnis({ ...v, quelle: r.quelle, versuche, url: r.url });
@@ -312,7 +312,7 @@ const SprechKI = (() => {
         if (!a.sprach) { vgl.innerHTML = '<p class="ski-hinweis">Ich habe nichts gehört – noch einmal?</p>'; return; }
         vgl.innerHTML = '<div class="ski-knoepfe"><button type="button" class="ski-k" data-x="ich">▶️ Ich</button>' + (opt.sprich ? '<button type="button" class="ski-k" data-x="orig">🔊 Original</button>' : '') + '</div>'
           + '<p class="ski-hinweis">Hör beides an. Klang es gleich?</p><div class="ski-knoepfe"><button type="button" class="btn" data-x="ja">👍 Ja, passt</button><button type="button" class="btn secondary" data-x="nein">🔁 Noch nicht</button></div>';
-        vgl.querySelector('[data-x="ich"]').addEventListener('click', () => new Audio(a.url).play().catch(() => {}));
+        vgl.querySelector('[data-x="ich"]').addEventListener('click', () => spielTonMedium(a.url).play().catch(() => {}));
         if (opt.sprich) vgl.querySelector('[data-x="orig"]').addEventListener('click', () => opt.sprich(opt.ziel));
         vgl.querySelector('[data-x="ja"]').addEventListener('click', () => opt.onErgebnis && opt.onErgebnis({ ok: true, quote: null, selbst: true, woerter: [], url: a.url }));
         vgl.querySelector('[data-x="nein"]').addEventListener('click', () => opt.onErgebnis && opt.onErgebnis({ ok: false, quote: null, selbst: true, woerter: [], url: a.url }));

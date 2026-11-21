@@ -60,7 +60,7 @@ async function dzJahre(liste, anzahl) {
 const DZ_STILL = 'data:audio/wav;base64,UklGRiQAAABXQVZFZm10IBAAAAABAAEARKwAAIhYAQACABAAZGF0YQAAAAA=';
 let dzEl = null, dzLauf = 0;
 function dzAudio() {
-  if (!dzEl) { dzEl = new Audio(); dzEl.preload = 'auto'; dzEl.setAttribute('playsinline', ''); }
+  if (!dzEl) { dzEl = spielTonMedium(); dzEl.preload = 'auto'; dzEl.setAttribute('playsinline', ''); }
   return dzEl;
 }
 // iPhone: Ton darf nur nach einem Tipp starten – beim Tipp auf „Los“ einmal kurz „entsperren“

@@ -224,7 +224,7 @@ function sloSprich(text, langsam) {
   if (datei) {
     if ('speechSynthesis' in window) speechSynthesis.cancel();
     if (sloAudioEl) sloAudioEl.pause();
-    sloAudioEl = new Audio('audio/slo/' + datei);
+    sloAudioEl = spielTonMedium('audio/slo/' + datei);
     sloAudioEl.playbackRate = langsam ? 0.7 : 1; sloAudioEl.preservesPitch = true;
     sloAudioEl.play().catch(() => {});
     return;
@@ -233,7 +233,7 @@ function sloSprich(text, langsam) {
   speechSynthesis.cancel();
   const u = new SpeechSynthesisUtterance(text);
   u.voice = sloStimme; u.lang = sloStimme.lang; u.rate = langsam ? 0.6 : 0.9;
-  speechSynthesis.speak(u);
+  spielTonSprache(u);
 }
 const sloLaut = (text) => (sloHatTon(text) ? '<button type="button" class="slo-laut" data-sprich="' + sloEsc(text) + '" aria-label="Anhören">🔊</button>' : '');
 
@@ -255,7 +255,7 @@ function sloKlang(gut) {
       const o = sloAc.createOscillator(), g = sloAc.createGain();
       o.type = gut ? 'sine' : 'triangle'; o.frequency.value = f;
       g.gain.setValueAtTime(0.0001, t + d); g.gain.exponentialRampToValueAtTime(0.18, t + d + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + d + 0.22);
-      o.connect(g).connect(sloAc.destination); o.start(t + d); o.stop(t + d + 0.25);
+      o.connect(g).connect(spielTonAusgang(sloAc)); o.start(t + d); o.stop(t + d + 0.25);
     });
   } catch (e) { /* ohne Ton */ }
 }
@@ -831,7 +831,7 @@ $('sloPfad').addEventListener('click', (e) => {
 });
 $('sloPruefen').addEventListener('click', sloPruefen);
 $('sloWeissNicht').addEventListener('click', sloWeissNicht);
-$('sloUrteil').addEventListener('click', (e) => { const b = e.target.closest('.slo-meine'); if (b) new Audio(b.dataset.url).play().catch(() => {}); });
+$('sloUrteil').addEventListener('click', (e) => { const b = e.target.closest('.slo-meine'); if (b) spielTonMedium(b.dataset.url).play().catch(() => {}); });
 $('sloAufgabe').addEventListener('click', (e) => { if (e.target.closest('[data-nicht="hoeren"]')) sloUeberspringen(['hoeren', 'diktat'], '🔇 Hör-Aufgaben sind für eine Stunde aus.', 'hoerenAus', 1); });
 $('sloAbbruch').addEventListener('click', () => { if (!slo || slo.i === 0 || confirm('Lektion abbrechen? Der Fortschritt dieser Lektion geht verloren.')) sloKarte(); });
 $('sloUeben').addEventListener('click', () => sloStart(null, 'ueben'));

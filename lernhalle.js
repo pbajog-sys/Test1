@@ -34,7 +34,7 @@ const LH = (() => {
     try {
       ac = ac || new (window.AudioContext || window.webkitAudioContext)();
       const t = ac.currentTime, noten = gut === 'super' ? [660, 880, 1320] : gut ? [660, 990] : [196, 165];
-      noten.forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = gut ? 'sine' : 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t + i * 0.07); g.gain.exponentialRampToValueAtTime(0.12, t + i * 0.07 + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.07 + 0.18); o.connect(g); g.connect(ac.destination); o.start(t + i * 0.07); o.stop(t + i * 0.07 + 0.2); });
+      noten.forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = gut ? 'sine' : 'triangle'; o.frequency.value = f; g.gain.setValueAtTime(0.0001, t + i * 0.07); g.gain.exponentialRampToValueAtTime(0.12, t + i * 0.07 + 0.015); g.gain.exponentialRampToValueAtTime(0.0001, t + i * 0.07 + 0.18); o.connect(g); g.connect(spielTonAusgang(ac)); o.start(t + i * 0.07); o.stop(t + i * 0.07 + 0.2); });
     } catch (e) { /* ohne Ton */ }
     if (navigator.vibrate) navigator.vibrate(gut ? 10 : [30, 30, 30]);
   }

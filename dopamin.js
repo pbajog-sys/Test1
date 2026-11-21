@@ -15,7 +15,7 @@ function dpTon(f, d = 0.08, art = 'square', laut = 0.05, verz = 0) {
     const t = dpAc.currentTime + verz, o = dpAc.createOscillator(), g = dpAc.createGain();
     o.type = art; o.frequency.setValueAtTime(f, t);
     g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(laut, t + 0.01); g.gain.exponentialRampToValueAtTime(0.0001, t + d);
-    o.connect(g).connect(dpAc.destination); o.start(t); o.stop(t + d + 0.02);
+    o.connect(g).connect(spielTonAusgang(dpAc)); o.start(t); o.stop(t + d + 0.02);
   } catch (e) { /* ohne Ton */ }
 }
 // ---------- Feuerwerk ----------

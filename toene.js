@@ -45,7 +45,7 @@ function sinus(f, dauer) {
     g.gain.exponentialRampToValueAtTime(0.3, t + 0.04);
     g.gain.setValueAtTime(0.3, t + dauer - 0.08);
     g.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
-    o.connect(g).connect(c.destination);
+    o.connect(g).connect(spielTonAusgang(c));
     o.start(t); o.stop(t + dauer + 0.02);
   } catch (e) { /* ohne Ton weiter */ }
 }
@@ -59,7 +59,7 @@ function liveStart(f) {
     o.type = 'sine'; o.frequency.value = f;
     g.gain.setValueAtTime(0.0001, c.currentTime);
     g.gain.exponentialRampToValueAtTime(0.28, c.currentTime + 0.04);
-    o.connect(g).connect(c.destination);
+    o.connect(g).connect(spielTonAusgang(c));
     o.start();
     live = { o, g };
   } catch (e) { live = null; }

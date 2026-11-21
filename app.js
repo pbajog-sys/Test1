@@ -214,7 +214,7 @@ function preloadWal(wal) {
 const soundCache = loadJson(SOUND_KEY);
 const soundInflight = {};
 const BAD_SOUND = /pronunc|aussprache|spoken|wikipedia|^File:(LL-|En-|De-|Fr-|Nl-|Es-|It-|Pt-|Ru-|Pl-|Sv-|Da-|Nb-|Fi-|Cs-|Ja-|Zh-)/i;
-const player = new Audio();
+const player = spielTonMedium();
 player.preload = 'none';
 const hasNoSound = (w) => Array.isArray(soundCache[w.id]) && !soundCache[w.id].length;
 
@@ -379,6 +379,7 @@ function show(name, title) {
   if (aktuellerScreen === 'hub' && name !== 'hub' && typeof hubMerkenFallback === 'function') hubMerkenFallback();
   screens.forEach((s) => $('screen-' + s).classList.toggle('active', s === name));
   aktuellerScreen = name;
+  spielTonPlatzieren(name);
   $('homeBtn').hidden = name === 'hub';
   document.querySelector('header').hidden = ['hub', 'quizze', 'farben', 'cello', 'instrument', 'toene', 'takt', 'punkte', 'funktion', 'zufall', 'zahlen', 'tierleben', 'piranha', 'slo', 'sk', 'labor', 'dopamin', 'songs', 'klassiker', 'falten', 'zoom', 'glas', 'beat', 'wunder', 'studio', 'stimmen', 'fitness', 'scan', 'rage', 'naehen', 'eng', 'augen', 'karte', 'tiefgang', 'riff', 'verlauf', 'krimi'].includes(name);   // die Spiele haben eine eigene Kopfzeile
   $('headerTitle').textContent = title || WELTEN[welt].title;

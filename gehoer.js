@@ -36,7 +36,7 @@ function gbKlang(f, start = 0, dauer = 1.1) {
       g.gain.exponentialRampToValueAtTime(a, t + 0.012);
       g.gain.exponentialRampToValueAtTime(a * 0.35, t + 0.35);
       g.gain.exponentialRampToValueAtTime(0.0001, t + dauer);
-      o.connect(g).connect(c.destination); o.start(t); o.stop(t + dauer + 0.05);
+      o.connect(g).connect(spielTonAusgang(c)); o.start(t); o.stop(t + dauer + 0.05);
     });
   } catch (e) { /* ohne Ton */ }
 }
