@@ -325,3 +325,8 @@ body:has(#screen-hub.active) #ambient { display: none; }
 .sk-weltfakten ul { display: flex; flex-wrap: wrap; gap: 7px; margin: 0; padding: 0; list-style: none; }
 .sk-weltfakten li { padding: 4px 8px; border-radius: 8px; border: 1px solid var(--raum-rand); background: var(--raum-eingabe); font-size: .8rem; }
 .sk-weltfakten li span { margin-right: 3px; }
+
+.sk-duokopf { display: flex; align-items: baseline; flex-wrap: wrap; gap: 5px 10px; margin-bottom: 8px; }
+.sk-dienststats .sk-duokopf h3 { margin: 0; }
+.sk-duokopf select { max-width: 100%; font: inherit; font-size: .78rem; color: var(--raum-text); padding: 4px 7px; background: var(--raum-eingabe); border: 1px solid var(--raum-rand); border-radius: 7px; }
+.sk-dienststats .sk-duohinweis { font-size: .72rem; }

@@ -247,14 +247,28 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
     });
   }
 
-  function auswerten(personenListe, spielListe, filter) {
-    const queues = FILTER[filter] || FILTER.alle, aram = filter === 'aram' || filter === 'mayhem';
+  function auswerten(personenListe, spielListe, filter, vollstaendigeTeams = false) {
+    const aram = filter === 'aram' || filter === 'mayhem';
     const vonPuuid = {}; personenListe.forEach((p) => p.puuids.forEach((u) => { vonPuuid[u] = p.id; }));
+    const eingetragen = vollstaendigeTeams ? new Set(personenListe.filter((p) => !p.auto).map((p) => p.id)) : null;
     const P = {}; personenListe.forEach((p) => { P[p.id] = { id: p.id, name: p.name, ich: p.ich, auto: p.auto, accounts: p.accounts, g: 0, w: 0, k: 0, de: 0, a: 0, cs: 0, min: 0, s: 0, vs: 0, rollen: {}, champs: {}, verlauf: [] }; });
     const duos = {}, gegner = {}, feed = [];
     const liste = spielListe.filter((m) => passtFilter(filter, m) && m.d >= 300).sort((a, b) => b.t - a.t);
+    let spieleGezaehlt = 0;
     for (const m of liste) {
-      const wir = m.p.filter((x) => vonPuuid[x.u]);
+      let wir = m.p.filter((x) => vonPuuid[x.u]);
+      if (eingetragen) {
+        const teams = new Map();
+        for (const x of wir) {
+          const person = vonPuuid[x.u];
+          if (!eingetragen.has(person)) continue;
+          if (!teams.has(x.tm)) teams.set(x.tm, new Set());
+          teams.get(x.tm).add(person);
+        }
+        wir = wir.filter((x) => teams.get(x.tm)?.size === 5);
+        if (!wir.length) continue;
+      }
+      spieleGezaehlt++;
       if (!wir.length) continue;
       const teamKills = { 100: 0, 200: 0 }; m.p.forEach((x) => { teamKills[x.tm] = (teamKills[x.tm] || 0) + x.k; });
       if (feed.length < 60) feed.push({ id: m.id, t: m.t, d: m.d, q: queueText(m), wir: wir.map((x) => ({ person: vonPuuid[x.u], c: x.c, r: aram ? '' : x.r, w: x.w, k: x.k, de: x.de, a: x.a, cs: x.cs, n: x.n,
@@ -285,7 +299,7 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
         schadenMin: p.min ? Math.round(p.s / p.min) : 0, sichtMin: p.min ? Math.round((p.vs / p.min) * 100) / 100 : 0, rollen: p.rollen, champs: champs.slice(0, 15),
         form: p.verlauf.slice(0, 10), trend: form.length >= 5 && alt.length >= 5 ? Math.round((form.reduce((a, b) => a + b, 0) / form.length - alt.reduce((a, b) => a + b, 0) / alt.length) * 100) : null };
     }).sort((a, b) => b.g - a.g);
-    return { personen, duos: Object.values(duos).sort((a, b) => b.g - a.g), gegner: Object.values(gegner).sort((a, b) => b.g - a.g), feed, spiele: liste.length };
+    return { personen, duos: Object.values(duos).sort((a, b) => b.g - a.g), gegner: Object.values(gegner).sort((a, b) => b.g - a.g), feed, spiele: spieleGezaehlt };
   }
 
   // ---------- Beispieldaten (fest, reproduzierbar) ----------
@@ -422,7 +436,8 @@ function erstelleLol({ daten, jetzt = () => Date.now(), senden, koerper, kontoNa
       const echt = echtePersonen(k), echteSpiele = Object.values(spiele);
       const nutzeEcht = !!key() && echteSpiele.length > 0;
       const quelle = nutzeEcht ? { personen: echt, spiele: echteSpiele } : demo();
-      const a = auswerten(quelle.personen.concat(autoMitspieler(quelle.personen, quelle.spiele)), quelle.spiele, filter);
+      const vollstaendigeTeams = filter === 'flex' && url.searchParams.get('gruppe') === '5';
+      const a = auswerten(quelle.personen.concat(autoMitspieler(quelle.personen, quelle.spiele)), quelle.spiele, filter, vollstaendigeTeams);
       return senden(res, 200, Object.assign(a, { quelle: nutzeEcht ? 'riot' : 'demo', key: key() ? keyStatus : 'fehlt', filter, laeuft, letzterLauf: letzterLauf || null,
         ichId: k, ausgeblendet: Object.keys(zustand.ausgeblendet || {}).length, meine: (echt.find((p) => p.ich) || { accounts: [] }).accounts, alle: echt.map((p) => ({ id: p.id, name: p.name, ich: p.ich, gast: p.gast, accounts: p.accounts })),
         wahl: konten().filter((x) => x.id !== k).map((x) => ({ id: x.id, name: x.name })).concat(Object.entries(zustand.gaeste).map(([id, name]) => ({ id, name, gast: true }))).sort((x, y) => x.name.localeCompare(y.name, 'de')), regionen: Object.fromEntries(Object.entries(REGIONEN).map(([x, v]) => [x, v[0]])), ddragon: await ddragon(), version }));

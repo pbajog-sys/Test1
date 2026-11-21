@@ -506,6 +506,41 @@ const skZahl = (wert) => Number(wert).toLocaleString('de-DE');
 const skRangNamen = { IRON: 'Eisen', BRONZE: 'Bronze', SILVER: 'Silber', GOLD: 'Gold', PLATINUM: 'Platin', EMERALD: 'Smaragd', DIAMOND: 'Diamant', MASTER: 'Meister', GRANDMASTER: 'Großmeister', CHALLENGER: 'Herausforderer' };
 const skKennzahl = (wert, text) => '<span><strong>' + skText(wert) + '</strong><small>' + text + '</small></span>';
 
+const skDuoModi = new Map([['alle', 'Alle (Kluft)'], ['solo', 'Solo/Duo'], ['flex', 'Flex'], ['5er', '5er'], ['aram', 'ARAM'], ['mayhem', 'Mayhem']]);
+
+function skDuoErgebnis(daten, modus) {
+  if (!daten || daten.quelle !== 'riot') return '<p>Für diesen Modus sind gerade keine Daten verfügbar.</p>';
+  const personen = new Map((daten.personen || []).map((p) => [p.id, p.name]));
+  const duos = (daten.duos || []).filter((d) => d.g > 0 && (d.a === daten.ichId || d.b === daten.ichId)).slice(0, 3);
+  return (modus === '5er' ? '<p class="sk-duohinweis">Flex mit fünf eingetragenen Personen im selben Team.</p>' : '') + (duos.length ? '<ul class="sk-duos">' + duos.map((d) => {
+      const quote = Math.max(0, Math.min(100, Math.round(d.w / d.g * 100)));
+      return '<li><span>' + skText(personen.get(d.a === daten.ichId ? d.b : d.a) || 'Mitspieler') + ' <small>· ' + Number(d.g) + ' Spiele</small></span><b>' + quote + ' %</b><meter min="0" max="100" value="' + quote + '" aria-label="Siegquote"></meter></li>';
+    }).join('') + '</ul>' : '<p>Noch keine gemeinsamen Spiele in diesem Modus.</p>');
+}
+
+async function skDienstJson(pfad) {
+  const r = await fetch('api/' + pfad, { credentials: 'same-origin', cache: 'no-store' });
+  return r.ok ? r.json() : null;
+}
+
+function skDuoZeigen(vorschau) {
+  const wahl = $('skDuoModus'), box = $('skDuoErgebnis');
+  if (!wahl || !box) return;
+  const modus = vorschau.duoModus || 'alle';
+  wahl.value = modus;
+  const alt = vorschau.duos.get(modus);
+  box.innerHTML = alt ? alt.html : '<p>Wird geladen …</p>';
+  if ((alt && Date.now() - alt.zeit < 60000) || vorschau.duoLaedt.has(modus)) return;
+  vorschau.duoLaedt.add(modus);
+  const filter = modus === '5er' ? 'flex&gruppe=5' : modus;
+  skDienstJson('lol/daten?filter=' + filter).catch(() => null).then((daten) => {
+    vorschau.duoLaedt.delete(modus);
+    if (skDienstVorschau !== vorschau || syZustand !== 'ok' || syName !== vorschau.konto) return;
+    vorschau.duos.set(modus, { html: skDuoErgebnis(daten, modus), zeit: Date.now() });
+    if ((vorschau.duoModus || 'alle') === modus) skDuoZeigen(vorschau);
+  });
+}
+
 function skZeigeLol(daten, profil) {
   if (!profil || profil.quelle !== 'riot') {
     return ['<p>' + ((daten.meine || []).length ? 'Deine Profilwerte sind noch nicht verfügbar.' : 'Verknüpfe deinen Riot-Account für deine persönliche Übersicht.') + '</p>', ''];
@@ -534,8 +569,6 @@ function skZeigeLol(daten, profil) {
   const bilanz = profil.leistung || {}, letzte = (profil.spiele || []).slice(0, 4);
   const champions = (profil.mastery || []).slice(0, 3);
   const champBild = (name, groesse) => /^[a-z0-9]+$/i.test(name) ? '<img src="api/lol/bild/champion/' + encodeURIComponent(name) + '.png" alt="" width="' + groesse + '" height="' + groesse + '">' : '';
-  const personen = new Map((daten.personen || []).map((p) => [p.id, p.name]));
-  const duos = (daten.duos || []).filter((d) => d.g > 0 && (d.a === daten.ichId || d.b === daten.ichId)).slice(0, 3);
   return ['<div class="sk-lol-raenge">'
     + '<div class="sk-rangkarte"><small>Riot-Kontostufe</small><div class="sk-konto-bild">' + kontoBild + '<b aria-label="Level ' + skText(konto.level || 'unbekannt') + '">' + skText(konto.level || '–') + '</b></div>' + (kontoName ? '<strong>' + skText(kontoName) + '</strong>' : '') + '</div>'
     + rangKarte('Solo/Duo', solo) + rangKarte('Flex', flex) + rangKarte('5er-Gruppe', flex, 'Flex-Wertung')
@@ -547,10 +580,9 @@ function skZeigeLol(daten, profil) {
       return '<li class="' + (m.w ? 'sk-sieg' : 'sk-niederlage') + '">' + champBild(spieler.c, 36) + '<span><b>' + (m.w ? 'Sieg' : 'Niederlage') + '</b><small>' + skText(spieler.c) + '</small></span>' + zeit + '</li>';
     }).join('') + '</ul>' : ''),
     '<div><h3>Champion-Meisterschaft</h3>' + (champions.length ? '<ul class="sk-meisterschaft">' + champions.map((c) => '<li><span>' + champBild(c.c, 54) + '<b aria-label="Meisterschaftsstufe ' + skText(c.l) + '">' + skText(c.l) + '</b></span><small>' + skText(c.c) + '</small></li>').join('') + '</ul>' : '<p>Noch keine Meisterschaftsdaten.</p>') + '</div>'
-    + '<div><h3>Siegquote mit Mitspielern</h3>' + (duos.length ? '<ul class="sk-duos">' + duos.map((d) => {
-      const quote = Math.max(0, Math.min(100, Math.round(d.w / d.g * 100)));
-      return '<li><span>' + skText(personen.get(d.a === daten.ichId ? d.b : d.a) || 'Mitspieler') + ' <small>· ' + Number(d.g) + ' Spiele</small></span><b>' + quote + ' %</b><meter min="0" max="100" value="' + quote + '" aria-label="Siegquote"></meter></li>';
-    }).join('') + '</ul>' : '<p>Noch keine gemeinsamen Kluft-Spiele.</p>') + '</div>'
+    + '<div><div class="sk-duokopf"><h3>Siegquote mit Mitspielern</h3><select id="skDuoModus" aria-label="Spielmodus für Mitspieler-Siegquote">'
+    + [...skDuoModi].map(([id, name]) => '<option value="' + id + '">' + name + '</option>').join('')
+    + '</select></div><div id="skDuoErgebnis" aria-live="polite"></div></div>'
     + (lolFakten ? '<div class="sk-lol-fakten"><h3>Kluft-Statistik</h3><div class="sk-kennzahlen">' + lolFakten + '</div></div>' : '')
   ];
 }
@@ -597,36 +629,45 @@ function skGrossKacheln() {
     box.hidden = true;
     return;
   }
-  if (!skDienstVorschau || skDienstVorschau.konto !== syName) skDienstVorschau = { konto: syName, zeit: 0 };
+  if (!skDienstVorschau || skDienstVorschau.konto !== syName) skDienstVorschau = { konto: syName, zeit: 0, duos: new Map(), duoLaedt: new Set() };
   const vorschau = skDienstVorschau;
   const zeigen = () => {
     for (const [id, inhalt] of [['skGrossLol', vorschau.lol], ['skGrossMc', vorschau.mc]]) {
       $(id).hidden = !inhalt;
-      $(id + 'Daten').innerHTML = inhalt ? inhalt[0] : '';
-      $(id + 'Stats').innerHTML = inhalt ? inhalt[1] : '';
-      $(id + 'Stats').hidden = !inhalt || !inhalt[1];
+      const daten = $(id + 'Daten'), stats = $(id + 'Stats');
+      if (daten.skInhalt !== inhalt) {
+        daten.skInhalt = inhalt;
+        daten.innerHTML = inhalt ? inhalt[0] : '';
+        stats.innerHTML = inhalt ? inhalt[1] : '';
+        stats.hidden = !inhalt || !inhalt[1];
+      }
     }
     $('skGross').hidden = !vorschau.lol && !vorschau.mc;
+    if ($('skDuoModus')) {
+      $('skDuoModus').onchange = (e) => {
+        if (!skDuoModi.has(e.target.value)) return;
+        vorschau.duoModus = e.target.value;
+        skDuoZeigen(vorschau);
+      };
+      skDuoZeigen(vorschau);
+    }
   };
   zeigen();
   if (Date.now() - vorschau.zeit < 60000) return;
   vorschau.zeit = Date.now();
-  const json = async (pfad) => {
-    const r = await fetch('api/' + pfad, { credentials: 'same-origin', cache: 'no-store' });
-    return r.ok ? r.json() : null;
-  };
   const laden = (fach, abfrage) => abfrage.catch(() => '').then((html) => {
     if (skDienstVorschau !== vorschau || syZustand !== 'ok' || syName !== vorschau.konto) return;
     vorschau[fach] = html;
     zeigen();
   });
-  laden('lol', json('lol/daten?filter=alle').then(async (d) => {
+  laden('lol', skDienstJson('lol/daten?filter=alle').then(async (d) => {
     if (!d) return '';
     const profil = d.quelle === 'riot' && d.ichId
-      ? await json('lol/person?id=' + encodeURIComponent(d.ichId) + '&filter=alle') : null;
+      ? await skDienstJson('lol/person?id=' + encodeURIComponent(d.ichId) + '&filter=alle') : null;
+    vorschau.duos.set('alle', { html: skDuoErgebnis(d, 'alle'), zeit: Date.now() });
     return skZeigeLol(d, profil);
   }));
-  laden('mc', json('minecraft/info').then((i) => i && i.installiert ? skZeigeMinecraft(i) : ''));
+  laden('mc', skDienstJson('minecraft/info').then((i) => i && i.installiert ? skZeigeMinecraft(i) : ''));
 }
 // Unten im Dashboard: zuletzt gespielt (mit Karte) und nächste Erfolge
 function skUnten(D) {

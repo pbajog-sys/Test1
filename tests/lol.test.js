@@ -106,6 +106,17 @@ async function bisFertig(cookie) { for (let i = 0; i < 100; i++) { const d = awa
     ck('Beispiel: Kill-Beteiligung nie über 100 %, keine negativen Werte', d.json.feed.every((s) => s.wir.every((x) => x.kp <= 100 && x.k >= 0 && x.a >= 0)));
     const aram = await anfrage('lol/daten?filter=aram', 'GET', null, ben);
     ck('Filter ARAM: nur ARAM-Spiele', aram.json.feed.length > 0 && aram.json.feed.every((s) => s.q === 'ARAM') && aram.json.spiele < d.json.spiele);
+    const flex = await anfrage('lol/daten?filter=flex', 'GET', null, ben);
+    const fuenfer = await anfrage('lol/daten?filter=flex&gruppe=5', 'GET', null, ben);
+    ck('5er-Filter ignoriert unvollständige und automatisch erkannte Flex-Teams', flex.json.duos.length > 0 && fuenfer.json.duos.length === 0 && fuenfer.json.spiele === 0);
+    const { erstelleLol } = require('../werkzeuge/homeserver/lol.js');
+    const testLol = erstelleLol({ daten: DATEN, takt: 0, kontoName: (name) => name });
+    const teilnehmer = [1, 2, 3, 4, 5].map((n) => ({ u: 'P' + n, tm: 100, w: true, c: 'Ahri', k: 1, de: 1, a: 1 }));
+    const personen = teilnehmer.map((x) => ({ id: x.u, puuids: [x.u] }));
+    const spiel = { id: 'FLEX5', q: 440, d: 1500, t: Date.now(), p: teilnehmer };
+    const volleTeams = testLol._auswerten(personen, [spiel, { ...spiel, id: 'FLEX4', p: teilnehmer.slice(0, 4) }, { ...spiel, q: 420 }], 'flex', true);
+    testLol.schliessen();
+    ck('5er-Filter zählt nur vollständige Flex-Teams und ihre zehn Mitspielerpaare', volleTeams.spiele === 1 && volleTeams.duos.length === 10 && volleTeams.duos.every((d) => d.g === 1 && d.w === 1));
     ck('Riot-ID falsch geschrieben → 400', (await anfrage('lol/account', 'POST', { riotId: 'ohneTag', region: 'euw1' }, ben)).status === 400);
     ck('unbekannte Region → 400', (await anfrage('lol/account', 'POST', { riotId: 'Ben#1234', region: 'mond' }, ben)).status === 400);
     let a = await anfrage('lol/account', 'POST', { riotId: 'Ben # 1234', region: 'euw1' }, ben);
